@@ -241,6 +241,7 @@ v1 은 "나중에 도착한 쓰기가 이긴다", 지운 것은 되살리지 않
 | `css/app.css` | 전체 스타일 |
 | `js/vendor/` | `supabase-js` · `leaflet` (파일명에 버전 고정 — CDN 의존 없이 커밋) |
 | `js/supabase-config.js` | 접속 URL · 공개 키 |
+| `js/util.js` | 이스케이프·날짜·금액 서식 — 화면 여러 곳이 같이 쓴다 |
 | `js/db.js` | 인증 + trips·items·members·checklist CRUD |
 | `js/gmaps.js` | 구글맵 링크 파싱 (전체 URL 은 여기서 끝난다) |
 | `js/geo.js` | 직선거리(하버사인) · 구글맵 길찾기 URL |

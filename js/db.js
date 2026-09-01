@@ -147,6 +147,93 @@ const DB = (function () {
     },
   };
 
+  // ── 일정 ────────────────────────────────────────────────────────────
+  /* 화면이 늘 이 순서로 읽는다: 날짜 → 시각(없으면 뒤) → 순번.
+     ★정렬을 서버에 맡긴다. 클라이언트에서 또 정렬하면 두 규칙이 생기고 언젠가 갈린다. */
+  const COLS = 'id,trip_id,author_id,on_date,at_time,seq,kind,name,memo,done,' +
+               'map_url,lat,lng,cost,cost_cur,fx,payer_id,ref_code,book_url';
+
+  const num = v => (v === '' || v == null) ? null : (Number.isFinite(+v) ? +v : null);
+
+  const items = {
+    list: async (tripId) => {
+      if (mode() !== 'cloud') return [];
+      const { data, error } = await sb.from('items')
+        .select(COLS)
+        .eq('trip_id', tripId)
+        .order('on_date', { ascending: true })
+        .order('at_time', { ascending: true, nullsFirst: false })
+        .order('seq', { ascending: true });
+      if (error) throw new Error(say('일정을 불러오지 못했습니다', error));
+      return data || [];
+    },
+
+    /* 넣는 값을 한 곳에서 다듬는다. 화면이 준 것을 그대로 보내면 빈 문자열이 숫자 칸에 들어간다. */
+    shape: (v) => ({
+      on_date: v.on_date,
+      at_time: v.at_time || null,
+      seq: Number.isFinite(+v.seq) ? +v.seq : 0,
+      kind: v.kind || '기타',
+      name: String(v.name || '').trim(),
+      memo: (v.memo || '').trim() || null,
+      done: !!v.done,
+      map_url: (v.map_url || '').trim() || null,
+      lat: num(v.lat), lng: num(v.lng),
+      cost: num(v.cost),
+      cost_cur: num(v.cost) == null ? null : (v.cost_cur || 'KRW'),
+      fx: num(v.fx),
+      payer_id: v.payer_id || null,
+      ref_code: (v.ref_code || '').trim() || null,
+      book_url: (v.book_url || '').trim() || null,
+    }),
+
+    create: async (tripId, v) => {
+      if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
+      const row = items.shape(v);
+      if (!row.name) throw new Error('장소명을 입력하세요.');
+      if (!row.on_date) throw new Error('날짜를 고르세요.');
+      /* ★.select() 를 붙이지 않는다. RETURNING 은 SELECT 정책까지 보는데, 여기서는
+         이미 멤버라 통과하긴 한다 — 다만 돌려받을 이유가 없다(목록을 다시 받는다).
+         trips 에서 이 성질 때문에 한 번 막혔다(members.sql 주석 참고). */
+      const { error } = await sb.from('items').insert({ ...row, trip_id: tripId });
+      if (error) throw new Error(say('일정을 추가하지 못했습니다', error));
+    },
+
+    update: async (id, v) => {
+      if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
+      const row = items.shape(v);
+      if (!row.name) throw new Error('장소명을 입력하세요.');
+      const { error } = await sb.from('items').update(row).eq('id', id);
+      if (error) throw new Error(say('일정을 수정하지 못했습니다', error));
+    },
+
+    /* 다녀왔음만 토글한다 — 한 칸이라 폼을 열 필요가 없다. */
+    setDone: async (id, done) => {
+      if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
+      const { error } = await sb.from('items').update({ done: !!done }).eq('id', id);
+      if (error) throw new Error(say('표시를 바꾸지 못했습니다', error));
+    },
+
+    remove: async (id) => {
+      if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
+      const { error } = await sb.from('items').delete().eq('id', id);
+      if (error) throw new Error(say('일정을 지우지 못했습니다', error));
+    },
+  };
+
+  /* 단축 링크 펼치기 — api/gmaps.js 가 리다이렉트를 따라간다.
+     전체 URL 은 여기 오지 않는다(js/gmaps.js 가 브라우저에서 바로 파싱한다). */
+  async function expandMapUrl(shortUrl) {
+    const tok = await accessToken();
+    if (!tok) throw new Error('로그인이 필요합니다.');
+    const r = await fetch('/api/gmaps?u=' + encodeURIComponent(shortUrl), {
+      headers: { Authorization: 'Bearer ' + tok },
+    });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || `링크를 펼치지 못했습니다 (${r.status})`);
+    return body.url;
+  }
+
   /* 초대 코드로 들어가기. 표에 직접 쓰지 않고 RPC 하나로만 통과한다 —
      클라이언트에 trip_members insert 를 열어 주면 남의 여행에 자기를 밀어 넣을 수 있다. */
   async function join(code) {
@@ -160,5 +247,5 @@ const DB = (function () {
 
   return { CONFIGURED, mode, email, uid, accessToken,
            onAuth, onError, initAuth, signIn, signOut,
-           trips, join };
+           trips, items, join, expandMapUrl };
 })();

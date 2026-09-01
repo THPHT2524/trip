@@ -21,30 +21,14 @@
   let tripId = null;       // 지금 열어 둔 여행
   let tab = 'plan';
 
-  /* 화면에 넣는 모든 문자열은 여기를 지난다.
-     ★홑따옴표까지 바꾼다. 홑따옴표로 감싼 속성이 하나라도 있으면 이름에 ' 가 든 것만으로
-       속성이 조기 종료되어 카드가 깨지고 속성 주입이 열린다. 실제로 오는 이름이다 —
-       구글맵에서 McDonald's 가 그대로 온다. */
-  const esc = s => String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  /* 문자열 이스케이프와 날짜·금액 서식은 util.js(U)에 있다 — plan.js 도 같은 것을 쓴다.
+     이스케이프 규칙이 두 벌이 되면 한쪽만 고쳐지고, 그 한쪽으로 들어온 이름이 화면을 깨뜨린다. */
+  const esc = U.esc;
+  const fmtSpan = U.span;
 
-  // ── 날짜 ──────────────────────────────────────────────────────────────
-  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
-  const todayISO = () => {
-    const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
-    return d.toISOString().slice(0, 10);
-  };
-  const fmtSpan = (a, b) => {
-    if (!a && !b) return '날짜 미정';
-    const s = (x) => x ? x.slice(2).replace(/-/g, '.') : '';
-    const days = (a && b) ? Math.round((Date.parse(b) - Date.parse(a)) / 86400000) + 1 : 0;
-    if (a && b) return `${s(a)} – ${b.slice(5).replace('-', '.')} · ${days}일`;
-    return s(a || b);
-  };
   /* 진행 중 · 예정 · 지난 것. 날짜가 없는 여행은 '예정' 쪽에 둔다(아직 안 정한 것이지 지난 것이 아니다). */
   function phase(t) {
-    const now = todayISO();
+    const now = U.todayISO();
     if (t.start_on && t.end_on) {
       if (t.start_on <= now && now <= t.end_on) return 'now';
       return t.end_on < now ? 'past' : 'soon';
@@ -90,6 +74,10 @@
       b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     document.querySelectorAll('.pane').forEach(p =>
       p.hidden = p.dataset.tab !== tab);
+
+    /* 일정은 이 여행의 본체다 — 어느 탭으로 들어와도 먼저 받아 둔다.
+       (지도·비용도 결국 같은 rows 를 쓴다. 탭마다 따로 받으면 세 번 받는다.) */
+    if (t) Plan.open(t);
   }
 
   function renderTrips() {

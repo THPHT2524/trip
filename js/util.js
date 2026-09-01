@@ -1,0 +1,55 @@
+/* util.js — 화면 여러 곳이 같이 쓰는 것들. 여기에는 DOM 도 네트워크도 없다.
+   ★esc 를 파일마다 복사하지 않으려고 만들었다. 이스케이프가 두 벌이 되면 한쪽만 고쳐지고,
+     그 한쪽으로 들어온 이름 하나가 화면을 깨뜨린다. 규칙은 한 곳에만 있어야 한다. */
+const U = (function () {
+
+  /* 화면에 넣는 모든 문자열은 여기를 지난다.
+     ★홑따옴표까지 바꾼다. 홑따옴표로 감싼 속성이 하나라도 있으면 이름에 ' 가 든 것만으로
+       속성이 조기 종료되어 카드가 깨지고 속성 주입이 열린다.
+       실제로 오는 이름이다 — 구글맵에서 McDonald's 가 그대로 온다. */
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+
+  /* 오늘(현지 시각 기준 YYYY-MM-DD).
+     ★UTC 로 자르면 한국에서 오전 9시 전에 어제가 된다. 시간대 보정을 먼저 한다. */
+  function todayISO() {
+    const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  /* 'YYYY-MM-DD' 하루 더하기. Date 로 왕복하지 않는다 — 서머타임 있는 곳에서 하루가 밀린다. */
+  function addDays(iso, n) {
+    const d = new Date(iso + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  const dowOf = iso => DOW[new Date(iso + 'T00:00:00Z').getUTCDay()];
+  const md = iso => iso ? iso.slice(5).replace('-', '.') : '';
+
+  /* 여행 기간 한 줄. 날짜가 없는 여행도 있다(아직 안 정한 것이지 잘못된 것이 아니다). */
+  function span(a, b) {
+    if (!a && !b) return '날짜 미정';
+    if (a && b) {
+      const days = Math.round((Date.parse(b) - Date.parse(a)) / 86400000) + 1;
+      return `${a.slice(2).replace(/-/g, '.')} – ${md(b)} · ${days}일`;
+    }
+    return (a || b).slice(2).replace(/-/g, '.');
+  }
+
+  /* 통화 기호. 없는 통화는 코드를 그대로 앞에 붙인다(추측하지 않는다). */
+  const SIGN = { KRW: '₩', JPY: '¥', USD: '$', EUR: '€', TWD: 'NT$', THB: '฿', VND: '₫', CNY: '¥' };
+  function money(v, cur) {
+    if (v == null || !Number.isFinite(+v)) return '';
+    const s = SIGN[cur];
+    const n = Math.round(+v).toLocaleString('ko-KR');
+    return s ? s + n : `${n} ${cur || ''}`.trim();
+  }
+
+  return { esc, DOW, todayISO, addDays, dowOf, md, span, money };
+})();
+
+if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용

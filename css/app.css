@@ -289,6 +289,31 @@ a { color: var(--route); text-underline-offset: 2px; }
   .seg a::after { opacity: 1; }   /* 폰에는 hover 가 없다 — 늘 보인다 */
 }
 
+/* 좌표가 없어 거리를 못 내는 구간 — 레일은 잇되 아무 말도 하지 않는다.
+   짧게 둔다: 없는 정보에 자리를 크게 내주면 빈 곳이 실수처럼 보인다. */
+.seg.seg-blank { height: 18px; }
+
+/* 줄마다 붙는 작은 동작. 카드를 누르면 수정이고, 이건 그보다 가벼운 것들이다. */
+.acts {
+  display: flex; gap: 6px; justify-content: flex-end;
+  padding: 0 2px 4px;
+}
+.act {
+  appearance: none; cursor: pointer;
+  background: none; border: 0; padding: 2px 6px;
+  font: inherit; font-size: 11px; font-weight: 600;
+  color: var(--ink-3); text-decoration: none; border-radius: 5px;
+}
+.act:hover, .act:focus-visible { color: var(--route); }
+
+/* 비어 있는 날 — 감추지 않는다. 3일차가 비었다는 사실 자체가 정보다. */
+.blank {
+  margin: 0; padding: 10px 0 10px var(--gutter);
+  font-size: 13px; color: var(--ink-3);
+}
+
+.dayband .warn { color: var(--warn); font-weight: 500; }
+
 /* ── 하단 탭 ──────────────────────────────────────────────────────────── */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
@@ -376,6 +401,11 @@ details[open] summary::after { content: '−'; }
 .form .row .field { flex: 1; min-width: 0; }
 .form .row .field.cur { flex: 0 0 88px; }
 .hint { margin: -4px 0 0; font-size: 12px; color: var(--ink-3); }
+.hint.ok { color: var(--depth); }
+.form .row.btns { gap: 10px; align-items: center; }
+.form .row.btns .btn { flex: 0 0 auto; }
+.btn.danger { color: var(--warn); border-color: var(--line); }
+textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .err { margin: 0; font-size: 13px; color: var(--warn); }
 .err:empty { display: none; }
 .btn.sm { padding: 6px 11px; font-size: 13px; border-radius: 7px; }
