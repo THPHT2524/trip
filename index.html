@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=46">
+<link rel="stylesheet" href="/css/app.css?v=47">
 </head>
 <body>
 
@@ -99,80 +99,9 @@
       <nav class="daytabs" id="daytabs" role="tablist" aria-label="날짜" hidden></nav>
       <div id="days"></div>
 
-      <div class="forms">
-        <details id="if-wrap">
-          <summary id="if-sum">일정 추가</summary>
-          <form id="if-form" class="form">
-            <input type="hidden" id="if-id">
-            <input type="hidden" id="if-lat">
-            <input type="hidden" id="if-lng">
-
-            <div class="field">
-              <label for="if-link">구글맵 링크</label>
-              <input id="if-link" type="text" inputmode="url" autocomplete="off" spellcheck="false"
-                     placeholder="https://maps.app.goo.gl/… 붙여넣기">
-              <p class="hint" id="if-geo">좌표 없음 — 지도와 거리 표시에서 빠집니다</p>
-            </div>
-
-            <div class="row">
-              <div class="field"><label for="if-name">장소명</label>
-                <input id="if-name" type="text" required maxlength="80" placeholder="오사카성"></div>
-              <div class="field kind"><label for="if-kind">구분</label>
-                <select id="if-kind"></select></div>
-            </div>
-
-            <div class="row">
-              <div class="field"><label for="if-date">날짜</label>
-                <input id="if-date" type="date" class="mono" required></div>
-              <div class="field"><label for="if-time">시각</label>
-                <input id="if-time" type="time" class="mono"></div>
-            </div>
-
-            <div class="row tight">
-              <div class="field"><label for="if-cost">비용</label>
-                <input id="if-cost" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
-              <div class="field unit"><label for="if-cur">통화</label>
-                <select id="if-cur">
-                  <option>KRW</option><option>JPY</option><option>USD</option>
-                  <option>EUR</option><option>TWD</option><option>THB</option><option>VND</option>
-                </select></div>
-              <div class="field unit"><label for="if-fx">환율</label>
-                <input id="if-fx" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
-            </div>
-
-            <p class="hint">기준통화로 바꿀 비율. 비워 두면 합계에서 빠지고 그 사실을 화면에 적습니다.</p>
-
-            <div class="field">
-              <label for="if-payer">누가 냈나</label>
-              <select id="if-payer"><option value="">안 적음</option></select>
-            </div>
-
-            <!-- 미리 계획할 때만 쓰는 것들. 길에서 한 줄 넣을 때는 펴지 않는다.
-                 (고칠 때 값이 들어 있으면 plan.js 가 대신 펴 준다) -->
-            <details class="more" id="if-more">
-              <summary>예약 · 메모</summary>
-              <div class="morebody">
-                <div class="row">
-                  <div class="field"><label for="if-ref">예약번호</label>
-                    <input id="if-ref" type="text" class="mono" maxlength="40" autocomplete="off"></div>
-                  <div class="field"><label for="if-book">예약 링크</label>
-                    <input id="if-book" type="text" inputmode="url" autocomplete="off" spellcheck="false"></div>
-                </div>
-                <div class="field">
-                  <label for="if-memo">메모</label>
-                  <textarea id="if-memo" rows="2" maxlength="500"></textarea>
-                </div>
-              </div>
-            </details>
-
-            <div class="row btns">
-              <button class="btn" id="if-save" type="submit">저장</button>
-              <button class="btn ghost danger" id="if-del" type="button" hidden>지우기</button>
-            </div>
-            <p class="err" id="if-err"></p>
-          </form>
-        </details>
-      </div>
+      <!-- 떠다니는 추가 단추. 판이 hidden 이면 같이 사라진다 —
+           position:fixed 라도 조상이 display:none 이면 안 그려진다. -->
+      <button class="fab" id="fab" type="button" aria-label="일정 추가"><span aria-hidden="true">＋</span></button>
     </div>
 
     <div class="pane" data-tab="map" hidden>
@@ -269,6 +198,89 @@
 
 <div class="obox" id="obox" hidden></div>
 
+<!-- 일정 입력 — 화면을 덮는 시트. 판 밖에 두는 이유: 판이 hidden 이면
+     그 안의 dialog 는 showModal() 로도 안 열린다. -->
+<dialog id="if-dlg" aria-labelledby="if-sum">
+  <div class="sheet">
+    <header class="sheethd">
+      <h2 id="if-sum">일정 추가</h2>
+      <button class="sheetx" id="if-close" type="button" aria-label="닫기">✕</button>
+    </header>
+    <div class="sheetbody">
+        <form id="if-form" class="form">
+          <input type="hidden" id="if-id">
+          <input type="hidden" id="if-lat">
+          <input type="hidden" id="if-lng">
+
+          <div class="field">
+            <label for="if-link">구글맵 링크</label>
+            <input id="if-link" type="text" inputmode="url" autocomplete="off" spellcheck="false"
+                   placeholder="https://maps.app.goo.gl/… 붙여넣기">
+            <p class="hint" id="if-geo">좌표 없음 — 지도와 거리 표시에서 빠집니다</p>
+          </div>
+
+          <div class="row">
+            <div class="field"><label for="if-name">장소명</label>
+              <input id="if-name" type="text" required maxlength="80" placeholder="오사카성"></div>
+            <div class="field kind"><label for="if-kind">구분</label>
+              <select id="if-kind"></select></div>
+          </div>
+
+          <div class="row">
+            <div class="field"><label for="if-date">날짜</label>
+              <input id="if-date" type="date" class="mono" required></div>
+            <div class="field"><label for="if-time">시각</label>
+              <input id="if-time" type="time" class="mono"></div>
+          </div>
+
+          <div class="row tight">
+            <div class="field"><label for="if-cost">비용</label>
+              <input id="if-cost" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
+            <div class="field unit"><label for="if-cur">통화</label>
+              <select id="if-cur">
+                <option>KRW</option><option>JPY</option><option>USD</option>
+                <option>EUR</option><option>TWD</option><option>THB</option><option>VND</option>
+              </select></div>
+            <div class="field unit"><label for="if-fx">환율</label>
+              <input id="if-fx" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
+          </div>
+
+          <p class="hint">기준통화로 바꿀 비율. 비워 두면 합계에서 빠지고 그 사실을 화면에 적습니다.</p>
+
+          <div class="field">
+            <label for="if-payer">누가 냈나</label>
+            <select id="if-payer"><option value="">안 적음</option></select>
+          </div>
+
+          <!-- 미리 계획할 때만 쓰는 것들. 길에서 한 줄 넣을 때는 펴지 않는다.
+               (고칠 때 값이 들어 있으면 plan.js 가 대신 펴 준다) -->
+          <details class="more" id="if-more">
+            <summary>예약 · 메모</summary>
+            <div class="morebody">
+              <div class="row">
+                <div class="field"><label for="if-ref">예약번호</label>
+                  <input id="if-ref" type="text" class="mono" maxlength="40" autocomplete="off"></div>
+                <div class="field"><label for="if-book">예약 링크</label>
+                  <input id="if-book" type="text" inputmode="url" autocomplete="off" spellcheck="false"></div>
+              </div>
+              <div class="field">
+                <label for="if-memo">메모</label>
+                <textarea id="if-memo" rows="2" maxlength="500"></textarea>
+              </div>
+            </div>
+          </details>
+
+          <div class="row btns">
+            <button class="btn" id="if-save" type="submit">저장</button>
+            <button class="btn ghost danger" id="if-del" type="button" hidden>지우기</button>
+          </div>
+          <p class="err" id="if-err"></p>
+        </form>
+    </div>
+  </div>
+</dialog>
+
+
 <nav class="tabs" id="tabs" role="tablist" aria-label="화면" hidden>
   <button type="button" role="tab" data-tab="plan" aria-selected="true">일정</button>
   <button type="button" role="tab" data-tab="map"  aria-selected="false">지도</button>
@@ -280,20 +292,20 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=46"></script>
-<script src="/js/map-config.js?v=46"></script>
-<script src="/js/util.js?v=46"></script>
-<script src="/js/geo.js?v=46"></script>
-<script src="/js/gmaps.js?v=46"></script>
-<script src="/js/db.js?v=46"></script>
-<script src="/js/outbox.js?v=46"></script>
+<script src="/js/supabase-config.js?v=47"></script>
+<script src="/js/map-config.js?v=47"></script>
+<script src="/js/util.js?v=47"></script>
+<script src="/js/geo.js?v=47"></script>
+<script src="/js/gmaps.js?v=47"></script>
+<script src="/js/db.js?v=47"></script>
+<script src="/js/outbox.js?v=47"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=46"></script>
-<script src="/js/plan.js?v=46"></script>
-<script src="/js/map.js?v=46"></script>
-<script src="/js/cost.js?v=46"></script>
-<script src="/js/prep.js?v=46"></script>
-<script src="/js/app.js?v=46"></script>
+<script src="/js/crew.js?v=47"></script>
+<script src="/js/plan.js?v=47"></script>
+<script src="/js/map.js?v=47"></script>
+<script src="/js/cost.js?v=47"></script>
+<script src="/js/prep.js?v=47"></script>
+<script src="/js/app.js?v=47"></script>
 
 </body>
 </html>

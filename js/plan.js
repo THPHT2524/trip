@@ -90,10 +90,6 @@ const Plan = (function () {
     const nid = nextId();
     el.innerHTML = (offline ? '<p class="note">연결이 없어 마지막으로 받아 둔 일정을 보여줍니다</p>' : '')
                  + show.map(d => dayHtml(d, days.indexOf(d) + 1, nid)).join('');
-    /* ★날마다 레일 끝에 정거장이 생겼으므로 아래쪽 '일정 추가' 카드는 **같은 일을 둘이**
-       하는 셈이 된다. 닫혀 있을 때만 감춘다 — 폼 자체는 하나뿐이고 여기 그대로 있다.
-       날이 아예 없는 여행(날짜도 줄도 없는 새 여행)에는 정거장이 없으므로 남겨 둔다. */
-    $('if-wrap').classList.toggle('dup', days.length > 0);
   }
 
   function dayHtml(d, n, nid) {
@@ -111,10 +107,7 @@ const Plan = (function () {
         <span class="sum">${cost}</span>
       </div>`;
 
-    /* ★빈 날에도 **누를 것**을 둔다. '비어 있는 날' 이라고만 적어 두면 막다른 길이다 —
-       비었다는 사실은 정거장 하나만 있는 모습으로 이미 읽힌다. */
-    const add = `<button class="addstop" type="button" data-add="${esc(d)}">이 날에 추가</button>`;
-    if (!list.length) return band + `<section class="day">${add}</section>`;
+    if (!list.length) return band + `<section class="day"><p class="blank">비어 있는 날</p></section>`;
 
     let html = '';
     list.forEach((r, i) => {
@@ -122,7 +115,7 @@ const Plan = (function () {
       const nx = list[i + 1];
       if (nx) html += segHtml(r, nx);
     });
-    return band + `<section class="day">${html}${add}</section>`;
+    return band + `<section class="day">${html}</section>`;
   }
 
   function stopHtml(r, nid) {
@@ -171,17 +164,33 @@ const Plan = (function () {
   }
 
   // ── 폼 ────────────────────────────────────────────────────────────────
-  /* ★'이 날에 추가' 가 넘겨 준 날짜. details 의 toggle 이 **비동기로** 뒤늦게 fillForm 을
-     한 번 더 부르기 때문에, fillForm 안에서 비우면 그 두 번째 호출이 날짜를 되돌린다.
-     그래서 수명을 **폼이 닫힐 때까지**로 둔다 — 남겨 두면 다음 추가까지 따라오므로. */
-  let addDay = null;
+  /* ── 입력 시트 열고 닫기 ────────────────────────────────────────────
+     ★<dialog>.showModal() 을 쓴다. 배경 가림·Esc·포커스 가둠을 브라우저가 해 준다 —
+       손으로 만들면 반드시 하나를 빠뜨린다(특히 포커스). */
+  function openSheet(r) {
+    fillForm(r);
+    const d = $('if-dlg');
+    if (!d.open) d.showModal();
+    /* 열 때마다 맨 위부터 — 앞서 스크롤해 둔 자리가 남아 있으면
+       새 줄을 넣으러 왔는데 메모 칸부터 보인다 */
+    d.querySelector('.sheetbody').scrollTop = 0;
+    if (!r) setTimeout(() => $('if-link').focus({ preventScroll: true }), 0);
+  }
+  const closeSheet = () => { if ($('if-dlg').open) $('if-dlg').close(); };
 
   function fillForm(r) {
     editing = r ? r.id : null;
     $('if-id').value = r ? r.id : '';
     $('if-link').value = (r && r.map_url) || '';
     $('if-name').value = (r && r.name) || '';
-    $('if-date').value = (r && r.on_date) || addDay || pick || (trip && trip.start_on) || U.todayISO();
+    /* ★날짜 기본값: 고르고 있는 날 → **오늘(여행 기간 안이면)** → 시작일.
+       '그때그때 추가' 는 대개 오늘 일이다. 전체 보기에서 시작일이 먼저 오면
+       3일차 저녁에 넣은 줄이 1일차로 들어간다. */
+    const today = U.todayISO();
+    const inTrip = trip && trip.start_on && trip.end_on
+                && today >= trip.start_on && today <= trip.end_on;
+    $('if-date').value = (r && r.on_date) || pick || (inTrip ? today : '')
+                      || (trip && trip.start_on) || today;
     $('if-time').value = (r && r.at_time) ? r.at_time.slice(0, 5) : '';
     $('if-kind').value = (r && r.kind) || '기타';
     $('if-cost').value = (r && r.cost != null) ? r.cost : '';
@@ -284,7 +293,7 @@ const Plan = (function () {
       }
       await reload();
       fillForm(null);
-      $('if-wrap').open = false;
+      closeSheet();
     } catch (e) {
       $('if-err').textContent = e.message;
     } finally {
@@ -305,7 +314,7 @@ const Plan = (function () {
       }
       await reload();
       fillForm(null);
-      $('if-wrap').open = false;
+      closeSheet();
     } catch (e) {
       $('if-err').textContent = e.message;
     } finally {
@@ -351,33 +360,18 @@ const Plan = (function () {
       await reload();
       return;
     }
-    const add = e.target.closest('[data-add]');
-    if (add) {
-      addDay = add.dataset.add;
-      editing = null;                                // 고치던 중이었어도 여기서는 새로 넣는다
-      $('if-wrap').open = true;
-      fillForm(null);                                // 이미 펴져 있으면 toggle 이 안 온다
-      $('if-wrap').scrollIntoView({ block: 'nearest' });
-      $('if-link').focus({ preventScroll: true });
-      return;
-    }
     const edit = e.target.closest('[data-edit]');
-    if (edit) {
-      const r = rows.find(x => x.id === edit.dataset.edit);
-      fillForm(r);
-      $('if-wrap').open = true;                      // 수정을 누르면 코드가 대신 펴 준다
-      $('if-wrap').scrollIntoView({ block: 'nearest' });
-    }
+    if (edit) openSheet(rows.find(x => x.id === edit.dataset.edit));
   });
 
   $('if-form').addEventListener('submit', save);
   $('if-del').addEventListener('click', del);
   $('if-link').addEventListener('change', readLink);
   $('if-link').addEventListener('paste', () => setTimeout(readLink, 0));
-  $('if-wrap').addEventListener('toggle', () => {
-    if ($('if-wrap').open) { if (!editing) fillForm(null); }
-    else addDay = null;                              // 닫으면 '이 날' 도 잊는다
-  });
+  $('fab').addEventListener('click', () => openSheet(null));
+  $('if-close').addEventListener('click', closeSheet);
+  /* 배경을 누르면 닫는다. dialog 자신이 클릭 대상이면 시트 **바깥**을 누른 것이다. */
+  $('if-dlg').addEventListener('click', e => { if (e.target === $('if-dlg')) closeSheet(); });
 
   $('if-kind').innerHTML = KINDS.map(k => `<option value="${k}">${k}</option>`).join('');
 
