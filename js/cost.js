@@ -63,9 +63,13 @@ const Cost = (function () {
     const total = paid.reduce((s, r) => s + (inBase(r) || 0), 0);
     const miss = paid.filter(r => inBase(r) == null);
 
+    /* ★'3건 · ¥2,400' 처럼 적으면 셋을 더해 2,400 인 줄 읽힌다. 실제로는 하나가 빠졌다.
+       센 것과 빠진 것을 갈라 적는다. */
     $('cost-total').innerHTML = paid.length
       ? `<span class="big">${esc(U.money(total, trip.base_cur))}</span>
-         <span class="sub">${paid.length}건 · 기준통화 ${esc(trip.base_cur)}</span>`
+         <span class="sub">${paid.length - miss.length}건 합산 · 기준통화 ${esc(trip.base_cur)}`
+         + (miss.length ? ` · <span class="warn">${miss.length}건 환율 없음</span>` : '')
+         + '</span>'
       : '<span class="sub">아직 비용을 적은 일정이 없습니다</span>';
 
     const byDay = [...group(r => r.on_date).entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))
@@ -122,10 +126,12 @@ const Cost = (function () {
   });
 
   return {
-    async open(t, list) {
+    /* keepMsg — 환율을 막 채우고 다시 그리는 길에서는 방금 띄운 안내를 지우지 않는다
+       (지우면 '무슨 환율이 적용됐는지' 를 볼 새가 없다). */
+    async open(t, list, keepMsg) {
       trip = t;
       rows = list || [];
-      $('cost-msg').textContent = '';
+      if (!keepMsg) $('cost-msg').textContent = '';
       try { crew = await Crew.of(t.id); } catch (e) { crew = []; }
       draw();
     },

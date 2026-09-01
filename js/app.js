@@ -257,7 +257,12 @@
      모듈끼리 서로를 부르지 않게 이벤트 한 겹을 둔다. */
   document.addEventListener('items:changed', () => {
     const t = trips.find(x => x.id === tripId);
-    if (t) Plan.open(t).then(() => { if (tab === 'cost') Cost.open(t, Plan.rows()); });
+    if (!t) return;
+    // ★open() 이 아니라 refresh() 다 — open 은 같은 여행이면 다시 받지 않는다
+    Plan.refresh().then(() => {
+      if (tab === 'cost') Cost.open(t, Plan.rows(), true);
+      if (tab === 'map') Maps.open(t, Plan.rows());
+    });
   });
   document.addEventListener('trip:changed', async () => { trips = await DB.trips.list(); render(); });
   document.addEventListener('trip:deleted', async () => {

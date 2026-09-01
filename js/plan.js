@@ -357,5 +357,9 @@ const Plan = (function () {
       catch (e) { $('days').innerHTML = `<p class="empty"><strong>불러오지 못했습니다</strong>${esc(e.message)}</p>`; }
     },
     rows: () => rows,
+    /* ★다른 모듈(cost.js 가 환율을 채우는 것처럼)이 DB 를 고쳤을 때 쓴다.
+       open() 은 같은 여행이면 다시 안 받으므로, 그 길로 부르면 낡은 rows 를 그대로 다시 그린다.
+       한 번 그렇게 당했다(2026-09-01 — 환율은 저장됐는데 화면은 '환율 없음' 그대로). */
+    refresh: () => reload(),
   };
 })();
