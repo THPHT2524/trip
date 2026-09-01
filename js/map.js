@@ -53,7 +53,9 @@ const Maps = (function () {
     if (tiles) map.removeLayer(tiles);
     const b = BASE[base];
     tiles = L.tileLayer(b.url, { maxZoom: b.max, attribution: b.attr }).addTo(map);
-    if (layer) layer.bringToFront();
+    /* ★bringToFront() 를 부르지 않는다. layer 는 LayerGroup 이라 그 메서드가 없다 —
+       불렀다가 ensureMap 이 통째로 죽어 타일이 한 장도 안 깔렸다(2026-09-01).
+       애초에 필요 없다: Leaflet 은 마커·오버레이 판을 타일 판 위에 둔다. */
     document.querySelectorAll('#basepick button').forEach(x =>
       x.setAttribute('aria-selected', String(x.dataset.base === base)));
   }
