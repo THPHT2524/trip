@@ -253,6 +253,7 @@ v1 은 "나중에 도착한 쓰기가 이긴다", 지운 것은 되살리지 않
 | `api/gmaps.js` | 단축 링크 펼치기 — 호스트 허용목록 + 로그인 확인 |
 | `api/fx.js` | 날짜별 환율 (stock 의 `api/naver.js` 에서 이식) |
 | `supabase/*.sql` | 표·RLS (멱등) · `SETUP.md` 설치 런북 |
+| `tools/test-pure.js` | `js/geo.js`·`js/gmaps.js` 회귀 — `node tools/test-pure.js` |
 | `tools/bump.py` | 캐시버스팅 (card-dashboard 에서 이식) |
 | `vercel.json` | 보안 헤더 · 캐시 정책 · `/t/(.*)` 리라이트 |
 
