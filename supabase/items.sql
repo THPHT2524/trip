@@ -27,7 +27,7 @@ create table if not exists trip.items (
   kind       text        not null default '기타',
   name       text        not null,
   memo       text,
-  done       boolean     not null default false,   -- 다녀왔나. 날짜만으로는 못 가른다
+  done       boolean     not null default false,   -- ★뜻은 '못 갔다'. 계획엔 있었지만 빠진 곳
 
   -- ── 어디 (구글맵 링크에서 뽑는다) ────────────────────────
   map_url    text,                        -- 붙여넣은 원문 그대로 남긴다

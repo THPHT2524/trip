@@ -60,6 +60,12 @@
   --sans: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
           'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
 
+  /* ★sticky 세 겹의 높이. **손으로 적은 값이 실제와 어긋나 있었다** —
+     헤더가 64.2px 인데 날짜 탭이 47px 에 붙어 있어서 D1·D2·D3 이 잘렸다
+     (2026-09-01 측정). 관계를 한 곳에 적어 두 번 어긋나지 않게 한다. */
+  --h-top:  64px;       /* 여행 이름 머리말 */
+  --h-tabs: 44px;       /* 날짜 탭 */
+
   --rail-x: 15px;       /* 레일의 가로 위치 */
   --gutter: 46px;       /* 레일이 차지하는 왼쪽 폭 */
   --pad:    16px;
@@ -168,10 +174,11 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* ── Day 머리띠 ───────────────────────────────────────────────────────── */
 /* 레일이 이 띠를 **뚫고 지나간다**. 여행 하나가 경로 하나라서 끊지 않는다. */
-/* ★sticky 가 셋 겹친다: .top(47) → .daytabs(41) → .dayband.
-   같은 top 을 주면 스크롤할 때 서로를 덮는다 — 쌓인 높이만큼 내려 앉힌다. */
+/* ★sticky 가 셋 겹친다: .top → .daytabs → .dayband.
+   같은 top 을 주면 스크롤할 때 서로를 덮는다 — 쌓인 높이만큼 내려 앉힌다.
+   값은 --h-top·--h-tabs 에서 온다(직접 적지 않는다 — 그래서 어긋났었다). */
 .dayband {
-  position: sticky; top: 88px; z-index: 20;
+  position: sticky; top: calc(var(--h-top) + var(--h-tabs)); z-index: 20;
   background: var(--paper);
   padding: 14px var(--pad) 8px;
   display: flex; align-items: baseline; gap: 10px;
@@ -213,7 +220,9 @@ a { color: var(--route); text-underline-offset: 2px; }
   border: 3px solid var(--k, var(--k-etc));
   z-index: 1;
 }
-.stop.is-done > .pin { background: var(--k, var(--k-etc)); }
+/* ★못 간 곳. **채우지 않는다** — 채운 점은 '다녀왔다' 로 읽힌다.
+   구분 색을 걷고 레일 색으로 되돌려 노선에서 빠진 정거장으로 보이게 한다. */
+.stop.is-done > .pin { background: var(--paper); border-color: var(--rail); }
 /* 다음에 갈 곳 — 현지에서 이 앱을 여는 이유가 이 한 줄이다.
    따로 라벨을 붙이지 않는다. 링과 테두리 둘이면 눈이 먼저 여기 앉는다. */
 .stop.is-next > .pin {
@@ -230,8 +239,8 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: block; width: 100%; text-align: left;
   appearance: none; border: 1px solid var(--line); background: var(--card);
   border-radius: var(--r);
-  padding: 11px 13px;
-  margin: 6px 0;
+  padding: 9px 12px;
+  margin: 4px 0;
   cursor: pointer;
   color: inherit; font: inherit;
 }
@@ -249,7 +258,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 .item.is-done .name { color: var(--ink-3); text-decoration: line-through; }
 .item .row2 {
   display: flex; align-items: center; gap: 8px;
-  margin-top: 3px; padding-left: 46px;
+  margin-top: 3px; padding-left: 46px; padding-right: 84px;   /* 오른쪽은 .acts 자리 */
   font-size: 12px; color: var(--ink-3);
 }
 .kind {
@@ -267,7 +276,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ── 구간 — 이 화면의 서명 ────────────────────────────────────────────── */
 /* 정거장 사이의 **빈 곳이 정보를 갖는다.** 거리는 여기 적히고, 누르면 길찾기로 나간다.
    레일이 이 구간에서만 점선이 된다 — 지나가는 중이라는 뜻이다. */
-.seg { position: relative; padding-left: var(--gutter); height: 34px; }
+.seg { position: relative; padding-left: var(--gutter); height: 26px; }
 .seg::before {
   content: ''; position: absolute;
   left: calc(var(--rail-x) - 1px); top: 0; bottom: 0; width: 4px;
@@ -298,12 +307,17 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* 좌표가 없어 거리를 못 내는 구간 — 레일은 잇되 아무 말도 하지 않는다.
    짧게 둔다: 없는 정보에 자리를 크게 내주면 빈 곳이 실수처럼 보인다. */
-.seg.seg-blank { height: 18px; }
+.seg.seg-blank { height: 14px; }
 
-/* 줄마다 붙는 작은 동작. 카드를 누르면 수정이고, 이건 그보다 가벼운 것들이다. */
+/* 줄마다 붙는 작은 동작. 카드를 누르면 수정이고, 이건 그보다 가벼운 것들이다.
+   ★★전에는 카드 **아래에 제 줄**을 갖고 있었다. 한 줄당 26px 인데 65개짜리 여행에서
+     그것만 1,700px 다 — 게다가 오른쪽에 떠 있어서 위 카드에도 아래 구간에도
+     속하지 않아 보였다. 카드의 오른쪽 아래에 얹어 **줄을 없앤다.**
+   ★.item 은 button 이라 그 안에 링크·단추를 넣을 수 없다(그래서 밖에 있었다).
+     겹쳐 놓으면 마크업은 형제로 두면서 눈에는 카드 안으로 들어온다. */
 .acts {
-  display: flex; gap: 6px; justify-content: flex-end;
-  padding: 0 2px 4px;
+  position: absolute; right: 6px; bottom: 8px;
+  display: flex; gap: 4px;
 }
 .act {
   appearance: none; cursor: pointer;
@@ -354,7 +368,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .basepick .seg2 { display: flex; gap: 6px; }
 .basepick .tog[aria-pressed="true"] {
-  background: var(--depth-bg); border-color: var(--depth); color: var(--depth);
+  background: var(--route-w); border-color: var(--route); color: var(--route);
 }
 .basepick button {
   appearance: none; cursor: pointer;
@@ -374,7 +388,8 @@ a { color: var(--route); text-underline-offset: 2px; }
   color: var(--ink); font-family: var(--mono); font-size: 10px; font-weight: 600;
   box-shadow: 0 1px 3px rgba(0,0,0,.35);
 }
-.mpin.is-done { background: var(--k, var(--k-etc)); color: var(--card); }
+/* 못 간 곳은 지도에서도 색을 뺀다 — 동선에는 남기되 앞에 서지 않는다 */
+.mpin.is-done { background: var(--card); border-color: var(--rail); color: var(--ink-3); }
 
 /* MapLibre 기본 크롬을 이 앱의 어법으로 낮춘다 */
 .maplibregl-map { font-family: var(--sans); background: var(--sunk); }
@@ -434,7 +449,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   z-index: 45;
   display: flex; align-items: center; justify-content: center; gap: 12px;
   padding: 8px var(--pad);
-  background: var(--sand); border-top: 1px solid var(--sand-line);
+  background: var(--route-w); border-top: 1px solid var(--route);
   font-size: 12px; font-weight: 600; color: var(--ink);
 }
 .obox .act { color: var(--route); }
@@ -481,7 +496,9 @@ a { color: var(--route); text-underline-offset: 2px; }
 .clist .cn { grid-column: 2 / -1; font-size: 11px; color: var(--ink-3); }
 /* 막대는 크기를 눈으로 견주게 해 준다 — 숫자만으로는 '많다' 가 안 읽힌다 */
 .cbar { display: block; height: 6px; background: var(--sunk); border-radius: 3px; overflow: hidden; }
-.cbar i { display: block; height: 100%; background: var(--k, var(--depth)); }
+/* ★기본값이 **정의되지 않은 토큰**이라 '누가 냈나' 막대가 통째로 안 보였다(2026-09-01).
+   사람은 장소구분이 아니라 범례색이 없다 — 구조색(코발트)을 쓴다. */
+.cbar i { display: block; height: 100%; background: var(--k, var(--route)); }
 .warnblock .chd { color: var(--warn); }
 
 /* ── 하루에 얼마씩 ──────────────────────────────────────────────────────
@@ -559,7 +576,8 @@ input.code {
   color: var(--card); font-size: 13px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
 }
-.prow.is-done .pchk { background: var(--depth); border-color: var(--depth); }
+/* ★여기도 정의되지 않은 토큰이었다 — **챙긴 표시가 안 보였다.** */
+.prow.is-done .pchk { background: var(--route); border-color: var(--route); }
 .ptext { flex: 1; min-width: 0; font-size: 14px; }
 .prow.is-done .ptext { color: var(--ink-3); text-decoration: line-through; }
 
@@ -681,6 +699,9 @@ details[open] summary { border-bottom: 1px solid var(--line); }
 details[open] summary::after { content: '−'; }
 
 .form { padding: 14px 14px 20px; display: flex; flex-direction: column; gap: 12px; }
+/* ★.cblock 안에 들어가는 폼은 **카드 여백을 다시 갖지 않는다.**
+   준비물 입력칸이 위 목록보다 15px 오른쪽으로 밀려 있었다 — 여백이 두 번 걸려서다. */
+.form.inline { padding: 10px 0 0; gap: 8px; }
 /* ★★한 줄에 세 칸을 **강제로** 넣지 않는다. iOS 사파리의 date·time 입력은
    최소 너비가 고정이라(로케일 형식만큼) 375px 화면에서 3등분하면 100px 남짓이 되어
    **칸을 넘쳐 겹쳐 그려진다**(2026-09-01 폰에서 확인). 줄바꿈을 허용하고 최소 너비를 준다 —
@@ -708,7 +729,7 @@ details[open] summary::after { content: '−'; }
 .form .row.tight .field.unit { flex: 0 0 88px; }
 .form .row.tight select { padding-right: 24px; background-position: right 11px center, right 6px center; }
 .hint { margin: -4px 0 0; font-size: 12px; color: var(--ink-3); }
-.hint.ok { color: var(--depth); }
+.hint.ok { color: var(--route); }
 .form .row.btns { gap: 10px; align-items: center; }
 .form .row.btns .btn { flex: 0 0 auto; }
 .btn.danger { color: var(--warn); border-color: var(--line); }

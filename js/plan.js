@@ -122,7 +122,10 @@ const Plan = (function () {
     const k = KVAR[r.kind] || 'k-etc';
     const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : ''].filter(Boolean).join(' ');
     const time = r.at_time ? r.at_time.slice(0, 5) : '';
-    const cost = r.cost == null ? '<span class="money none">비용 미정</span>'
+    /* ★비용이 없으면 **아무 말도 하지 않는다.** 전에는 '비용 미정' 을 적었는데,
+       65줄짜리 여행에서 57줄이 그랬다 — 빈 칸의 이름을 57번 읽는 셈이다.
+       관광지에 값을 안 적는 것은 실수가 아니라 보통이다. */
+    const cost = r.cost == null ? ''
       : `<span class="money">${esc(U.money(r.cost, r.cost_cur))}${
           r.fx && r.cost_cur !== trip.base_cur
             ? ' · ' + esc(U.money(+r.cost * +r.fx, trip.base_cur)) : ''}</span>`;
@@ -144,7 +147,7 @@ const Plan = (function () {
       </button>
       <span class="acts">
         ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
-        <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '다녀옴'}</button>
+        <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '못 감'}</button>
       </span>
     </div>`;
   }

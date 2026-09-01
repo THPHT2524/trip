@@ -220,7 +220,9 @@ const DB = (function () {
       if (error) throw new Error(say('일정을 수정하지 못했습니다', error));
     },
 
-    /* 다녀왔음만 토글한다 — 한 칸이라 폼을 열 필요가 없다. */
+    /* '못 감' 만 토글한다 — 한 칸이라 폼을 열 필요가 없다.
+       ★컬럼 이름은 done 이지만 뜻은 **못 갔다** 다. 계획한 곳 중 실제로는 빠진 곳을 표시한다
+         (2026-09-01에 뜻을 그렇게 정했다 — 갔다 온 것을 지우는 쓰임이 아니었다). */
     setDone: async (id, done) => {
       if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
       const { error } = await sb.from('items').update({ done: !!done }).eq('id', id);
