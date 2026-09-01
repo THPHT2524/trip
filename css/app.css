@@ -760,7 +760,7 @@ details[open] > summary::after { content: '−'; }
 .form .row.tight .field { flex: 1 1 0; }
 .form .row.tight .field.unit { flex: 0 0 88px; }
 .form .row.tight select { padding-right: 24px; background-position: right 11px center, right 6px center; }
-.hint { margin: -4px 0 0; font-size: 12px; color: var(--ink-3); }
+.hint { margin: -4px 0 0; font-size: 12px; color: var(--ink-3); word-break: keep-all; }
 .hint.ok { color: var(--route); }
 .form .row.btns { gap: 10px; align-items: center; }
 .form .row.btns .btn { flex: 0 0 auto; }
