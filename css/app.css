@@ -557,13 +557,6 @@ a { color: var(--route); text-underline-offset: 2px; }
 .tagrow { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .act.danger { color: var(--warn); }
 
-/* 되돌릴 수 없는 동작 — 선을 긋고 주 동작에서 떼어 놓는다 */
-.danger-zone {
-  margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
-}
-.danger-zone .hint { margin: 0; }
-
 /* 초대 코드 — 불러 줄 수 있게 크고 성기게 */
 input.code {
   font-size: 17px; letter-spacing: .14em; text-align: center;
@@ -763,6 +756,12 @@ details[open] > summary::after { content: '−'; }
 .hint { margin: -4px 0 0; font-size: 12px; color: var(--ink-3); word-break: keep-all; }
 .hint.ok { color: var(--route); }
 .form .row.btns { gap: 10px; align-items: center; }
+/* 지우기 ↔ 저장을 양 끝으로. 가운데를 비워 두는 것이 곧 안전거리다 */
+.form .row.btns.split { flex-wrap: nowrap; justify-content: space-between; }
+.form .row.btns.split > .btn { flex: 0 0 auto; }
+.form .row.btns.split > .btn[hidden] { display: none; }
+/* 지우기만 있고 저장이 없을 일은 없지만, 하나뿐이면 그 하나가 오른쪽에 선다 */
+.form .row.btns.split > .btn:only-child { margin-left: auto; }
 .form .row.btns .btn { flex: 0 0 auto; }
 .btn.danger { color: var(--warn); border-color: var(--line); }
 textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
@@ -875,12 +874,25 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
   #if-dlg { margin: auto; max-height: 84dvh; }
   #if-dlg .sheet { border-radius: var(--r); }
 }
-#if-dlg .sheet {
+#if-dlg .sheet { border-radius: 16px 16px 0 0; }   /* 아래에 붙으니 위 두 귀만 둥글다 */
+
+/* ── 가운데 팝업 — 칸이 적은 것들(새 여행·참여) ────────────────────────
+   일정 입력은 칸이 열둘이라 아래에서 올라오는 시트를 쓰지만, 여기는 서넛이다.
+   화면을 다 쓰면 오히려 크게 느껴진다. */
+.dlg {
+  padding: 0; border: 0; background: none;
+  width: calc(100% - 32px); max-width: 400px;
+  margin: auto; max-height: 84dvh;
+}
+.dlg::backdrop { background: rgba(10, 22, 19, .45); }
+
+/* 시트·팝업이 함께 쓰는 상자 */
+.sheet {
   display: flex; flex-direction: column;
   max-height: inherit;
   background: var(--card); color: var(--ink);
   border: 1px solid var(--line);
-  border-radius: 16px 16px 0 0;
+  border-radius: 16px;
 }
 .sheethd {
   display: flex; align-items: center; gap: 10px;
@@ -897,6 +909,27 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
 /* 본문만 스크롤한다 — 머리말과 저장 단추는 늘 보인다.
    overscroll-behavior: contain — 시트 안을 끝까지 굴려도 그 스크롤이 뒤 페이지로 안 넘어간다 */
 .sheetbody { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+/* ── 홈의 떠다니는 두 동작 ─────────────────────────────────────────────
+   ★자리는 **왼쪽**이다. 여행 안으로 들어가면 오른쪽 아래에 일정 추가(＋)가 뜨는데,
+     같은 자리에 다른 뜻의 단추가 번갈아 나오면 손이 먼저 눌러 놓고 확인하게 된다.
+   ★떠다니는 주 동작은 코발트 — 일정 추가(＋)와 같은 규칙이다. 곁 동작은 카드 바탕. */
+.homefab {
+  position: fixed; left: var(--pad);
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 42;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+}
+.hbtn {
+  appearance: none; cursor: pointer; font: inherit;
+  font-size: 13px; font-weight: 600; letter-spacing: -.01em;
+  padding: 11px 16px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+  box-shadow: 0 3px 12px rgba(0,0,0,.16);
+}
+.hbtn.primary { background: var(--route); border-color: var(--route); color: #fff; }
+.hbtn:active { transform: translateY(1px); }
+.hbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 /* ★시트가 떠 있는 동안 뒤 화면을 **잠근다.** showModal() 은 배경을 못 누르게만 하지
    스크롤까지 막아 주지는 않는다(브라우저마다 다르다).

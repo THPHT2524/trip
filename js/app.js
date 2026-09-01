@@ -206,7 +206,7 @@
         base_cur: $('new-cur').value,
       });
       $('new').reset();
-      $('new-wrap').open = false;
+      $('new-dlg').close();
       /* ★만든 사람은 트리거가 첫 멤버로 넣는다. 그게 없으면 방금 만든 여행이
          정책에 걸려 자기 눈에도 안 보인다 — 목록을 다시 받아 그 사실을 확인한다. */
       trips = await DB.trips.list();
@@ -229,6 +229,7 @@
     try {
       const id = await DB.join($('join-code').value);
       $('join').reset();
+      $('join-dlg').close();
       trips = await DB.trips.list();
       go(id, 'plan', true);
     } catch (e) {
@@ -270,6 +271,21 @@
   // ── 붙이기 ────────────────────────────────────────────────────────────
   $('signin').addEventListener('click', () => DB.signIn());
   $('signout').addEventListener('click', async () => { await DB.signOut(); trips = []; showGate(); });
+  /* 떠다니는 두 단추 ↔ 가운데 팝업. 폼은 팝업 안에 하나씩만 있고 여기서 문을 연다.
+     닫기는 ✕·백드롭·Esc 셋 — 뒤 화면 잠금은 CSS(html:has(dialog[open]))가 맡는다. */
+  const openDlg = (id, focusId) => {
+    const d = $(id);
+    d.showModal();
+    d.querySelector('.sheetbody').scrollTop = 0;
+    if (focusId) setTimeout(() => $(focusId).focus({ preventScroll: true }), 0);
+  };
+  $('new-open').addEventListener('click', () => { $('new-err').textContent = ''; openDlg('new-dlg', 'new-name'); });
+  $('join-open').addEventListener('click', () => { $('join-err').textContent = ''; openDlg('join-dlg', 'join-code'); });
+  document.querySelectorAll('dialog.dlg').forEach(d => {
+    d.querySelector('[data-close]').addEventListener('click', () => d.close());
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });   // 배경 누름
+  });
+
   $('new').addEventListener('submit', createTrip);
   $('join').addEventListener('submit', joinTrip);
   $('back').addEventListener('click', () => go(null, 'plan', true));

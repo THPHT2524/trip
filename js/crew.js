@@ -55,6 +55,7 @@ const Crew = (function () {
     $('set-to').value = trip.end_on || '';
     $('set-cur').value = trip.base_cur || 'KRW';
     ['set-name', 'set-from', 'set-to', 'set-cur', 'set-save'].forEach(id => { $(id).disabled = !owner; });
+    $('set-del').hidden = !owner;
     $('set-danger').hidden = !owner;
     $('set-note').textContent = owner ? '' : '여행을 만든 사람만 고칠 수 있습니다.';
   }

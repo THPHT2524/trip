@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=50">
+<link rel="stylesheet" href="/css/app.css?v=51">
 </head>
 <body>
 
@@ -35,52 +35,12 @@
 
     <div class="trips" id="trips"></div>
 
-    <div class="forms">
-      <details id="new-wrap">
-        <summary>새 여행 만들기</summary>
-        <form id="new" class="form">
-          <div class="row">
-            <div class="field">
-              <label for="new-name">여행 이름</label>
-              <input id="new-name" name="name" type="text" required maxlength="60" placeholder="오사카">
-            </div>
-            <div class="field kind">
-              <label for="new-cur">기준통화</label>
-              <select id="new-cur" name="cur">
-                <option value="KRW">KRW</option>
-                <option value="JPY">JPY</option>
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="TWD">TWD</option>
-                <option value="THB">THB</option>
-                <option value="VND">VND</option>
-              </select>
-            </div>
-          </div>
-          <div class="row">
-            <div class="field"><label for="new-from">시작</label>
-              <input id="new-from" name="from" type="date" class="mono"></div>
-            <div class="field"><label for="new-to">끝</label>
-              <input id="new-to" name="to" type="date" class="mono"></div>
-          </div>
-          <p class="hint">날짜는 나중에 정해도 됩니다. 기준통화는 비용 합계를 환산할 통화입니다.</p>
-          <button class="btn" id="new-save" type="submit">만들기</button>
-          <p class="err" id="new-err"></p>
-        </form>
-      </details>
-
-      <details>
-        <summary>초대 코드로 참여하기</summary>
-        <form id="join" class="form">
-          <div class="field">
-            <label for="join-code">초대 코드</label>
-            <input id="join-code" name="code" type="text" class="mono" required
-                   autocomplete="off" spellcheck="false" placeholder="a1b2c3d4e5f6">
-          </div>
-          <button class="btn" id="join-btn" type="submit">참여하기</button>
-          <p class="err" id="join-err"></p>
-        </form>
-      </details>
+    <!-- 떠다니는 두 동작. 판이 hidden 이면 같이 사라진다.
+         ★자리는 **왼쪽** — 여행 안으로 들어가면 오른쪽 아래에 일정 추가(＋)가 뜬다.
+           같은 자리에 다른 뜻의 단추가 번갈아 나오면 손이 먼저 눌러 놓고 확인하게 된다. -->
+    <div class="homefab">
+      <button class="hbtn" id="join-open" type="button">초대 코드로 참여</button>
+      <button class="hbtn primary" id="new-open" type="button"><span aria-hidden="true">＋</span> 새 여행</button>
     </div>
   </section>
 
@@ -149,7 +109,7 @@
 
       <section class="cblock">
         <h3 class="chd">초대</h3>
-        <div class="form">
+        <div class="form inline">
           <div class="row">
             <input id="crew-link" type="text" class="mono code" readonly aria-label="초대 코드">
             <button class="btn" id="crew-copy" type="button">링크 복사</button>
@@ -161,7 +121,7 @@
 
       <section class="cblock">
         <h3 class="chd">여행 설정</h3>
-        <form id="crew-form" class="form">
+        <form id="crew-form" class="form inline">
           <div class="row">
             <div class="field"><label for="set-name">여행 이름</label>
               <input id="set-name" type="text" maxlength="60" required></div>
@@ -178,15 +138,14 @@
               <input id="set-to" type="date" class="mono"></div>
           </div>
           <p class="hint" id="set-note"></p>
-          <div class="row btns">
+          <!-- 지우기는 왼쪽, 저장은 오른쪽 — 한 줄에서 **양 끝**으로 갈라 놓는다.
+               붙여 두면 손가락이 옆칸을 누른다. 지우기는 확인 창을 한 번 더 받는다. -->
+          <div class="row btns split">
+            <button class="btn ghost danger" id="set-del" type="button" hidden>여행 지우기</button>
             <button class="btn" id="set-save" type="submit">저장</button>
           </div>
+          <p class="hint" id="set-danger" hidden>여행을 지우면 일정·비용·준비물이 전부 함께 지워지고 되돌릴 수 없습니다.</p>
           <p class="err" id="set-err"></p>
-          <!-- 되돌릴 수 없는 동작은 주 동작 옆에 두지 않는다 — 선을 하나 긋고 아래로 내린다 -->
-          <div class="danger-zone" id="set-danger" hidden>
-            <button class="btn ghost danger" id="set-del" type="button">여행 지우기</button>
-            <p class="hint">일정·비용·준비물이 전부 함께 지워지고 되돌릴 수 없습니다.</p>
-          </div>
         </form>
       </section>
 
@@ -197,6 +156,70 @@
 </div>
 
 <div class="obox" id="obox" hidden></div>
+
+
+<!-- 새 여행 · 참여 — 칸이 적어서 **가운데 팝업**이다.
+     일정 입력은 칸이 열둘이라 아래에서 올라오는 시트를 쓰지만, 여기는 서넛이라
+     화면을 다 쓰면 오히려 크게 느껴진다. -->
+<dialog class="dlg" id="new-dlg" aria-labelledby="new-dlg-t">
+  <div class="sheet">
+    <header class="sheethd">
+      <h2 id="new-dlg-t">새 여행 만들기</h2>
+      <button class="sheetx" data-close type="button" aria-label="닫기">✕</button>
+    </header>
+    <div class="sheetbody">
+      <form id="new" class="form">
+        <div class="row">
+          <div class="field">
+            <label for="new-name">여행 이름</label>
+            <input id="new-name" name="name" type="text" required maxlength="60" placeholder="오사카">
+          </div>
+          <div class="field kind">
+            <label for="new-cur">기준통화</label>
+            <select id="new-cur" name="cur">
+              <option value="KRW">KRW</option>
+              <option value="JPY">JPY</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="TWD">TWD</option>
+              <option value="THB">THB</option>
+              <option value="VND">VND</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="new-from">시작</label>
+            <input id="new-from" name="from" type="date" class="mono"></div>
+          <div class="field"><label for="new-to">끝</label>
+            <input id="new-to" name="to" type="date" class="mono"></div>
+        </div>
+        <p class="hint">날짜는 나중에 정해도 됩니다. 기준통화는 비용 합계를 환산할 통화입니다.</p>
+        <button class="btn" id="new-save" type="submit">만들기</button>
+        <p class="err" id="new-err"></p>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="dlg" id="join-dlg" aria-labelledby="join-dlg-t">
+  <div class="sheet">
+    <header class="sheethd">
+      <h2 id="join-dlg-t">초대 코드로 참여</h2>
+      <button class="sheetx" data-close type="button" aria-label="닫기">✕</button>
+    </header>
+    <div class="sheetbody">
+      <form id="join" class="form">
+        <div class="field">
+          <label for="join-code">초대 코드</label>
+          <input id="join-code" name="code" type="text" class="mono" required
+                 autocomplete="off" spellcheck="false" placeholder="a1b2c3d4e5f6">
+        </div>
+        <button class="btn" id="join-btn" type="submit">참여하기</button>
+        <p class="err" id="join-err"></p>
+      </form>
+    </div>
+  </div>
+</dialog>
 
 <!-- 일정 입력 — 화면을 덮는 시트. 판 밖에 두는 이유: 판이 hidden 이면
      그 안의 dialog 는 showModal() 로도 안 열린다. -->
@@ -292,20 +315,20 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=50"></script>
-<script src="/js/map-config.js?v=50"></script>
-<script src="/js/util.js?v=50"></script>
-<script src="/js/geo.js?v=50"></script>
-<script src="/js/gmaps.js?v=50"></script>
-<script src="/js/db.js?v=50"></script>
-<script src="/js/outbox.js?v=50"></script>
+<script src="/js/supabase-config.js?v=51"></script>
+<script src="/js/map-config.js?v=51"></script>
+<script src="/js/util.js?v=51"></script>
+<script src="/js/geo.js?v=51"></script>
+<script src="/js/gmaps.js?v=51"></script>
+<script src="/js/db.js?v=51"></script>
+<script src="/js/outbox.js?v=51"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=50"></script>
-<script src="/js/plan.js?v=50"></script>
-<script src="/js/map.js?v=50"></script>
-<script src="/js/cost.js?v=50"></script>
-<script src="/js/prep.js?v=50"></script>
-<script src="/js/app.js?v=50"></script>
+<script src="/js/crew.js?v=51"></script>
+<script src="/js/plan.js?v=51"></script>
+<script src="/js/map.js?v=51"></script>
+<script src="/js/cost.js?v=51"></script>
+<script src="/js/prep.js?v=51"></script>
+<script src="/js/app.js?v=51"></script>
 
 </body>
 </html>
