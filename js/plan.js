@@ -41,13 +41,13 @@ const Plan = (function () {
 
   const ofDay = d => rows.filter(r => r.on_date === d);
 
-  /* 그날의 비용 합계. 기준통화로 환산된 것만 더한다 —
+  /* 그날의 비용 합계. **원화로** 환산된 것만 더한다 —
      환율이 없는 줄을 섞으면 엔과 원을 더하는 셈이 된다. 대신 몇 줄이 빠졌는지 적는다. */
   function dayCost(list) {
     let sum = 0, miss = 0;
     list.forEach(r => {
       if (r.cost == null) return;
-      if (r.cost_cur === (trip && trip.base_cur)) { sum += +r.cost; return; }
+      if (r.cost_cur === U.SETTLE) { sum += +r.cost; return; }
       if (r.fx) { sum += +r.cost * +r.fx; return; }
       miss += 1;
     });
@@ -98,7 +98,7 @@ const Plan = (function () {
     const cost = list.some(r => r.cost != null)
       /* ★숫자만 붉게 둔다. 이 띠는 sticky 라 하루치 40줄을 넘기는 내내 화면에 남는데,
          문장 전체가 붉으면 스크롤하는 동안 계속 소리친다. 셀 것은 건수다. */
-      ? U.money(sum, trip.base_cur) + (miss ? ` <span class="warn">+${miss}건</span> 환율 없음` : '')
+      ? U.money(sum, U.SETTLE) + (miss ? ` <span class="warn">+${miss}건</span> 환율 없음` : '')
       : '';
 
     const band = `<div class="dayband">
@@ -127,8 +127,8 @@ const Plan = (function () {
        관광지에 값을 안 적는 것은 실수가 아니라 보통이다. */
     const cost = r.cost == null ? ''
       : `<span class="money">${esc(U.money(r.cost, r.cost_cur))}${
-          r.fx && r.cost_cur !== trip.base_cur
-            ? ' · ' + esc(U.money(+r.cost * +r.fx, trip.base_cur)) : ''}</span>`;
+          r.fx && r.cost_cur !== U.SETTLE
+            ? ' · ' + esc(U.money(+r.cost * +r.fx, U.SETTLE)) : ''}</span>`;
     const link = GM.placeUrl(r);
     return `<div class="${cls}" style="--k: var(--${k})">
       <span class="pin"></span>

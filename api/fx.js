@@ -5,9 +5,17 @@
    '지금 환율' 이 아니라 **쓴 날의 환율**인데, 단건 시세 경로는 지금 값만 준다.
    일별 이력은 m.stock.naver.com 의 front-api 에만 있다.
 
-   호출 규약:  GET /api/fx?date=2026-08-29&from=JPY&to=KRW
-   응답:       { rate: 9.13, on: "2026-08-29", from: "JPY", to: "KRW", exact: true }
-               rate 는 **from 1 단위가 to 로 얼마인가** 다. cost * rate = 기준통화 금액.
+   호출 규약:  GET /api/fx?date=2026-08-29&from=JPY&to=KRW&kind=tts
+   응답:       { rate: 8.67, on: "2026-08-29", from: "JPY", to: "KRW", exact: true, kind: "tts" }
+               rate 는 **from 1 단위가 to 로 얼마인가** 다. cost * rate = 원화 금액.
+
+   ★★어느 환율인가가 중요하다. 네이버 일별 응답은 넷을 함께 준다:
+        closePrice   매매기준율        — 은행이 기준으로 삼는 값. 실제로 내는 돈이 아니다
+        sendValue    전신환매도율(TTS) — **카드 결제**가 이 언저리로 잡힌다  → kind=tts (기본)
+        cashBuyValue 현찰 살 때        — **환전**해서 현금을 쥘 때 내는 값    → kind=cash
+        receiveValue 전신환매입율
+      매매기준율로 계산하면 실제보다 싸게 나온다(엔 기준 약 1% — 858.18 vs 866.59).
+      쓴 돈을 재는 앱이므로 **기본을 tts 로** 둔다. 매매기준율이 필요하면 kind=base.
 
    ★★엔은 **100엔 기준**으로 고시된다(FX_JPYKRW 가 '100엔당 원'). 그대로 쓰면 환산액이
      100배가 된다. 여기서 나누어 1엔당으로 맞춘다 — stock 의 README 도 같은 함정을 적어 뒀다.
@@ -28,6 +36,12 @@ const CODE = {
 };
 /* 100 단위로 고시되는 통화. 여기 빠뜨리면 환산액이 조용히 100배가 된다. */
 const PER100 = { JPY: true, VND: true };
+
+/* 어느 환율을 쓸 것인가 → 네이버 응답의 어느 칸인가.
+   tts  전신환매도율  : 카드로 긁었을 때 청구되는 값에 가장 가깝다 (기본)
+   cash 현찰 살 때    : 환전해서 현금을 쥘 때 실제로 낸 값
+   base 매매기준율    : 은행 기준값. 실제로 내는 돈은 아니다 */
+const FIELD = { tts: 'sendValue', cash: 'cashBuyValue', base: 'closePrice' };
 
 const SB_URL = process.env.SUPABASE_URL || 'https://slakyumsnufoywxrdhhx.supabase.co';
 const SB_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_5xTTEUeViqzY1JgFLv0z6A_NAVJZcUz';
@@ -71,7 +85,7 @@ function overLimit(token) {
 /* 그 통화의 '원화 대비' 종가를 날짜에 맞춰 찾는다.
    ★주말·공휴일에는 고시가 없다. 그래서 **그 날짜 이하에서 가장 가까운 거래일**을 쓰고,
      정확히 그 날이 아니면 exact:false 로 알려 준다(화면이 그렇게 적는다). */
-async function krwPer(cur, date) {
+async function krwPer(cur, date, kind) {
   if (cur === 'KRW') return { v: 1, on: date, exact: true };
   const code = CODE[cur];
   if (!code) return null;
@@ -102,7 +116,9 @@ async function krwPer(cur, date) {
     if (!Array.isArray(list) || !list.length) break;
     list.forEach(x => {
       const on = String(x.localTradedAt || '').slice(0, 10);
-      const v = num(x.closePrice);
+      /* 원하는 환율이 없는 날이면 매매기준율로 물러난다 — 없는 값을 지어내지 않되,
+         한 칸 비었다고 그 날짜를 통째로 버리지도 않는다. */
+      const v = num(x[FIELD[kind] || 'closePrice']) || num(x.closePrice);
       if (/^\d{4}-\d{2}-\d{2}$/.test(on) && Number.isFinite(v) && v > 0) rows.push({ on, v });
     });
     // 찾는 날짜까지 내려왔으면 더 넘길 이유가 없다
@@ -135,12 +151,14 @@ module.exports = async (req, res) => {
   const date = String(q.date || '').slice(0, 10);
   const from = String(q.from || '').toUpperCase();
   const to = String(q.to || 'KRW').toUpperCase();
+  /* 모르는 값이 오면 기본(tts)으로 — 400 을 내느니 쓸 만한 값을 준다 */
+  const kind = FIELD[String(q.kind || '').toLowerCase()] ? String(q.kind).toLowerCase() : 'tts';
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { res.status(400).json({ error: 'date=YYYY-MM-DD 가 필요합니다.' }); return; }
   if (!/^[A-Z]{3}$/.test(from) || !/^[A-Z]{3}$/.test(to)) { res.status(400).json({ error: '통화 코드가 잘못됐습니다.' }); return; }
   if (from === to) {
     res.setHeader('Cache-Control', 'private, max-age=86400');
-    res.status(200).json({ rate: 1, on: date, from, to, exact: true });
+    res.status(200).json({ rate: 1, on: date, from, to, kind, exact: true });
     return;
   }
   if ((from !== 'KRW' && !CODE[from]) || (to !== 'KRW' && !CODE[to])) {
@@ -152,7 +170,7 @@ module.exports = async (req, res) => {
   try {
     /* 둘 다 원화 대비로 받아 나눈다. KRW 를 거치므로 어느 조합이든 낼 수 있다
        (엔→원, 원→엔, 엔→달러 전부 같은 길이다). */
-    const [a, b] = await Promise.all([krwPer(from, date), krwPer(to, date)]);
+    const [a, b] = await Promise.all([krwPer(from, date, kind), krwPer(to, date, kind)]);
     if (!a || !b || !b.v) {
       res.setHeader('Cache-Control', 'no-store');
       res.status(502).json({ error: '환율을 가져오지 못했습니다. 직접 넣어 주세요.' });
@@ -164,7 +182,7 @@ module.exports = async (req, res) => {
     res.status(200).json({
       rate: Math.round(rate * 1e6) / 1e6,
       on: a.on < b.on ? a.on : b.on,
-      from, to,
+      from, to, kind,
       exact: a.exact && b.exact,
     });
   } catch (e) {

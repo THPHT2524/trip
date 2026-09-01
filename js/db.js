@@ -296,14 +296,14 @@ const DB = (function () {
   /* 같은 (날짜·통화쌍) 은 값이 바뀌지 않는다 — 한 번 받으면 이 세션 동안 다시 묻지 않는다.
      비용을 열 줄 적으면 열 번 부를 이유가 없다. */
   const fxMemo = new Map();
-  async function fx(date, from, to) {
+  async function fx(date, from, to, kind) {
     if (!date || !from || !to) return null;
     if (from === to) return { rate: 1, on: date, exact: true };
     const key = `${date}|${from}|${to}`;
     if (fxMemo.has(key)) return fxMemo.get(key);
     const tok = await accessToken();
     if (!tok) throw new Error('로그인이 필요합니다.');
-    const r = await fetch(`/api/fx?date=${encodeURIComponent(date)}&from=${from}&to=${to}`,
+    const r = await fetch(`/api/fx?date=${encodeURIComponent(date)}&from=${from}&to=${to}&kind=${kind || 'tts'}`,
                           { headers: { Authorization: 'Bearer ' + tok } });
     const body = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(body.error || `환율을 가져오지 못했습니다 (${r.status})`);

@@ -3,7 +3,7 @@
    ★별도 표가 없다. 여행 지출은 대부분 '어디서 쓴 것' 이라 일정 한 줄에 담았고
      (트리플 가계부도 결국 일정에 붙어 있다), 여기서는 그 줄들을 모아 보여주기만 한다.
 
-   ★★기준통화로 환산된 것만 더한다. 환율이 없는 줄을 섞으면 **엔과 원을 더하는 셈**이 된다.
+   ★★**원화로 환산된 것만** 더한다. 환율이 없는 줄을 섞으면 **엔과 원을 더하는 셈**이 된다.
      빠진 줄은 감추지 않고 따로 세워 두고, 그 자리에서 환율을 채울 수 있게 한다
      (그 날짜의 종가를 api/fx 가 가져온다 — 사람이 고칠 수 있다).
 
@@ -18,10 +18,10 @@ const Cost = (function () {
 
   let trip = null, rows = [], crew = [];
 
-  /* 이 줄이 기준통화로 얼마인가. 낼 수 없으면 null 이고, null 은 합계에 안 들어간다. */
+  /* 이 줄이 **원화로** 얼마인가. 낼 수 없으면 null 이고, null 은 합계에 안 들어간다. */
   function inBase(r) {
     if (r.cost == null) return null;
-    if (r.cost_cur === trip.base_cur) return +r.cost;
+    if (r.cost_cur === U.SETTLE) return +r.cost;
     if (r.fx) return +r.cost * +r.fx;
     return null;
   }
@@ -52,7 +52,7 @@ const Cost = (function () {
         <li${colorOf ? ` style="--k: var(--${colorOf(k)})"` : ''}>
           <span class="ck">${esc(k)}<em>${v.n}</em></span>
           ${bar(v.sum, max)}
-          <span class="cv">${esc(U.money(v.sum, trip.base_cur))}</span>
+          <span class="cv">${esc(U.money(v.sum, U.SETTLE))}</span>
           ${v.miss ? `<span class="cn">${v.miss}건 환율 없음</span>` : ''}
         </li>`).join('')}</ul>
     </section>`;
@@ -89,7 +89,7 @@ const Cost = (function () {
             `<i style="--k: var(--${KVAR[k]}); height:${(x.byK[k] / max * 100).toFixed(1)}%"></i>`
           ).join('') : '<em></em>'}</span>
           <span class="lb">D${i + 1}</span>
-          ${wide ? `<span class="amt">${x.sum ? esc(U.money(x.sum, trip.base_cur)) : ''}</span>` : ''}
+          ${wide ? `<span class="amt">${x.sum ? esc(U.money(x.sum, U.SETTLE)) : ''}</span>` : ''}
         </div>`).join('')}</div>
     </section>`;
   }
@@ -112,8 +112,8 @@ const Cost = (function () {
     /* ★'3건 · ¥2,400' 처럼 적으면 셋을 더해 2,400 인 줄 읽힌다. 실제로는 하나가 빠졌다.
        센 것과 빠진 것을 갈라 적는다. */
     $('cost-total').innerHTML = paid.length
-      ? `<span class="big">${esc(U.money(total, trip.base_cur))}</span>
-         <span class="sub">${paid.length - miss.length}건 합산 · 기준통화 ${esc(trip.base_cur)}`
+      ? `<span class="big">${esc(U.money(total, U.SETTLE))}</span>
+         <span class="sub">${paid.length - miss.length}건 합산 · 원화 기준`
          + (miss.length ? ` · <span class="warn">${miss.length}건 환율 없음</span>` : '')
          + '</span>'
       : '<span class="sub">아직 비용을 적은 일정이 없습니다</span>';
@@ -140,31 +140,47 @@ const Cost = (function () {
             <span class="cv">${esc(U.money(r.cost, r.cost_cur))}</span>
             <button class="act" type="button" data-fx="${esc(r.id)}">환율 채우기</button>
           </li>`).join('')}</ul>
-        <p class="hint">${esc(miss[0].cost_cur || '')} → ${esc(trip.base_cur)} 그 날짜의 종가를 가져옵니다. 값은 고칠 수 있습니다.</p>
+        <p class="hint">그 날짜의 <b>전신환매도율</b>을 가져와 원화로 환산합니다. 값은 고칠 수 있습니다.</p>
+        ${miss.length > 1 ? '<button class="btn sm" type="button" data-fxall>모두 채우기</button>' : ''}
       </section>` : '';
   }
 
   /* 한 줄의 환율을 그 날짜 종가로 채운다.
      ★주말·공휴일에는 고시가 없다 — 그때는 직전 거래일 값을 쓰고 그렇게 적는다. */
-  async function fillFx(id) {
+  async function fillFx(id, quiet) {
     const r = rows.find(x => x.id === id);
     if (!r) return;
     const btn = document.querySelector(`[data-fx="${id}"]`);
     if (btn) { btn.disabled = true; btn.textContent = '가져오는 중…'; }
     try {
-      const got = await DB.fx(r.on_date, r.cost_cur, trip.base_cur);
+      /* ★전신환매도율(TTS)로 채운다 — 카드로 긁으면 매매기준율이 아니라 이 언저리로 청구된다.
+         매매기준율로 계산하면 실제보다 싸게 나온다(엔 기준 약 1%). */
+      const got = await DB.fx(r.on_date, r.cost_cur, U.SETTLE, 'tts');
       await DB.items.update(id, { ...DB.items.shape(r), fx: got.rate });
       $('cost-msg').textContent = got.exact
-        ? `${r.cost_cur} → ${trip.base_cur} ${got.rate} (${got.on} 종가)`
-        : `${r.cost_cur} → ${trip.base_cur} ${got.rate} — ${r.on_date} 고시가 없어 ${got.on} 종가를 썼습니다`;
-      document.dispatchEvent(new CustomEvent('items:changed'));
+        ? `${r.cost_cur} → ${U.SETTLE} ${got.rate} (${got.on} 종가)`
+        : `${r.cost_cur} → ${U.SETTLE} ${got.rate} — ${r.on_date} 고시가 없어 ${got.on} 종가를 썼습니다`;
+      r.fx = got.rate;                       // 모두 채우기가 다음 줄로 넘어가기 전에 반영
+      if (!quiet) document.dispatchEvent(new CustomEvent('items:changed'));
     } catch (e) {
       $('cost-msg').textContent = e.message;
       if (btn) { btn.disabled = false; btn.textContent = '환율 채우기'; }
     }
   }
 
+  /* ★여러 줄을 한 번에. 정산 통화를 원화로 바꾸면서 현지통화로 적어 둔 줄이 한꺼번에
+     환율을 필요로 하게 됐다 — 하나씩 누르게 두면 그건 우리가 만든 일거리다.
+     한 줄씩 순서대로 부른다(동시에 던지면 환율 프록시의 분당 상한에 걸린다). */
+  async function fillAll() {
+    const btn = document.querySelector('[data-fxall]');
+    if (btn) { btn.disabled = true; btn.textContent = '가져오는 중…'; }
+    const ids = rows.filter(r => r.cost != null && r.cost_cur !== U.SETTLE && !r.fx).map(r => r.id);
+    for (const id of ids) { await fillFx(id, true); }
+    document.dispatchEvent(new CustomEvent('items:changed'));
+  }
+
   $('cost-miss').addEventListener('click', e => {
+    if (e.target.closest('[data-fxall]')) { fillAll(); return; }
     const b = e.target.closest('[data-fx]');
     if (b) fillFx(b.dataset.fx);
   });

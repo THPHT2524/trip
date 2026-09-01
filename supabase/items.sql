@@ -37,7 +37,7 @@ create table if not exists trip.items (
   -- ── 얼마 ────────────────────────────────────────────────
   cost       numeric,                     -- null = 아직 안 정했다
   cost_cur   text,                        -- 'KRW' | 'JPY' | …
-  fx         numeric,                     -- 기준통화 환산율. 그 날짜 종가를 채우고 사람이 고친다
+  fx         numeric,                     -- ★원화 환산율(1 단위당 원). 그 날짜 종가를 채우고 사람이 고친다
   payer_id   uuid        references auth.users(id) on delete set null,   -- 누가 냈나
 
   -- ── 예약 ────────────────────────────────────────────────

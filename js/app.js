@@ -136,17 +136,17 @@
       mark = `${Math.floor((Date.parse(U.todayISO()) - Date.parse(t.start_on)) / DAYMS) + 1}일차`;
     }
 
-    /* 합계는 기준통화로 환산된 것만 — 비용 탭과 같은 규칙이다(엔과 원을 더하지 않는다) */
+    /* 합계는 **원화로 환산된 것만** — 비용 탭과 같은 규칙이다(엔과 원을 더하지 않는다) */
     let sum = 0;
     mine.forEach(r => {
       if (r.cost == null) return;
-      if (r.cost_cur === t.base_cur) sum += +r.cost;
+      if (r.cost_cur === U.SETTLE) sum += +r.cost;
       else if (r.fx) sum += +r.cost * +r.fx;
     });
 
     const bits = [fmtSpan(t.start_on, t.end_on)];
     if (mine.length) bits.push(`일정 ${mine.length}`);
-    bits.push(sum ? U.money(sum, t.base_cur) : t.base_cur);
+    bits.push(sum ? U.money(sum, U.SETTLE) : (t.base_cur || U.SETTLE));
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
       <span class="top2">

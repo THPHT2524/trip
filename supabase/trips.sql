@@ -16,10 +16,10 @@ alter default privileges in schema trip grant all on functions to authenticated;
 
 -- trips — 여행 하나. 이 앱의 그릇이다.
 --
--- 담는 것은 이름·기간·기준통화·초대코드 넷과 소유자뿐이다.
+-- 담는 것은 이름·기간·현지통화·초대코드 넷과 소유자뿐이다.
 -- 합계·일수·진행 여부는 담지 않는다 — 전부 items 와 날짜에서 계산해 낸다(저장하면 곧 어긋난다).
 --
--- ★기준통화(base_cur)가 이 표에 있는 이유: 비용은 items 에 현지 통화로 들어오고,
+-- ★현지통화(base_cur)가 이 표에 있는 이유: 비용 칸의 기본값이 그 나라 돈이어야 하고,
 --   합계를 낼 때 무엇으로 환산할지는 여행마다 다르다(일본 여행이라고 엔으로 보고 싶은 건 아니다).
 --
 -- 멱등하다. 여러 번 실행해도 안전하다.
@@ -30,7 +30,7 @@ create table if not exists trip.trips (
   name        text        not null,
   start_on    date,                                  -- 미정일 수 있다(“가을에 대만” 단계)
   end_on      date,
-  base_cur    text        not null default 'KRW',    -- 합계를 환산할 통화
+  base_cur    text        not null default 'KRW',    -- ★현지통화(그 나라 돈). 정산은 늘 원화다
   invite_code text        not null default encode(gen_random_bytes(6), 'hex'),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now(),

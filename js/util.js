@@ -49,7 +49,13 @@ const U = (function () {
     return s ? s + n : `${n} ${cur || ''}`.trim();
   }
 
-  return { esc, DOW, todayISO, addDays, dowOf, md, span, money };
+  /* ★★정산 통화는 **원화 하나**다. 여행의 base_cur 는 '합계를 낼 통화' 가 아니라
+     **그 나라 돈**(현지통화)이고, 새 줄을 넣을 때 통화 칸의 기본값으로만 쓴다.
+     돈은 결국 원화로 갚고 나누므로 합계·정산은 전부 여기로 모은다.
+     (2026-09-02에 뜻을 그렇게 정했다 — 그전에는 base_cur 가 합계 통화였다) */
+  const SETTLE = 'KRW';
+
+  return { esc, DOW, todayISO, addDays, dowOf, md, span, money, SETTLE };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용
