@@ -258,14 +258,18 @@ a { color: var(--route); text-underline-offset: 2px; }
 .item.is-done .name { color: var(--ink-3); text-decoration: line-through; }
 .item .row2 {
   display: flex; align-items: center; gap: 8px;
-  margin-top: 3px; padding-left: 46px; padding-right: 84px;   /* 오른쪽은 .acts 자리 */
+  /* ★왼쪽 46px 을 걷었다. 이름 아래로 맞춰 들여 쓰던 자리인데, 오른쪽에 .acts 자리를
+     내주고 나니 375px 폰에서 내용이 으깨져 '이동' 이 두 줄로 쪼개졌다(2026-09-01).
+     메타는 이름이 아니라 **줄 전체**에 붙는 것이라 왼쪽 끝에서 시작해도 맞다. */
+  margin-top: 3px; padding-right: 80px;   /* 오른쪽은 .acts 자리 */
   font-size: 12px; color: var(--ink-3);
 }
 .kind {
   font-size: 11px; font-weight: 600; letter-spacing: .02em;
   color: var(--k, var(--k-etc));
+  white-space: nowrap;          /* 좁은 칸에서 '이동' 이 두 글자로 쪼개지지 않게 */
 }
-.money { font-size: 12px; color: var(--ink-2); }
+.money { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
 .money.none { color: var(--ink-3); }
 .badge {
   font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
@@ -321,7 +325,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .act {
   appearance: none; cursor: pointer;
-  background: none; border: 0; padding: 2px 6px;
+  background: none; border: 0; padding: 2px 4px; white-space: nowrap;
   font: inherit; font-size: 11px; font-weight: 600;
   color: var(--ink-3); text-decoration: none; border-radius: 5px;
 }
