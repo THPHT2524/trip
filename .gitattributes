@@ -1,0 +1,4 @@
+# 이 저장소의 파일은 전부 LF 로 보관한다. 받는 쪽 설정(core.autocrlf)과 무관하게
+# 작업트리도 LF 로 고정한다 — 윈도우에서 CRLF 로 받으면 tools/bump.py 의 자산 지문
+# (원시 바이트를 해싱한다)이 어긋나 CI 가 거짓 실패를 낸다. card-dashboard 에서 실제로 겪었다.
+* text=auto eol=lf

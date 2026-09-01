@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+**/.DS_Store
+__pycache__/
+
+# 로컬 전용 (설치한 Claude 스킬·런치 설정 등 — 앱 배포와 무관)
+.claude/
+
+# 로컬 전용 (vercel link 산출물: 프로젝트 식별자·환경변수)
+.vercel
+.env*
