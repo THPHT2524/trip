@@ -77,16 +77,25 @@ const DB = (function () {
     } catch (e) { return ''; }
   }
 
-  /* RLS 에 막힌 것인지 알려 준다. 원문만으로는 무엇을 해야 할지 알 수 없다. */
+  /* 오류를 사람 말로 바꾸되 **원문을 지우지 않는다.**
+     ★한 번 지웠다가 디버깅이 막혔다(2026-09-01): '권한이 없습니다' 만 보이니 무엇이 막혔는지
+       알 수 없었다. 무슨 일이 일어났는지는 원문에만 있고, 무엇을 해야 하는지는 힌트에만 있다.
+       stock 의 db.js 가 그렇게 한다 — 원문 + 덧붙인 설명. */
   function say(prefix, error) {
     const m = (error && error.message) || '알 수 없는 오류';
-    if (/permission denied|row-level security/i.test(m)) {
-      return `${prefix}: 이 여행에 접근할 권한이 없습니다. 초대를 받았는지 확인하세요.`;
+    const code = (error && error.code) ? ` [${error.code}]` : '';
+    const det = (error && error.details) ? ` (${error.details})` : '';
+    let hint = '';
+    if (/row-level security/i.test(m)) {
+      hint = ' — RLS 정책에 막혔습니다. 이 표에 해당 동작의 정책이 있는지 확인하세요.';
+    } else if (/permission denied/i.test(m)) {
+      hint = ' — 표 권한이 없습니다. supabase/grants.sql 을 다시 돌리세요.';
+    } else if (/schema|PGRST106/i.test(m)) {
+      hint = ' — trip 스키마가 Data API 에 노출되지 않았습니다.';
+    } else if (/PGRST116/i.test(code + m)) {
+      hint = ' — 만들어졌지만 되읽지 못했습니다(select 정책 확인).';
     }
-    if (/schema|PGRST106/i.test(m)) {
-      return `${prefix}: 서버 설정이 아직 끝나지 않았습니다(trip 스키마가 노출되지 않음).`;
-    }
-    return `${prefix}: ${m}`;
+    return `${prefix}: ${m}${code}${det}${hint}`;
   }
 
   // ── 여행 ────────────────────────────────────────────────────────────
