@@ -87,6 +87,10 @@ const Maps = (function () {
        폰에서 dragging 을 껐는데, 그러면 **지도가 고장난 것처럼** 느껴진다 —
        위성 지도는 끌고 확대하라고 있는 것이다. 페이지는 지도 위아래 여백으로 스크롤한다. */
     map = L.map('map', { zoomControl: true, attributionControl: true });
+    /* ★'Leaflet' 앞머리를 뗀다. Leaflet 은 그것을 **요구하지 않는다**(예의로 붙는 것이고
+       공식적으로 끄는 방법을 준다). 저작자 표시는 두 줄로 넘어가면 지도를 덮으므로
+       **의무인 것만** 남긴다 — MapTiler 와 OpenStreetMap. 둘 다 링크를 유지한다. */
+    map.attributionControl.setPrefix(false);
     layer = L.layerGroup().addTo(map);
     setBasemap();
     /* 시스템 테마가 바뀌면 '지도' 쪽 회색조도 따라가야 한다 */

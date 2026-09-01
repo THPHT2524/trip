@@ -378,11 +378,16 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* Leaflet 기본 크롬을 이 앱의 어법으로 낮춘다 */
 .leaflet-container { font-family: var(--sans); background: var(--sunk); }
+/* 저작자 표시 — 의무이므로 지우지 않는다. 다만 지도를 덮지 않게 한 줄로 눌러 둔다. */
 .leaflet-control-attribution {
-  background: color-mix(in srgb, var(--card) 82%, transparent);
-  color: var(--ink-3); font-size: 10px;
+  background: color-mix(in srgb, var(--card) 78%, transparent);
+  color: var(--ink-3);
+  font-family: var(--sans); font-size: 9px; line-height: 1.5;
+  padding: 1px 6px; border-radius: 5px 0 0 0;
+  white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
 }
-.leaflet-control-attribution a { color: var(--ink-2); }
+.leaflet-control-attribution a { color: var(--ink-3); text-decoration: none; }
+.leaflet-control-attribution a:hover { text-decoration: underline; }
 .leaflet-bar a {
   background: var(--card); color: var(--ink); border-bottom-color: var(--line);
 }
