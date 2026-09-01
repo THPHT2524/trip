@@ -20,51 +20,55 @@ const Maps = (function () {
   let onPick = () => {};
 
   /* ── 밑그림 ────────────────────────────────────────────────────────────
-     OSM 기본 타일을 쓴다. 키도 결제도 없고 정책도 명확하기 때문이다.
-     ★다만 **그대로 쓰지 않는다.** 그 스타일은 지도 자체를 읽으라고 만든 것이라
-       고속도로가 분홍 리본으로 화면을 가르고 출구·분기점 라벨이 빼곡하다.
-       여기서 지도는 밑그림이고 앞에 서야 하는 것은 우리 마커다 —
-       **회색조로 눌러서 뒤로 보낸다**(css/app.css 의 .leaflet-tile-pane).
-
-     ★CARTO Positron 을 잠깐 썼다가 되돌렸다(2026-09-01): 지금은 **API 키를 요구**해서
+     **기본은 위성이다.** 여행 지도에서 알고 싶은 것은 '거기가 어떻게 생겼나' 이고,
+     항공사진은 그 답을 라벨 없이 준다 — 덤으로 우리 마커가 확실히 앞에 선다.
+     ★Esri World Imagery 는 **키도 결제도 필요 없다.** 저작자 표시만 하면 된다.
+     ★'지도' 로 바꾸면 OSM 을 회색조로 눌러 쓴다. 길 이름과 역이 필요할 때가 있다.
+       OSM 기본 스타일을 그대로 쓰지 않는 이유는 그것이 지도 자체를 읽으라고 만든 것이라
+       고속도로가 분홍 리본으로 화면을 가르기 때문이다(회색조 처리는 css/app.css).
+     ★CARTO Positron 을 잠깐 썼다가 되돌렸다(2026-09-01): 지금은 API 키를 요구해서
        타일에 'API KEY REQUIRED' 워터마크가 박혀 나온다. curl 로는 200 이 와서 되는 줄 알았다 —
-       상태코드만 보고 넘긴 확인이었다. 키가 필요하면 구글맵을 피한 이유와 같은 문제가 된다.
-     ★저작자 표시는 ODbL 의무다. 지우지 말 것. */
-  const ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+       **상태코드만 보고 넘긴 확인이었다.** 키 없는 타일은 눈으로 봐야 한다. */
+  const BASE = {
+    sat: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      max: 19,
+      attr: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    },
+    map: {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      max: 19,
+      attr: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    },
+  };
+  const KEY = 'trip_basemap';
+  let base = (() => { try { return localStorage.getItem(KEY) === 'map' ? 'map' : 'sat'; } catch (e) { return 'sat'; } })();
+
   const prefersDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
 
-  /* 밑그림 자체는 하나다. 밝고 어두움은 CSS 필터가 가른다 —
-     타일을 두 벌 받을 필요가 없고, 테마가 바뀌어도 다시 받지 않는다. */
-  function setBasemap(dark) {
-    document.getElementById('map').dataset.dark = String(!!dark);
-    if (tiles) return;
-    tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        { maxZoom: 19, attribution: ATTR });
-    tiles.addTo(map);
+  function setBasemap() {
+    const el = $('map');
+    el.dataset.base = base;
+    el.dataset.dark = String(prefersDark());
+    if (tiles) map.removeLayer(tiles);
+    const b = BASE[base];
+    tiles = L.tileLayer(b.url, { maxZoom: b.max, attribution: b.attr }).addTo(map);
     if (layer) layer.bringToFront();
+    document.querySelectorAll('#basepick button').forEach(x =>
+      x.setAttribute('aria-selected', String(x.dataset.base === base)));
   }
 
   function ensureMap() {
     if (map) return map;
-    map = L.map('map', {
-      zoomControl: true,
-      attributionControl: true,
-      // 폰에서 한 손가락으로 페이지를 스크롤하다 지도에 걸려 멈추는 것을 막는다.
-      // 지도를 옮기려면 두 손가락(또는 마우스 드래그)을 쓴다.
-      dragging: !L.Browser.mobile,
-      tap: false,
-    });
-    setBasemap(prefersDark());
+    /* ★한 손가락으로도 끌 수 있게 둔다. 전에는 페이지 스크롤이 지도에 걸리는 것을 막으려고
+       폰에서 dragging 을 껐는데, 그러면 **지도가 고장난 것처럼** 느껴진다 —
+       위성 지도는 끌고 확대하라고 있는 것이다. 페이지는 지도 위아래 여백으로 스크롤한다. */
+    map = L.map('map', { zoomControl: true, attributionControl: true });
     layer = L.layerGroup().addTo(map);
-    /* 시스템 테마가 바뀌면 밑그림도 따라간다 — 어두운 앱 위에 흰 지도가 남으면
-       그 판만 조명을 켠 것처럼 튄다. */
+    setBasemap();
+    /* 시스템 테마가 바뀌면 '지도' 쪽 회색조도 따라가야 한다 */
     matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', e => { if (map) setBasemap(e.matches); });
-    if (L.Browser.mobile) {
-      // 두 손가락으로만 움직인다는 사실을 알려 주지 않으면 '지도가 고장났다' 로 읽힌다
-      map.on('movestart', () => {});
-      L.DomUtil.addClass(map.getContainer(), 'two-finger');
-    }
+      .addEventListener('change', () => { if (map) $('map').dataset.dark = String(prefersDark()); });
     return map;
   }
 
@@ -149,6 +153,14 @@ const Maps = (function () {
     if (!map) return;
     clearTimeout(rz);
     rz = setTimeout(() => map.invalidateSize(), 150);
+  });
+
+  $('basepick').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b || b.dataset.base === base) return;
+    base = b.dataset.base;
+    try { localStorage.setItem(KEY, base); } catch (err) {}
+    setBasemap();
   });
 
   $('mapdays').addEventListener('click', e => {
