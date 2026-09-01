@@ -90,6 +90,10 @@ const Plan = (function () {
     const nid = nextId();
     el.innerHTML = (offline ? '<p class="note">연결이 없어 마지막으로 받아 둔 일정을 보여줍니다</p>' : '')
                  + show.map(d => dayHtml(d, days.indexOf(d) + 1, nid)).join('');
+    /* ★날마다 레일 끝에 정거장이 생겼으므로 아래쪽 '일정 추가' 카드는 **같은 일을 둘이**
+       하는 셈이 된다. 닫혀 있을 때만 감춘다 — 폼 자체는 하나뿐이고 여기 그대로 있다.
+       날이 아예 없는 여행(날짜도 줄도 없는 새 여행)에는 정거장이 없으므로 남겨 둔다. */
+    $('if-wrap').classList.toggle('dup', days.length > 0);
   }
 
   function dayHtml(d, n, nid) {

@@ -359,6 +359,9 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--paper); border: 2px dashed var(--rail);
 }
 .addstop:hover, .addstop:focus-visible { color: var(--route); }
+/* 정거장이 있으면 아래쪽 '일정 추가' 카드는 중복이다 — 닫혀 있을 때만 감춘다.
+   정거장이나 줄을 누르면 open 이 되면서 다시 나타난다(폼은 계속 하나다). */
+#if-wrap.dup:not([open]) { display: none; }
 .addstop:hover::before, .addstop:focus-visible::before { border-color: var(--route); }
 
 .dayband .warn { color: var(--warn); font-weight: 500; }
