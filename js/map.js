@@ -20,59 +20,68 @@ const Maps = (function () {
   let onPick = () => {};
 
   /* ── 밑그림 ────────────────────────────────────────────────────────────
-     **기본은 위성이다.** 여행 지도에서 알고 싶은 것은 '거기가 어떻게 생겼나' 이고,
-     항공사진은 그 답을 라벨 없이 준다 — 덤으로 우리 마커가 확실히 앞에 선다.
-     ★Esri World Imagery 는 **키도 결제도 필요 없다.** 저작자 표시만 하면 된다.
-     ★'지도' 로 바꾸면 OSM 을 회색조로 눌러 쓴다. 길 이름과 역이 필요할 때가 있다.
-       OSM 기본 스타일을 그대로 쓰지 않는 이유는 그것이 지도 자체를 읽으라고 만든 것이라
-       고속도로가 분홍 리본으로 화면을 가르기 때문이다(회색조 처리는 css/app.css).
-     ★CARTO Positron 을 잠깐 썼다가 되돌렸다(2026-09-01): 지금은 API 키를 요구해서
-       타일에 'API KEY REQUIRED' 워터마크가 박혀 나온다. curl 로는 200 이 와서 되는 줄 알았다 —
-       **상태코드만 보고 넘긴 확인이었다.** 키 없는 타일은 눈으로 봐야 한다. */
-  const BASE = {
-    sat: {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      max: 19,
-      attr: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
-    },
-    map: {
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      max: 19,
-      attr: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    },
-  };
+     **키가 있으면 MapTiler, 없으면 Esri+OSM.** 앱은 어느 쪽이든 돈다 —
+     키는 '있으면 더 좋아지는' 설정이지 필수가 아니다(js/map-config.js).
+
+     MapTiler 가 나은 이유: `hybrid` 는 **위성에 도로·지명이 처음부터 얹혀 나오는** 스타일이다.
+       우리가 OSM 을 multiply 로 섞어 흉내 내던 것(2026-09-01)보다 훨씬 깨끗하다 —
+       글자에 테두리가 있어 사진 위에서 읽히고, 사진이 어두워지지도 않는다.
+     ★그 방식으로 오게 된 경위: Esri 참조 레이어(World_Transportation 등)가 이 지역에서
+       **완전히 투명한 타일**만 줬다(어느 배율에서도 875바이트). 그래서 섞을 수밖에 없었다.
+
+     ★밑그림을 세 번 갈아 봤다. 남겨 두는 이유는 다음 사람이 같은 길을 다시 걷지 않도록:
+       · OSM 기본 — 지도 자체를 읽으라고 만든 스타일. 분홍 고속도로가 화면을 가른다.
+       · CARTO Positron — 지금은 API 키를 요구한다. 'API KEY REQUIRED' 워터마크가 박힌다.
+       · Stadia — 좋지만 가입 필요. 정적 미리보기만 키 없이 열린다. */
+  const MT = (typeof MAPTILER_KEY === 'string' && MAPTILER_KEY.trim()) ? MAPTILER_KEY.trim() : '';
+  const mtUrl = s => `https://api.maptiler.com/maps/${s}/{z}/{x}/{y}.png?key=${MT}`;
+  const MT_ATTR = '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> '
+                + '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+  /* 고른 조합(밑그림 × 길이름)이 어떤 타일이 되는가. 키 유무로 갈린다. */
+  function pickTiles() {
+    if (MT) {
+      if (base === 'sat') return { url: mtUrl(labels ? 'hybrid' : 'satellite'), max: 20, attr: MT_ATTR, over: null };
+      return { url: mtUrl('dataviz'), max: 20, attr: MT_ATTR, over: null };
+    }
+    if (base === 'sat') {
+      return {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        max: 19,
+        attr: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+        /* 키가 없을 때만 쓰는 흉내 — OSM 을 얹고 multiply 로 흰 배경을 걷어낸다 */
+        over: labels ? OSM_URL : null,
+      };
+    }
+    return { url: OSM_URL, max: 19, attr: OSM_ATTR, over: null };
+  }
+
   const KEY = 'trip_basemap', KEY2 = 'trip_maplabels';
   let base = (() => { try { return localStorage.getItem(KEY) === 'map' ? 'map' : 'sat'; } catch (e) { return 'sat'; } })();
-  /* 라벨 오버레이는 **기본 꺼짐**이다. 켜면 길 이름이 보이지만 사진이 어두워지고 지저분해진다 —
-     필요할 때만 켜는 편이 맞다. 고른 것은 기억한다. */
-  let labels = (() => { try { return localStorage.getItem(KEY2) === '1'; } catch (e) { return false; } })();
+  /* 길 이름은 기본 켜짐이다 — MapTiler hybrid 는 그게 자연스러운 기본이고,
+     키가 없을 때만(섞어서 흉내 내느라 지저분해질 때만) 꺼 두고 싶어진다. */
+  let labels = (() => {
+    try { const v = localStorage.getItem(KEY2); return v == null ? !!MT : v === '1'; } catch (e) { return !!MT; }
+  })();
 
   const prefersDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
 
   function setBasemap() {
     const el = $('map');
+    const t = pickTiles();
     el.dataset.base = base;
     el.dataset.dark = String(prefersDark());
     el.dataset.labels = String(labels);
+    el.dataset.mt = String(!!MT);          // 키가 있으면 회색조 필터를 걸지 않는다
     if (tiles) map.removeLayer(tiles);
     if (over) { map.removeLayer(over); over = null; }
-    const b = BASE[base];
-    tiles = L.tileLayer(b.url, { maxZoom: b.max, attribution: b.attr }).addTo(map);
-    /* ★라벨 오버레이 — Esri 의 참조 레이어(World_Transportation 등)는 이 지역에서
-       **완전히 투명한 타일**만 준다(2026-09-01 실측: 어느 배율에서도 875바이트 = 빈 타일).
-       그래서 OSM 을 위에 얹고 **혼합 모드로 흰 배경을 걷어낸다** — 선과 글자만 남는다.
-       위성일 때만 뜻이 있다('지도' 는 그 자체가 OSM 이다). */
-    if (base === 'sat' && labels) {
-      over = L.tileLayer(BASE.map.url, {
-        maxZoom: BASE.map.max, className: 'lblover', opacity: 1,
-      }).addTo(map);
-    }
+    tiles = L.tileLayer(t.url, { maxZoom: t.max, attribution: t.attr }).addTo(map);
+    if (t.over) over = L.tileLayer(t.over, { maxZoom: 19, className: 'lblover' }).addTo(map);
     $('lblbtn').setAttribute('aria-pressed', String(labels));
     $('lblbtn').hidden = base !== 'sat';
-    /* ★bringToFront() 를 부르지 않는다. layer 는 LayerGroup 이라 그 메서드가 없다 —
-       불렀다가 ensureMap 이 통째로 죽어 타일이 한 장도 안 깔렸다(2026-09-01).
-       애초에 필요 없다: Leaflet 은 마커·오버레이 판을 타일 판 위에 둔다. */
-    document.querySelectorAll('#basepick button').forEach(x =>
+    document.querySelectorAll('#basepick button[data-base]').forEach(x =>
       x.setAttribute('aria-selected', String(x.dataset.base === base)));
   }
 
