@@ -8,29 +8,29 @@
 
    ★V 를 올려야 새 파일이 나간다. index.html 의 ?v=N 과 함께 올린다.
      안 올리면 이미 받아 간 브라우저가 옛 앱을 계속 쓴다(card-dashboard 에서 실제로 겪은 사고다). */
-const V = 24;   // assets-sha:98ea63aeb1e2
+const V = 25;   // assets-sha:10906d6c9234
 const CACHE = `trip-shell-v${V}`;
 
 const SHELL = [
   '/',
   '/index.html',
-  '/css/app.css?v=24',
+  '/css/app.css?v=25',
   '/css/leaflet-1.9.4.css',
   '/js/vendor/supabase-js-2.111.0.js',
   '/js/vendor/leaflet-1.9.4.js',
-  '/js/supabase-config.js?v=24',
-  '/js/map-config.js?v=24',
-  '/js/util.js?v=24',
-  '/js/geo.js?v=24',
-  '/js/gmaps.js?v=24',
-  '/js/db.js?v=24',
-  '/js/outbox.js?v=24',
-  '/js/plan.js?v=24',
-  '/js/map.js?v=24',
-  '/js/crew.js?v=24',
-  '/js/cost.js?v=24',
-  '/js/prep.js?v=24',
-  '/js/app.js?v=24',
+  '/js/supabase-config.js?v=25',
+  '/js/map-config.js?v=25',
+  '/js/util.js?v=25',
+  '/js/geo.js?v=25',
+  '/js/gmaps.js?v=25',
+  '/js/db.js?v=25',
+  '/js/outbox.js?v=25',
+  '/js/plan.js?v=25',
+  '/js/map.js?v=25',
+  '/js/crew.js?v=25',
+  '/js/cost.js?v=25',
+  '/js/prep.js?v=25',
+  '/js/app.js?v=25',
   '/fonts/ibm-plex-mono-400.woff2',
   '/fonts/ibm-plex-mono-500.woff2',
   '/fonts/ibm-plex-mono-600.woff2',

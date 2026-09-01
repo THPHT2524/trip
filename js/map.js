@@ -15,80 +15,68 @@ const Maps = (function () {
 
   const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
 
-  let map = null, layer = null, tiles = null, over = null;
+  let map = null, layer = null, tiles = null;
   let trip = null, rows = [], days = [], pick = null;
   let onPick = () => {};
 
   /* ── 밑그림 ────────────────────────────────────────────────────────────
-     **키가 있으면 MapTiler, 없으면 Esri+OSM.** 앱은 어느 쪽이든 돈다 —
-     키는 '있으면 더 좋아지는' 설정이지 필수가 아니다(js/map-config.js).
+     **MapTiler 하나만 쓴다.** 위성도 일반 지도도 거기 다 있고, 다크 변형까지 있어서
+     CSS 필터로 억지로 어둡게 만들 필요가 없다.
 
-     MapTiler 가 나은 이유: `hybrid` 는 **위성에 도로·지명이 처음부터 얹혀 나오는** 스타일이다.
-       우리가 OSM 을 multiply 로 섞어 흉내 내던 것(2026-09-01)보다 훨씬 깨끗하다 —
-       글자에 테두리가 있어 사진 위에서 읽히고, 사진이 어두워지지도 않는다.
-     ★그 방식으로 오게 된 경위: Esri 참조 레이어(World_Transportation 등)가 이 지역에서
-       **완전히 투명한 타일**만 줬다(어느 배율에서도 875바이트). 그래서 섞을 수밖에 없었다.
-
-     ★밑그림을 세 번 갈아 봤다. 남겨 두는 이유는 다음 사람이 같은 길을 다시 걷지 않도록:
-       · OSM 기본 — 지도 자체를 읽으라고 만든 스타일. 분홍 고속도로가 화면을 가른다.
-       · CARTO Positron — 지금은 API 키를 요구한다. 'API KEY REQUIRED' 워터마크가 박힌다.
-       · Stadia — 좋지만 가입 필요. 정적 미리보기만 키 없이 열린다. */
+     ★전에는 Esri 위성 + OSM 지도 + OSM 을 multiply 로 얹은 라벨 흉내까지 셋이 섞여 있었다.
+       키가 없어도 돌게 하려던 폴백이었는데, 키가 생긴 뒤로는 **코드만 복잡하게** 만들었다.
+       (그 여정: OSM 기본은 분홍 고속도로가 화면을 갈랐고, CARTO 는 워터마크를 박았고,
+        Esri 참조 레이어는 이 지역에서 빈 타일만 줬다. 결론은 '깨끗한 위성+라벨은 공짜가 아니다'.)
+     ★그래서 이제 키는 **필수**다. 없거나 막히면 지도가 빈 채로 남으므로,
+       조용히 비워 두지 않고 화면에 그렇게 적는다(tileerror). */
   const MT = (typeof MAPTILER_KEY === 'string' && MAPTILER_KEY.trim()) ? MAPTILER_KEY.trim() : '';
-  const mtUrl = s => `https://api.maptiler.com/maps/${s}/{z}/{x}/{y}.png?key=${MT}`;
-  const MT_ATTR = '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> '
-                + '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-  const OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  const ATTR = '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> '
+             + '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  const prefersDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
 
-  /* 고른 조합(밑그림 × 길이름)이 어떤 타일이 되는가. 키 유무로 갈린다. */
-  function pickTiles() {
-    if (MT) {
-      if (base === 'sat') return { url: mtUrl(labels ? 'hybrid' : 'satellite'), max: 20, attr: MT_ATTR, over: null };
-      return { url: mtUrl('dataviz'), max: 20, attr: MT_ATTR, over: null };
-    }
-    if (base === 'sat') {
-      return {
-        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        max: 19,
-        attr: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
-        /* 키가 없을 때만 쓰는 흉내 — OSM 을 얹고 multiply 로 흰 배경을 걷어낸다 */
-        over: labels ? OSM_URL : null,
-      };
-    }
-    return { url: OSM_URL, max: 19, attr: OSM_ATTR, over: null };
+  /* 고른 조합이 어떤 스타일이 되는가.
+       위성 + 길이름 → hybrid   (사진 위에 도로·지명이 얹혀 나온다)
+       위성          → satellite
+       지도          → streets-v2 / streets-v2-dark (시스템 테마를 따른다) */
+  function styleName() {
+    if (base === 'sat') return labels ? 'hybrid' : 'satellite';
+    return prefersDark() ? 'streets-v2-dark' : 'streets-v2';
   }
 
   const KEY = 'trip_basemap', KEY2 = 'trip_maplabels';
   let base = (() => { try { return localStorage.getItem(KEY) === 'map' ? 'map' : 'sat'; } catch (e) { return 'sat'; } })();
-  /* 길 이름은 기본 켜짐이다 — MapTiler hybrid 는 그게 자연스러운 기본이고,
-     키가 없을 때만(섞어서 흉내 내느라 지저분해질 때만) 꺼 두고 싶어진다. */
-  let labels = (() => {
-    try { const v = localStorage.getItem(KEY2); return v == null ? !!MT : v === '1'; } catch (e) { return !!MT; }
-  })();
-
-  const prefersDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
+  let labels = (() => { try { const v = localStorage.getItem(KEY2); return v == null ? true : v === '1'; } catch (e) { return true; } })();
 
   function setBasemap() {
     const el = $('map');
-    const t = pickTiles();
     el.dataset.base = base;
-    el.dataset.dark = String(prefersDark());
     el.dataset.labels = String(labels);
-    el.dataset.mt = String(!!MT);          // 키가 있으면 회색조 필터를 걸지 않는다
     if (tiles) map.removeLayer(tiles);
-    if (over) { map.removeLayer(over); over = null; }
-    /* ★★타일에만 출처를 보낸다.
-       vercel.json 의 `Referrer-Policy: same-origin` 은 **다른 도메인으로 나가는 요청에
-       Referer 를 아예 안 붙인다.** MapTiler 는 출처로 키를 검증하므로 'Invalid key' 가 뜬다
-       (2026-09-01 에 그렇게 막혔다 — curl 로는 헤더를 손으로 넣어서 200 이 왔다).
-       요소별 referrerPolicy 가 문서 정책을 이긴다. `strict-origin-when-cross-origin` 은
-       **오리진만** 보내고 경로는 안 보낸다 — 여행 id 가 든 주소가 새어 나가지 않는다.
-       문서 전체 정책은 엄격한 채로 둔다. */
-    const RP = 'strict-origin-when-cross-origin';
-    tiles = L.tileLayer(t.url, { maxZoom: t.max, attribution: t.attr, referrerPolicy: RP }).addTo(map);
-    if (t.over) over = L.tileLayer(t.over, { maxZoom: 19, className: 'lblover', referrerPolicy: RP }).addTo(map);
+
+    if (!MT) { $('map-note').textContent = '지도 키가 없습니다 — js/map-config.js 를 확인하세요.'; }
+    else {
+      tiles = L.tileLayer(`https://api.maptiler.com/maps/${styleName()}/{z}/{x}/{y}.png?key=${MT}`, {
+        maxZoom: 20,
+        attribution: ATTR,
+        /* ★★타일에만 출처를 보낸다. vercel.json 의 `Referrer-Policy: same-origin` 은
+           다른 도메인으로 나가는 요청에 Referer 를 아예 안 붙이고, MapTiler 는 출처로
+           키를 검증하므로 'Invalid key' 가 뜬다(2026-09-01 에 그렇게 막혔다 —
+           curl 로는 헤더를 손으로 넣어서 200 이 왔다).
+           요소별 정책이 문서 정책을 이긴다. 오리진만 가고 **경로는 안 간다** —
+           여행 id 가 든 주소가 새어 나가지 않는다. */
+        referrerPolicy: 'strict-origin-when-cross-origin',
+      });
+      /* 키가 죽거나 한도를 넘기면 타일이 조용히 안 온다 — 빈 판만 남으면 원인을 알 수 없다 */
+      let told = false;
+      tiles.on('tileerror', () => {
+        if (told) return; told = true;
+        $('map-note').textContent = '지도 타일을 받지 못했습니다 — 키 또는 사용 한도를 확인하세요.';
+      });
+      tiles.addTo(map);
+    }
+
     $('lblbtn').setAttribute('aria-pressed', String(labels));
-    $('lblbtn').hidden = base !== 'sat';
+    $('lblbtn').hidden = base !== 'sat';     // '지도' 에는 원래 라벨이 있다
     document.querySelectorAll('#basepick button[data-base]').forEach(x =>
       x.setAttribute('aria-selected', String(x.dataset.base === base)));
   }
@@ -102,8 +90,9 @@ const Maps = (function () {
     layer = L.layerGroup().addTo(map);
     setBasemap();
     /* 시스템 테마가 바뀌면 '지도' 쪽 회색조도 따라가야 한다 */
+    /* 시스템 테마가 바뀌면 '지도' 스타일도 밝고 어두운 것으로 갈아 끼운다 */
     matchMedia('(prefers-color-scheme: dark)')
-      .addEventListener('change', () => { if (map) $('map').dataset.dark = String(prefersDark()); });
+      .addEventListener('change', () => { if (map && base === 'map') setBasemap(); });
     return map;
   }
 

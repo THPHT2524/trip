@@ -339,29 +339,13 @@ a { color: var(--route); text-underline-offset: 2px; }
    ★채도만 살짝 낮추는 것으로는 모자랐다(2026-09-01: saturate(.6) 로는 분홍이 그대로 남았다).
      색을 아예 빼고 대비를 낮춘다. 색은 **마커에만** 남는다 — 그게 노선도의 어법이다.
    ★어두운 테마는 여기에 반전을 얹는다. 밑그림이 하나라 타일을 두 벌 받지 않는다. */
-/* ★위성에는 필터를 걸지 않는다. 항공사진은 라벨이 없어 이미 조용하고,
-   손대면 그냥 흐려질 뿐이다. 회색조 처리는 '지도' 를 골랐을 때만. */
-#map[data-mt="false"][data-base="map"][data-dark="false"] .leaflet-tile-pane {
-  filter: grayscale(1) brightness(1.07) contrast(.78);
-}
-/* ★어두운 테마에서 **반전하지 않는다.** 반전하면 건물이 검은 덩어리가 되고 도로가 하얗게
-   튀어 대비가 사나워진다 — 나란히 놓고 보니 원본보다 나빴다(2026-09-01 비교).
-   그냥 어둡게 눌러야 지도가 고르게 가라앉고 마커가 앞에 선다. */
-#map[data-mt="false"][data-base="map"][data-dark="true"] .leaflet-tile-pane {
-  filter: grayscale(1) brightness(.38) contrast(1.02);
-}
+/* ★타일에 CSS 필터를 걸지 않는다. MapTiler 가 테마마다 제대로 만든 스타일을 주므로
+   (satellite · hybrid · streets-v2 · streets-v2-dark) 손볼 것이 없다.
+   전에는 OSM 을 회색조로 누르고 어두운 테마에서 반전까지 했는데, 반전은 건물을 검은
+   덩어리로 만들고 도로를 하얗게 튀게 해서 **원본보다 나빴다**(2026-09-01 비교). */
+
 /* 위성 위에서는 마커 테두리를 조금 두껍게 — 사진 위에서 얇은 선은 묻힌다 */
 #map[data-base="sat"] .mpin { border-width: 3.5px; box-shadow: 0 1px 5px rgba(0,0,0,.7); }
-
-/* ★라벨 오버레이 — OSM 을 위성 위에 얹고 **흰 배경을 걷어낸다.**
-   multiply 는 흰색을 그대로 통과시키므로, 대비를 크게 올려 밝은 면을 흰색으로 밀어 놓으면
-   남는 것은 도로선과 글자뿐이다. (Esri 참조 레이어가 이 지역에서 빈 타일만 줘서 택한 길이다.)
-   ★blend 가 먹으려면 부모가 스태킹 컨텍스트를 만들어야 한다 — #map 의 isolation. */
-#map { isolation: isolate; }
-.lblover {
-  mix-blend-mode: multiply;
-  filter: grayscale(1) contrast(2.2) brightness(1.25);
-}
 
 /* 밑그림 고르기 — 날짜 탭과 같은 어법, 자리만 오른쪽 */
 .basepick {
