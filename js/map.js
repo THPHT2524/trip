@@ -43,12 +43,14 @@ const Maps = (function () {
      ★한글은 래스터로 안 된다. 타일에 글자가 구워져 나오고 language 파라미터는 무시된다
        (2026-09-01 실측: 파라미터 유무에 응답 바이트가 동일). 벡터로 가야 바꿀 수 있다. */
   function styleName() {
-    if (base === 'sat') return labels ? 'hybrid-v4' : 'satellite';
-    return prefersDark() ? 'streets-v2-dark' : 'streets-v4';
+    if (base === 'sat') return labels ? 'hybrid-v4' : 'satellite-v4';
+    return prefersDark() ? 'streets-v4-dark' : 'streets-v4';
   }
 
   const KEY = 'trip_basemap', KEY2 = 'trip_maplabels';
-  let base = (() => { try { return localStorage.getItem(KEY) === 'map' ? 'map' : 'sat'; } catch (e) { return 'sat'; } })();
+  /* ★기본은 '지도'(streets-v4) 다. 위성은 어디에 뭐가 있는지는 보여 주지만 뭐가 뭔지는 못 읽는다 —
+     일정을 훑는 화면에서는 지명과 도로가 먼저다. 위성은 단추 하나 거리에 있고 고른 것은 기억한다. */
+  let base = (() => { try { return localStorage.getItem(KEY) === 'sat' ? 'sat' : 'map'; } catch (e) { return 'map'; } })();
   let labels = (() => { try { const v = localStorage.getItem(KEY2); return v == null ? true : v === '1'; } catch (e) { return true; } })();
 
   function setBasemap() {
