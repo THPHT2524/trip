@@ -40,6 +40,12 @@ eq(GEO.ok({lat:34.6,lng:135.5}), true, '정상 좌표');
 eq(GEO.ok({lat:34.6}), false, 'lng 없음');
 eq(GEO.ok({lat:'34.6',lng:135}), false, '문자열은 안 받는다');
 
+// ★사람이 읽을 이름이 아닌 것을 장소명에 넣지 않는다
+eq(GM.parse('https://www.google.com/maps/place/?q=place_id:ChIJN1t_tDeuEmsRUsoyG83frY4'), null,
+   '★place_id 는 이름이 아니다 — 좌표도 없으면 실패로 본다');
+eq(GM.parse('https://www.google.com/maps/search/?api=1&query=%EC%98%A4%EC%82%AC%EC%B9%B4%EC%84%B1').name,
+   '오사카성', '한글 장소명은 그대로 읽는다');
+
 // ── api/gmaps.js: 단축 링크 정규화 (SSRF 방어선) ────────────────────────
 // ★폰 공유 링크에는 추적 파라미터가 붙는다. 전에 이걸 403 으로 막아서
 //   **폰에서 붙여넣은 링크는 자동 채움이 한 번도 안 됐다.**

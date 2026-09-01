@@ -25,6 +25,10 @@ const GM = (function () {
   /* 좌표 한 쌍을 그대로 붙여넣은 경우도 받는다: "34.6873, 135.5259" */
   const PAIR = /^\s*(-?\d{1,3}(?:\.\d+)?)\s*[,\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/;
 
+  /* ★사람이 읽을 이름이 아닌 것들. `?q=place_id:ChIJ...` 형태가 실제로 온다 —
+     그대로 두면 장소명 칸에 `place_id:ChIJN1t_...` 가 박힌다(2026-09-01에 그렇게 나왔다). */
+  const NOT_A_NAME = /^(place_id:|ftid=|0x[0-9a-f]+:)/i;
+
   function isMapUrl(s) { return SHORT.test(s || '') || FULL.test(s || ''); }
   function needsServer(s) { return SHORT.test(s || ''); }
 
@@ -36,7 +40,7 @@ const GM = (function () {
     try { s = decodeURIComponent(s); } catch (e) { /* 깨진 인코딩이면 원문을 쓴다 */ }
     s = s.trim();
     // 좌표만 들어 있는 place 세그먼트("34.68,135.52")는 이름이 아니다
-    return (!s || PAIR.test(s)) ? null : s;
+    return (!s || PAIR.test(s) || NOT_A_NAME.test(s)) ? null : s;
   }
 
   /* 진짜 핀 좌표. data= 안의 !3d/!4d.
@@ -62,7 +66,8 @@ const GM = (function () {
     try { v = decodeURIComponent(v); } catch (e) {}
     const p = PAIR.exec(v);
     if (p) return { lat: num(p[1]), lng: num(p[2]), name: null };
-    return { lat: null, lng: null, name: v.trim() || null };
+    v = v.trim();
+    return { lat: null, lng: null, name: (!v || NOT_A_NAME.test(v)) ? null : v };
   }
 
   /* 붙여넣은 것 하나를 { name, lat, lng, approx, url } 로.

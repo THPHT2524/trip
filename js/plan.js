@@ -204,8 +204,13 @@ const Plan = (function () {
       let got = GM.parse(raw);
       if (got && got.needsServer) {
         const full = await DB.expandMapUrl(raw);
-        $('if-link').value = full;         // 원문을 펼친 것으로 바꿔 둔다(다음엔 서버가 필요 없다)
         got = GM.parse(full);
+        /* ★펼쳐지지 않고 **그대로** 돌아오는 일이 있다(코드가 죽었거나 구글이 404 를 준다).
+           그때 got 은 다시 needsServer 라 아래 채우기가 전부 건너뛰어지는데,
+           화면에는 아무 말도 안 나온다 — 사용자에게는 '눌러도 아무 일이 없다' 로 보인다.
+           실패로 못박고 원문도 그대로 둔다(펼친 것이 아니므로 덮어쓰지 않는다). */
+        if (got && got.needsServer) got = null;
+        else $('if-link').value = full;    // 다음엔 서버가 필요 없다
       }
       if (!got) {
         $('if-err').textContent = '구글맵 링크로 읽지 못했습니다. 장소명을 직접 적으세요.';
