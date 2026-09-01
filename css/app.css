@@ -894,8 +894,13 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
   padding: 6px 8px; margin: -6px -8px -6px 0; border-radius: 8px;
 }
 .sheetx:hover, .sheetx:focus-visible { color: var(--ink); background: var(--sunk); }
-/* 본문만 스크롤한다 — 머리말과 저장 단추는 늘 보인다 */
-.sheetbody { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* 본문만 스크롤한다 — 머리말과 저장 단추는 늘 보인다.
+   overscroll-behavior: contain — 시트 안을 끝까지 굴려도 그 스크롤이 뒤 페이지로 안 넘어간다 */
+.sheetbody { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+/* ★시트가 떠 있는 동안 뒤 화면을 **잠근다.** showModal() 은 배경을 못 누르게만 하지
+   스크롤까지 막아 주지는 않는다(브라우저마다 다르다). */
+html.sheet-open, html.sheet-open body { overflow: hidden; overscroll-behavior: none; }
 #if-dlg .form { padding: 14px 14px 18px; }
 /* 저장 줄은 시트 바닥에 붙는다 — 열두 칸을 지나 내려가지 않아도 닿는다 */
 #if-dlg .form .row.btns {
