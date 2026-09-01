@@ -43,13 +43,19 @@ card-dashboard 프로젝트의 **SQL Editor** 에서 **반드시 이 순서로**
 | 2 | `supabase/members.sql` | `trip.is_trip_member()` 를 만들고 **trips 의 정책도 여기서 만든다** |
 | 3 | `supabase/items.sql` | 일정 |
 | 4 | `supabase/checklist.sql` | 준비물 |
+| 5 | `supabase/grants.sql` | Data API 권한. **표를 더할 때마다 다시 돌린다** |
 
 ★순서를 지켜야 한다. `items.sql` 은 `trip.is_trip_member()` 를 부르는데 그 함수는 2번이 만든다.
 
 ### 그다음 대시보드에서 두 가지
 
-1. **Project Settings → API → Exposed schemas 에 `trip` 추가**
-   안 하면 PostgREST 가 이 표들을 보지 못해 클라이언트가 404 를 받는다. 제일 흔한 첫 실패다.
+1. **Exposed schemas 에 `trip` 추가** — 안 하면 PostgREST 가 이 표들을 보지 못하고
+   `PGRST106 Invalid schema: trip` 을 낸다. **제일 흔한 첫 실패다.**
+   UI 개편으로 위치가 둘 중 하나다:
+   - Project Settings → **Data API** → Exposed schemas
+   - Integrations → Data API → Settings → Exposed schemas
+
+   `Extra search path` 에도 `trip` 을 넣어 두면 RPC 가 깔끔하게 잡힌다.
 2. **Authentication → Sign In / Providers → 신규 가입 허용**
    동행자가 들어오려면 필요하다(위 경고 참고).
 
