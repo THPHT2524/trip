@@ -684,7 +684,11 @@ details[open] summary::after { content: '−'; }
 /* ★`.field` 로 감싸지 않고 `.row` 에 직접 놓인 입력칸은 width:100% 를 받아
    버튼을 다음 줄로 밀어낸다(준비물 추가·초대 링크에서 그렇게 갈렸다 — 2026-09-01).
    직접 놓인 것들은 flex 로 나눠 갖게 한다. */
-.form .row > input { flex: 1 1 auto; width: auto; min-width: 0; }
+/* ★flex-basis 는 **0** 이어야 한다. auto 로 두면 input 이 `size` 속성(기본 20자)만큼
+   내재 너비를 주장해서, 글자가 큰 칸(초대 코드)에서는 그것만으로 줄을 다 먹고
+   옆 단추를 다음 줄로 밀어낸다(2026-09-01 측정: 272px 를 주장했다).
+   basis 0 이면 내용 크기를 주장하지 않고 남는 공간만 나눠 갖는다. */
+.form .row > input { flex: 1 1 0; width: auto; min-width: 0; }
 .form .row > .btn { flex: 0 0 auto; }
 
 .form .row.tight { flex-wrap: nowrap; }
