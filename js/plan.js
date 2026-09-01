@@ -107,9 +107,10 @@ const Plan = (function () {
         <span class="sum">${cost}</span>
       </div>`;
 
-    if (!list.length) {
-      return band + `<section class="day"><p class="blank">비어 있는 날</p></section>`;
-    }
+    /* ★빈 날에도 **누를 것**을 둔다. '비어 있는 날' 이라고만 적어 두면 막다른 길이다 —
+       비었다는 사실은 정거장 하나만 있는 모습으로 이미 읽힌다. */
+    const add = `<button class="addstop" type="button" data-add="${esc(d)}">이 날에 추가</button>`;
+    if (!list.length) return band + `<section class="day">${add}</section>`;
 
     let html = '';
     list.forEach((r, i) => {
@@ -117,7 +118,7 @@ const Plan = (function () {
       const nx = list[i + 1];
       if (nx) html += segHtml(r, nx);
     });
-    return band + `<section class="day">${html}</section>`;
+    return band + `<section class="day">${html}${add}</section>`;
   }
 
   function stopHtml(r, nid) {
@@ -166,12 +167,17 @@ const Plan = (function () {
   }
 
   // ── 폼 ────────────────────────────────────────────────────────────────
+  /* ★'이 날에 추가' 가 넘겨 준 날짜. details 의 toggle 이 **비동기로** 뒤늦게 fillForm 을
+     한 번 더 부르기 때문에, fillForm 안에서 비우면 그 두 번째 호출이 날짜를 되돌린다.
+     그래서 수명을 **폼이 닫힐 때까지**로 둔다 — 남겨 두면 다음 추가까지 따라오므로. */
+  let addDay = null;
+
   function fillForm(r) {
     editing = r ? r.id : null;
     $('if-id').value = r ? r.id : '';
     $('if-link').value = (r && r.map_url) || '';
     $('if-name').value = (r && r.name) || '';
-    $('if-date').value = (r && r.on_date) || pick || (trip && trip.start_on) || U.todayISO();
+    $('if-date').value = (r && r.on_date) || addDay || pick || (trip && trip.start_on) || U.todayISO();
     $('if-time').value = (r && r.at_time) ? r.at_time.slice(0, 5) : '';
     $('if-kind').value = (r && r.kind) || '기타';
     $('if-cost').value = (r && r.cost != null) ? r.cost : '';
@@ -183,6 +189,8 @@ const Plan = (function () {
     $('if-payer').value = (r && r.payer_id) || '';
     $('if-lat').value = (r && r.lat != null) ? r.lat : '';
     $('if-lng').value = (r && r.lng != null) ? r.lng : '';
+    /* ★접어 둔 칸에 값이 들어 있으면 펴 준다 — 안 그러면 고치러 왔다가 못 본다 */
+    $('if-more').open = !!(r && (r.ref_code || r.book_url || r.memo));
     $('if-del').hidden = !r;
     $('if-sum').textContent = r ? '일정 고치기' : '일정 추가';
     $('if-err').textContent = '';
@@ -339,6 +347,16 @@ const Plan = (function () {
       await reload();
       return;
     }
+    const add = e.target.closest('[data-add]');
+    if (add) {
+      addDay = add.dataset.add;
+      editing = null;                                // 고치던 중이었어도 여기서는 새로 넣는다
+      $('if-wrap').open = true;
+      fillForm(null);                                // 이미 펴져 있으면 toggle 이 안 온다
+      $('if-wrap').scrollIntoView({ block: 'nearest' });
+      $('if-link').focus({ preventScroll: true });
+      return;
+    }
     const edit = e.target.closest('[data-edit]');
     if (edit) {
       const r = rows.find(x => x.id === edit.dataset.edit);
@@ -352,7 +370,10 @@ const Plan = (function () {
   $('if-del').addEventListener('click', del);
   $('if-link').addEventListener('change', readLink);
   $('if-link').addEventListener('paste', () => setTimeout(readLink, 0));
-  $('if-wrap').addEventListener('toggle', () => { if ($('if-wrap').open && !editing) fillForm(null); });
+  $('if-wrap').addEventListener('toggle', () => {
+    if ($('if-wrap').open) { if (!editing) fillForm(null); }
+    else addDay = null;                              // 닫으면 '이 날' 도 잊는다
+  });
 
   $('if-kind').innerHTML = KINDS.map(k => `<option value="${k}">${k}</option>`).join('');
 
