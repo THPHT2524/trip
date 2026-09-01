@@ -172,14 +172,20 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding: 14px var(--pad) 8px;
   display: flex; align-items: baseline; gap: 10px;
 }
-/* ★레일은 **컨테이너에 한 줄로** 그린다. 요소마다 따로 그렸더니 띠와 날 사이에
-   6px 씩 끊겼다(2026-09-01 측정) — '여행 하나가 경로 하나' 라는 말이 화면에서 깨진다.
-   한 줄로 그으면 사이 여백이 어떻게 바뀌든 이어진다. */
+/* ★레일은 **두 겹으로** 그린다. 하나만으로는 안 된다 —
+   ① `#days::before` : 컨테이너를 세로로 관통한다. 요소 사이 여백이 어떻게 바뀌든 이어진다.
+      (요소마다 그렸을 때는 띠와 날 사이가 6px 씩 끊겼다 — 2026-09-01 측정)
+   ② `.dayband::before` : 머리띠는 sticky 라 **불투명 배경**을 갖는다. ①이 그 뒤로 깔려
+      가려지므로, 띠 위에 한 번 더 긋는다. 안 그리면 Day 머리띠마다 레일이 끊긴다.
+   '여행 하나가 경로 하나' 라는 말이 화면에서 지켜지려면 둘 다 필요하다. */
 #days { position: relative; }
-#days::before {
+#days::before,
+.dayband::before {
   content: ''; position: absolute; left: calc(var(--pad) + var(--rail-x));
-  top: 0; bottom: 22px; width: 2px; background: var(--rail);
+  top: 0; width: 2px; background: var(--rail);
 }
+#days::before { bottom: 22px; }
+.dayband::before { bottom: 0; }
 .daytag {
   font-size: 11px; font-weight: 600; letter-spacing: .14em;
   color: var(--ink-3); text-transform: uppercase;
