@@ -319,8 +319,8 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* ── 지도 ─────────────────────────────────────────────────────────────── */
 /* 밑그림은 물러나고 **우리 마커가 앞에 선다.** 장소 이름은 이미 우리가 갖고 있으므로
-   OSM 은 '여기가 어디쯤인가' 만 맡으면 된다 — 채도를 낮춰 뒤로 보낸다.
-   어두운 테마에서는 반전 + 색상 회전을 얹는다(물이 파랗게 남는 표준 수법이다). */
+   지도는 '여기가 어디쯤인가' 만 맡으면 된다. 그래서 데이터를 얹으라고 만든 타일을 쓴다
+   (CARTO Positron / Dark Matter — js/map.js 참고). */
 #map {
   height: clamp(320px, calc(100dvh - 260px), 620px);
   margin: 0 var(--pad);
@@ -329,14 +329,9 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--sunk);
   z-index: 0;                       /* sticky 머리띠·탭바 아래에 둔다 */
 }
-.leaflet-tile-pane { filter: saturate(.6) contrast(.96); }
-:root[data-theme="dark"] .leaflet-tile-pane,
-:root:not([data-theme="light"]) .leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) saturate(.55) brightness(.92);
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .leaflet-tile-pane { filter: saturate(.6) contrast(.96); }
-}
+/* ★타일에 필터를 걸지 않는다. 전에는 OSM 기본 타일을 어두운 테마에서 반전시켰는데,
+   그건 밝은 테마의 소란스러움을 가려 주지 못했다(2026-09-01 — 밝은 화면에서 그대로 드러났다).
+   지금은 테마마다 **제대로 만들어진 밑그림**을 받아 오므로 손볼 것이 없다. */
 
 /* 마커 — 레일의 정거장과 같은 어법. 번호는 그날의 순서다. */
 .mpin {

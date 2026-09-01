@@ -15,9 +15,31 @@ const Maps = (function () {
 
   const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
 
-  let map = null, layer = null;
+  let map = null, layer = null, tiles = null, tileDark = null;
   let trip = null, rows = [], days = [], pick = null;
   let onPick = () => {};
+
+  /* ── 밑그림 ────────────────────────────────────────────────────────────
+     ★OSM 기본 타일을 쓰지 않는다. 그건 **지도 자체를 읽으라고** 만든 스타일이라
+       고속도로가 분홍 리본으로 화면을 가르고 출구·분기점 라벨이 빼곡하다.
+       여기서 지도는 밑그림이고 앞에 서야 하는 것은 우리 마커다.
+     CARTO Positron / Dark Matter 는 데이터를 얹으라고 만든 스타일이다 —
+       회색으로 물러나고 라벨이 성기다. 덤으로 타일이 절반 크기다(6KB vs 12KB, 실측).
+     ★키도 결제도 필요 없다. img-src 에 호스트 하나만 더 열면 된다.
+     ★저작자 표시는 둘 다 해야 한다(OSM 데이터 + CARTO 스타일). 지우지 말 것. */
+  const CARTO = d => `https://{s}.basemaps.cartocdn.com/${d ? 'dark_all' : 'light_all'}/{z}/{x}/{y}{r}.png`;
+  const ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors '
+             + '&copy; <a href="https://carto.com/attributions">CARTO</a>';
+  const prefersDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
+
+  function setBasemap(dark) {
+    if (tiles && tileDark === dark) return;
+    if (tiles) map.removeLayer(tiles);
+    tileDark = dark;
+    tiles = L.tileLayer(CARTO(dark), { maxZoom: 20, attribution: ATTR, subdomains: 'abcd' });
+    tiles.addTo(map);
+    if (layer) layer.bringToFront();      // 마커·동선이 타일 위에 남아야 한다
+  }
 
   function ensureMap() {
     if (map) return map;
@@ -29,12 +51,12 @@ const Maps = (function () {
       dragging: !L.Browser.mobile,
       tap: false,
     });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      // ODbL 이 요구하는 저작자 표시다. 지우지 말 것.
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
+    setBasemap(prefersDark());
     layer = L.layerGroup().addTo(map);
+    /* 시스템 테마가 바뀌면 밑그림도 따라간다 — 어두운 앱 위에 흰 지도가 남으면
+       그 판만 조명을 켠 것처럼 튄다. */
+    matchMedia('(prefers-color-scheme: dark)')
+      .addEventListener('change', e => { if (map) setBasemap(e.matches); });
     if (L.Browser.mobile) {
       // 두 손가락으로만 움직인다는 사실을 알려 주지 않으면 '지도가 고장났다' 로 읽힌다
       map.on('movestart', () => {});
