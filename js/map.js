@@ -20,25 +20,28 @@ const Maps = (function () {
   let onPick = () => {};
 
   /* ── 밑그림 ────────────────────────────────────────────────────────────
-     ★OSM 기본 타일을 쓰지 않는다. 그건 **지도 자체를 읽으라고** 만든 스타일이라
+     OSM 기본 타일을 쓴다. 키도 결제도 없고 정책도 명확하기 때문이다.
+     ★다만 **그대로 쓰지 않는다.** 그 스타일은 지도 자체를 읽으라고 만든 것이라
        고속도로가 분홍 리본으로 화면을 가르고 출구·분기점 라벨이 빼곡하다.
-       여기서 지도는 밑그림이고 앞에 서야 하는 것은 우리 마커다.
-     CARTO Positron / Dark Matter 는 데이터를 얹으라고 만든 스타일이다 —
-       회색으로 물러나고 라벨이 성기다. 덤으로 타일이 절반 크기다(6KB vs 12KB, 실측).
-     ★키도 결제도 필요 없다. img-src 에 호스트 하나만 더 열면 된다.
-     ★저작자 표시는 둘 다 해야 한다(OSM 데이터 + CARTO 스타일). 지우지 말 것. */
-  const CARTO = d => `https://{s}.basemaps.cartocdn.com/${d ? 'dark_all' : 'light_all'}/{z}/{x}/{y}{r}.png`;
-  const ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors '
-             + '&copy; <a href="https://carto.com/attributions">CARTO</a>';
+       여기서 지도는 밑그림이고 앞에 서야 하는 것은 우리 마커다 —
+       **회색조로 눌러서 뒤로 보낸다**(css/app.css 의 .leaflet-tile-pane).
+
+     ★CARTO Positron 을 잠깐 썼다가 되돌렸다(2026-09-01): 지금은 **API 키를 요구**해서
+       타일에 'API KEY REQUIRED' 워터마크가 박혀 나온다. curl 로는 200 이 와서 되는 줄 알았다 —
+       상태코드만 보고 넘긴 확인이었다. 키가 필요하면 구글맵을 피한 이유와 같은 문제가 된다.
+     ★저작자 표시는 ODbL 의무다. 지우지 말 것. */
+  const ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
   const prefersDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
 
+  /* 밑그림 자체는 하나다. 밝고 어두움은 CSS 필터가 가른다 —
+     타일을 두 벌 받을 필요가 없고, 테마가 바뀌어도 다시 받지 않는다. */
   function setBasemap(dark) {
-    if (tiles && tileDark === dark) return;
-    if (tiles) map.removeLayer(tiles);
-    tileDark = dark;
-    tiles = L.tileLayer(CARTO(dark), { maxZoom: 20, attribution: ATTR, subdomains: 'abcd' });
+    document.getElementById('map').dataset.dark = String(!!dark);
+    if (tiles) return;
+    tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        { maxZoom: 19, attribution: ATTR });
     tiles.addTo(map);
-    if (layer) layer.bringToFront();      // 마커·동선이 타일 위에 남아야 한다
+    if (layer) layer.bringToFront();
   }
 
   function ensureMap() {

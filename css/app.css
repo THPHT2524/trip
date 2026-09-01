@@ -329,9 +329,18 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--sunk);
   z-index: 0;                       /* sticky 머리띠·탭바 아래에 둔다 */
 }
-/* ★타일에 필터를 걸지 않는다. 전에는 OSM 기본 타일을 어두운 테마에서 반전시켰는데,
-   그건 밝은 테마의 소란스러움을 가려 주지 못했다(2026-09-01 — 밝은 화면에서 그대로 드러났다).
-   지금은 테마마다 **제대로 만들어진 밑그림**을 받아 오므로 손볼 것이 없다. */
+/* ★밑그림을 **회색조로 눌러 뒤로 보낸다.** 이게 이 화면의 핵심 처리다.
+   OSM 기본 스타일은 지도 자체를 읽으라고 만든 것이라 분홍 고속도로가 화면을 가르고
+   라벨이 빼곡하다 — 그대로 두면 우리 마커가 그 소음에 묻힌다.
+   ★채도만 살짝 낮추는 것으로는 모자랐다(2026-09-01: saturate(.6) 로는 분홍이 그대로 남았다).
+     색을 아예 빼고 대비를 낮춘다. 색은 **마커에만** 남는다 — 그게 노선도의 어법이다.
+   ★어두운 테마는 여기에 반전을 얹는다. 밑그림이 하나라 타일을 두 벌 받지 않는다. */
+#map[data-dark="false"] .leaflet-tile-pane {
+  filter: grayscale(1) brightness(1.07) contrast(.78);
+}
+#map[data-dark="true"] .leaflet-tile-pane {
+  filter: grayscale(1) invert(1) brightness(.82) contrast(.86);
+}
 
 /* 마커 — 레일의 정거장과 같은 어법. 번호는 그날의 순서다. */
 .mpin {
