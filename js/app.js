@@ -115,10 +115,13 @@
   function card(t, phase) {
     const mine = shape.filter(r => r.trip_id === t.id);
     const days = dayList(t, mine);
+    /* ★칸이 좁아지면 점을 줄인다. 21일 여행이면 칸이 13px 인데 점 넷은 26px 라 넘친다 —
+       그때는 '무엇이 있나' 대신 '있나 없나' 까지만 말한다. 넘쳐서 깨지느니 덜 말한다. */
+    const maxDots = days.length > 12 ? 1 : days.length > 7 ? 2 : 4;
     const rail = days.length ? `<span class="mrail">${days.map(d => {
       const on = mine.filter(r => r.on_date === d);
       return on.length
-        ? `<span class="md">${on.slice(0, 4).map(r =>
+        ? `<span class="md">${on.slice(0, maxDots).map(r =>
             `<i style="--k: var(--${KVAR[r.kind] || 'k-etc'})"></i>`).join('')}</span>`
         : '<span class="md is-empty"></span>';
     }).join('')}</span>` : '';

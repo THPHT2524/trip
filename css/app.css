@@ -160,7 +160,11 @@ a { color: var(--route); text-underline-offset: 2px; }
 .top .span {
   font-family: var(--mono); font-size: 11px; color: var(--ink-3);
   letter-spacing: .02em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* ★로그아웃은 **가장 안 쓰는 동작**이다. 테두리 버튼으로 두면 첫 화면에서 제일 밝은 것이
+   되어 눈이 거기 먼저 앉는다 — 대담함은 서명(미니 레일)에만 쓴다. */
+.top .act { flex: 0 0 auto; }
 
 /* ── Day 머리띠 ───────────────────────────────────────────────────────── */
 /* 레일이 이 띠를 **뚫고 지나간다**. 여행 하나가 경로 하나라서 끊지 않는다. */
@@ -566,12 +570,14 @@ a { color: var(--route); text-underline-offset: 2px; }
   flex: 1 1 0; min-width: 6px; height: 100%;
   display: flex; align-items: center; justify-content: center; gap: 2px;
   border-radius: 3px; background: var(--sunk);
+  overflow: hidden;                 /* 좁은 칸에서 점이 삐져나오지 않게 */
 }
 /* 비어 있는 날은 **가는 선 하나**로 남긴다 — 없는 것이 아니라 비어 있는 것이다 */
 .mrail .md.is-empty {
   background: none;
   border-top: 2px solid var(--rail);
   height: 2px; align-self: center; border-radius: 0;
+  opacity: .8;
 }
 .mrail i {
   width: 5px; height: 5px; border-radius: 50%;
