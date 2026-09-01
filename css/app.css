@@ -730,9 +730,12 @@ summary {
   padding: 12px 14px; font-size: 14px; font-weight: 600; color: var(--ink-2);
 }
 summary::-webkit-details-marker { display: none; }
-summary::after { content: '＋'; float: right; color: var(--ink-3); font-weight: 400; }
-details[open] summary { border-bottom: 1px solid var(--line); }
-details[open] summary::after { content: '−'; }
+/* ★자손이 아니라 **직계 자식**이어야 한다. details 안에 details 를 넣는 순간
+   바깥이 열려 있다는 이유로 안쪽 접힘까지 '−' 가 됐다 — 닫혀 있는데 열린 것처럼 보였다
+   (2026-09-01, 폼 안에 '예약·메모' 접힘을 넣고 발견). */
+details > summary::after { content: '＋'; float: right; color: var(--ink-3); font-weight: 400; }
+details[open] > summary { border-bottom: 1px solid var(--line); }
+details[open] > summary::after { content: '−'; }
 
 .form { padding: 14px 14px 20px; display: flex; flex-direction: column; gap: 12px; }
 /* 폼 안의 작은 접힘 — 바깥 카드처럼 테두리를 또 두르지 않는다.
