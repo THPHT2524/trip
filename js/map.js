@@ -38,9 +38,13 @@ const Maps = (function () {
        위성 + 길이름 → hybrid   (사진 위에 도로·지명이 얹혀 나온다)
        위성          → satellite
        지도          → streets-v2 / streets-v2-dark (시스템 테마를 따른다) */
+  /* ★v4 를 쓴다. v1/v2 는 라벨이 **현지 문자**로 나온다(오사카에서 難波五丁目·日本橋) —
+     v4 는 로마자로 적어 준다(Nanba·Dotonbori). 한국 사람이 일본을 다닐 때는 그쪽이 읽힌다.
+     ★한글은 래스터로 안 된다. 타일에 글자가 구워져 나오고 language 파라미터는 무시된다
+       (2026-09-01 실측: 파라미터 유무에 응답 바이트가 동일). 벡터로 가야 바꿀 수 있다. */
   function styleName() {
-    if (base === 'sat') return labels ? 'hybrid' : 'satellite';
-    return prefersDark() ? 'streets-v2-dark' : 'streets-v2';
+    if (base === 'sat') return labels ? 'hybrid-v4' : 'satellite';
+    return prefersDark() ? 'streets-v2-dark' : 'streets-v4';
   }
 
   const KEY = 'trip_basemap', KEY2 = 'trip_maplabels';
