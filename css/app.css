@@ -317,6 +317,54 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 .dayband .warn { color: var(--warn); font-weight: 500; }
 
+/* ── 지도 ─────────────────────────────────────────────────────────────── */
+/* 밑그림은 물러나고 **우리 마커가 앞에 선다.** 장소 이름은 이미 우리가 갖고 있으므로
+   OSM 은 '여기가 어디쯤인가' 만 맡으면 된다 — 채도를 낮춰 뒤로 보낸다.
+   어두운 테마에서는 반전 + 색상 회전을 얹는다(물이 파랗게 남는 표준 수법이다). */
+#map {
+  height: clamp(320px, calc(100dvh - 260px), 620px);
+  margin: 0 var(--pad);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--sunk);
+  z-index: 0;                       /* sticky 머리띠·탭바 아래에 둔다 */
+}
+.leaflet-tile-pane { filter: saturate(.6) contrast(.96); }
+:root[data-theme="dark"] .leaflet-tile-pane,
+:root:not([data-theme="light"]) .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) saturate(.55) brightness(.92);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .leaflet-tile-pane { filter: saturate(.6) contrast(.96); }
+}
+
+/* 마커 — 레일의 정거장과 같은 어법. 번호는 그날의 순서다. */
+.mpin {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--card); border: 3px solid var(--k, var(--k-etc));
+  color: var(--ink); font-family: var(--mono); font-size: 10px; font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,.35);
+}
+.mpin.is-done { background: var(--k, var(--k-etc)); color: var(--card); }
+
+/* Leaflet 기본 크롬을 이 앱의 어법으로 낮춘다 */
+.leaflet-container { font-family: var(--sans); background: var(--sunk); }
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  color: var(--ink-3); font-size: 10px;
+}
+.leaflet-control-attribution a { color: var(--ink-2); }
+.leaflet-bar a {
+  background: var(--card); color: var(--ink); border-bottom-color: var(--line);
+}
+.leaflet-bar a:hover { background: var(--sunk); color: var(--ink); }
+.leaflet-tooltip {
+  background: var(--ink); color: var(--paper); border: 0; border-radius: 5px;
+  font-size: 12px; font-weight: 600; padding: 3px 7px; box-shadow: none;
+}
+.leaflet-tooltip-top::before { border-top-color: var(--ink); }
+
 /* ── 하단 탭 ──────────────────────────────────────────────────────────── */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;

@@ -76,8 +76,9 @@
       p.hidden = p.dataset.tab !== tab);
 
     /* 일정은 이 여행의 본체다 — 어느 탭으로 들어와도 먼저 받아 둔다.
-       (지도·비용도 결국 같은 rows 를 쓴다. 탭마다 따로 받으면 세 번 받는다.) */
-    if (t) Plan.open(t);
+       (지도·비용도 결국 같은 rows 를 쓴다. 탭마다 따로 받으면 세 번 받는다.)
+       ★지도는 그 rows 를 넘겨받기만 한다 — 자기 것을 또 받지 않는다. */
+    if (t) Plan.open(t).then(() => { if (tab === 'map') Maps.open(t, Plan.rows()); });
   }
 
   function renderTrips() {
@@ -197,6 +198,16 @@
   $('tabs').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (b) go(tripId, b.dataset.tab, true);
+  });
+
+  /* 지도의 마커를 누르면 그 일정 줄로 데려간다 — 지도에서 '이게 뭐였지' 가 생기면
+     결국 일정 탭으로 돌아가 눈으로 찾게 된다. */
+  Maps.onPick(id => {
+    go(tripId, 'plan', true);
+    setTimeout(() => {
+      const el = document.querySelector(`[data-edit="${id}"]`);
+      if (el) { el.scrollIntoView({ block: 'center' }); el.focus({ preventScroll: true }); }
+    }, 80);
   });
 
   addEventListener('popstate', () => { const u = readUrl(); go(u.tripId, u.tab, false); });
