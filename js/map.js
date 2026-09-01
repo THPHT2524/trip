@@ -115,6 +115,17 @@ const Maps = (function () {
     setTimeout(() => map.invalidateSize(), 0);
   }
 
+  /* ★크기가 바뀌면 알려 줘야 한다. Leaflet 은 컨테이너 크기를 제 안에 기억하고 있어서,
+     폰을 돌리거나 창을 줄이면 **타일이 일부만 깔린 채로 남는다**(2026-09-01 실측 — 화면의
+     3분의 1만 그려졌다). 그림이 깨진 것처럼 보이는데 원인은 크기 정보 하나다.
+     자주 오는 이벤트라 한 박자 묶어서 부른다. */
+  let rz = 0;
+  addEventListener('resize', () => {
+    if (!map) return;
+    clearTimeout(rz);
+    rz = setTimeout(() => map.invalidateSize(), 150);
+  });
+
   $('mapdays').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (!b) return;
