@@ -43,8 +43,16 @@ function canonical(raw) {
 const HOP_OK = /^https:\/\/([a-z0-9-]+\.)*google\.[a-z.]{2,6}\//i;
 
 const MAX_HOPS = 5;
-const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 ' +
-           '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+
+/* ★★**브라우저인 척하면 안 된다.** 데스크톱 Chrome UA 를 보내면 구글이 302 대신
+     '앱으로 열기' 중간 페이지(200 + JS)를 준다 — Location 헤더가 없으니 펼치기가
+     통째로 실패한다. 그 HTML 안에 목적지가 들어 있지도 않다(찾아봤다).
+     2026-09-01 같은 링크로 실측:
+        Chrome UA        → 200  (중간 페이지)
+        UA 없음·curl·봇  → 302  Location: .../maps/place/간사이+국제공항/...
+     평범한 클라이언트로 자기를 밝히면 구글이 그냥 리다이렉트를 준다.
+   ★이건 '봇 탐지 우회' 의 반대다 — 원래 우리는 봇이고, 봇인 척을 그만두는 것이다. */
+const UA = 'trip-app/1.0 (+https://thpht-trip.vercel.app)';
 
 /* 인증 — 로그인한 사용자만 이 프록시를 쓸 수 있다.
    값은 js/supabase-config.js 와 같은 공개 값이다(anon 키는 브라우저에 노출되도록 설계된 키).
@@ -166,6 +174,16 @@ module.exports = async (req, res) => {
     if (out.err) {
       res.setHeader('Cache-Control', 'no-store');
       res.status(422).json({ error: out.err });
+      return;
+    }
+    /* ★펼쳐지지 않고 **그대로** 돌아오는 경우 — 구글이 리다이렉트 대신 200 을 줬다는 뜻이다.
+       그때 성공(200)으로 돌려주면 브라우저는 같은 단축 링크를 또 파싱하려 들고
+       화면에는 아무 일도 안 일어난 것처럼 보인다. 실패로 못박고 다음 수를 알려 준다. */
+    if (IN_HOST[new URL(out.url).hostname]) {
+      res.setHeader('Cache-Control', 'no-store');
+      res.status(422).json({
+        error: '구글이 이 링크를 펼쳐 주지 않았습니다 — 링크를 브라우저에서 연 뒤 주소창의 전체 주소를 붙여넣어 주세요.',
+      });
       return;
     }
     /* private — 공유 캐시(Vercel 엣지)에 남기지 않는다. public 으로 두면 인증을 통과한 응답이
