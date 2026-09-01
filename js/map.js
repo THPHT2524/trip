@@ -96,8 +96,14 @@ const Maps = (function () {
   /* ── 동선 선 ───────────────────────────────────────────────────────────
      ★스타일을 갈면 소스와 레이어가 **함께 날아간다**(마커는 DOM 이라 남는다).
        그래서 style.load 마다 다시 얹는다. */
+  /* ★★`map.isStyleLoaded()` 를 쓰면 **안 된다.** MapTiler 스타일에는 저작자 표시만 담은
+     `maptiler_attribution` 소스가 들어 있는데 url 도 tiles 도 없어서 **영원히 로드되지
+     않는다.** 그래서 isStyleLoaded() 가 항상 false 고, 여기서 걸러 버리면 동선 선이
+     한 번도 안 그려진다(2026-09-01 실측 — 선이 안 나와서 찾았다).
+     스타일이 준비됐는지는 style.load 로 직접 센다. */
+  let styleReady = false;
   function addRoute() {
-    if (!map || !map.isStyleLoaded()) return;
+    if (!map || !styleReady) return;
     const color = getComputedStyle(document.documentElement).getPropertyValue('--route').trim() || '#2B4ACB';
     if (map.getSource('route')) { map.getSource('route').setData(route); return; }
     map.addSource('route', { type: 'geojson', data: route });
@@ -116,7 +122,7 @@ const Maps = (function () {
     el.dataset.base = base;
     el.dataset.labels = String(labels);
     const u = styleUrl();
-    if (map && u !== curStyle) { curStyle = u; original.clear(); map.setStyle(u); }
+    if (map && u !== curStyle) { curStyle = u; styleReady = false; original.clear(); map.setStyle(u); }
     $('lblbtn').setAttribute('aria-pressed', String(labels));
     $('lblbtn').hidden = base !== 'sat';     // '지도' 에는 원래 라벨이 있다
     document.querySelectorAll('#basepick button[data-base]').forEach(x =>
@@ -151,7 +157,7 @@ const Maps = (function () {
        표시는 살아 있고 지도는 안 가린다. 문구는 스타일이 들고 오므로 우리가 적지 않는다. */
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
-    map.on('style.load', () => { localizeLabels(); addRoute(); });
+    map.on('style.load', () => { styleReady = true; localizeLabels(); addRoute(); });
     /* 키가 죽거나 한도를 넘기면 타일이 조용히 안 온다 — 빈 판만 남으면 원인을 알 수 없다 */
     let told = false;
     map.on('error', e => {
@@ -230,7 +236,7 @@ const Maps = (function () {
     const note = $('map-note');
     const parts = [];
     if (missing) parts.push(`좌표 없는 일정 ${missing} — 지도에 없습니다`);
-    if (pts.length > 1) parts.push('선은 직선입니다 (실제 이동 경로가 아닙니다)');
+    if (lines.length) parts.push('선은 직선입니다 (실제 이동 경로가 아닙니다)');
     note.textContent = parts.join(' · ');
 
     if (pts.length) {
