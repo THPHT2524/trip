@@ -482,7 +482,9 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .dbar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .dbar .col {
-  width: 100%; height: 96px;
+  /* ★폭을 묶는다. 사흘짜리 여행이면 칸이 110px 씩인데 그만한 막대는 **덩어리로 읽힌다** —
+     막대는 길이로 말하는 것이지 면적으로 말하는 것이 아니다. */
+  width: 100%; max-width: 52px; height: 96px;
   display: flex; flex-direction: column-reverse;   /* 큰 것이 아래에 깔린다 */
   justify-content: flex-start;
   border-radius: 4px 4px 0 0; overflow: hidden;
@@ -494,9 +496,11 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--ink-3);
   letter-spacing: .04em;
 }
+/* ★빈 칸도 자리를 지킨다. 금액이 있는 칸만 키가 커지면 기둥들이 바닥에 정렬되면서
+   **라벨 높이가 칸마다 달라진다**(2026-09-01: D1 라벨만 위에 떠 있었다). */
 .dbar .amt {
   font-family: var(--mono); font-size: 9px; color: var(--ink-3);
-  font-variant-numeric: tabular-nums; line-height: 1;
+  font-variant-numeric: tabular-nums; line-height: 1; min-height: 10px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 .clist .act { justify-self: end; }
