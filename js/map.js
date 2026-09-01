@@ -15,7 +15,7 @@ const Maps = (function () {
 
   const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
 
-  let map = null, layer = null, tiles = null, tileDark = null;
+  let map = null, layer = null, tiles = null, over = null;
   let trip = null, rows = [], days = [], pick = null;
   let onPick = () => {};
 
@@ -41,8 +41,11 @@ const Maps = (function () {
       attr: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     },
   };
-  const KEY = 'trip_basemap';
+  const KEY = 'trip_basemap', KEY2 = 'trip_maplabels';
   let base = (() => { try { return localStorage.getItem(KEY) === 'map' ? 'map' : 'sat'; } catch (e) { return 'sat'; } })();
+  /* 라벨 오버레이는 **기본 꺼짐**이다. 켜면 길 이름이 보이지만 사진이 어두워지고 지저분해진다 —
+     필요할 때만 켜는 편이 맞다. 고른 것은 기억한다. */
+  let labels = (() => { try { return localStorage.getItem(KEY2) === '1'; } catch (e) { return false; } })();
 
   const prefersDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -50,9 +53,22 @@ const Maps = (function () {
     const el = $('map');
     el.dataset.base = base;
     el.dataset.dark = String(prefersDark());
+    el.dataset.labels = String(labels);
     if (tiles) map.removeLayer(tiles);
+    if (over) { map.removeLayer(over); over = null; }
     const b = BASE[base];
     tiles = L.tileLayer(b.url, { maxZoom: b.max, attribution: b.attr }).addTo(map);
+    /* ★라벨 오버레이 — Esri 의 참조 레이어(World_Transportation 등)는 이 지역에서
+       **완전히 투명한 타일**만 준다(2026-09-01 실측: 어느 배율에서도 875바이트 = 빈 타일).
+       그래서 OSM 을 위에 얹고 **혼합 모드로 흰 배경을 걷어낸다** — 선과 글자만 남는다.
+       위성일 때만 뜻이 있다('지도' 는 그 자체가 OSM 이다). */
+    if (base === 'sat' && labels) {
+      over = L.tileLayer(BASE.map.url, {
+        maxZoom: BASE.map.max, className: 'lblover', opacity: 1,
+      }).addTo(map);
+    }
+    $('lblbtn').setAttribute('aria-pressed', String(labels));
+    $('lblbtn').hidden = base !== 'sat';
     /* ★bringToFront() 를 부르지 않는다. layer 는 LayerGroup 이라 그 메서드가 없다 —
        불렀다가 ensureMap 이 통째로 죽어 타일이 한 장도 안 깔렸다(2026-09-01).
        애초에 필요 없다: Leaflet 은 마커·오버레이 판을 타일 판 위에 둔다. */
@@ -158,11 +174,18 @@ const Maps = (function () {
   });
 
   $('basepick').addEventListener('click', e => {
-    const b = e.target.closest('button');
-    if (!b || b.dataset.base === base) return;
-    base = b.dataset.base;
-    try { localStorage.setItem(KEY, base); } catch (err) {}
-    setBasemap();
+    const b = e.target.closest('button[data-base]');
+    if (b && b.dataset.base !== base) {
+      base = b.dataset.base;
+      try { localStorage.setItem(KEY, base); } catch (err) {}
+      setBasemap();
+      return;
+    }
+    if (e.target.closest('#lblbtn')) {
+      labels = !labels;
+      try { localStorage.setItem(KEY2, labels ? '1' : '0'); } catch (err) {}
+      setBasemap();
+    }
   });
 
   $('mapdays').addEventListener('click', e => {

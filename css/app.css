@@ -349,10 +349,24 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* 위성 위에서는 마커 테두리를 조금 두껍게 — 사진 위에서 얇은 선은 묻힌다 */
 #map[data-base="sat"] .mpin { border-width: 3.5px; box-shadow: 0 1px 5px rgba(0,0,0,.7); }
 
+/* ★라벨 오버레이 — OSM 을 위성 위에 얹고 **흰 배경을 걷어낸다.**
+   multiply 는 흰색을 그대로 통과시키므로, 대비를 크게 올려 밝은 면을 흰색으로 밀어 놓으면
+   남는 것은 도로선과 글자뿐이다. (Esri 참조 레이어가 이 지역에서 빈 타일만 줘서 택한 길이다.)
+   ★blend 가 먹으려면 부모가 스태킹 컨텍스트를 만들어야 한다 — #map 의 isolation. */
+#map { isolation: isolate; }
+.lblover {
+  mix-blend-mode: multiply;
+  filter: grayscale(1) contrast(2.2) brightness(1.25);
+}
+
 /* 밑그림 고르기 — 날짜 탭과 같은 어법, 자리만 오른쪽 */
 .basepick {
-  display: flex; gap: 6px; justify-content: flex-end;
+  display: flex; gap: 8px; justify-content: flex-end; align-items: center;
   padding: 0 var(--pad) 8px;
+}
+.basepick .seg2 { display: flex; gap: 6px; }
+.basepick .tog[aria-pressed="true"] {
+  background: var(--depth-bg); border-color: var(--depth); color: var(--depth);
 }
 .basepick button {
   appearance: none; cursor: pointer;
