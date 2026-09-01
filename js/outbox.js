@@ -87,7 +87,16 @@ const Outbox = (function () {
   /* 쌓인 것을 순서대로 보낸다. 하나라도 네트워크로 실패하면 **거기서 멈춘다** —
      뒤엣것을 먼저 보내면 순서가 뒤집혀 '고친 뒤 만든' 꼴이 된다.
      서버가 거절한 것(권한·검증)은 다시 보내도 같으므로 큐에서 빼고 알린다. */
+  /* ★한 번에 하나만 돈다. 방어가 없으면 둘이 겹쳐 **같은 줄을 두 번 만든다** —
+     둘 다 q[0] 을 보고 둘 다 보낸 뒤에야 shift 하기 때문이다.
+     2026-09-01 에 실제로 겪었다: online 이벤트를 outbox.js 와 app.js 가 각각 듣고 있었다. */
+  let flushing = null;
   async function flush() {
+    if (flushing) return flushing;
+    flushing = run().finally(() => { flushing = null; });
+    return flushing;
+  }
+  async function run() {
     if (!q.length || !navigator.onLine) return { sent: 0, failed: 0, dropped: [] };
     let sent = 0; const dropped = [];
     while (q.length) {

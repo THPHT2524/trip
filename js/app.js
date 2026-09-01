@@ -251,7 +251,8 @@
   Outbox.onChange(drawObox);
   drawObox(Outbox.count());
   $('obox').addEventListener('click', e => { if (e.target.id === 'obox-send') sendOutbox(); });
-  addEventListener('online', () => drawObox(Outbox.count(), true));
+  /* ★online 을 여기서 또 듣지 않는다. outbox.js 가 이미 듣고 onChange 로 알려 준다 —
+     둘 다 들으면 flush 가 두 번 돌아 같은 줄이 두 개 생긴다(2026-09-01 에 겪었다). */
 
   /* 다른 모듈이 데이터를 바꿨다고 알려 오면 다시 그린다 —
      모듈끼리 서로를 부르지 않게 이벤트 한 겹을 둔다. */
