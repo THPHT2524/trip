@@ -9,3 +9,6 @@ __pycache__/
 # 로컬 전용 (vercel link 산출물: 프로젝트 식별자·환경변수)
 .vercel
 .env*
+
+# supabase CLI 가 만드는 로컬 상태 (프로젝트 링크 등)
+supabase/.temp/

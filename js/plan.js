@@ -19,6 +19,7 @@ const Plan = (function () {
   let editing = null;   // 수정 중인 항목 id (null = 새로 추가)
   let loaded = false;   // 이 여행의 일정을 한 번이라도 받았나
   let offline = false;  // 마지막 읽기가 로컬 사본이었나
+  let crew = [];        // 동행자 — '누가 냈나' 를 사람 이름으로 고르게 한다
 
   const KINDS = ['숙소', '식사', '관광', '이동', '쇼핑', '기타'];
   const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
@@ -136,6 +137,7 @@ const Plan = (function () {
         <span class="row2">
           <span class="kind">${esc(r.kind)}</span>
           ${cost}
+          ${r.payer_id ? `<span class="badge">${esc(Crew.nameOf(crew, r.payer_id) || '냄')}</span>` : ''}
           ${r.ref_code ? `<span class="badge">${esc(r.ref_code)}</span>` : ''}
           ${r.memo ? '<span class="badge">메모</span>' : ''}
         </span>
@@ -173,6 +175,7 @@ const Plan = (function () {
     $('if-ref').value = (r && r.ref_code) || '';
     $('if-book').value = (r && r.book_url) || '';
     $('if-memo').value = (r && r.memo) || '';
+    $('if-payer').value = (r && r.payer_id) || '';
     $('if-lat').value = (r && r.lat != null) ? r.lat : '';
     $('if-lng').value = (r && r.lng != null) ? r.lng : '';
     $('if-del').hidden = !r;
@@ -231,6 +234,7 @@ const Plan = (function () {
       map_url: $('if-link').value,
       lat: $('if-lat').value, lng: $('if-lng').value,
       cost: $('if-cost').value, cost_cur: $('if-cur').value, fx: $('if-fx').value,
+      payer_id: $('if-payer').value || null,
       ref_code: $('if-ref').value, book_url: $('if-book').value,
       done: editing ? !!(rows.find(r => r.id === editing) || {}).done : false,
       /* 시각이 없는 줄은 그날 맨 뒤에 붙인다. 시각이 있으면 서버 정렬이 시각을 먼저 본다. */
@@ -353,6 +357,13 @@ const Plan = (function () {
       rows = []; pick = null; editing = null; loaded = false;
       fillForm(null);
       $('days').innerHTML = '<p class="empty">불러오는 중…</p>';
+      /* 동행자 목록을 미리 받아 '누가 냈나' 를 채운다.
+         못 받아도(끊겼거나 혼자거나) 폼은 그대로 쓴다 — '안 적음' 만 남는다. */
+      try {
+        crew = await Crew.of(t.id);
+        $('if-payer').innerHTML = '<option value="">안 적음</option>'
+          + crew.map(m => `<option value="${esc(m.user_id)}">${esc(String(m.email || '').split('@')[0])}</option>`).join('');
+      } catch (e) { crew = []; }
       try { await reload(); loaded = true; }
       catch (e) { $('days').innerHTML = `<p class="empty"><strong>불러오지 못했습니다</strong>${esc(e.message)}</p>`; }
     },

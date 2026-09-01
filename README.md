@@ -257,7 +257,7 @@ v1 은 "나중에 도착한 쓰기가 이긴다", 지운 것은 되살리지 않
 | `supabase/*.sql` | 표·RLS·함수 (멱등) · `SETUP.md` 설치 런북 |
 | `supabase/crew.sql` | 같은 여행 멤버끼리만 서로를 보게 하는 `security definer` 함수 |
 | `tools/test-pure.js` | `js/geo.js`·`js/gmaps.js` 회귀 — `node tools/test-pure.js` |
-| `tools/bump.py` | 캐시버스팅 (card-dashboard 에서 이식) |
+| `tools/bump.py` | 캐시버스팅 — `?v` 세 곳(index·sw·SHELL)을 한 번에 올린다 |
 | `vercel.json` | 보안 헤더 · 캐시 정책 · `/t/(.*)` 리라이트 |
 
 ---
