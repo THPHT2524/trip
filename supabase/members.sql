@@ -104,10 +104,20 @@ create policy trip_members_leave on trip.trip_members
 -- ★insert 정책을 두지 않는다 — 넣는 것은 위의 두 함수(security definer)뿐이다.
 
 -- ── 이제 trips 의 정책을 만들 수 있다 ─────────────────────────────────
+/* ★★`owner_id = auth.uid()` 를 **반드시 먼저** 둔다. 멤버십만으로 판정하면 여행을 못 만든다.
+   왜냐 (2026-09-01 에 실제로 막혔다):
+     `insert ... returning` 은 삽입 정책뿐 아니라 **돌려줄 행에 SELECT 정책까지** 적용한다.
+     그런데 멤버 행은 아래 AFTER INSERT 트리거가 만들므로, RETURNING 이 평가되는 시점에는
+     아직 멤버가 아니다 → 방금 만든 여행이 만든 사람에게 안 보인다 →
+     `new row violates row-level security policy for table "trips"` 로 거부된다.
+     ★증상이 고약하다: RETURNING 없이 넣으면 성공하므로 삽입 정책을 아무리 들여다봐도 멀쩡하다.
+     supabase-js 의 `.insert(row).select()` 가 바로 그 RETURNING 이다.
+   소유자를 직접 통과시키는 것은 의미상으로도 맞다 — 내가 만든 여행은 멤버 표와 무관하게
+   보여야 하고, 트리거가 언젠가 실패해도 자기 여행이 사라지지 않는다. */
 drop policy if exists trips_member on trip.trips;
 create policy trips_member on trip.trips
   for select to authenticated
-  using (trip.is_trip_member(id));
+  using (owner_id = auth.uid() or trip.is_trip_member(id));
 
 -- 만들기: 자기를 소유자로 하는 여행만.
 drop policy if exists trips_create on trip.trips;
