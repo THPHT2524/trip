@@ -7,6 +7,7 @@
  */
 const GEO = require('../js/geo.js');
 const GM  = require('../js/gmaps.js');
+const API = require('../api/gmaps.js');   // canonical() 만 쓴다
 
 let pass = 0, fail = 0;
 const eq = (got, want, msg) => {
@@ -38,6 +39,22 @@ eq(GEO.label(null), '', '없으면 빈 문자열');
 eq(GEO.ok({lat:34.6,lng:135.5}), true, '정상 좌표');
 eq(GEO.ok({lat:34.6}), false, 'lng 없음');
 eq(GEO.ok({lat:'34.6',lng:135}), false, '문자열은 안 받는다');
+
+// ── api/gmaps.js: 단축 링크 정규화 (SSRF 방어선) ────────────────────────
+// ★폰 공유 링크에는 추적 파라미터가 붙는다. 전에 이걸 403 으로 막아서
+//   **폰에서 붙여넣은 링크는 자동 채움이 한 번도 안 됐다.**
+const C = API.canonical;
+eq(C('https://maps.app.goo.gl/AbCd1234'), 'https://maps.app.goo.gl/AbCd1234', '기본형');
+eq(C('https://maps.app.goo.gl/AbCd1234?g_st=ic'), 'https://maps.app.goo.gl/AbCd1234', '★iOS 공유 파라미터를 버린다');
+eq(C('https://maps.app.goo.gl/AbCd1234?g_st=iw'), 'https://maps.app.goo.gl/AbCd1234', '★안드로이드 공유 파라미터');
+eq(C('https://maps.app.goo.gl/AbCd1234/?utm_source=x#f'), 'https://maps.app.goo.gl/AbCd1234', '★끝 슬래시·조각도 버린다');
+eq(C('https://goo.gl/maps/AbCd1234?x=1'), 'https://goo.gl/maps/AbCd1234', '옛 단축 형식');
+eq(C('http://maps.app.goo.gl/AbCd1234'), null, 'http 는 안 받는다');
+eq(C('https://maps.app.goo.gl.evil.com/AbCd1234'), null, '★호스트를 앞에 붙인 사칭');
+eq(C('https://maps.app.goo.gl/AbCd1234/../../x'), null, '경로 탈출');
+eq(C('https://evil.com/maps/AbCd1234'), null, '남의 호스트');
+eq(C('https://maps.app.goo.gl/ab'), null, '너무 짧은 코드');
+eq(C('https://www.google.com/maps/place/X'), null, '전체 URL 은 서버가 안 받는다 (브라우저가 파싱한다)');
 
 // ── GM: 전체 URL ───────────────────────────────────────────────────────
 // ★핵심 — @ 는 지도 중심이고 !3d/!4d 가 핀이다. 둘이 다른 URL 로 확인한다.

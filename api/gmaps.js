@@ -17,10 +17,26 @@
 
 /* 받아 줄 입력. **이 목록이 SSRF 방어선이다** — 안 하면 내 도메인이 아무 데나
    요청을 던지는 통로가 된다. 구글 단축 링크 두 형태만 연다. */
-const IN_OK = [
-  /^https:\/\/maps\.app\.goo\.gl\/[A-Za-z0-9_-]{4,40}\/?$/,
-  /^https:\/\/goo\.gl\/maps\/[A-Za-z0-9_-]{4,40}\/?$/,
-];
+const IN_HOST = {
+  'maps.app.goo.gl': /^\/[A-Za-z0-9_-]{4,40}\/?$/,
+  'goo.gl': /^\/maps\/[A-Za-z0-9_-]{4,40}\/?$/,
+};
+
+/* ★★폰에서 공유하면 뒤에 추적 파라미터가 붙는다 — iOS 는 `?g_st=ic`, 안드로이드는 `?g_st=iw`,
+     공유 경로에 따라 `?utm_source=...` 도 붙는다. 전에는 정규식이 **문자열 끝**을 요구해서
+     그런 링크가 전부 403 이었다 — 즉 **폰에서 붙여넣으면 자동 채움이 한 번도 안 됐다**
+     (2026-09-01. 데스크톱 전체 URL 은 브라우저에서 파싱하니 멀쩡해서 오래 안 보였다).
+   ★고치는 방향은 정규식을 느슨하게 푸는 쪽이 아니다. URL 로 **분해**해서 호스트와 경로만
+     보고, 질의문자열과 조각은 **버린 뒤 정규 형태로 다시 만든다.** 단축 코드만 있으면
+     펼쳐지므로 잃는 것이 없고, 서버가 따라가는 주소는 오히려 더 좁아진다. */
+function canonical(raw) {
+  let u;
+  try { u = new URL(String(raw || '').trim()); } catch (e) { return null; }
+  if (u.protocol !== 'https:') return null;
+  const re = IN_HOST[u.hostname];
+  if (!re || !re.test(u.pathname)) return null;
+  return 'https://' + u.hostname + u.pathname.replace(/\/+$/, '');
+}
 
 /* 따라가는 중에 닿아도 되는 곳. 구글 밖으로 나가면 거기서 멈춘다 —
    단축 링크가 언제든 남의 사이트를 가리키게 바뀔 수 있다. */
@@ -138,14 +154,15 @@ module.exports = async (req, res) => {
 
   const u = String((req.query && req.query.u) || '').trim();
   if (!u) { res.status(400).json({ error: 'u 파라미터가 필요합니다.' }); return; }
-  if (!IN_OK.some(re => re.test(u))) {
+  const start = canonical(u);
+  if (!start) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(403).json({ error: '구글맵 단축 링크만 펼칠 수 있습니다.' });
     return;
   }
 
   try {
-    const out = await expand(u);
+    const out = await expand(start);
     if (out.err) {
       res.setHeader('Cache-Control', 'no-store');
       res.status(422).json({ error: out.err });
@@ -165,3 +182,5 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+module.exports.canonical = canonical;   // tools/test-pure.js 용
