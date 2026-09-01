@@ -137,6 +137,19 @@ const DB = (function () {
       if (error) throw new Error(say('여행을 수정하지 못했습니다', error));
     },
 
+    /* 여행 목록 화면이 카드마다 '그 여행의 모양' 을 그리려면 일정이 필요하다.
+       ★여행마다 따로 부르지 않는다 — RLS 가 이미 '내가 속한 여행' 으로 좁혀 주므로
+         한 번에 다 받아 와서 클라이언트가 나눈다. 여행이 열 개여도 왕복은 하나다.
+       ★필요한 칸만 고른다. 목록 화면에 메모·링크·예약번호는 쓰이지 않는다. */
+    shape: async () => {
+      if (mode() !== 'cloud') return [];
+      const { data, error } = await sb.from('items')
+        .select('trip_id,on_date,kind,cost,cost_cur,fx')
+        .order('on_date', { ascending: true });
+      if (error) return [];          // 못 받아도 목록은 보여준다 — 미니 레일만 빠진다
+      return data || [];
+    },
+
     /* 지우는 것은 소유자만 — 정책이 판정한다. 동행자가 누르면 0행이 지워지고 조용히 끝나므로
        화면이 그 사실을 알 수 있게 지워진 행을 돌려받는다. */
     remove: async (id) => {

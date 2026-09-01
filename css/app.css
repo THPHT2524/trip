@@ -528,23 +528,54 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--ink); border-color: var(--ink); color: var(--paper);
 }
 
-/* ── 여행 목록 ────────────────────────────────────────────────────────── */
+/* ── 여행 목록 ──────────────────────────────────────────────────────────
+   ★★카드마다 **그 여행의 미니 레일**을 단다. 여행 하나가 경로 하나라면 카드는 그
+   경로의 축소판이어야 한다 — 며칠짜리인지, 어느 날이 비었는지, 무슨 여행인지가
+   카드만 보고 읽힌다. 일정 탭의 레일과 같은 색·같은 어법이다.
+   전에는 이름과 날짜 한 줄뿐이라 첫 화면이 회색 상자 더미였다(2026-09-01). */
 .trips { padding: var(--pad); display: flex; flex-direction: column; gap: 10px; }
 .trip {
-  display: block; width: 100%; text-align: left;
+  display: flex; flex-direction: column; gap: 9px;
+  width: 100%; text-align: left;
   appearance: none; cursor: pointer; color: inherit; font: inherit;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
   padding: 14px;
 }
-.trip .nm { font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
+.trip .top2 { display: flex; align-items: baseline; gap: 10px; }
+.trip .nm {
+  flex: 1; min-width: 0; font-size: 18px; font-weight: 700; letter-spacing: -.02em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* 떠날 때까지 며칠 — 예정된 여행에서 제일 먼저 찾는 숫자다 */
+.trip .dday {
+  flex: 0 0 auto; font-family: var(--mono); font-size: 12px; font-weight: 600;
+  color: var(--ink-3); letter-spacing: .02em; font-variant-numeric: tabular-nums;
+}
+.trip .dday.hot { color: var(--route); }
 .trip .meta {
-  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
-  margin-top: 3px; letter-spacing: .02em;
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: .02em;
 }
 .trip.is-now { border-color: var(--route); box-shadow: 0 0 0 3px var(--route-w); }
-.trip .now {
-  font-family: var(--sans); font-size: 10px; font-weight: 700;
-  color: var(--route); letter-spacing: .04em; margin-left: 6px;
+
+/* 미니 레일 — 날짜 칸이 늘어서고 그 안에 장소구분 색 점이 찍힌다 */
+.mrail {
+  display: flex; align-items: center; gap: 3px;
+  height: 14px;
+}
+.mrail .md {
+  flex: 1 1 0; min-width: 6px; height: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  border-radius: 3px; background: var(--sunk);
+}
+/* 비어 있는 날은 **가는 선 하나**로 남긴다 — 없는 것이 아니라 비어 있는 것이다 */
+.mrail .md.is-empty {
+  background: none;
+  border-top: 2px solid var(--rail);
+  height: 2px; align-self: center; border-radius: 0;
+}
+.mrail i {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--k, var(--k-etc));
 }
 
 .grouphd {

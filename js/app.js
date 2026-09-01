@@ -18,8 +18,12 @@
   const SEG = { plan: '', map: 'map', cost: 'cost', prep: 'prep', crew: 'crew' };
 
   let trips = [];          // 마지막으로 받은 여행 목록
+  let shape = [];          // 카드에 그릴 '여행의 모양' (일정의 날짜·구분·비용만)
   let tripId = null;       // 지금 열어 둔 여행
   let tab = 'plan';
+
+  const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
+  const DAYMS = 86400000;
 
   /* 문자열 이스케이프와 날짜·금액 서식은 util.js(U)에 있다 — plan.js 도 같은 것을 쓴다.
      이스케이프 규칙이 두 벌이 되면 한쪽만 고쳐지고, 그 한쪽으로 들어온 이름이 화면을 깨뜨린다. */
@@ -99,18 +103,75 @@
     const label = { now: '지금', soon: '예정', past: '지난 여행' };
 
     el.innerHTML = ['now', 'soon', 'past'].filter(k => group[k].length).map(k =>
-      `<h2 class="grouphd">${label[k]}</h2>` + group[k].map(t => `
-        <button class="trip${k === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-          <span class="nm">${esc(t.name)}${k === 'now' ? '<span class="now">지금</span>' : ''}</span>
-          <span class="meta">${esc(fmtSpan(t.start_on, t.end_on))} · ${esc(t.base_cur)}</span>
-        </button>`).join('')
+      `<h2 class="grouphd">${label[k]}</h2>` + group[k].map(t => card(t, k)).join('')
     ).join('');
+  }
+
+  /* ── 여행 카드 ──────────────────────────────────────────────────────────
+     **여행 하나가 경로 하나라면, 카드는 그 경로의 축소판이어야 한다.**
+     날짜 칸이 늘어서고 그 안에 장소구분 색 점이 찍힌다 — 며칠짜리인지, 어느 날이 비었는지,
+     무슨 여행인지(식사 위주냐 관광 위주냐)가 카드만 보고 읽힌다.
+     ★장식이 아니라 정보다. 일정 탭의 레일과 같은 색·같은 어법을 쓴다. */
+  function card(t, phase) {
+    const mine = shape.filter(r => r.trip_id === t.id);
+    const days = dayList(t, mine);
+    const rail = days.length ? `<span class="mrail">${days.map(d => {
+      const on = mine.filter(r => r.on_date === d);
+      return on.length
+        ? `<span class="md">${on.slice(0, 4).map(r =>
+            `<i style="--k: var(--${KVAR[r.kind] || 'k-etc'})"></i>`).join('')}</span>`
+        : '<span class="md is-empty"></span>';
+    }).join('')}</span>` : '';
+
+    /* 떠날 때까지 며칠 — 예정된 여행에서 제일 먼저 보고 싶은 숫자다.
+       진행 중이면 '며칠차', 지난 여행은 굳이 세지 않는다(끝난 것에 날짜를 세지 않는다). */
+    let mark = '';
+    if (phase === 'soon' && t.start_on) {
+      const n = Math.ceil((Date.parse(t.start_on) - Date.parse(U.todayISO())) / DAYMS);
+      mark = n > 0 ? `D-${n}` : 'D-DAY';
+    } else if (phase === 'now' && t.start_on) {
+      mark = `${Math.floor((Date.parse(U.todayISO()) - Date.parse(t.start_on)) / DAYMS) + 1}일차`;
+    }
+
+    /* 합계는 기준통화로 환산된 것만 — 비용 탭과 같은 규칙이다(엔과 원을 더하지 않는다) */
+    let sum = 0;
+    mine.forEach(r => {
+      if (r.cost == null) return;
+      if (r.cost_cur === t.base_cur) sum += +r.cost;
+      else if (r.fx) sum += +r.cost * +r.fx;
+    });
+
+    const bits = [fmtSpan(t.start_on, t.end_on)];
+    if (mine.length) bits.push(`일정 ${mine.length}`);
+    bits.push(sum ? U.money(sum, t.base_cur) : t.base_cur);
+
+    return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
+      <span class="top2">
+        <span class="nm">${esc(t.name)}</span>
+        ${mark ? `<span class="dday${phase === 'now' ? ' hot' : ''}">${esc(mark)}</span>` : ''}
+      </span>
+      ${rail}
+      <span class="meta">${esc(bits.join(' · '))}</span>
+    </button>`;
+  }
+
+  /* 카드에 세울 날짜. 기간이 있으면 **빈 날도 센다** — 비었다는 것도 여행의 모양이다.
+     기간이 없으면 일정이 적힌 날만(없는 날을 지어낼 근거가 없다). 너무 길면 접는다. */
+  function dayList(t, mine) {
+    const has = [...new Set(mine.map(r => r.on_date))].sort();
+    if (!t.start_on || !t.end_on) return has.slice(0, 21);
+    const out = [];
+    for (let d = t.start_on; d <= t.end_on && out.length < 21; d = U.addDays(d, 1)) out.push(d);
+    return out;
   }
 
   // ── 여행 불러오기 ─────────────────────────────────────────────────────
   async function load(openBest) {
     try {
-      trips = await DB.trips.list();
+      /* 둘을 나란히 부른다 — 카드가 '여행의 모양' 을 그리려면 둘 다 있어야 하고,
+         차례로 부르면 첫 화면이 두 번 왕복만큼 늦어진다. */
+      const [list, sh] = await Promise.all([DB.trips.list(), DB.trips.shape()]);
+      trips = list; shape = sh;
     } catch (e) {
       trips = [];
       $('trips').innerHTML = `<p class="empty"><strong>불러오지 못했습니다</strong>${esc(e.message)}</p>`;
