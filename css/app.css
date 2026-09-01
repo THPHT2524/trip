@@ -172,9 +172,13 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding: 14px var(--pad) 8px;
   display: flex; align-items: baseline; gap: 10px;
 }
-.dayband::before {
+/* ★레일은 **컨테이너에 한 줄로** 그린다. 요소마다 따로 그렸더니 띠와 날 사이에
+   6px 씩 끊겼다(2026-09-01 측정) — '여행 하나가 경로 하나' 라는 말이 화면에서 깨진다.
+   한 줄로 그으면 사이 여백이 어떻게 바뀌든 이어진다. */
+#days { position: relative; }
+#days::before {
   content: ''; position: absolute; left: calc(var(--pad) + var(--rail-x));
-  top: 0; bottom: 0; width: 2px; background: var(--rail);
+  top: 0; bottom: 22px; width: 2px; background: var(--rail);
 }
 .daytag {
   font-size: 11px; font-weight: 600; letter-spacing: .14em;
@@ -188,13 +192,6 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* ── 레일 위의 정거장 ─────────────────────────────────────────────────── */
 .day { position: relative; padding: 0 var(--pad) 6px; }
-/* 레일 본체 — 하루 전체를 관통한다 */
-.day::before {
-  content: ''; position: absolute;
-  left: calc(var(--pad) + var(--rail-x)); top: 0; bottom: 0;
-  width: 2px; background: var(--rail);
-}
-.day:last-child::before { bottom: 22px; }   /* 마지막 날은 레일이 끝난다 */
 
 .stop { position: relative; padding-left: var(--gutter); }
 
