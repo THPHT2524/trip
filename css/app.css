@@ -275,6 +275,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
   border: 1px solid var(--line); border-radius: 3px;
   padding: 1px 4px; color: var(--ink-3);
+  white-space: nowrap;          /* 좁은 칸에서 '메모' 가 두 글자로 쪼개지지 않게 */
 }
 
 /* ── 구간 — 이 화면의 서명 ────────────────────────────────────────────── */

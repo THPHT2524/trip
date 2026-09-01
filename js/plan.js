@@ -96,7 +96,9 @@ const Plan = (function () {
     const list = ofDay(d);
     const { sum, miss } = dayCost(list);
     const cost = list.some(r => r.cost != null)
-      ? U.money(sum, trip.base_cur) + (miss ? ` <span class="warn">+${miss}건 환율 없음</span>` : '')
+      /* ★숫자만 붉게 둔다. 이 띠는 sticky 라 하루치 40줄을 넘기는 내내 화면에 남는데,
+         문장 전체가 붉으면 스크롤하는 동안 계속 소리친다. 셀 것은 건수다. */
+      ? U.money(sum, trip.base_cur) + (miss ? ` <span class="warn">+${miss}건</span> 환율 없음` : '')
       : '';
 
     const band = `<div class="dayband">
