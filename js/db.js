@@ -234,6 +234,68 @@ const DB = (function () {
     return body.url;
   }
 
+  // ── 준비물 ──────────────────────────────────────────────────────────
+  /* 준비물은 '적는 것' 이 아니라 **'지우는 것'** 이다 — 그래서 자유 메모가 아니라 표다. */
+  const checklist = {
+    list: async (tripId) => {
+      if (mode() !== 'cloud') return [];
+      const { data, error } = await sb.from('checklist')
+        .select('id,text,done,seq').eq('trip_id', tripId)
+        .order('seq', { ascending: true });
+      if (error) throw new Error(say('준비물을 불러오지 못했습니다', error));
+      return data || [];
+    },
+    add: async (tripId, text, seq) => {
+      const t = String(text || '').trim();
+      if (!t) throw new Error('내용을 적으세요.');
+      const { error } = await sb.from('checklist').insert({ trip_id: tripId, text: t, seq: seq || 0 });
+      if (error) throw new Error(say('준비물을 추가하지 못했습니다', error));
+    },
+    setDone: async (id, done) => {
+      const { error } = await sb.from('checklist').update({ done: !!done }).eq('id', id);
+      if (error) throw new Error(say('표시를 바꾸지 못했습니다', error));
+    },
+    remove: async (id) => {
+      const { error } = await sb.from('checklist').delete().eq('id', id);
+      if (error) throw new Error(say('준비물을 지우지 못했습니다', error));
+    },
+  };
+
+  // ── 동행자 ──────────────────────────────────────────────────────────
+  /* trip_members 를 직접 읽으면 uuid 뿐이라 화면에 쓸 이름이 없다.
+     auth.users 는 클라이언트가 못 읽는다(읽히면 이 프로젝트의 남의 계정까지 노출된다 —
+     card-dashboard 와 같은 프로젝트다). security definer 함수가 딱 필요한 만큼만 연다. */
+  async function crew(tripId) {
+    if (mode() !== 'cloud') return [];
+    const { data, error } = await sb.rpc('trip_crew', { t: tripId });
+    if (error) throw new Error(say('동행자를 불러오지 못했습니다', error));
+    return data || [];
+  }
+
+  async function removeMember(tripId, userId) {
+    const { error } = await sb.rpc('remove_member', { t: tripId, who: userId });
+    if (error) throw new Error(say('내보내지 못했습니다', error));
+  }
+
+  // ── 환율 ────────────────────────────────────────────────────────────
+  /* 같은 (날짜·통화쌍) 은 값이 바뀌지 않는다 — 한 번 받으면 이 세션 동안 다시 묻지 않는다.
+     비용을 열 줄 적으면 열 번 부를 이유가 없다. */
+  const fxMemo = new Map();
+  async function fx(date, from, to) {
+    if (!date || !from || !to) return null;
+    if (from === to) return { rate: 1, on: date, exact: true };
+    const key = `${date}|${from}|${to}`;
+    if (fxMemo.has(key)) return fxMemo.get(key);
+    const tok = await accessToken();
+    if (!tok) throw new Error('로그인이 필요합니다.');
+    const r = await fetch(`/api/fx?date=${encodeURIComponent(date)}&from=${from}&to=${to}`,
+                          { headers: { Authorization: 'Bearer ' + tok } });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || `환율을 가져오지 못했습니다 (${r.status})`);
+    fxMemo.set(key, body);
+    return body;
+  }
+
   /* 초대 코드로 들어가기. 표에 직접 쓰지 않고 RPC 하나로만 통과한다 —
      클라이언트에 trip_members insert 를 열어 주면 남의 여행에 자기를 밀어 넣을 수 있다. */
   async function join(code) {
@@ -247,5 +309,5 @@ const DB = (function () {
 
   return { CONFIGURED, mode, email, uid, accessToken,
            onAuth, onError, initAuth, signIn, signOut,
-           trips, items, join, expandMapUrl };
+           trips, items, checklist, crew, removeMember, fx, join, expandMapUrl };
 })();

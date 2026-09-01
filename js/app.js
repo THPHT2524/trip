@@ -76,9 +76,15 @@
       p.hidden = p.dataset.tab !== tab);
 
     /* 일정은 이 여행의 본체다 — 어느 탭으로 들어와도 먼저 받아 둔다.
-       (지도·비용도 결국 같은 rows 를 쓴다. 탭마다 따로 받으면 세 번 받는다.)
-       ★지도는 그 rows 를 넘겨받기만 한다 — 자기 것을 또 받지 않는다. */
-    if (t) Plan.open(t).then(() => { if (tab === 'map') Maps.open(t, Plan.rows()); });
+       지도·비용은 **그 rows 를 넘겨받기만 한다** — 자기 것을 또 받지 않는다.
+       (탭마다 따로 받으면 현지에서 탭 옮길 때마다 네트워크를 탄다.) */
+    if (!t) return;
+    Plan.open(t).then(() => {
+      if (tab === 'map') Maps.open(t, Plan.rows());
+      if (tab === 'cost') Cost.open(t, Plan.rows());
+    });
+    if (tab === 'prep') Prep.open(t);
+    if (tab === 'crew') Crew.open(t);
   }
 
   function renderTrips() {
@@ -176,11 +182,24 @@
     $('gate-err').textContent = msg || '';
   }
 
-  function refresh() {
+  async function refresh() {
     if (DB.mode() !== 'cloud') { showGate(); return; }
     $('gate').hidden = true;
     $('app').hidden = false;
     $('who').textContent = DB.email();
+
+    // 로그인 전에 초대 링크를 열었다면 지금 쓴다
+    let pending = null;
+    try { pending = sessionStorage.getItem('join1'); } catch (e) {}
+    if (pending) {
+      try { sessionStorage.removeItem('join1'); } catch (e) {}
+      try {
+        const id = await DB.join(pending);
+        trips = await DB.trips.list();
+        go(id, 'plan', true);
+        return;
+      } catch (e) { /* 코드가 죽었으면 그냥 목록을 보여준다 */ }
+    }
     load(true);
   }
 
@@ -210,9 +229,53 @@
     }, 80);
   });
 
+  /* ── 아웃박스 ────────────────────────────────────────────────────────
+     못 보낸 것이 있으면 **화면 어디에 있든** 보인다. 조용히 쌓이면 '적었는데 안 올라갔다' 를
+     한참 뒤에야 알게 된다. 눌러서 지금 보낼 수도 있다. */
+  function drawObox(n, justOnline) {
+    const el = $('obox');
+    el.hidden = !n;
+    if (!n) return;
+    el.innerHTML = `<span>못 보낸 변경 ${n}건</span>`
+      + `<button class="act" type="button" id="obox-send">${navigator.onLine ? '지금 보내기' : '연결되면 보냅니다'}</button>`;
+    if (justOnline) sendOutbox();
+  }
+  async function sendOutbox() {
+    if (!navigator.onLine || !Outbox.count()) return;
+    const r = await Outbox.flush();
+    if (r.dropped.length) {
+      alert(['서버가 거절해서 버린 변경이 있습니다:', ...r.dropped.map(d => d.why)].join('\n'));
+    }
+    if (r.sent && tripId) { const t = trips.find(x => x.id === tripId); if (t) Plan.open(t); }
+  }
+  Outbox.onChange(drawObox);
+  drawObox(Outbox.count());
+  $('obox').addEventListener('click', e => { if (e.target.id === 'obox-send') sendOutbox(); });
+  addEventListener('online', () => drawObox(Outbox.count(), true));
+
+  /* 다른 모듈이 데이터를 바꿨다고 알려 오면 다시 그린다 —
+     모듈끼리 서로를 부르지 않게 이벤트 한 겹을 둔다. */
+  document.addEventListener('items:changed', () => {
+    const t = trips.find(x => x.id === tripId);
+    if (t) Plan.open(t).then(() => { if (tab === 'cost') Cost.open(t, Plan.rows()); });
+  });
+  document.addEventListener('trip:changed', async () => { trips = await DB.trips.list(); render(); });
+  document.addEventListener('trip:deleted', async () => {
+    trips = await DB.trips.list();
+    go(null, 'plan', true);
+  });
+
   addEventListener('popstate', () => { const u = readUrl(); go(u.tripId, u.tab, false); });
   DB.onError(showGate);
   DB.onAuth(refresh);
+
+  /* 서비스워커 — 껍데기를 미리 받아 둬서 끊긴 곳에서도 앱이 열린다.
+     ★첫 페인트를 막지 않도록 load 뒤에 등록한다. 실패해도 앱은 그대로 돈다. */
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  }
 
   (async function boot() {
     await DB.initAuth();
@@ -228,6 +291,24 @@
     }
     const u = readUrl();
     tripId = u.tripId; tab = u.tab;
+
+    /* 초대 링크 — /?join=<코드>. 로그인 뒤에 처리해야 하므로 여기서 본다.
+       ★코드는 주소에서 **바로 지운다.** 남겨 두면 새로고침할 때마다 다시 참여를 시도하고,
+         공유·즐겨찾기로도 새어 나간다. */
+    const code = new URLSearchParams(location.search).get('join');
+    if (code) {
+      history.replaceState(null, '', '/');
+      if (DB.mode() === 'cloud') {
+        try {
+          const id = await DB.join(code);
+          trips = await DB.trips.list();
+          go(id, 'plan', true);
+          return;
+        } catch (e) { showGate(e.message); return; }
+      }
+      /* 아직 로그인 전이면 코드를 들고 있다가 로그인 뒤에 쓴다 */
+      try { sessionStorage.setItem('join1', code); } catch (e) {}
+    }
     refresh();
   })();
 })();

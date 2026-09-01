@@ -18,6 +18,7 @@ const Plan = (function () {
   let pick = null;      // 고른 날 (null = 전체)
   let editing = null;   // 수정 중인 항목 id (null = 새로 추가)
   let loaded = false;   // 이 여행의 일정을 한 번이라도 받았나
+  let offline = false;  // 마지막 읽기가 로컬 사본이었나
 
   const KINDS = ['숙소', '식사', '관광', '이동', '쇼핑', '기타'];
   const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
@@ -86,7 +87,8 @@ const Plan = (function () {
     }
     const show = pick ? [pick] : days;
     const nid = nextId();
-    el.innerHTML = show.map(d => dayHtml(d, days.indexOf(d) + 1, nid)).join('');
+    el.innerHTML = (offline ? '<p class="note">연결이 없어 마지막으로 받아 둔 일정을 보여줍니다</p>' : '')
+                 + show.map(d => dayHtml(d, days.indexOf(d) + 1, nid)).join('');
   }
 
   function dayHtml(d, n, nid) {
@@ -126,7 +128,7 @@ const Plan = (function () {
     const link = GM.placeUrl(r);
     return `<div class="${cls}" style="--k: var(--${k})">
       <span class="pin"></span>
-      <button class="item${r.done ? ' is-done' : ''}" type="button" data-edit="${esc(r.id)}">
+      <button class="item${r.done ? ' is-done' : ''}${r._pending ? ' is-pending' : ''}" type="button" data-edit="${esc(r.id)}">
         <span class="row1">
           <span class="time${time ? '' : ' none'}">${esc(time || '시각 미정')}</span>
           <span class="name">${esc(r.name)}</span>
@@ -243,8 +245,17 @@ const Plan = (function () {
     $('if-err').textContent = '';
     try {
       const v = valueOf();
-      if (editing) await DB.items.update(editing, v);
-      else await DB.items.create(trip.id, v);
+      try {
+        if (editing) await DB.items.update(editing, v);
+        else await DB.items.create(trip.id, v);
+      } catch (e) {
+        /* 서버가 거절한 것(검증·권한)은 그대로 보여 준다 — 다시 보내도 같다.
+           끊겨서 못 보낸 것만 쌓아 둔다. */
+        if (!Outbox.isOffline(e)) throw e;
+        Outbox.queue(editing
+          ? { kind: 'update', id: editing, tripId: trip.id, row: DB.items.shape(v) }
+          : { kind: 'create', tempId: Outbox.tmpId(), tripId: trip.id, row: DB.items.shape(v) });
+      }
       await reload();
       fillForm(null);
       $('if-wrap').open = false;
@@ -261,7 +272,11 @@ const Plan = (function () {
     if (!confirm(`'${r ? r.name : '이 일정'}' 을 지울까요?`)) return;
     $('if-del').disabled = true;
     try {
-      await DB.items.remove(editing);
+      try { await DB.items.remove(editing); }
+      catch (e) {
+        if (!Outbox.isOffline(e)) throw e;
+        Outbox.queue({ kind: 'delete', id: editing, tripId: trip.id });
+      }
       await reload();
       fillForm(null);
       $('if-wrap').open = false;
@@ -272,8 +287,20 @@ const Plan = (function () {
     }
   }
 
+  /* 서버에서 받고, 못 받으면 **마지막으로 받아 둔 것**을 쓴다.
+     그 위에 아직 못 보낸 것을 얹는다 — 적었는데 사라진 것처럼 보이면 안 된다. */
   async function reload() {
-    rows = await DB.items.list(trip.id);
+    let base;
+    try {
+      base = await DB.items.list(trip.id);
+      Outbox.cacheSet(trip.id, base);
+      offline = false;
+    } catch (e) {
+      const cached = Outbox.cacheGet(trip.id);
+      if (cached && Outbox.isOffline(e)) { base = cached; offline = true; }
+      else throw e;
+    }
+    rows = Outbox.apply(trip.id, base);
     render();
   }
 
@@ -289,8 +316,13 @@ const Plan = (function () {
     const done = e.target.closest('[data-done]');
     if (done) {
       const r = rows.find(x => x.id === done.dataset.done);
-      try { await DB.items.setDone(r.id, !r.done); await reload(); }
-      catch (err) { alert(err.message); }
+      try { await DB.items.setDone(r.id, !r.done); }
+      catch (err) {
+        if (!Outbox.isOffline(err)) { alert(err.message); return; }
+        Outbox.queue({ kind: 'update', id: r.id, tripId: trip.id,
+                       row: { ...DB.items.shape(r), done: !r.done } });
+      }
+      await reload();
       return;
     }
     const edit = e.target.closest('[data-edit]');

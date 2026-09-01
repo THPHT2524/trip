@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/leaflet-1.9.4.css">
-<link rel="stylesheet" href="/css/app.css?v=8">
+<link rel="stylesheet" href="/css/app.css?v=9">
 </head>
 <body>
 
@@ -170,12 +170,83 @@
       <div id="map"></div>
       <p class="note" id="map-note"></p>
     </div>
-    <div class="pane" data-tab="cost" hidden><p class="empty"><strong>비용</strong>P5 에서 붙습니다 — 환율 환산과 사람별 합계</p></div>
-    <div class="pane" data-tab="prep" hidden><p class="empty"><strong>준비물</strong>P6 에서 붙습니다 — 체크리스트</p></div>
-    <div class="pane" data-tab="crew" hidden><p class="empty"><strong>동행자</strong>P6 에서 붙습니다 — 초대 링크와 참여자</p></div>
+    <!-- 비용 — js/cost.js -->
+    <div class="pane" data-tab="cost" hidden>
+      <div class="ctotal" id="cost-total"></div>
+      <div id="cost-blocks"></div>
+      <div id="cost-miss"></div>
+      <p class="note" id="cost-msg"></p>
+    </div>
+
+    <!-- 준비물 — js/prep.js -->
+    <div class="pane" data-tab="prep" hidden>
+      <div class="cblock">
+        <h3 class="chd">준비물 <span class="cn" id="prep-count"></span></h3>
+        <ul class="prep" id="prep-list"></ul>
+        <form id="prep-form" class="form">
+          <div class="row">
+            <input id="prep-text" type="text" maxlength="120" placeholder="유심 · 비자 · 상비약 · 콘센트 어댑터"
+                   autocomplete="off">
+            <button class="btn" id="prep-add" type="submit">추가</button>
+          </div>
+          <p class="err" id="prep-err"></p>
+        </form>
+      </div>
+    </div>
+
+    <!-- 동행자 · 여행 설정 — js/crew.js -->
+    <div class="pane" data-tab="crew" hidden>
+      <section class="cblock">
+        <h3 class="chd">동행자 <span class="cn" id="crew-count"></span></h3>
+        <ul class="crew" id="crew-list"></ul>
+      </section>
+
+      <section class="cblock">
+        <h3 class="chd">초대 링크</h3>
+        <div class="form">
+          <div class="row">
+            <input id="crew-link" type="text" class="mono" readonly aria-label="초대 링크">
+            <button class="btn" id="crew-copy" type="button">복사</button>
+          </div>
+          <p class="hint">이 링크를 연 사람은 이 여행에 참여합니다.
+            참여하면 <strong>서로의 이메일이 보입니다.</strong></p>
+        </div>
+      </section>
+
+      <section class="cblock">
+        <h3 class="chd">여행 설정</h3>
+        <form id="crew-form" class="form">
+          <div class="field">
+            <label for="set-name">여행 이름</label>
+            <input id="set-name" type="text" maxlength="60" required>
+          </div>
+          <div class="row">
+            <div class="field"><label for="set-from">시작</label>
+              <input id="set-from" type="date" class="mono"></div>
+            <div class="field"><label for="set-to">끝</label>
+              <input id="set-to" type="date" class="mono"></div>
+            <div class="field cur"><label for="set-cur">기준통화</label>
+              <select id="set-cur">
+                <option>KRW</option><option>JPY</option><option>USD</option>
+                <option>EUR</option><option>TWD</option><option>THB</option><option>VND</option>
+              </select></div>
+          </div>
+          <p class="hint" id="set-note"></p>
+          <div class="row btns">
+            <button class="btn" id="set-save" type="submit">저장</button>
+            <button class="btn ghost danger" id="set-del" type="button" hidden>여행 지우기</button>
+          </div>
+          <p class="err" id="set-err"></p>
+        </form>
+      </section>
+
+      <p class="note" id="crew-msg"></p>
+    </div>
   </section>
 
 </div>
+
+<div class="obox" id="obox" hidden></div>
 
 <nav class="tabs" id="tabs" role="tablist" aria-label="화면" hidden>
   <button type="button" role="tab" data-tab="plan" aria-selected="true">일정</button>
@@ -188,15 +259,19 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=8"></script>
-<script src="/js/util.js?v=8"></script>
-<script src="/js/geo.js?v=8"></script>
-<script src="/js/gmaps.js?v=8"></script>
-<script src="/js/db.js?v=8"></script>
+<script src="/js/supabase-config.js?v=9"></script>
+<script src="/js/util.js?v=9"></script>
+<script src="/js/geo.js?v=9"></script>
+<script src="/js/gmaps.js?v=9"></script>
+<script src="/js/db.js?v=9"></script>
+<script src="/js/outbox.js?v=9"></script>
 <script src="/js/vendor/leaflet-1.9.4.js"></script>
-<script src="/js/plan.js?v=8"></script>
-<script src="/js/map.js?v=8"></script>
-<script src="/js/app.js?v=8"></script>
+<script src="/js/plan.js?v=9"></script>
+<script src="/js/map.js?v=9"></script>
+<script src="/js/crew.js?v=9"></script>
+<script src="/js/cost.js?v=9"></script>
+<script src="/js/prep.js?v=9"></script>
+<script src="/js/app.js?v=9"></script>
 
 </body>
 </html>

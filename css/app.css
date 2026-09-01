@@ -365,6 +365,89 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .leaflet-tooltip-top::before { border-top-color: var(--ink); }
 
+/* ── 아웃박스 ─────────────────────────────────────────────────────────── */
+/* 못 보낸 것이 있으면 어느 화면에 있든 보인다. 조용히 쌓이면 한참 뒤에야 안다. */
+.obox {
+  position: fixed; left: 0; right: 0; bottom: calc(58px + env(safe-area-inset-bottom));
+  z-index: 45;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 8px var(--pad);
+  background: var(--sand); border-top: 1px solid var(--sand-line);
+  font-size: 12px; font-weight: 600; color: var(--ink);
+}
+.obox .act { color: var(--route); }
+
+/* 아직 못 보낸 줄 — 있는 척하지 않는다 */
+.item.is-pending { border-style: dashed; }
+.item.is-pending .name::after {
+  content: '보내는 중'; margin-left: 6px;
+  font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink-3);
+}
+
+/* ── 비용 ─────────────────────────────────────────────────────────────── */
+.ctotal {
+  padding: 18px var(--pad) 6px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.ctotal .big {
+  font-family: var(--mono); font-size: 28px; font-weight: 600; letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.ctotal .sub { font-size: 12px; color: var(--ink-3); }
+
+.cblock { padding: 14px var(--pad) 4px; }
+.chd {
+  margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.clist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.clist li {
+  display: grid; grid-template-columns: minmax(4.5em, auto) 1fr auto; align-items: center;
+  gap: 4px 10px; font-size: 13px;
+}
+.clist .ck { color: var(--ink); font-weight: 500; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clist .cv { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
+.clist .cn { grid-column: 2 / -1; font-size: 11px; color: var(--ink-3); }
+/* 막대는 크기를 눈으로 견주게 해 준다 — 숫자만으로는 '많다' 가 안 읽힌다 */
+.cbar { display: block; height: 6px; background: var(--sunk); border-radius: 3px; overflow: hidden; }
+.cbar i { display: block; height: 100%; background: var(--k, var(--depth)); }
+.warnblock .chd { color: var(--warn); }
+.clist .act { justify-self: end; }
+
+/* ── 동행자 ───────────────────────────────────────────────────────────── */
+.crew { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.crewrow {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
+  padding: 10px 12px;
+}
+.crewrow .who2 { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.crewrow .nm { font-size: 14px; font-weight: 600; }
+.crewrow .em {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.tagrow { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.act.danger { color: var(--warn); }
+
+/* ── 준비물 ───────────────────────────────────────────────────────────── */
+.prep { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.prow {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
+  padding: 9px 11px;
+}
+.pchk {
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 6px; cursor: pointer;
+  border: 1.5px solid var(--rail); background: var(--paper);
+  color: var(--card); font-size: 13px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.prow.is-done .pchk { background: var(--depth); border-color: var(--depth); }
+.ptext { flex: 1; min-width: 0; font-size: 14px; }
+.prow.is-done .ptext { color: var(--ink-3); text-decoration: line-through; }
+
 /* ── 하단 탭 ──────────────────────────────────────────────────────────── */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
