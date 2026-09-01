@@ -600,7 +600,16 @@ details[open] summary::after { content: '−'; }
    좁으면 두 줄이 되지, 깨지지는 않는다. */
 .form .row { display: flex; flex-wrap: wrap; gap: 8px; }
 .form .row .field { flex: 1 1 128px; min-width: 0; }
-.form .row .field.cur { flex: 1 1 92px; }
+/* 구분은 '관광' 세 글자와 화살표만 들어가면 된다 — 장소명에 자리를 내준다 */
+.form .row .field.kind { flex: 0 0 104px; }
+
+/* ★비용·통화·환율은 **한 줄로 붙여 둔다.** 셋이 한 값의 세 조각이라
+   줄이 갈리면 '얼마를 무슨 돈으로 얼마에' 가 끊겨 읽힌다.
+   숫자·선택 칸은 date 와 달리 내재 최소 너비가 작아서 좁혀도 깨지지 않는다. */
+.form .row.tight { flex-wrap: nowrap; }
+.form .row.tight .field { flex: 1 1 0; }
+.form .row.tight .field.unit { flex: 0 0 88px; }
+.form .row.tight select { padding-right: 24px; background-position: right 11px center, right 6px center; }
 .hint { margin: -4px 0 0; font-size: 12px; color: var(--ink-3); }
 .hint.ok { color: var(--depth); }
 .form .row.btns { gap: 10px; align-items: center; }

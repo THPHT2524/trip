@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/leaflet-1.9.4.css">
-<link rel="stylesheet" href="/css/app.css?v=25">
+<link rel="stylesheet" href="/css/app.css?v=26">
 </head>
 <body>
 
@@ -116,9 +116,11 @@
               <p class="hint" id="if-geo">좌표 없음 — 지도와 거리 표시에서 빠집니다</p>
             </div>
 
-            <div class="field">
-              <label for="if-name">장소명</label>
-              <input id="if-name" type="text" required maxlength="80" placeholder="오사카성">
+            <div class="row">
+              <div class="field"><label for="if-name">장소명</label>
+                <input id="if-name" type="text" required maxlength="80" placeholder="오사카성"></div>
+              <div class="field kind"><label for="if-kind">구분</label>
+                <select id="if-kind"></select></div>
             </div>
 
             <div class="row">
@@ -126,19 +128,17 @@
                 <input id="if-date" type="date" class="mono" required></div>
               <div class="field"><label for="if-time">시각</label>
                 <input id="if-time" type="time" class="mono"></div>
-              <div class="field cur"><label for="if-kind">구분</label>
-                <select id="if-kind"></select></div>
             </div>
 
-            <div class="row">
+            <div class="row tight">
               <div class="field"><label for="if-cost">비용</label>
                 <input id="if-cost" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
-              <div class="field cur"><label for="if-cur">통화</label>
+              <div class="field unit"><label for="if-cur">통화</label>
                 <select id="if-cur">
                   <option>KRW</option><option>JPY</option><option>USD</option>
                   <option>EUR</option><option>TWD</option><option>THB</option><option>VND</option>
                 </select></div>
-              <div class="field cur"><label for="if-fx">환율</label>
+              <div class="field unit"><label for="if-fx">환율</label>
                 <input id="if-fx" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
             </div>
 
@@ -272,20 +272,20 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=25"></script>
-<script src="/js/map-config.js?v=25"></script>
-<script src="/js/util.js?v=25"></script>
-<script src="/js/geo.js?v=25"></script>
-<script src="/js/gmaps.js?v=25"></script>
-<script src="/js/db.js?v=25"></script>
-<script src="/js/outbox.js?v=25"></script>
+<script src="/js/supabase-config.js?v=26"></script>
+<script src="/js/map-config.js?v=26"></script>
+<script src="/js/util.js?v=26"></script>
+<script src="/js/geo.js?v=26"></script>
+<script src="/js/gmaps.js?v=26"></script>
+<script src="/js/db.js?v=26"></script>
+<script src="/js/outbox.js?v=26"></script>
 <script src="/js/vendor/leaflet-1.9.4.js"></script>
-<script src="/js/crew.js?v=25"></script>
-<script src="/js/plan.js?v=25"></script>
-<script src="/js/map.js?v=25"></script>
-<script src="/js/cost.js?v=25"></script>
-<script src="/js/prep.js?v=25"></script>
-<script src="/js/app.js?v=25"></script>
+<script src="/js/crew.js?v=26"></script>
+<script src="/js/plan.js?v=26"></script>
+<script src="/js/map.js?v=26"></script>
+<script src="/js/cost.js?v=26"></script>
+<script src="/js/prep.js?v=26"></script>
+<script src="/js/app.js?v=26"></script>
 
 </body>
 </html>
