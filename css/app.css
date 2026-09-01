@@ -608,7 +608,7 @@ input.code {
 
 /* Day 탭 — 일정 화면에서만. 트리플처럼 날짜를 빠르게 옮긴다 */
 .daytabs {
-  position: sticky; top: 47px; z-index: 25;
+  position: sticky; top: var(--h-top); z-index: 25;
   display: flex; gap: 6px; overflow-x: auto;
   padding: 8px var(--pad);
   background: var(--paper);
