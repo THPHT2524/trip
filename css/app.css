@@ -1,0 +1,402 @@
+/* app.css — 여행 일정표.
+   ──────────────────────────────────────────────────────────────────────────
+   생각의 뼈대: **일정표는 세로로 세운 노선도다.**
+     정거장(장소)과 구간(이동)이 번갈아 나오고, 구간에는 거리가 적힌다.
+     그래서 화면의 중심은 카드가 아니라 왼쪽을 관통하는 **레일**이다.
+     레일은 Day 머리띠를 뚫고 계속 이어진다 — 여행 하나가 경로 하나이기 때문이다.
+
+   색은 노선도의 어법을 따른다: 종이는 차갑고 잉크는 짙은 초록빛이며,
+     **채도 높은 색은 장소구분 여섯에만** 쓴다(범례처럼). 코발트는 구조색이다 —
+     레일·링크·초점. 그 밖에는 색을 쓰지 않는다.
+
+   글꼴: 한글은 시스템 글꼴이다. 한글 웹폰트는 서브셋이 수백 개라 무빌드로 감당이 안 된다
+     (card-dashboard 도 같은 이유로 라틴만 self-host 한다).
+     **숫자와 라벨만 IBM Plex Mono** 를 직접 호스팅한다 — 시각·거리·금액이 자리를 맞춰
+     세로로 읽히는 것이 이 화면에서 중요하다. 시간표가 그렇게 생겼다.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Plex Mono';
+  src: url('../fonts/ibm-plex-mono-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2190-21BB, U+2212, U+20A9, U+20AC;
+}
+@font-face {
+  font-family: 'Plex Mono';
+  src: url('../fonts/ibm-plex-mono-500.woff2') format('woff2');
+  font-weight: 500; font-style: normal; font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2190-21BB, U+2212, U+20A9, U+20AC;
+}
+@font-face {
+  font-family: 'Plex Mono';
+  src: url('../fonts/ibm-plex-mono-600.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2190-21BB, U+2212, U+20A9, U+20AC;
+}
+
+/* ── 토큰 ─────────────────────────────────────────────────────────────── */
+:root {
+  --paper:   #F1F4F2;   /* 노선도 종이 — 차가운 초록빛 회색 */
+  --card:    #FFFFFF;
+  --sunk:    #E7ECE9;   /* 눌린 자리 · 입력칸 */
+  --ink:     #16302B;   /* 소나무 잉크. 검정을 쓰지 않는다 */
+  --ink-2:   #4B635C;
+  --ink-3:   #869993;
+  --line:    #DCE4E0;   /* 실선 구획 */
+  --rail:    #C4D0CB;   /* 레일 — 지나온 구간 */
+  --route:   #2B4ACB;   /* 구조색: 활성 레일 · 링크 · 초점 */
+  --route-w: #E3E8FB;   /* 코발트의 옅은 바탕 */
+  --warn:    #A6392C;
+
+  /* 장소구분 여섯 — 노선도 범례. 채도 있는 색은 여기서만 쓴다 */
+  --k-stay:  #3B6EA5;
+  --k-eat:   #C1543A;
+  --k-see:   #2E7D5B;
+  --k-move:  #6A5AA8;
+  --k-buy:   #B08424;
+  --k-etc:   #6B7B78;
+
+  --mono: 'Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
+          'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+
+  --rail-x: 15px;       /* 레일의 가로 위치 */
+  --gutter: 46px;       /* 레일이 차지하는 왼쪽 폭 */
+  --pad:    16px;
+  --r:      10px;       /* 모서리 — 크게 굴리지 않는다. 도면에 가깝게 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:   #0E1A17;
+    --card:    #16241F;
+    --sunk:    #1D2E29;
+    --ink:     #DFEAE5;
+    --ink-2:   #9FB3AC;
+    --ink-3:   #708580;
+    --line:    #25352F;
+    --rail:    #2E4139;
+    --route:   #8AA0FF;
+    --route-w: #1B2440;
+    --warn:    #E9877A;
+    --k-stay:  #79A8DA;
+    --k-eat:   #E28E77;
+    --k-see:   #6CBE96;
+    --k-move:  #A497E0;
+    --k-buy:   #DCB65E;
+    --k-etc:   #9AAAA6;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:   #0E1A17;
+  --card:    #16241F;
+  --sunk:    #1D2E29;
+  --ink:     #DFEAE5;
+  --ink-2:   #9FB3AC;
+  --ink-3:   #708580;
+  --line:    #25352F;
+  --rail:    #2E4139;
+  --route:   #8AA0FF;
+  --route-w: #1B2440;
+  --warn:    #E9877A;
+  --k-stay:  #79A8DA;
+  --k-eat:   #E28E77;
+  --k-see:   #6CBE96;
+  --k-move:  #A497E0;
+  --k-buy:   #DCB65E;
+  --k-etc:   #9AAAA6;
+}
+
+/* ── 바탕 ─────────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  /* 하단 탭바 + 홈 인디케이터만큼 비운다 */
+  padding-bottom: calc(58px + env(safe-area-inset-bottom));
+}
+[hidden] { display: none !important; }
+
+/* 숫자가 세로로 줄을 맞춰야 하는 곳 전부 */
+.mono, .time, .dist, .money, .daytag, .code {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'zero' 1;
+}
+
+a { color: var(--route); text-underline-offset: 2px; }
+:focus-visible {
+  outline: 2px solid var(--route);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ── 앱 셸 ────────────────────────────────────────────────────────────── */
+.wrap { max-width: 640px; margin: 0 auto; }
+
+.top {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  padding: 10px var(--pad);
+  display: flex; align-items: center; gap: 10px;
+}
+.top .back {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  color: var(--ink-2); font-size: 20px; line-height: 1;
+  padding: 4px 6px; margin-left: -6px;
+}
+.top .who { flex: 1; min-width: 0; }
+.top h1 {
+  margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.top .span {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  letter-spacing: .02em;
+}
+
+/* ── Day 머리띠 ───────────────────────────────────────────────────────── */
+/* 레일이 이 띠를 **뚫고 지나간다**. 여행 하나가 경로 하나라서 끊지 않는다. */
+/* ★sticky 가 셋 겹친다: .top(47) → .daytabs(41) → .dayband.
+   같은 top 을 주면 스크롤할 때 서로를 덮는다 — 쌓인 높이만큼 내려 앉힌다. */
+.dayband {
+  position: sticky; top: 88px; z-index: 20;
+  background: var(--paper);
+  padding: 14px var(--pad) 8px;
+  display: flex; align-items: baseline; gap: 10px;
+}
+.dayband::before {
+  content: ''; position: absolute; left: calc(var(--pad) + var(--rail-x));
+  top: 0; bottom: 0; width: 2px; background: var(--rail);
+}
+.daytag {
+  font-size: 11px; font-weight: 600; letter-spacing: .14em;
+  color: var(--ink-3); text-transform: uppercase;
+  padding-left: var(--gutter);
+}
+.dayband .date { font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.dayband .sum {
+  margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+}
+
+/* ── 레일 위의 정거장 ─────────────────────────────────────────────────── */
+.day { position: relative; padding: 0 var(--pad) 6px; }
+/* 레일 본체 — 하루 전체를 관통한다 */
+.day::before {
+  content: ''; position: absolute;
+  left: calc(var(--pad) + var(--rail-x)); top: 0; bottom: 0;
+  width: 2px; background: var(--rail);
+}
+.day:last-child::before { bottom: 22px; }   /* 마지막 날은 레일이 끝난다 */
+
+.stop { position: relative; padding-left: var(--gutter); }
+
+/* 정거장 표식 — 구분 색이 여기서만 진하게 나온다 */
+.stop > .pin {
+  position: absolute; left: calc(var(--rail-x) - 5px); top: 16px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--card);
+  border: 3px solid var(--k, var(--k-etc));
+  z-index: 1;
+}
+.stop.is-done > .pin { background: var(--k, var(--k-etc)); }
+/* 다음에 갈 곳 — 현지에서 이 앱을 여는 이유가 이 한 줄이다.
+   따로 라벨을 붙이지 않는다. 링과 테두리 둘이면 눈이 먼저 여기 앉는다. */
+.stop.is-next > .pin {
+  border-color: var(--route);
+  box-shadow: 0 0 0 4px var(--route-w);
+}
+.stop.is-next .item {
+  border-color: var(--route);
+  box-shadow: 0 0 0 3px var(--route-w);
+}
+
+/* ── 일정 한 줄 ───────────────────────────────────────────────────────── */
+.item {
+  display: block; width: 100%; text-align: left;
+  appearance: none; border: 1px solid var(--line); background: var(--card);
+  border-radius: var(--r);
+  padding: 11px 13px;
+  margin: 6px 0;
+  cursor: pointer;
+  color: inherit; font: inherit;
+}
+.item:active { background: var(--sunk); }
+.item .row1 { display: flex; align-items: baseline; gap: 8px; }
+.item .time {
+  font-size: 12px; font-weight: 600; color: var(--ink-2);
+  min-width: 38px;
+}
+.item .time.none { color: var(--ink-3); font-weight: 400; }
+.item .name {
+  flex: 1; min-width: 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.item.is-done .name { color: var(--ink-3); text-decoration: line-through; }
+.item .row2 {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 3px; padding-left: 46px;
+  font-size: 12px; color: var(--ink-3);
+}
+.kind {
+  font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  color: var(--k, var(--k-etc));
+}
+.money { font-size: 12px; color: var(--ink-2); }
+.money.none { color: var(--ink-3); }
+.badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
+  border: 1px solid var(--line); border-radius: 3px;
+  padding: 1px 4px; color: var(--ink-3);
+}
+
+/* ── 구간 — 이 화면의 서명 ────────────────────────────────────────────── */
+/* 정거장 사이의 **빈 곳이 정보를 갖는다.** 거리는 여기 적히고, 누르면 길찾기로 나간다.
+   레일이 이 구간에서만 점선이 된다 — 지나가는 중이라는 뜻이다. */
+.seg { position: relative; padding-left: var(--gutter); height: 34px; }
+.seg::before {
+  content: ''; position: absolute;
+  left: calc(var(--rail-x) - 1px); top: 0; bottom: 0; width: 4px;
+  background: var(--paper);
+  /* 점선 레일 — 배경색으로 덮고 그 위에 점을 찍는다 */
+  background-image: linear-gradient(var(--rail) 50%, transparent 0);
+  background-size: 2px 7px;
+  background-repeat: repeat-y;
+  background-position: 1px 0;
+}
+.seg a {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: .01em;
+  color: var(--ink-3); text-decoration: none;
+  background: var(--paper); padding: 2px 7px 2px 0;
+}
+.seg a .km { color: var(--ink-2); font-weight: 500; }
+.seg a:hover .km, .seg a:focus-visible .km { color: var(--route); }
+.seg a::after {
+  content: '길찾기'; font-family: var(--sans); font-size: 10px;
+  color: var(--route); opacity: 0; transition: opacity .12s ease;
+}
+.seg a:hover::after, .seg a:focus-visible::after { opacity: 1; }
+@media (hover: none) {
+  .seg a::after { opacity: 1; }   /* 폰에는 hover 가 없다 — 늘 보인다 */
+}
+
+/* ── 하단 탭 ──────────────────────────────────────────────────────────── */
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: flex;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tabs button {
+  flex: 1; appearance: none; border: 0; background: none; cursor: pointer;
+  padding: 9px 4px 10px;
+  font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: -.01em;
+  color: var(--ink-3);
+  border-top: 2px solid transparent; margin-top: -1px;
+}
+.tabs button[aria-selected="true"] {
+  color: var(--ink);
+  border-top-color: var(--route);
+}
+
+/* Day 탭 — 일정 화면에서만. 트리플처럼 날짜를 빠르게 옮긴다 */
+.daytabs {
+  position: sticky; top: 47px; z-index: 25;
+  display: flex; gap: 6px; overflow-x: auto;
+  padding: 8px var(--pad);
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+.daytabs::-webkit-scrollbar { display: none; }
+.daytabs button {
+  appearance: none; cursor: pointer; flex: 0 0 auto;
+  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  padding: 5px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+}
+.daytabs button[aria-selected="true"] {
+  background: var(--ink); border-color: var(--ink); color: var(--paper);
+}
+
+/* ── 여행 목록 ────────────────────────────────────────────────────────── */
+.trips { padding: var(--pad); display: flex; flex-direction: column; gap: 10px; }
+.trip {
+  display: block; width: 100%; text-align: left;
+  appearance: none; cursor: pointer; color: inherit; font: inherit;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 14px;
+}
+.trip .nm { font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
+.trip .meta {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  margin-top: 3px; letter-spacing: .02em;
+}
+.trip.is-now { border-color: var(--route); box-shadow: 0 0 0 3px var(--route-w); }
+.trip .now {
+  font-family: var(--sans); font-size: 10px; font-weight: 700;
+  color: var(--route); letter-spacing: .04em; margin-left: 6px;
+}
+
+/* ── 게이트 · 빈 화면 ─────────────────────────────────────────────────── */
+.gate {
+  min-height: 100dvh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px; padding: 24px;
+  text-align: center;
+}
+.gate h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.gate p { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 26em; }
+.gate .err { color: var(--warn); font-size: 13px; }
+
+.btn {
+  appearance: none; cursor: pointer; font: inherit; font-weight: 600;
+  background: var(--ink); color: var(--paper);
+  border: 1px solid var(--ink); border-radius: 8px;
+  padding: 10px 18px;
+}
+.btn.ghost { background: none; color: var(--ink); }
+.btn:active { opacity: .85; }
+
+.empty {
+  padding: 40px var(--pad); text-align: center;
+  color: var(--ink-3); font-size: 14px;
+}
+.empty strong { display: block; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
+
+/* 좌표 없는 일정이 지도에서 빠졌다는 사실을 조용히 넘기지 않는다 */
+.note {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  padding: 8px var(--pad) 0; text-align: center;
+}
+
+/* ── 폼 ───────────────────────────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+input, select, textarea {
+  font-family: inherit; font-size: 15px; color: var(--ink);
+  background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px;
+  width: 100%;
+}
+input.mono { font-family: var(--mono); }
+/* ★이 규칙은 위 input 규칙보다 **뒤에** 있어야 한다 — 같은 무게라 먼저 두면 덮인다.
+   iOS 사파리는 16px 미만 입력칸에 초점이 가면 페이지를 제멋대로 확대하고 되돌리지 않는다.
+   viewport 에 maximum-scale 을 박으면 막히지만 그건 두 손가락 확대까지 없앤다 —
+   못 읽는 사람에게서 확대를 빼앗는 대신 글자를 키운다. (stock 에서 같은 판단을 했다) */
+@media (hover: none) {
+  input, select, textarea { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

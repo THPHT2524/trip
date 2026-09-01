@@ -13,9 +13,9 @@
 --
 -- 멱등하다. 여러 번 실행해도 안전하다.
 
-create table if not exists public.items (
+create table if not exists trip.items (
   id         uuid        primary key default gen_random_uuid(),
-  trip_id    uuid        not null references public.trips(id) on delete cascade,
+  trip_id    uuid        not null references trip.trips(id) on delete cascade,
   author_id  uuid        not null default auth.uid() references auth.users(id) on delete set null,
 
   -- ── 언제 ────────────────────────────────────────────────
@@ -58,18 +58,18 @@ create table if not exists public.items (
 );
 
 -- 화면이 늘 이 순서로 읽는다: 이 여행의, 날짜 순, 그날 안에서는 시각→순번.
-create index if not exists items_trip_idx on public.items (trip_id, on_date, at_time nulls last, seq);
+create index if not exists items_trip_idx on trip.items (trip_id, on_date, at_time nulls last, seq);
 
-drop trigger if exists items_touch on public.items;
-create trigger items_touch before update on public.items
-  for each row execute function public.touch_updated_at();
+drop trigger if exists items_touch on trip.items;
+create trigger items_touch before update on trip.items
+  for each row execute function trip.touch_updated_at();
 
-alter table public.items enable row level security;
+alter table trip.items enable row level security;
 
 -- 멤버면 읽고 쓴다. 동행자가 같이 일정을 짜는 것이 이 앱의 전제다.
 --   with check 까지 걸어야 남의 여행으로 행을 옮겨 넣는 것을 막는다.
-drop policy if exists items_member on public.items;
-create policy items_member on public.items
+drop policy if exists items_member on trip.items;
+create policy items_member on trip.items
   for all to authenticated
-  using (public.is_trip_member(trip_id))
-  with check (public.is_trip_member(trip_id));
+  using (trip.is_trip_member(trip_id))
+  with check (trip.is_trip_member(trip_id));

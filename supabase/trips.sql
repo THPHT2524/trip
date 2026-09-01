@@ -1,3 +1,19 @@
+-- ★★이 앱의 표는 public 이 아니라 **trip 스키마**에 있다.
+--   Supabase 무료 플랜은 프로젝트를 둘까지만 준다(card-dashboard · stock 이 이미 쓴다).
+--   그래서 card-dashboard 의 프로젝트에 얹되, public 은 그쪽 것으로 두고 우리는 우리 방을 쓴다.
+--   프리픽스(trip_items)가 아니라 스키마인 이유: Postgres 가 이런 상황을 위해 주는 도구다.
+--
+--   ★대시보드에서 할 일: Project Settings → API → **Exposed schemas 에 `trip` 을 추가**한다.
+--     안 하면 PostgREST 가 이 표들을 보지 못해 클라이언트가 404 를 받는다.
+--   ★클라이언트도 알아야 한다: createClient(..., { db: { schema: 'trip' } })
+
+create schema if not exists trip;
+
+grant usage on schema trip to anon, authenticated;
+-- 표 권한은 로그인한 사람에게만. 실제 방어선은 아래의 RLS 다.
+alter default privileges in schema trip grant all on tables to authenticated;
+alter default privileges in schema trip grant all on functions to authenticated;
+
 -- trips — 여행 하나. 이 앱의 그릇이다.
 --
 -- 담는 것은 이름·기간·기준통화·초대코드 넷과 소유자뿐이다.
@@ -8,7 +24,7 @@
 --
 -- 멱등하다. 여러 번 실행해도 안전하다.
 
-create table if not exists public.trips (
+create table if not exists trip.trips (
   id          uuid        primary key default gen_random_uuid(),
   owner_id    uuid        not null default auth.uid() references auth.users(id) on delete cascade,
   name        text        not null,
@@ -23,17 +39,20 @@ create table if not exists public.trips (
   unique (invite_code)
 );
 
--- updated_at 자동 갱신 — card-dashboard·stock 과 같은 공용 함수다.
-create or replace function public.touch_updated_at() returns trigger
+-- updated_at 자동 갱신.
+-- ★public.touch_updated_at() 을 쓰지 않는다 — 그건 card-dashboard 의 records 가 쓰는 함수다.
+--   create or replace 로 건드리면 남의 표의 동작까지 바꿀 수 있다(stock 의 snapshots.sql 이 같은 이유로
+--   공용 함수에 트리거를 안 달았다). 우리 스키마 안에 우리 것을 둔다.
+create or replace function trip.touch_updated_at() returns trigger
 language plpgsql as $$
 begin new.updated_at = now(); return new; end;
 $$;
 
-drop trigger if exists trips_touch on public.trips;
-create trigger trips_touch before update on public.trips
-  for each row execute function public.touch_updated_at();
+drop trigger if exists trips_touch on trip.trips;
+create trigger trips_touch before update on trip.trips
+  for each row execute function trip.touch_updated_at();
 
-alter table public.trips enable row level security;
+alter table trip.trips enable row level security;
 
 /* ★정책은 members.sql 이 만든다. is_trip_member() 가 있어야 쓸 수 있는데
    그 함수가 trip_members 표를 보기 때문이다. 실행 순서: trips → members → items → checklist.

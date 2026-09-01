@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- maximum-scale 을 박지 않는다 — 두 손가락 확대를 빼앗는 대신 입력칸 글자를 16px 로 키운다(app.css) -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>여행 일정표</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
+<link rel="stylesheet" href="css/app.css?v=1">
+</head>
+<body>
+
+<!-- ── 로그인 게이트 ───────────────────────────────────────────────────────
+     이 앱은 로그인 없이 할 수 있는 일이 없다 — 일정도 프록시도 세션을 요구한다. -->
+<div class="gate" id="gate" hidden>
+  <h1>여행 일정표</h1>
+  <p>구글 계정으로 들어오면 내가 만든 여행과 초대받은 여행이 보입니다.</p>
+  <button class="btn" id="signin" type="button">구글로 계속하기</button>
+  <p class="err" id="gate-err"></p>
+</div>
+
+<!-- ── 앱 ─────────────────────────────────────────────────────────────── -->
+<div id="app">
+  <div class="wrap">
+
+    <header class="top">
+      <button class="back" type="button" aria-label="여행 목록으로">←</button>
+      <div class="who">
+        <h1>오사카</h1>
+        <div class="span">2026.10.14 – 10.18 · 5일</div>
+      </div>
+    </header>
+
+    <!-- Day 탭 — 트리플에서 가져왔다. 폰에서 날짜를 옮기는 가장 빠른 길이다 -->
+    <nav class="daytabs" role="tablist" aria-label="날짜">
+      <button type="button" role="tab" aria-selected="false">D1</button>
+      <button type="button" role="tab" aria-selected="true">D2</button>
+      <button type="button" role="tab" aria-selected="false">D3</button>
+      <button type="button" role="tab" aria-selected="false">D4</button>
+      <button type="button" role="tab" aria-selected="false">D5</button>
+      <button type="button" role="tab" aria-selected="false">전체</button>
+    </nav>
+
+    <!-- ★표본이다. P2 에서 js/plan.js 가 이 자리를 채운다.
+         지금 두는 이유는 디자인을 눈으로 확인하기 위해서다 — 붙일 때 통째로 걷어낸다. -->
+    <div id="plan">
+
+      <div class="dayband">
+        <span class="daytag">Day 2</span>
+        <span class="date">10.15 목</span>
+        <span class="sum">₩86,400</span>
+      </div>
+
+      <section class="day">
+
+        <div class="stop is-done" style="--k: var(--k-etc)">
+          <span class="pin"></span>
+          <button class="item is-done" type="button">
+            <span class="row1">
+              <span class="time">08:20</span>
+              <span class="name">호텔 조식</span>
+            </span>
+            <span class="row2">
+              <span class="kind">기타</span>
+              <span class="money none">포함</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="seg">
+          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6654,135.5010&amp;destination=34.6873,135.5259">
+            <span class="km">직선 3.1km</span>
+          </a>
+        </div>
+
+        <div class="stop" style="--k: var(--k-see)">
+          <span class="pin"></span>
+          <button class="item" type="button">
+            <span class="row1">
+              <span class="time">10:00</span>
+              <span class="name">오사카성 천수각</span>
+            </span>
+            <span class="row2">
+              <span class="kind">관광</span>
+              <span class="money">¥600 · ₩5,760</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="seg">
+          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6873,135.5259&amp;destination=34.6687,135.5013">
+            <span class="km">직선 2.6km</span>
+          </a>
+        </div>
+
+        <div class="stop is-next" style="--k: var(--k-eat)">
+          <span class="pin"></span>
+          <button class="item" type="button">
+            <span class="row1">
+              <span class="time none">점심</span>
+              <span class="name">도톤보리 이치란</span>
+            </span>
+            <span class="row2">
+              <span class="kind">식사</span>
+              <span class="money none">비용 미정</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="seg">
+          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6687,135.5013&amp;destination=34.6656,135.5010">
+            <span class="km">직선 0.4km</span>
+          </a>
+        </div>
+
+        <div class="stop" style="--k: var(--k-buy)">
+          <span class="pin"></span>
+          <button class="item" type="button">
+            <span class="row1">
+              <span class="time none">오후</span>
+              <span class="name">신사이바시 스지</span>
+            </span>
+            <span class="row2">
+              <span class="kind">쇼핑</span>
+              <span class="money none">비용 미정</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="seg">
+          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6656,135.5010&amp;destination=34.6654,135.4960">
+            <span class="km">직선 0.5km</span>
+          </a>
+        </div>
+
+        <div class="stop" style="--k: var(--k-stay)">
+          <span class="pin"></span>
+          <button class="item" type="button">
+            <span class="row1">
+              <span class="time">19:00</span>
+              <span class="name">크로스호텔 오사카</span>
+            </span>
+            <span class="row2">
+              <span class="kind">숙소</span>
+              <span class="money">¥8,400 · ₩80,640</span>
+              <span class="badge">CX-4471</span>
+            </span>
+          </button>
+        </div>
+
+      </section>
+
+      <p class="note">좌표 없는 일정 1 — 지도에 안 나옵니다</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── 하단 탭 ────────────────────────────────────────────────────────── -->
+<nav class="tabs" role="tablist" aria-label="화면">
+  <button type="button" role="tab" aria-selected="true">일정</button>
+  <button type="button" role="tab" aria-selected="false">지도</button>
+  <button type="button" role="tab" aria-selected="false">비용</button>
+  <button type="button" role="tab" aria-selected="false">준비물</button>
+  <button type="button" role="tab" aria-selected="false">동행자</button>
+</nav>
+
+<!-- 스크립트는 P1 부터 붙는다. 로드 순서가 곧 의존성이다:
+     vendor/supabase-js → supabase-config → db → gmaps → geo → outbox → plan/map/cost/prep → app -->
+
+</body>
+</html>
