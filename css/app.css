@@ -899,8 +899,10 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
 .sheetbody { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 
 /* ★시트가 떠 있는 동안 뒤 화면을 **잠근다.** showModal() 은 배경을 못 누르게만 하지
-   스크롤까지 막아 주지는 않는다(브라우저마다 다르다). */
-html.sheet-open, html.sheet-open body { overflow: hidden; overscroll-behavior: none; }
+   스크롤까지 막아 주지는 않는다(브라우저마다 다르다).
+   ★JS 로 클래스를 붙였다 떼는 대신 :has() 로 DOM 상태를 직접 읽는다 — 여닫는 길이
+     넷(단추·✕·백드롭·Esc)이라 한 곳이라도 빠뜨리면 화면이 잠긴 채로 남는다. */
+html:has(dialog[open]), html:has(dialog[open]) body { overflow: hidden; overscroll-behavior: none; }
 #if-dlg .form { padding: 14px 14px 18px; }
 /* 저장 줄은 시트 바닥에 붙는다 — 열두 칸을 지나 내려가지 않아도 닿는다 */
 #if-dlg .form .row.btns {

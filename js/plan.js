@@ -170,16 +170,14 @@ const Plan = (function () {
   function openSheet(r) {
     fillForm(r);
     const d = $('if-dlg');
-    if (!d.open) { d.showModal(); document.documentElement.classList.add('sheet-open'); }
+    if (!d.open) d.showModal();
     /* 열 때마다 맨 위부터 — 앞서 스크롤해 둔 자리가 남아 있으면
        새 줄을 넣으러 왔는데 메모 칸부터 보인다 */
     d.querySelector('.sheetbody').scrollTop = 0;
     if (!r) setTimeout(() => $('if-link').focus({ preventScroll: true }), 0);
   }
   const closeSheet = () => { if ($('if-dlg').open) $('if-dlg').close(); };
-  /* 뒤 화면 잠금은 **dialog 의 상태**에 매단다 — Esc·백드롭·저장 어느 쪽으로 닫혀도
-     한 곳에서 풀린다. 여닫는 자리마다 따로 붙이면 반드시 하나를 빠뜨린다. */
-  $('if-dlg').addEventListener('close', () => document.documentElement.classList.remove('sheet-open'));
+  /* 뒤 화면 잠금은 CSS 가 한다 — html:has(dialog[open]). */
 
   function fillForm(r) {
     editing = r ? r.id : null;
