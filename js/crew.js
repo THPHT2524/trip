@@ -44,7 +44,9 @@ const Crew = (function () {
         </span>
       </li>`).join('');
 
-    $('crew-link').value = inviteUrl(trip);
+    /* ★칸에는 **코드**를 보여준다. 링크는 375px 칸에서 잘려 못 읽는데,
+       정작 사람이 읽고 불러 줄 수 있는 것은 코드다. 복사 단추가 링크를 가져간다. */
+    $('crew-link').value = trip.invite_code || '';
     $('crew-count').textContent = `${list.length}명`;
 
     // 설정 — 소유자만 고칠 수 있다
@@ -53,20 +55,19 @@ const Crew = (function () {
     $('set-to').value = trip.end_on || '';
     $('set-cur').value = trip.base_cur || 'KRW';
     ['set-name', 'set-from', 'set-to', 'set-cur', 'set-save'].forEach(id => { $(id).disabled = !owner; });
-    $('set-del').hidden = !owner;
+    $('set-danger').hidden = !owner;
     $('set-note').textContent = owner ? '' : '여행을 만든 사람만 고칠 수 있습니다.';
   }
 
   async function copyLink() {
-    const v = $('crew-link').value;
+    const v = inviteUrl(trip);          // 칸에는 코드가 있지만 복사하는 것은 링크다
     try {
       await navigator.clipboard.writeText(v);
       $('crew-msg').textContent = '초대 링크를 복사했습니다.';
     } catch (e) {
       /* 클립보드는 권한·컨텍스트에 따라 막힌다. 그때는 고를 수 있게만 해 준다 —
          '복사 실패' 만 띄우면 사용자가 할 수 있는 일이 없다. */
-      $('crew-link').select();
-      $('crew-msg').textContent = '복사가 막혔습니다. 선택해 두었으니 직접 복사하세요.';
+      $('crew-msg').textContent = '복사가 막혔습니다 — 코드를 직접 불러 주세요: ' + (trip.invite_code || '');
     }
   }
 

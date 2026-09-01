@@ -521,6 +521,19 @@ a { color: var(--route); text-underline-offset: 2px; }
 .tagrow { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .act.danger { color: var(--warn); }
 
+/* 되돌릴 수 없는 동작 — 선을 긋고 주 동작에서 떼어 놓는다 */
+.danger-zone {
+  margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
+}
+.danger-zone .hint { margin: 0; }
+
+/* 초대 코드 — 불러 줄 수 있게 크고 성기게 */
+input.code {
+  font-size: 17px; letter-spacing: .14em; text-align: center;
+  background: var(--sunk);
+}
+
 /* ── 준비물 ───────────────────────────────────────────────────────────── */
 .prep { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .prow {

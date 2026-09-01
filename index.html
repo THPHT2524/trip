@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/leaflet-1.9.4.css">
-<link rel="stylesheet" href="/css/app.css?v=31">
+<link rel="stylesheet" href="/css/app.css?v=32">
 </head>
 <body>
 
@@ -213,13 +213,13 @@
       </section>
 
       <section class="cblock">
-        <h3 class="chd">초대 링크</h3>
+        <h3 class="chd">초대</h3>
         <div class="form">
           <div class="row">
-            <input id="crew-link" type="text" class="mono" readonly aria-label="초대 링크">
-            <button class="btn" id="crew-copy" type="button">복사</button>
+            <input id="crew-link" type="text" class="mono code" readonly aria-label="초대 코드">
+            <button class="btn" id="crew-copy" type="button">링크 복사</button>
           </div>
-          <p class="hint">이 링크를 연 사람은 이 여행에 참여합니다.
+          <p class="hint">코드를 불러 주거나 링크를 보내세요. 받은 사람은 이 여행에 참여합니다 —
             참여하면 <strong>서로의 이메일이 보입니다.</strong></p>
         </div>
       </section>
@@ -245,9 +245,13 @@
           <p class="hint" id="set-note"></p>
           <div class="row btns">
             <button class="btn" id="set-save" type="submit">저장</button>
-            <button class="btn ghost danger" id="set-del" type="button" hidden>여행 지우기</button>
           </div>
           <p class="err" id="set-err"></p>
+          <!-- 되돌릴 수 없는 동작은 주 동작 옆에 두지 않는다 — 선을 하나 긋고 아래로 내린다 -->
+          <div class="danger-zone" id="set-danger" hidden>
+            <button class="btn ghost danger" id="set-del" type="button">여행 지우기</button>
+            <p class="hint">일정·비용·준비물이 전부 함께 지워지고 되돌릴 수 없습니다.</p>
+          </div>
         </form>
       </section>
 
@@ -270,20 +274,20 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=31"></script>
-<script src="/js/map-config.js?v=31"></script>
-<script src="/js/util.js?v=31"></script>
-<script src="/js/geo.js?v=31"></script>
-<script src="/js/gmaps.js?v=31"></script>
-<script src="/js/db.js?v=31"></script>
-<script src="/js/outbox.js?v=31"></script>
+<script src="/js/supabase-config.js?v=32"></script>
+<script src="/js/map-config.js?v=32"></script>
+<script src="/js/util.js?v=32"></script>
+<script src="/js/geo.js?v=32"></script>
+<script src="/js/gmaps.js?v=32"></script>
+<script src="/js/db.js?v=32"></script>
+<script src="/js/outbox.js?v=32"></script>
 <script src="/js/vendor/leaflet-1.9.4.js"></script>
-<script src="/js/crew.js?v=31"></script>
-<script src="/js/plan.js?v=31"></script>
-<script src="/js/map.js?v=31"></script>
-<script src="/js/cost.js?v=31"></script>
-<script src="/js/prep.js?v=31"></script>
-<script src="/js/app.js?v=31"></script>
+<script src="/js/crew.js?v=32"></script>
+<script src="/js/plan.js?v=32"></script>
+<script src="/js/map.js?v=32"></script>
+<script src="/js/cost.js?v=32"></script>
+<script src="/js/prep.js?v=32"></script>
+<script src="/js/app.js?v=32"></script>
 
 </body>
 </html>
