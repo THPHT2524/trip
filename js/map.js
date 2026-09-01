@@ -141,10 +141,15 @@ const Maps = (function () {
       }
       geo.forEach((r, i) => {
         pts.push([r.lat, r.lng]);
+        /* ★이름을 마커 위에 **늘 띄운다.** 핀만 있으면 '1번이 어디였더라' 를 확인하러
+           일정 탭으로 돌아가게 된다 — 지도를 여는 이유가 그걸 안 하기 위해서다.
+           permanent 툴팁은 pointer-events 를 받지 않으므로 지도를 끄는 데 방해되지 않는다. */
         L.marker([r.lat, r.lng], { icon: pinIcon(r, i + 1), keyboard: true, title: r.name })
           .addTo(layer)
-          .bindTooltip(`${esc(r.name)}${r.at_time ? ' · ' + esc(r.at_time.slice(0, 5)) : ''}`,
-                       { direction: 'top', offset: [0, -12] })
+          .bindTooltip(esc(r.name), {
+            permanent: true, direction: 'top', offset: [0, -13],
+            className: 'mlbl', opacity: 1,
+          })
           .on('click', () => onPick(r.id));
       });
     });

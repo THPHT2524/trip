@@ -387,11 +387,18 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--card); color: var(--ink); border-bottom-color: var(--line);
 }
 .leaflet-bar a:hover { background: var(--sunk); color: var(--ink); }
-.leaflet-tooltip {
-  background: var(--ink); color: var(--paper); border: 0; border-radius: 5px;
-  font-size: 12px; font-weight: 600; padding: 3px 7px; box-shadow: none;
+/* 마커 위에 늘 붙어 있는 이름표.
+   ★위성 사진 위에서도 읽혀야 한다 — 짙은 바탕에 밝은 글자, 화살표는 없앤다
+     (핀 바로 위에 붙어 있어서 무엇을 가리키는지 이미 분명하다).
+   ★긴 이름은 자른다. 이름표가 길어지면 옆 핀을 덮는다. */
+.leaflet-tooltip.mlbl {
+  background: color-mix(in srgb, var(--ink) 86%, transparent);
+  color: var(--paper); border: 0; border-radius: 5px; box-shadow: none;
+  font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: -.01em;
+  padding: 2px 6px;
+  max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.leaflet-tooltip-top::before { border-top-color: var(--ink); }
+.leaflet-tooltip.mlbl::before { display: none; }
 
 /* ── 아웃박스 ─────────────────────────────────────────────────────────── */
 /* 못 보낸 것이 있으면 어느 화면에 있든 보인다. 조용히 쌓이면 한참 뒤에야 안다. */
