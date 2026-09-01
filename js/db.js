@@ -144,7 +144,7 @@ const DB = (function () {
     shape: async () => {
       if (mode() !== 'cloud') return [];
       const { data, error } = await sb.from('items')
-        .select('trip_id,on_date,kind,cost,cost_cur,fx')
+        .select('trip_id,on_date,kind,cost,cost_cur,fx,settle,split,payer_id')
         .order('on_date', { ascending: true });
       if (error) return [];          // 못 받아도 목록은 보여준다 — 미니 레일만 빠진다
       return data || [];
@@ -164,7 +164,7 @@ const DB = (function () {
   /* 화면이 늘 이 순서로 읽는다: 날짜 → 시각(없으면 뒤) → 순번.
      ★정렬을 서버에 맡긴다. 클라이언트에서 또 정렬하면 두 규칙이 생기고 언젠가 갈린다. */
   const COLS = 'id,trip_id,author_id,on_date,at_time,seq,kind,name,memo,done,' +
-               'map_url,lat,lng,cost,cost_cur,fx,payer_id,ref_code,book_url';
+               'map_url,lat,lng,cost,cost_cur,qty,fx,settle,split,payer_id,ref_code,book_url';
 
   const num = v => (v === '' || v == null) ? null : (Number.isFinite(+v) ? +v : null);
 
@@ -194,8 +194,14 @@ const DB = (function () {
       lat: num(v.lat), lng: num(v.lng),
       cost: num(v.cost),
       cost_cur: num(v.cost) == null ? null : (v.cost_cur || 'KRW'),
+      /* 갯수. cost 는 **총액**이고 단가는 cost/qty 다 — 1개면 굳이 적지 않는다 */
+      qty: (num(v.qty) && +v.qty > 1) ? +v.qty : null,
       fx: num(v.fx),
-      payer_id: v.payer_id || null,
+      /* null=카드 · cash=현금(지갑에서 차감) · exchange=환전·출금(지갑에 입금, 지출 아님) */
+      settle: (v.settle === 'cash' || v.settle === 'exchange') ? v.settle : null,
+      /* 각자 냄(더치) — 교통카드처럼 각자 자기 걸로 찍은 줄. 한 사람에게 몰지 않는다 */
+      split: !!v.split,
+      payer_id: v.split ? null : (v.payer_id || null),
       ref_code: (v.ref_code || '').trim() || null,
       book_url: (v.book_url || '').trim() || null,
     }),

@@ -18,14 +18,15 @@ const Cost = (function () {
 
   let trip = null, rows = [], crew = [];
 
-  /* 이 줄이 **원화로** 얼마인가. 낼 수 없으면 null 이고, null 은 합계에 안 들어간다. */
+  /* ★셈은 js/money.js 한 곳에서만 한다. 홈·일정·여기가 같은 함수를 쓴다 —
+     각자 세면 언젠가 갈린다(실제로 갈렸었다). 여기서는 결과만 읽는다. */
+  let M = { per: new Map(), cash: { bal: 0, rate: null, cur: null } };
   function inBase(r) {
-    if (r.cost == null) return null;
-    if (r.cost_cur === U.SETTLE) return +r.cost;
-    if (r.fx) return +r.cost * +r.fx;
-    return null;
+    const p = M.per.get(r.id);
+    return (p && p.spend) ? p.krw : null;
   }
-  const has = r => r.cost != null;
+  /* 환전은 **지출이 아니다** — '무엇에·누가' 표에도, 건수에도 들어가지 않는다 */
+  const has = r => r.cost != null && r.settle !== 'exchange';
 
   function group(keyOf) {
     const m = new Map();
@@ -105,6 +106,7 @@ const Cost = (function () {
   }
 
   function draw() {
+    M = MONEY.total(rows);                     // 현금 지갑까지 한 번에 — 아래는 결과만 읽는다
     const paid = rows.filter(has);
     const total = paid.reduce((s, r) => s + (inBase(r) || 0), 0);
     const miss = paid.filter(r => inBase(r) == null);
@@ -120,9 +122,26 @@ const Cost = (function () {
 
     const byKind = KINDS.map(k => [k, group(r => r.kind).get(k)])
       .filter(e => e[1]).sort((a, b) => b[1].sum - a[1].sum);
-    const byPayer = [...group(r => r.payer_id || '').entries()]
-      .map(([id, v]) => [id ? (Crew.nameOf(crew, id) || '알 수 없음') : '안 적음', v])
-      .sort((a, b) => b[1].sum - a[1].sum);
+    /* ★'각자 냄' 은 한 사람에게 몰지 않는다 — 교통카드처럼 각자 자기 걸로 찍은 줄이라
+       동행자 수로 나눠 각자에게 붙인다. 동행자를 모르면(혼자거나 못 받았으면) 나눌 곳이
+       없으므로 '각자 냄' 이라는 한 칸으로 남긴다 — 없는 사람에게 배분하지 않는다. */
+    const pm = new Map();
+    const put = (k, krw, miss) => {
+      const c = pm.get(k) || { sum: 0, n: 0, miss: 0 };
+      if (miss) c.miss += 1; else c.sum += krw;
+      c.n += 1; pm.set(k, c);
+    };
+    rows.filter(has).forEach(r => {
+      const v = inBase(r);
+      if (r.split && crew.length > 1) {
+        crew.forEach(m => put(Crew.nameOf(crew, m.user_id) || '알 수 없음',
+                              v == null ? 0 : v / crew.length, v == null));
+        return;
+      }
+      if (r.split) { put('각자 냄', v, v == null); return; }
+      put(r.payer_id ? (Crew.nameOf(crew, r.payer_id) || '알 수 없음') : '안 적음', v, v == null);
+    });
+    const byPayer = [...pm.entries()].sort((a, b) => b[1].sum - a[1].sum);
 
     $('cost-blocks').innerHTML =
         dayBars()
@@ -131,6 +150,15 @@ const Cost = (function () {
           ? table('누가 냈나', byPayer) : '');
 
     /* 환율이 없어 합계에서 빠진 줄 — 감추지 않는다. 그 자리에서 채울 수 있게 한다. */
+    /* 지갑에 남은 현금 — 환전을 적기 시작하면 제일 먼저 궁금해지는 숫자다 */
+    const c = M.cash;
+    $('cost-wallet').innerHTML = (c && c.bal > 0.5) ? `
+      <div class="wallet">
+        <span class="wv">${esc(U.money(c.bal, c.cur))}</span>
+        <span class="wl">남은 현금</span>
+        <span class="wr">평균 ${(c.rate || 0).toFixed(2)}원 · 원가 ${esc(U.money(c.paid, U.SETTLE))}</span>
+      </div>` : '';
+
     $('cost-miss').innerHTML = miss.length ? `
       <section class="cblock warnblock">
         <h3 class="chd">환율이 없어 합계에서 빠진 ${miss.length}건</h3>

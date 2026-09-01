@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=53">
+<link rel="stylesheet" href="/css/app.css?v=54">
 </head>
 <body>
 
@@ -79,6 +79,7 @@
     <!-- 비용 — js/cost.js -->
     <div class="pane" data-tab="cost" hidden>
       <div class="ctotal" id="cost-total"></div>
+      <div id="cost-wallet"></div>
       <div id="cost-blocks"></div>
       <div id="cost-miss"></div>
       <p class="note" id="cost-msg"></p>
@@ -256,23 +257,38 @@
               <input id="if-time" type="time" class="mono"></div>
           </div>
 
+          <!-- 돈이 원화에서 현지통화로 건너오는 길. **환전은 지출이 아니라** 지갑에 넣는 것이다. -->
+          <div class="field">
+            <span class="lbl">결제</span>
+            <div class="seg3" id="if-settle">
+              <button type="button" data-settle="" aria-pressed="true">카드</button>
+              <button type="button" data-settle="cash" aria-pressed="false">현금</button>
+              <button type="button" data-settle="exchange" aria-pressed="false">환전·출금</button>
+            </div>
+          </div>
+
           <div class="row tight">
-            <div class="field"><label for="if-cost">비용</label>
+            <div class="field"><label for="if-cost" id="if-cost-lbl">단가</label>
               <input id="if-cost" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
+            <div class="field unit" id="if-qty-wrap"><label for="if-qty">갯수</label>
+              <input id="if-qty" type="number" inputmode="numeric" step="1" min="1" class="mono" placeholder="1"></div>
             <div class="field unit"><label for="if-cur">통화</label>
               <select id="if-cur">
                 <option>KRW</option><option>JPY</option><option>USD</option>
                 <option>EUR</option><option>TWD</option><option>THB</option><option>VND</option>
               </select></div>
-            <div class="field unit"><label for="if-fx">환율</label>
+            <div class="field unit" id="if-fx-wrap"><label for="if-fx">환율</label>
               <input id="if-fx" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
+            <div class="field unit" id="if-krw-wrap" hidden><label for="if-krw">낸 원화</label>
+              <input id="if-krw" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
           </div>
 
-          <p class="hint">원화로 바꿀 비율(1 단위당 원). 비우면 매입일 전신환매도율로 채울 수 있습니다.</p>
+          <p class="hint" id="if-sum"></p>
+            <p class="hint">원화로 바꿀 비율(1 단위당 원). 비우면 그날 전신환매도율로 채울 수 있습니다.</p>
 
           <div class="field">
             <label for="if-payer">누가 냈나</label>
-            <select id="if-payer"><option value="">안 적음</option></select>
+            <select id="if-payer"><option value="">안 적음</option><option value="split">각자 냄</option></select>
           </div>
 
           <!-- 미리 계획할 때만 쓰는 것들. 길에서 한 줄 넣을 때는 펴지 않는다.
@@ -315,20 +331,21 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=53"></script>
-<script src="/js/map-config.js?v=53"></script>
-<script src="/js/util.js?v=53"></script>
-<script src="/js/geo.js?v=53"></script>
-<script src="/js/gmaps.js?v=53"></script>
-<script src="/js/db.js?v=53"></script>
-<script src="/js/outbox.js?v=53"></script>
+<script src="/js/supabase-config.js?v=54"></script>
+<script src="/js/map-config.js?v=54"></script>
+<script src="/js/money.js?v=54"></script>
+<script src="/js/util.js?v=54"></script>
+<script src="/js/geo.js?v=54"></script>
+<script src="/js/gmaps.js?v=54"></script>
+<script src="/js/db.js?v=54"></script>
+<script src="/js/outbox.js?v=54"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=53"></script>
-<script src="/js/plan.js?v=53"></script>
-<script src="/js/map.js?v=53"></script>
-<script src="/js/cost.js?v=53"></script>
-<script src="/js/prep.js?v=53"></script>
-<script src="/js/app.js?v=53"></script>
+<script src="/js/crew.js?v=54"></script>
+<script src="/js/plan.js?v=54"></script>
+<script src="/js/map.js?v=54"></script>
+<script src="/js/cost.js?v=54"></script>
+<script src="/js/prep.js?v=54"></script>
+<script src="/js/app.js?v=54"></script>
 
 </body>
 </html>

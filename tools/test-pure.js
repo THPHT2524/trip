@@ -46,6 +46,53 @@ eq(GM.parse('https://www.google.com/maps/place/?q=place_id:ChIJN1t_tDeuEmsRUsoyG
 eq(GM.parse('https://www.google.com/maps/search/?api=1&query=%EC%98%A4%EC%82%AC%EC%B9%B4%EC%84%B1').name,
    '오사카성', '한글 장소명은 그대로 읽는다');
 
+// ── MONEY: 현금 지갑 ────────────────────────────────────────────────────
+// ★환전은 지출이 아니다(돈을 바꾼 것뿐). 그 현금으로 산 것이 지출이다.
+// ★여러 번 뽑으면 환율이 다르다 — 보유 현금의 **가중평균**으로 센다.
+const MONEY = require('../js/money.js');
+const row = (o) => ({ id: o.id, cost: o.c, cost_cur: o.cur || 'JPY', fx: o.fx ?? null, settle: o.s ?? null });
+
+// ₩470,000 → ¥50,000 (9.4원/엔) 을 뽑고 ¥1,000 짜리를 현금으로 먹었다
+{
+  const r = [ row({id:'x', c:50000, fx:9.4, s:'exchange'}), row({id:'a', c:1000, s:'cash'}) ];
+  const t = MONEY.total(r);
+  eq(Math.round(t.sum), 9400, '★현금 결제는 환전 환율로 — ¥1,000 = ₩9,400');
+  eq(t.cnt, 1, '★환전은 지출 건수에 안 들어간다');
+  eq(Math.round(t.cash.bal), 49000, '지갑에 ¥49,000 남는다');
+  eq(Math.round(t.cash.rate * 100) / 100, 9.4, '남은 돈의 환율도 9.4');
+}
+// 두 번 나눠 뽑으면 평균 환율로 센다 (¥50,000@9.4 + ¥50,000@10.0 → 9.7)
+{
+  const r = [ row({id:'e1', c:50000, fx:9.4, s:'exchange'}),
+              row({id:'e2', c:50000, fx:10,  s:'exchange'}),
+              row({id:'a',  c:10000, s:'cash'}) ];
+  const t = MONEY.total(r);
+  eq(Math.round(t.sum), 97000, '★가중평균 9.7원/엔 — 마지막 환율(10)도 첫 환율(9.4)도 아니다');
+  eq(Math.round(t.cash.bal), 90000, '지갑 ¥90,000');
+}
+// 지갑이 모자라면 지어내지 않는다
+{
+  const r = [ row({id:'e', c:1000, fx:9.4, s:'exchange'}), row({id:'a', c:5000, s:'cash'}) ];
+  const t = MONEY.total(r);
+  eq(t.miss, 1, '★안 적은 환전이 있으면 그 줄은 모른다고 남긴다');
+  eq(t.sum, 0, '모르는 줄은 합계에 안 들어간다');
+}
+// 사람이 적은 환율이 언제나 이긴다
+{
+  const r = [ row({id:'e', c:50000, fx:9.4, s:'exchange'}), row({id:'a', c:1000, fx:12, s:'cash'}) ];
+  eq(MONEY.total(r).sum, 12000, '★fx 를 직접 적었으면 지갑보다 그게 먼저다');
+}
+// 카드(기본)는 지갑을 건드리지 않는다
+{
+  const r = [ row({id:'e', c:50000, fx:9.4, s:'exchange'}), row({id:'a', c:1000, fx:8.7}) ];
+  const t = MONEY.total(r);
+  eq(t.sum, 8700, '카드는 제 환율로');
+  eq(Math.round(t.cash.bal), 50000, '★카드로 긁어도 현금은 그대로 있다');
+}
+// 원화로 낸 줄은 환율이 필요 없다
+eq(MONEY.total([row({id:'a', c:30000, cur:'KRW'})]).sum, 30000, '원화 결제는 그대로');
+eq(MONEY.SETTLE, 'KRW', '정산 통화는 원화');
+
 // ── U: 정산 통화 ───────────────────────────────────────────────────────
 const U = require('../js/util.js');
 eq(U.SETTLE, 'KRW', '정산 통화는 원화 하나 — 여행의 base_cur 는 현지통화다');

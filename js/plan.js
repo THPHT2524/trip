@@ -41,15 +41,61 @@ const Plan = (function () {
 
   const ofDay = d => rows.filter(r => r.on_date === d);
 
+  /* 결제 방식 셋. 환전을 고르면 '비용' 이 '받은 금액' 이 되고 환율 대신 낸 원화를 받는다 —
+     사람은 영수증에 적힌 대로(얼마 주고 얼마 받았는지) 넣고, 환율은 우리가 낸다. */
+  let settle = null;
+  function drawSettle() {
+    document.querySelectorAll('#if-settle button').forEach(b =>
+      b.setAttribute('aria-pressed', String((b.dataset.settle || null) === settle)));
+    const ex = settle === 'exchange';
+    $('if-cost-lbl').textContent = ex ? '받은 금액' : '단가';
+    $('if-qty-wrap').hidden = ex;              // 환전에 '갯수' 는 뜻이 없다
+    $('if-fx-wrap').hidden = ex;
+    $('if-krw-wrap').hidden = !ex;
+    showSum();
+  }
+
+  /* 단가 × 갯수가 얼마인지 그 자리에서 보여 준다 — 머릿속으로 곱하게 두지 않는다. */
+  function showSum() {
+    const unit = +$('if-cost').value || 0;
+    const qty = Math.max(1, +$('if-qty').value || 1);
+    const cur = $('if-cur').value;
+    const el = $('if-sum');
+    if (!unit) { el.textContent = ''; return; }
+    if (settle === 'exchange') {
+      const krw = +$('if-krw').value || 0;
+      el.textContent = krw ? `환율 ${(krw / unit).toFixed(2)}원 — ${U.money(unit, cur)} 받고 ${U.money(krw, U.SETTLE)} 냄` : '';
+      return;
+    }
+    const tot = unit * qty;
+    const fx = +$('if-fx').value || 0;
+    el.textContent = (qty > 1 ? `합계 ${U.money(tot, cur)}` : '')
+      + (fx ? `${qty > 1 ? ' · ' : ''}${U.money(tot * fx, U.SETTLE)}` : '');
+  }
+  ['if-cost', 'if-qty', 'if-fx', 'if-krw', 'if-cur'].forEach(id =>
+    $(id).addEventListener('input', showSum));
+  $('if-settle').addEventListener('click', e => {
+    const b = e.target.closest('button[data-settle]');
+    if (!b) return;
+    settle = b.dataset.settle || null;
+    if (settle === 'exchange' && !$('if-cur').value) $('if-cur').value = (trip && trip.base_cur) || 'JPY';
+    drawSettle();
+  });
+
   /* 그날의 비용 합계. **원화로** 환산된 것만 더한다 —
      환율이 없는 줄을 섞으면 엔과 원을 더하는 셈이 된다. 대신 몇 줄이 빠졌는지 적는다. */
+  /* ★현금 지갑은 **여행 전체의 시간 순서**로만 셀 수 있다(앞의 환전이 뒤의 현금을 먹인다).
+     그래서 하루치만 떼어 세지 않고, 전체를 한 번 굴린 뒤 그날 줄만 골라 더한다.
+     ★한 번만 굴린다. 줄마다 부르면 65줄짜리 여행에서 4,225번 센다 — 그리기 시작할 때
+       drawDays() 가 채우고, 아래는 그 결과만 읽는다. */
+  let M = { per: new Map() };
   function dayCost(list) {
+    const t = M;
     let sum = 0, miss = 0;
     list.forEach(r => {
-      if (r.cost == null) return;
-      if (r.cost_cur === U.SETTLE) { sum += +r.cost; return; }
-      if (r.fx) { sum += +r.cost * +r.fx; return; }
-      miss += 1;
+      const p = t.per.get(r.id);
+      if (!p || !p.spend) return;
+      if (p.krw == null) miss += 1; else sum += p.krw;
     });
     return { sum, miss };
   }
@@ -86,6 +132,7 @@ const Plan = (function () {
                    + '아래에서 첫 줄을 넣으세요. 구글맵 링크를 붙이면 장소가 채워집니다.</p>';
       return;
     }
+    M = MONEY.total(rows);                    // 이번 그리기에서 쓸 셈 한 벌
     const show = pick ? [pick] : days;
     const nid = nextId();
     el.innerHTML = (offline ? '<p class="note">연결이 없어 마지막으로 받아 둔 일정을 보여줍니다</p>' : '')
@@ -127,8 +174,9 @@ const Plan = (function () {
        관광지에 값을 안 적는 것은 실수가 아니라 보통이다. */
     const cost = r.cost == null ? ''
       : `<span class="money">${esc(U.money(r.cost, r.cost_cur))}${
-          r.fx && r.cost_cur !== U.SETTLE
-            ? ' · ' + esc(U.money(+r.cost * +r.fx, U.SETTLE)) : ''}</span>`;
+          (() => { const p = M.per.get(r.id);
+                   return (p && p.krw != null && r.cost_cur !== U.SETTLE)
+                     ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : ''; })()}</span>`;
     const link = GM.placeUrl(r);
     return `<div class="${cls}" style="--k: var(--${k})">
       <span class="pin"></span>
@@ -194,13 +242,21 @@ const Plan = (function () {
                       || (trip && trip.start_on) || today;
     $('if-time').value = (r && r.at_time) ? r.at_time.slice(0, 5) : '';
     $('if-kind').value = (r && r.kind) || '기타';
-    $('if-cost').value = (r && r.cost != null) ? r.cost : '';
+    settle = (r && r.settle) || null;
+    $('if-krw').value = (r && r.settle === 'exchange' && r.cost != null && r.fx != null)
+      ? Math.round(+r.cost * +r.fx) : '';
+    drawSettle();
+    /* ★DB 에는 **총액**이 있고 화면에는 단가를 보여 준다(qty 로 되나눈다).
+       총액을 저장하는 이유: 갯수를 나중에 지워도 쓴 돈이 안 바뀐다. */
+    const q = (r && +r.qty > 1) ? +r.qty : 1;
+    $('if-qty').value = q > 1 ? q : '';
+    $('if-cost').value = (r && r.cost != null) ? (+r.cost / q) : '';
     $('if-cur').value = (r && r.cost_cur) || (trip && trip.base_cur) || 'KRW';
     $('if-fx').value = (r && r.fx != null) ? r.fx : '';
     $('if-ref').value = (r && r.ref_code) || '';
     $('if-book').value = (r && r.book_url) || '';
     $('if-memo').value = (r && r.memo) || '';
-    $('if-payer').value = (r && r.payer_id) || '';
+    $('if-payer').value = (r && r.split) ? 'split' : ((r && r.payer_id) || '');
     $('if-lat').value = (r && r.lat != null) ? r.lat : '';
     $('if-lng').value = (r && r.lng != null) ? r.lng : '';
     /* ★접어 둔 칸에 값이 들어 있으면 펴 준다 — 안 그러면 고치러 왔다가 못 본다 */
@@ -265,8 +321,17 @@ const Plan = (function () {
       memo: $('if-memo').value,
       map_url: $('if-link').value,
       lat: $('if-lat').value, lng: $('if-lng').value,
-      cost: $('if-cost').value, cost_cur: $('if-cur').value, fx: $('if-fx').value,
-      payer_id: $('if-payer').value || null,
+      /* 화면은 단가, DB 는 총액 */
+      cost: $('if-cost').value === '' ? '' : String((+$('if-cost').value) * Math.max(1, +$('if-qty').value || 1)),
+      qty: Math.max(1, +$('if-qty').value || 1),
+      cost_cur: $('if-cur').value,
+      /* 환전은 '얼마 주고 얼마 받았나' 로 받아 환율을 우리가 낸다 — 사람이 9.4 를 계산하게 두지 않는다 */
+      fx: settle === 'exchange'
+        ? (+$('if-cost').value > 0 ? String(+$('if-krw').value / +$('if-cost').value) : '')
+        : $('if-fx').value,
+      settle,
+      split: $('if-payer').value === 'split',
+      payer_id: $('if-payer').value === 'split' ? null : ($('if-payer').value || null),
       ref_code: $('if-ref').value, book_url: $('if-book').value,
       done: editing ? !!(rows.find(r => r.id === editing) || {}).done : false,
       /* 시각이 없는 줄은 그날 맨 뒤에 붙인다. 시각이 있으면 서버 정렬이 시각을 먼저 본다. */
@@ -392,6 +457,7 @@ const Plan = (function () {
       try {
         crew = await Crew.of(t.id);
         $('if-payer').innerHTML = '<option value="">안 적음</option>'
+          + '<option value="split">각자 냄</option>'
           + crew.map(m => `<option value="${esc(m.user_id)}">${esc(String(m.email || '').split('@')[0])}</option>`).join('');
       } catch (e) { crew = []; }
       try { await reload(); loaded = true; }

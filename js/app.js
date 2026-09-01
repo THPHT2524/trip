@@ -136,13 +136,9 @@
       mark = `${Math.floor((Date.parse(U.todayISO()) - Date.parse(t.start_on)) / DAYMS) + 1}일차`;
     }
 
-    /* 합계는 **원화로 환산된 것만** — 비용 탭과 같은 규칙이다(엔과 원을 더하지 않는다) */
-    let sum = 0;
-    mine.forEach(r => {
-      if (r.cost == null) return;
-      if (r.cost_cur === U.SETTLE) sum += +r.cost;
-      else if (r.fx) sum += +r.cost * +r.fx;
-    });
+    /* 합계는 js/money.js 한 곳에서 낸다 — 비용 탭·일정 탭과 같은 함수다.
+       (전에는 여기서 따로 셌고, 현금 지갑이 생기면서 곧 갈릴 자리였다) */
+    const sum = MONEY.total(mine).sum;
 
     const bits = [fmtSpan(t.start_on, t.end_on)];
     if (mine.length) bits.push(`일정 ${mine.length}`);
