@@ -140,7 +140,7 @@ const Cost = (function () {
             <span class="cv">${esc(U.money(r.cost, r.cost_cur))}</span>
             <button class="act" type="button" data-fx="${esc(r.id)}">환율 채우기</button>
           </li>`).join('')}</ul>
-        <p class="hint">그 날짜의 <b>전신환매도율</b>을 가져와 원화로 환산합니다. 값은 고칠 수 있습니다.</p>
+        <p class="hint">그 날짜의 <b>전신환매도율</b>을 가져옵니다. 실제 청구는 카드사 매입일 고시로 잡혀 조금 다를 수 있습니다 — 값은 고칠 수 있습니다.</p>
         ${miss.length > 1 ? '<button class="btn sm" type="button" data-fxall>모두 채우기</button>' : ''}
       </section>` : '';
   }
@@ -153,13 +153,16 @@ const Cost = (function () {
     const btn = document.querySelector(`[data-fx="${id}"]`);
     if (btn) { btn.disabled = true; btn.textContent = '가져오는 중…'; }
     try {
-      /* ★전신환매도율(TTS)로 채운다 — 카드로 긁으면 매매기준율이 아니라 이 언저리로 청구된다.
-         매매기준율로 계산하면 실제보다 싸게 나온다(엔 기준 약 1%). */
+      /* ★환율 종류는 매매기준율이 아니라 **전신환매도율(TTS)** 이다 — 카드로 긁으면
+         그 언저리로 청구된다(엔 기준 약 1% 차이: 858.18 vs 866.59).
+       ★날짜는 **긁은 날**을 쓴다. 실제 청구는 카드사 매입일(3~5영업일 뒤) 고시로
+         잡히지만 며칠 뒤인지는 알 수 없고, 최근 결제면 그 날짜 고시가 아직 없다.
+         알 수 없는 날짜를 지어내느니 아는 날짜를 쓴다 — 어차피 fx 칸을 고치면 그게 이긴다. */
       const got = await DB.fx(r.on_date, r.cost_cur, U.SETTLE, 'tts');
       await DB.items.update(id, { ...DB.items.shape(r), fx: got.rate });
       $('cost-msg').textContent = got.exact
-        ? `${r.cost_cur} → ${U.SETTLE} ${got.rate} (${got.on} 종가)`
-        : `${r.cost_cur} → ${U.SETTLE} ${got.rate} — ${r.on_date} 고시가 없어 ${got.on} 종가를 썼습니다`;
+        ? `${r.cost_cur} → ${U.SETTLE} ${got.rate} — ${got.on} 전신환매도율`
+        : `${r.cost_cur} → ${U.SETTLE} ${got.rate} — ${r.on_date} 고시가 없어 ${got.on} 값을 썼습니다`;
       r.fx = got.rate;                       // 모두 채우기가 다음 줄로 넘어가기 전에 반영
       if (!quiet) document.dispatchEvent(new CustomEvent('items:changed'));
     } catch (e) {
