@@ -7,12 +7,12 @@
 <meta name="color-scheme" content="light dark">
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
-<link rel="stylesheet" href="css/app.css?v=1">
+<link rel="stylesheet" href="css/app.css?v=2">
 </head>
 <body>
 
 <!-- ── 로그인 게이트 ───────────────────────────────────────────────────────
-     이 앱은 로그인 없이 할 수 있는 일이 없다 — 일정도 프록시도 세션을 요구한다. -->
+     로그인 없이 할 수 있는 일이 없다 — 일정도 링크 프록시도 세션을 요구한다. -->
 <div class="gate" id="gate" hidden>
   <h1>여행 일정표</h1>
   <p>구글 계정으로 들어오면 내가 만든 여행과 초대받은 여행이 보입니다.</p>
@@ -20,31 +20,90 @@
   <p class="err" id="gate-err"></p>
 </div>
 
-<!-- ── 앱 ─────────────────────────────────────────────────────────────── -->
-<div id="app">
-  <div class="wrap">
+<div id="app" hidden>
 
+  <!-- ── 여행 목록 ─────────────────────────────────────────────────────── -->
+  <section id="view-trips" class="wrap" hidden>
     <header class="top">
-      <button class="back" type="button" aria-label="여행 목록으로">←</button>
       <div class="who">
-        <h1>오사카</h1>
-        <div class="span">2026.10.14 – 10.18 · 5일</div>
+        <h1>여행</h1>
+        <div class="span" id="who"></div>
+      </div>
+      <button class="btn ghost sm" id="signout" type="button">로그아웃</button>
+    </header>
+
+    <div class="trips" id="trips"></div>
+
+    <div class="forms">
+      <details id="new-wrap">
+        <summary>새 여행 만들기</summary>
+        <form id="new" class="form">
+          <div class="field">
+            <label for="new-name">여행 이름</label>
+            <input id="new-name" name="name" type="text" required maxlength="60" placeholder="오사카">
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="new-from">시작</label>
+              <input id="new-from" name="from" type="date" class="mono">
+            </div>
+            <div class="field">
+              <label for="new-to">끝</label>
+              <input id="new-to" name="to" type="date" class="mono">
+            </div>
+            <div class="field cur">
+              <label for="new-cur">기준통화</label>
+              <select id="new-cur" name="cur">
+                <option value="KRW">KRW</option>
+                <option value="JPY">JPY</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="TWD">TWD</option>
+                <option value="THB">THB</option>
+                <option value="VND">VND</option>
+              </select>
+            </div>
+          </div>
+          <p class="hint">날짜는 나중에 정해도 됩니다. 기준통화는 비용 합계를 환산할 통화입니다.</p>
+          <button class="btn" id="new-save" type="submit">만들기</button>
+          <p class="err" id="new-err"></p>
+        </form>
+      </details>
+
+      <details>
+        <summary>초대 코드로 참여하기</summary>
+        <form id="join" class="form">
+          <div class="field">
+            <label for="join-code">초대 코드</label>
+            <input id="join-code" name="code" type="text" class="mono" required
+                   autocomplete="off" spellcheck="false" placeholder="a1b2c3d4e5f6">
+          </div>
+          <button class="btn" id="join-btn" type="submit">참여하기</button>
+          <p class="err" id="join-err"></p>
+        </form>
+      </details>
+    </div>
+  </section>
+
+  <!-- ── 여행 하나 ─────────────────────────────────────────────────────── -->
+  <section id="view-trip" class="wrap" hidden>
+    <header class="top">
+      <button class="back" id="back" type="button" aria-label="여행 목록으로">←</button>
+      <div class="who">
+        <h1 id="trip-name"></h1>
+        <div class="span" id="trip-span"></div>
       </div>
     </header>
 
-    <!-- Day 탭 — 트리플에서 가져왔다. 폰에서 날짜를 옮기는 가장 빠른 길이다 -->
-    <nav class="daytabs" role="tablist" aria-label="날짜">
-      <button type="button" role="tab" aria-selected="false">D1</button>
-      <button type="button" role="tab" aria-selected="true">D2</button>
-      <button type="button" role="tab" aria-selected="false">D3</button>
-      <button type="button" role="tab" aria-selected="false">D4</button>
-      <button type="button" role="tab" aria-selected="false">D5</button>
-      <button type="button" role="tab" aria-selected="false">전체</button>
-    </nav>
-
-    <!-- ★표본이다. P2 에서 js/plan.js 가 이 자리를 채운다.
-         지금 두는 이유는 디자인을 눈으로 확인하기 위해서다 — 붙일 때 통째로 걷어낸다. -->
-    <div id="plan">
+    <!-- 일정 — ★표본이다. P2 에서 js/plan.js 가 이 자리를 채운다.
+         지금 두는 이유는 화면 어법을 눈으로 확인하기 위해서다. 붙일 때 통째로 걷어낸다. -->
+    <div class="pane" data-tab="plan">
+      <nav class="daytabs" role="tablist" aria-label="날짜">
+        <button type="button" role="tab" aria-selected="false">D1</button>
+        <button type="button" role="tab" aria-selected="true">D2</button>
+        <button type="button" role="tab" aria-selected="false">D3</button>
+        <button type="button" role="tab" aria-selected="false">전체</button>
+      </nav>
 
       <div class="dayband">
         <span class="daytag">Day 2</span>
@@ -53,121 +112,71 @@
       </div>
 
       <section class="day">
-
         <div class="stop is-done" style="--k: var(--k-etc)">
           <span class="pin"></span>
           <button class="item is-done" type="button">
-            <span class="row1">
-              <span class="time">08:20</span>
-              <span class="name">호텔 조식</span>
-            </span>
-            <span class="row2">
-              <span class="kind">기타</span>
-              <span class="money none">포함</span>
-            </span>
+            <span class="row1"><span class="time">08:20</span><span class="name">호텔 조식</span></span>
+            <span class="row2"><span class="kind">기타</span><span class="money none">포함</span></span>
           </button>
         </div>
-
         <div class="seg">
-          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6654,135.5010&amp;destination=34.6873,135.5259">
-            <span class="km">직선 3.1km</span>
-          </a>
+          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6654,135.5010&amp;destination=34.6873,135.5259"><span class="km">직선 3.1km</span></a>
         </div>
-
         <div class="stop" style="--k: var(--k-see)">
           <span class="pin"></span>
           <button class="item" type="button">
-            <span class="row1">
-              <span class="time">10:00</span>
-              <span class="name">오사카성 천수각</span>
-            </span>
-            <span class="row2">
-              <span class="kind">관광</span>
-              <span class="money">¥600 · ₩5,760</span>
-            </span>
+            <span class="row1"><span class="time">10:00</span><span class="name">오사카성 천수각</span></span>
+            <span class="row2"><span class="kind">관광</span><span class="money">¥600 · ₩5,760</span></span>
           </button>
         </div>
-
         <div class="seg">
-          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6873,135.5259&amp;destination=34.6687,135.5013">
-            <span class="km">직선 2.6km</span>
-          </a>
+          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6873,135.5259&amp;destination=34.6687,135.5013"><span class="km">직선 3.1km</span></a>
         </div>
-
         <div class="stop is-next" style="--k: var(--k-eat)">
           <span class="pin"></span>
           <button class="item" type="button">
-            <span class="row1">
-              <span class="time none">점심</span>
-              <span class="name">도톤보리 이치란</span>
-            </span>
-            <span class="row2">
-              <span class="kind">식사</span>
-              <span class="money none">비용 미정</span>
-            </span>
+            <span class="row1"><span class="time none">점심</span><span class="name">도톤보리 이치란</span></span>
+            <span class="row2"><span class="kind">식사</span><span class="money none">비용 미정</span></span>
           </button>
         </div>
-
         <div class="seg">
-          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6687,135.5013&amp;destination=34.6656,135.5010">
-            <span class="km">직선 0.4km</span>
-          </a>
+          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6687,135.5013&amp;destination=34.6654,135.4960"><span class="km">직선 450m</span></a>
         </div>
-
-        <div class="stop" style="--k: var(--k-buy)">
-          <span class="pin"></span>
-          <button class="item" type="button">
-            <span class="row1">
-              <span class="time none">오후</span>
-              <span class="name">신사이바시 스지</span>
-            </span>
-            <span class="row2">
-              <span class="kind">쇼핑</span>
-              <span class="money none">비용 미정</span>
-            </span>
-          </button>
-        </div>
-
-        <div class="seg">
-          <a href="https://www.google.com/maps/dir/?api=1&amp;origin=34.6656,135.5010&amp;destination=34.6654,135.4960">
-            <span class="km">직선 0.5km</span>
-          </a>
-        </div>
-
         <div class="stop" style="--k: var(--k-stay)">
           <span class="pin"></span>
           <button class="item" type="button">
-            <span class="row1">
-              <span class="time">19:00</span>
-              <span class="name">크로스호텔 오사카</span>
-            </span>
-            <span class="row2">
-              <span class="kind">숙소</span>
-              <span class="money">¥8,400 · ₩80,640</span>
-              <span class="badge">CX-4471</span>
-            </span>
+            <span class="row1"><span class="time">19:00</span><span class="name">크로스호텔 오사카</span></span>
+            <span class="row2"><span class="kind">숙소</span><span class="money">¥8,400 · ₩80,640</span><span class="badge">CX-4471</span></span>
           </button>
         </div>
-
       </section>
-
-      <p class="note">좌표 없는 일정 1 — 지도에 안 나옵니다</p>
+      <p class="note">표본입니다 — P2 에서 실제 일정으로 바뀝니다</p>
     </div>
 
-  </div>
+    <div class="pane" data-tab="map" hidden><p class="empty"><strong>지도</strong>P4 에서 붙습니다 — 마커와 하루치 동선</p></div>
+    <div class="pane" data-tab="cost" hidden><p class="empty"><strong>비용</strong>P5 에서 붙습니다 — 환율 환산과 사람별 합계</p></div>
+    <div class="pane" data-tab="prep" hidden><p class="empty"><strong>준비물</strong>P6 에서 붙습니다 — 체크리스트</p></div>
+    <div class="pane" data-tab="crew" hidden><p class="empty"><strong>동행자</strong>P6 에서 붙습니다 — 초대 링크와 참여자</p></div>
+  </section>
+
 </div>
 
-<!-- ── 하단 탭 ────────────────────────────────────────────────────────── -->
-<nav class="tabs" role="tablist" aria-label="화면">
-  <button type="button" role="tab" aria-selected="true">일정</button>
-  <button type="button" role="tab" aria-selected="false">지도</button>
-  <button type="button" role="tab" aria-selected="false">비용</button>
-  <button type="button" role="tab" aria-selected="false">준비물</button>
-  <button type="button" role="tab" aria-selected="false">동행자</button>
+<nav class="tabs" id="tabs" role="tablist" aria-label="화면" hidden>
+  <button type="button" role="tab" data-tab="plan" aria-selected="true">일정</button>
+  <button type="button" role="tab" data-tab="map"  aria-selected="false">지도</button>
+  <button type="button" role="tab" data-tab="cost" aria-selected="false">비용</button>
+  <button type="button" role="tab" data-tab="prep" aria-selected="false">준비물</button>
+  <button type="button" role="tab" data-tab="crew" aria-selected="false">동행자</button>
 </nav>
 
-<!-- 스크립트는 P1 부터 붙는다. 로드 순서가 곧 의존성이다:
-     vendor/supabase-js → supabase-config → db → gmaps → geo → outbox → plan/map/cost/prep → app -->
+<!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
+     gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
+<script src="js/vendor/supabase-js-2.111.0.js"></script>
+<script src="js/supabase-config.js?v=2"></script>
+<script src="js/geo.js?v=2"></script>
+<script src="js/gmaps.js?v=2"></script>
+<script src="js/db.js?v=2"></script>
+<script src="js/app.js?v=2"></script>
 
 </body>
 </html>
