@@ -323,8 +323,8 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* ── 지도 ─────────────────────────────────────────────────────────────── */
 /* 밑그림은 물러나고 **우리 마커가 앞에 선다.** 장소 이름은 이미 우리가 갖고 있으므로
-   지도는 '여기가 어디쯤인가' 만 맡으면 된다. 그래서 데이터를 얹으라고 만든 타일을 쓴다
-   (CARTO Positron / Dark Matter — js/map.js 참고). */
+   지도는 '여기가 어디쯤인가' 만 맡으면 된다. MapTiler 의 streets/hybrid 를 그대로 쓴다
+   (js/map.js 참고 — 라벨은 한국어로 바꿔 그린다). */
 #map {
   height: clamp(320px, calc(100dvh - 260px), 620px);
   margin: 0 var(--pad);
@@ -340,7 +340,7 @@ a { color: var(--route); text-underline-offset: 2px; }
      색을 아예 빼고 대비를 낮춘다. 색은 **마커에만** 남는다 — 그게 노선도의 어법이다.
    ★어두운 테마는 여기에 반전을 얹는다. 밑그림이 하나라 타일을 두 벌 받지 않는다. */
 /* ★타일에 CSS 필터를 걸지 않는다. MapTiler 가 테마마다 제대로 만든 스타일을 주므로
-   (satellite · hybrid · streets-v2 · streets-v2-dark) 손볼 것이 없다.
+   (satellite-v4 · hybrid-v4 · streets-v4 · streets-v4-dark) 손볼 것이 없다.
    전에는 OSM 을 회색조로 누르고 어두운 테마에서 반전까지 했는데, 반전은 건물을 검은
    덩어리로 만들고 도로를 하얗게 튀게 해서 **원본보다 나빴다**(2026-09-01 비교). */
 
@@ -376,44 +376,56 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .mpin.is-done { background: var(--k, var(--k-etc)); color: var(--card); }
 
-/* Leaflet 기본 크롬을 이 앱의 어법으로 낮춘다 */
-.leaflet-container { font-family: var(--sans); background: var(--sunk); }
-/* ★저작자 표시는 **지울 수 없다** — MapTiler 약관과 OSM 의 ODbL 이 둘 다 요구한다.
-   대신 ⓘ 로 접어 둔다: 표시는 살아 있고 지도는 안 가린다. 누르면 펴진다. */
-.leaflet-control-attribution.attr-fold { display: flex; align-items: center; gap: 0; }
-.attr-i {
-  appearance: none; border: 0; background: none; cursor: pointer;
-  color: var(--ink-3); font-size: 11px; line-height: 1; padding: 2px 4px;
-}
-.leaflet-control-attribution.attr-fold > :not(.attr-i) { display: none; }
-.leaflet-control-attribution.attr-fold.open > :not(.attr-i) { display: inline; }
+/* MapLibre 기본 크롬을 이 앱의 어법으로 낮춘다 */
+.maplibregl-map { font-family: var(--sans); background: var(--sunk); }
 
-/* 저작자 표시 — 의무이므로 지우지 않는다. 다만 지도를 덮지 않게 한 줄로 눌러 둔다. */
-.leaflet-control-attribution {
-  background: color-mix(in srgb, var(--card) 78%, transparent);
+/* 확대·축소 단추 */
+.maplibregl-ctrl-group,
+.maplibregl-ctrl-group:not(:empty) {
+  background: var(--card); border-radius: 7px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.maplibregl-ctrl-group button + button { border-top-color: var(--line); }
+.maplibregl-ctrl-group button:hover { background: var(--sunk); }
+/* ★아이콘이 검정 SVG 라 어두운 테마에서 검정 위 검정이 된다 — 반전시킨다. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .maplibregl-ctrl-icon,
+  :root:not([data-theme="light"]) .maplibregl-ctrl-attrib-button { filter: invert(1); }
+}
+:root[data-theme="dark"] .maplibregl-ctrl-icon,
+:root[data-theme="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1); }
+
+/* ★저작자 표시는 **지울 수 없다** — MapTiler 약관과 OSM 의 ODbL 이 둘 다 요구한다.
+   MapLibre 의 compact 모드가 ⓘ 로 접어 준다(눌러야 펴진다):
+   표시는 살아 있고 지도는 안 가린다. 문구는 스타일이 들고 오므로 우리가 적지 않는다. */
+.maplibregl-ctrl.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  background: color-mix(in srgb, var(--card) 82%, transparent);
   color: var(--ink-3);
-  font-family: var(--sans); font-size: 9px; line-height: 1.5;
-  padding: 1px 6px; border-radius: 5px 0 0 0;
-  white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  font-family: var(--sans); font-size: 10px; line-height: 1.6;
+  margin: 6px; border-radius: 10px;
 }
-.leaflet-control-attribution a { color: var(--ink-3); text-decoration: none; }
-.leaflet-control-attribution a:hover { text-decoration: underline; }
-.leaflet-bar a {
-  background: var(--card); color: var(--ink); border-bottom-color: var(--line);
+.maplibregl-ctrl-attrib a { color: var(--ink-3); text-decoration: none; }
+.maplibregl-ctrl-attrib a:hover { color: var(--ink); text-decoration: underline; }
+.maplibregl-ctrl-attrib-button { background-color: transparent; }
+
+/* ── 마커 ──────────────────────────────────────────────────────────────
+   이름표와 핀을 **한 요소**에 담는다. 아래끝을 좌표에 맞추고 핀 반지름만큼 내리므로
+   핀 한가운데가 좌표에 앉고 이름표는 그 위에 선다(js/map.js 의 anchor·offset). */
+.mk {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  cursor: pointer; line-height: 1;
 }
-.leaflet-bar a:hover { background: var(--sunk); color: var(--ink); }
-/* 마커 위에 늘 붙어 있는 이름표.
-   ★위성 사진 위에서도 읽혀야 한다 — 짙은 바탕에 밝은 글자, 화살표는 없앤다
-     (핀 바로 위에 붙어 있어서 무엇을 가리키는지 이미 분명하다).
+/* ★이름표는 늘 켜 둔다 — 핀만 있으면 '1번이 어디였더라' 를 보러 일정 탭으로 돌아가게 된다.
+   ★위성 사진 위에서도 읽혀야 한다 — 짙은 바탕에 밝은 글자.
    ★긴 이름은 자른다. 이름표가 길어지면 옆 핀을 덮는다. */
-.leaflet-tooltip.mlbl {
+.mk .mlbl {
   background: color-mix(in srgb, var(--ink) 86%, transparent);
-  color: var(--paper); border: 0; border-radius: 5px; box-shadow: none;
+  color: var(--paper); border-radius: 5px;
   font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: -.01em;
   padding: 2px 6px;
   max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.leaflet-tooltip.mlbl::before { display: none; }
 
 /* ── 아웃박스 ─────────────────────────────────────────────────────────── */
 /* 못 보낸 것이 있으면 어느 화면에 있든 보인다. 조용히 쌓이면 한참 뒤에야 안다. */

@@ -3,34 +3,35 @@
    무엇을 캐시하나: HTML·CSS·JS·폰트, 즉 **바뀌지 않는 것**만.
    무엇을 안 하나:
      · 일정 데이터 — 그건 outbox.js 가 localStorage 에 둔다(서비스워커가 손댈 이유가 없다).
-     · 지도 타일 — OSM 정책이 대량 캐시를 권하지 않는다. 오프라인에서 지도는 포기한다.
+     · 지도 타일 — MapTiler 약관이 대량 캐시를 권하지 않는다. 오프라인에서 지도는 포기한다.
      · /api/* — 프록시 응답은 세션에 달려 있다. 캐시하면 남의 응답이 나갈 수 있다.
 
    ★V 를 올려야 새 파일이 나간다. index.html 의 ?v=N 과 함께 올린다.
      안 올리면 이미 받아 간 브라우저가 옛 앱을 계속 쓴다(card-dashboard 에서 실제로 겪은 사고다). */
-const V = 35;   // assets-sha:541060f44f7b
+const V = 36;   // assets-sha:39859d20df03
 const CACHE = `trip-shell-v${V}`;
 
 const SHELL = [
   '/',
   '/index.html',
-  '/css/app.css?v=35',
-  '/css/leaflet-1.9.4.css',
+  '/css/app.css?v=36',
+  '/css/maplibre-gl-5.24.0.css',
   '/js/vendor/supabase-js-2.111.0.js',
-  '/js/vendor/leaflet-1.9.4.js',
-  '/js/supabase-config.js?v=35',
-  '/js/map-config.js?v=35',
-  '/js/util.js?v=35',
-  '/js/geo.js?v=35',
-  '/js/gmaps.js?v=35',
-  '/js/db.js?v=35',
-  '/js/outbox.js?v=35',
-  '/js/plan.js?v=35',
-  '/js/map.js?v=35',
-  '/js/crew.js?v=35',
-  '/js/cost.js?v=35',
-  '/js/prep.js?v=35',
-  '/js/app.js?v=35',
+  '/js/vendor/maplibre-gl-csp-5.24.0.js',
+  '/js/vendor/maplibre-gl-csp-worker-5.24.0.js',
+  '/js/supabase-config.js?v=36',
+  '/js/map-config.js?v=36',
+  '/js/util.js?v=36',
+  '/js/geo.js?v=36',
+  '/js/gmaps.js?v=36',
+  '/js/db.js?v=36',
+  '/js/outbox.js?v=36',
+  '/js/plan.js?v=36',
+  '/js/map.js?v=36',
+  '/js/crew.js?v=36',
+  '/js/cost.js?v=36',
+  '/js/prep.js?v=36',
+  '/js/app.js?v=36',
   '/fonts/ibm-plex-mono-400.woff2',
   '/fonts/ibm-plex-mono-500.woff2',
   '/fonts/ibm-plex-mono-600.woff2',

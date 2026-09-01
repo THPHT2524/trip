@@ -112,7 +112,7 @@ https://www.google.com/maps/dir/?api=1&origin=35.6586,139.7454&destination=35.71
 
 OSM 기본 스타일은 **지도 자체를 읽으라고** 만든 것이라 고속도로가 분홍 리본으로 화면을 가르고
 출구·분기점 라벨이 빼곡하다. 여기서 지도는 밑그림이고 앞에 서야 하는 것은 우리 마커다.
-그래서 **회색조로 눌러 뒤로 보낸다**(`css/app.css` 의 `.leaflet-tile-pane`).
+지금은 MapTiler 가 테마별로 만든 스타일을 그대로 쓴다(필터 없음).
 
     밝은 테마: grayscale(1) brightness(1.07) contrast(.78)
     어두운 테마: grayscale(1) invert(1) brightness(.82) contrast(.86)
@@ -256,8 +256,8 @@ v1 은 "나중에 도착한 쓰기가 이긴다", 지운 것은 되살리지 않
 |---|---|
 | `index.html` | 앱 셸 — 로그인 게이트 + 탭 |
 | `css/app.css` | 전체 스타일 |
-| `js/vendor/` | `supabase-js` · `leaflet` (파일명에 버전 고정 — CDN 의존 없이 커밋) |
-| `css/leaflet-1.9.4.css` | Leaflet 스타일. 자체 호스팅이라 CDN 을 타지 않는다 |
+| `js/vendor/` | `supabase-js` · `maplibre-gl`(csp 빌드 + 워커) (파일명에 버전 고정 — CDN 의존 없이 커밋) |
+| `css/maplibre-gl-5.24.0.css` | MapLibre 스타일. 자체 호스팅이라 CDN 을 타지 않는다 |
 | `js/supabase-config.js` | 접속 URL · 공개 키 |
 | `js/util.js` | 이스케이프·날짜·금액 서식 — 화면 여러 곳이 같이 쓴다 |
 | `js/db.js` | 인증 + trips·items·members·checklist CRUD |
