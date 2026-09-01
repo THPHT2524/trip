@@ -77,8 +77,16 @@ const Maps = (function () {
     el.dataset.mt = String(!!MT);          // 키가 있으면 회색조 필터를 걸지 않는다
     if (tiles) map.removeLayer(tiles);
     if (over) { map.removeLayer(over); over = null; }
-    tiles = L.tileLayer(t.url, { maxZoom: t.max, attribution: t.attr }).addTo(map);
-    if (t.over) over = L.tileLayer(t.over, { maxZoom: 19, className: 'lblover' }).addTo(map);
+    /* ★★타일에만 출처를 보낸다.
+       vercel.json 의 `Referrer-Policy: same-origin` 은 **다른 도메인으로 나가는 요청에
+       Referer 를 아예 안 붙인다.** MapTiler 는 출처로 키를 검증하므로 'Invalid key' 가 뜬다
+       (2026-09-01 에 그렇게 막혔다 — curl 로는 헤더를 손으로 넣어서 200 이 왔다).
+       요소별 referrerPolicy 가 문서 정책을 이긴다. `strict-origin-when-cross-origin` 은
+       **오리진만** 보내고 경로는 안 보낸다 — 여행 id 가 든 주소가 새어 나가지 않는다.
+       문서 전체 정책은 엄격한 채로 둔다. */
+    const RP = 'strict-origin-when-cross-origin';
+    tiles = L.tileLayer(t.url, { maxZoom: t.max, attribution: t.attr, referrerPolicy: RP }).addTo(map);
+    if (t.over) over = L.tileLayer(t.over, { maxZoom: 19, className: 'lblover', referrerPolicy: RP }).addTo(map);
     $('lblbtn').setAttribute('aria-pressed', String(labels));
     $('lblbtn').hidden = base !== 'sat';
     document.querySelectorAll('#basepick button[data-base]').forEach(x =>
