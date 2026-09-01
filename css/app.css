@@ -655,27 +655,35 @@ input.code {
 }
 .trip.is-now { border-color: var(--route); box-shadow: 0 0 0 3px var(--route-w); }
 
-/* 미니 레일 — 날짜 칸이 늘어서고 그 안에 장소구분 색 점이 찍힌다 */
+/* 미니 레일 — 일정 탭의 세로 레일을 **눕힌 것**이다. 선 하나가 카드를 가로지르고
+   그 위에 정거장이 얹힌다. 날의 경계는 눈금으로 끊는다.
+   ★전에는 날마다 회색 슬래브를 깔았는데, 카드 셋이 나란히 서면 **로딩 스켈레톤처럼**
+     보였다(2026-09-01). 레일은 배경이 아니라 선이다 — 슬래브를 걷고 선을 긋는다. */
 .mrail {
-  display: flex; align-items: center; gap: 3px;
+  position: relative;
+  display: flex; align-items: center;
   height: 14px;
 }
+.mrail::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 2px; margin-top: -1px; border-radius: 1px;
+  background: var(--rail);
+}
 .mrail .md {
-  flex: 1 1 0; min-width: 6px; height: 100%;
-  display: flex; align-items: center; justify-content: center; gap: 2px;
-  border-radius: 3px; background: var(--sunk);
-  overflow: hidden;                 /* 좁은 칸에서 점이 삐져나오지 않게 */
+  position: relative; flex: 1 1 0; min-width: 6px; height: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
 }
-/* 비어 있는 날은 **가는 선 하나**로 남긴다 — 없는 것이 아니라 비어 있는 것이다 */
-.mrail .md.is-empty {
-  background: none;
-  border-top: 2px solid var(--rail);
-  height: 2px; align-self: center; border-radius: 0;
-  opacity: .8;
+/* 날의 경계 — 눈금 하나. 며칠짜리인지가 여기서 읽힌다 */
+.mrail .md + .md::before {
+  content: ''; position: absolute; left: 0; top: 3px; bottom: 3px;
+  width: 1px; background: var(--line);
 }
+/* 비어 있는 날은 **레일만 지나간다.** 따로 그리지 않는 것이 곧 '비어 있음' 이다 */
 .mrail i {
+  position: relative;                     /* 레일 위에 온다 */
   width: 5px; height: 5px; border-radius: 50%;
   background: var(--k, var(--k-etc));
+  box-shadow: 0 0 0 1.5px var(--card);    /* 레일이 점을 관통하지 않게 — 노선도의 정거장 */
 }
 
 .grouphd {
