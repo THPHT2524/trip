@@ -55,8 +55,15 @@ const Maps = (function () {
 
     if (!MT) { $('map-note').textContent = '지도 키가 없습니다 — js/map-config.js 를 확인하세요.'; }
     else {
-      tiles = L.tileLayer(`https://api.maptiler.com/maps/${styleName()}/{z}/{x}/{y}.png?key=${MT}`, {
+      /* ★글자를 키운다: **@2x 타일을 512px 칸에 z-1 로 깐다.**
+         래스터 타일은 글자 크기가 그림에 구워져 있어 CSS 로 못 키운다. 대신 한 단계 낮은
+         배율의 레티나 타일을 두 배 칸에 깔면 같은 땅을 보면서 글자만 커진다.
+         (대가: 아주 높은 배율에서 세부가 한 단계 덜 나온다. 여행 지도에서 필요한 것은
+          '어디쯤인가' 라 그 교환이 맞다.) */
+      tiles = L.tileLayer(`https://api.maptiler.com/maps/${styleName()}/{z}/{x}/{y}@2x.png?key=${MT}`, {
         maxZoom: 20,
+        tileSize: 512,
+        zoomOffset: -1,
         attribution: ATTR,
         /* ★★타일에만 출처를 보낸다. vercel.json 의 `Referrer-Policy: same-origin` 은
            다른 도메인으로 나가는 요청에 Referer 를 아예 안 붙이고, MapTiler 는 출처로
@@ -75,10 +82,28 @@ const Maps = (function () {
       tiles.addTo(map);
     }
 
+    foldAttribution();
     $('lblbtn').setAttribute('aria-pressed', String(labels));
     $('lblbtn').hidden = base !== 'sat';     // '지도' 에는 원래 라벨이 있다
     document.querySelectorAll('#basepick button[data-base]').forEach(x =>
       x.setAttribute('aria-selected', String(x.dataset.base === base)));
+  }
+
+  /* ★저작자 표시는 **지울 수 없다.** MapTiler 약관과 OSM 의 ODbL 이 둘 다 요구한다 —
+     지도 데이터가 OpenStreetMap 에서 오기 때문이고, 이건 취향이 아니라 라이선스다.
+     대신 **ⓘ 로 접어 둔다.** 눌러야 펴진다 — 표시는 살아 있고 지도는 안 가린다.
+     (Mapbox·MapTiler 의 공식 SDK 도 좁은 화면에서 같은 모양을 쓴다.)
+     ★Leaflet 이 레이어를 갈 때마다 이 칸을 다시 그리므로 setBasemap 끝에서 다시 건다. */
+  function foldAttribution() {
+    const ac = map && map.attributionControl && map.attributionControl.getContainer();
+    if (!ac || ac.dataset.folded) return;
+    ac.dataset.folded = '1';
+    ac.classList.add('attr-fold');
+    const i = document.createElement('button');
+    i.type = 'button'; i.className = 'attr-i'; i.textContent = 'ⓘ';
+    i.setAttribute('aria-label', '지도 저작자 표시 보기');
+    i.addEventListener('click', ev => { ev.stopPropagation(); ac.classList.toggle('open'); });
+    ac.insertBefore(i, ac.firstChild);
   }
 
   function ensureMap() {

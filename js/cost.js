@@ -50,12 +50,58 @@ const Cost = (function () {
       <h3 class="chd">${esc(title)}</h3>
       <ul class="clist">${entries.map(([k, v]) => `
         <li${colorOf ? ` style="--k: var(--${colorOf(k)})"` : ''}>
-          <span class="ck">${esc(k)}</span>
+          <span class="ck">${esc(k)}<em>${v.n}</em></span>
           ${bar(v.sum, max)}
           <span class="cv">${esc(U.money(v.sum, trip.base_cur))}</span>
-          <span class="cn">${v.n}건${v.miss ? ` · ${v.miss} 환율없음` : ''}</span>
+          ${v.miss ? `<span class="cn">${v.miss}건 환율 없음</span>` : ''}
         </li>`).join('')}</ul>
     </section>`;
+  }
+
+  /* ── 하루에 얼마씩 ──────────────────────────────────────────────────────
+     ★가로축이 **여행 카드의 미니 레일·일정 탭의 Day 탭과 같은 것**이다. 같은 날이 같은
+       자리에 선다 — 화면을 옮겨 다녀도 '3일차' 가 늘 같은 칸이다.
+     ★기둥 높이는 그날 쓴 돈, 색은 무엇에 썼는지. 둘을 한 그림에 담으므로
+       '날짜별' 과 '구분별' 목록을 따로 세울 필요가 없다(전에는 둘 다 있었고,
+       하루짜리 여행에서는 날짜별 막대가 자기 자신과 100% 비교라 아무 말도 안 했다).
+     ★빈 날은 바닥에 가는 선만 남긴다 — 미니 레일과 같은 어법이다. */
+  function dayBars() {
+    const days = tripDays();
+    if (days.length < 2) return '';        // 하루뿐이면 견줄 것이 없다
+    const per = days.map(d => {
+      const list = rows.filter(r => r.on_date === d && has(r));
+      let sum = 0; const byK = {};
+      list.forEach(r => {
+        const v = inBase(r); if (v == null) return;
+        sum += v; byK[r.kind] = (byK[r.kind] || 0) + v;
+      });
+      return { d, sum, byK };
+    });
+    const max = Math.max(...per.map(x => x.sum));
+    if (!max) return '';
+    const wide = days.length <= 6;         // 좁으면 금액을 적지 않는다 — 겹치느니 뺀다
+
+    return `<section class="cblock">
+      <h3 class="chd">하루에 얼마씩</h3>
+      <div class="daybars">${per.map((x, i) => `
+        <div class="dbar">
+          <span class="col">${x.sum ? KINDS.filter(k => x.byK[k]).map(k =>
+            `<i style="--k: var(--${KVAR[k]}); height:${(x.byK[k] / max * 100).toFixed(1)}%"></i>`
+          ).join('') : '<em></em>'}</span>
+          <span class="lb">D${i + 1}</span>
+          ${wide ? `<span class="amt">${x.sum ? esc(U.money(x.sum, trip.base_cur)) : ''}</span>` : ''}
+        </div>`).join('')}</div>
+    </section>`;
+  }
+
+  /* 여행 기간이 있으면 빈 날도 센다 — 안 쓴 날도 '하루에 얼마씩' 의 일부다 */
+  function tripDays() {
+    const has2 = [...new Set(rows.map(r => r.on_date))].sort();
+    if (!trip.start_on || !trip.end_on) return has2;
+    const out = [];
+    for (let d = trip.start_on; d <= trip.end_on && out.length < 31; d = U.addDays(d, 1)) out.push(d);
+    has2.forEach(d => { if (!out.includes(d)) out.push(d); });
+    return out.sort();
   }
 
   function draw() {
@@ -72,8 +118,6 @@ const Cost = (function () {
          + '</span>'
       : '<span class="sub">아직 비용을 적은 일정이 없습니다</span>';
 
-    const byDay = [...group(r => r.on_date).entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))
-      .map(([d, v]) => [`${U.md(d)} ${U.dowOf(d)}`, v]);
     const byKind = KINDS.map(k => [k, group(r => r.kind).get(k)])
       .filter(e => e[1]).sort((a, b) => b[1].sum - a[1].sum);
     const byPayer = [...group(r => r.payer_id || '').entries()]
@@ -81,8 +125,8 @@ const Cost = (function () {
       .sort((a, b) => b[1].sum - a[1].sum);
 
     $('cost-blocks').innerHTML =
-        table('날짜별', byDay)
-      + table('구분별', byKind, k => KVAR[k] || 'k-etc')
+        dayBars()
+      + table('무엇에', byKind, k => KVAR[k] || 'k-etc')
       + (byPayer.length > 1 || (byPayer[0] && byPayer[0][0] !== '안 적음')
           ? table('누가 냈나', byPayer) : '');
 
