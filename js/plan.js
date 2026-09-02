@@ -49,7 +49,6 @@ const Plan = (function () {
   let settle = null;
   let parentOf = null;      // '결제 추가' 로 열었을 때 붙일 장소 줄의 id
   let hasOwnCost = false;   // 고치는 중인 장소 줄에 금액이 얹혀 있나(옛 방식)
-  let hasKids = false;      // 그 자리에 이미 결제 줄이 붙어 있나
   function drawSettle() {
     document.querySelectorAll('#if-settle button').forEach(b =>
       b.setAttribute('aria-pressed', String((b.dataset.settle || null) === settle)));
@@ -78,7 +77,8 @@ const Plan = (function () {
     $('if-pay').hidden = !kid && !hasOwnCost;
     /* 결제 줄에는 또 결제를 못 붙인다(trip.items_one_level 트리거가 막는다) */
     $('if-payadd').hidden = kid;
-    $('if-payadd').textContent = (hasKids || hasOwnCost) ? '＋ 결제 하나 더' : '＋ 결제 넣기';
+    /* 목록의 단추와 **같은 이름**이다 — 같은 동작을 두 곳에서 달리 부르지 않는다 */
+    $('if-payadd').textContent = '＋ 결제 추가';
     showSum();
   }
 
@@ -241,14 +241,13 @@ const Plan = (function () {
     })();
     const link = GM.placeUrl(r);
     /* 같은 자리의 추가 결제 — 장소 아래 들여 붙는다. 지도에는 안 찍힌다(부모가 그 자리다).
-       ★★'＋ 결제 추가' 는 **이미 결제가 둘 이상인 자리에만** 세운다.
-         모든 줄에 세웠더니(v=58) 65줄짜리 여행에서 34.2px × 65 = 2,222px 였다 —
-         일정 탭 전체 스크롤의 25%, 이 화면의 서명인 구간 거리(1,612px)보다 큰 자리를
-         **한 번도 안 눌린 단추**가 먹고 있었다(2026-09-02 측정).
-         첫 결제는 장소를 눌러 여는 시트 안에서 붙인다 — 거기가 이미 그 장소의 자리다.
-         ★한 번 '둘 이상일 때만' 으로 좁혔다가 되돌렸다(v=68→69). 결제 줄이 **이미 보이는**
-           자리에서는 '여기에 하나 더' 가 눈앞에 있어야 한다 — 목록에 결제가 펼쳐져 있는데
-           추가는 시트를 열어야 한다면 두 곳의 규칙이 어긋난다. 자리를 아끼자고 바꿀 것이 아니었다. */
+       ★★'＋ 결제 추가' 는 **모든 장소 줄**에 세운다. 34.2px × 65 = 2,222px 로 싸지 않지만,
+         이것이 돈을 넣는 주 경로다 — 장소 폼에서 결제를 묻지 않기로 했으므로(v=65)
+         돈은 반드시 이 단추나 시트를 거쳐야 들어온다.
+         ★한 번 걷었다가 두 번 되돌렸다(v=58→59 전체 제거, v=68→69 하나짜리 복구, v=73 전체 복구).
+           처음 값을 매길 때 '한 번도 안 눌린 단추' 라고 셌는데, 그때는 결제를 자식 줄로
+           넣는 방식 자체가 없었다 — 안 눌린 것이 당연했다. 없는 기능의 사용량으로
+           그 기능의 자리값을 매긴 것이 틀렸다. */
     const payHtml = kids.map(c => {
       const who = c.split ? `각자${+c.qty > 1 ? ' ' + (+c.qty) + '명' : ''}`
                 : (c.payer_id ? (Crew.nameOf(crew, c.payer_id) || '냄') : '');
@@ -284,7 +283,7 @@ const Plan = (function () {
         </span>
       </span>
       ${payHtml}
-      ${kids.length ? `<button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>` : ''}
+      <button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>
     </div>`;
   }
 
@@ -319,7 +318,6 @@ const Plan = (function () {
     editing = r ? r.id : null;
     if (r) parentOf = r.parent_id || null;      // 고치기로 열면 그 줄의 소속을 따른다
     hasOwnCost = !!(r && !r.parent_id && r.cost != null);
-    hasKids = !!(r && !r.parent_id && kidsOf(r.id).length);
     $('if-id').value = r ? r.id : '';
     $('if-link').value = (r && r.map_url) || '';
     $('if-name').value = (r && r.name) || '';
