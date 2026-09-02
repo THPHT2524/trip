@@ -788,8 +788,11 @@ input.code {
   background: var(--card);
   overflow: hidden;            /* MRZ 가 모서리 밖으로 새지 않게 */
 }
+/* ★여행마다 한 장씩, **겹쳐 쌓아 한 줄**로. 몇 장이든 한 줄에 들어간다
+   (겹치는 폭은 js/app.js 의 fitFlags 가 재서 정한다).
+   ★겹쳐도 서로 갈리게 종이색 테를 두른다 — 안 두르면 색 띠 하나로 뭉친다. */
 .pflags {
-  display: flex; flex-wrap: wrap; gap: 7px;
+  display: flex; flex-wrap: nowrap; overflow: hidden;
   padding: var(--pad-box) var(--pad-box) 0;
   font-size: 26px; line-height: 1; letter-spacing: 0;
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
@@ -799,7 +802,12 @@ input.code {
 }
 /* 낱개로 세운다. 붙여 놓으면 폰에서는 국기가 이어져 보이고, 윈도우에서는
    'JPCNIDUSMOKRESPTTHGUHKTWSG' 라는 한 덩어리가 된다(2026-09-02, 나라 13개에서 확인). */
-.pflags span { display: inline-block; }
+.pflags span {
+  display: inline-block; flex: 0 0 auto;
+  margin-left: calc(-1 * var(--lap, 0px));
+  box-shadow: -2px 0 0 var(--card);   /* 겹친 자리의 경계 */
+}
+.pflags span:first-child { margin-left: 0; box-shadow: none; }
 /* 항목과 값. 라벨은 위, 값은 아래 — 여권의 인적사항 칸이 그렇게 생겼다. */
 .pgrid {
   margin: 0; padding: 10px var(--pad-box) var(--pad-box);

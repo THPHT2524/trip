@@ -103,6 +103,7 @@
       return;
     }
     $('passport').innerHTML = passportHtml();
+    fitFlags();
     /* 전에 적은 도시를 제안한다 — 같은 도시를 다른 철자로 적어 두 곳으로 세지 않게 */
     const seen = new Set();
     trips.forEach(t => U.cityList(t.cities).forEach(c => seen.add(c)));
@@ -139,14 +140,32 @@
             pad(cells.filter(([k]) => MRZ_CODE[k]).map(([k, v]) => v + MRZ_CODE[k]).join('<'))];
   }
 
+  /* 국기 줄을 **한 줄에 맞춘다.** 몇 장인지에 따라 겹치는 폭이 달라지므로 그려진 뒤에 잰다.
+     ★반 넘게 가리지 않는다 — 그 이상 겹치면 국기가 색 띠가 되어 무엇인지 알 수 없다.
+       그래도 안 들어가면 넘치는 쪽을 자른다(줄을 늘리지 않는다). */
+  function fitFlags() {
+    const box = $('passport').querySelector('.pflags');
+    if (!box || box.children.length < 2) return;
+    const w = box.children[0].getBoundingClientRect().width;
+    const n = box.children.length;
+    const avail = box.clientWidth;
+    const over = n * w - avail;
+    const lap = over <= 0 ? 0 : Math.min(w * 0.55, over / (n - 1));
+    box.style.setProperty('--lap', lap.toFixed(2) + 'px');
+  }
+  addEventListener('resize', fitFlags);
+
   function passportHtml() {
     if (!trips.length) return '';
-    /* 나라는 여행마다 여럿일 수 있다 — 전부 펴서 겹치는 것을 걷는다 */
-    const flags = [...new Set(trips.flatMap(t => U.flags(t.country)))];
+    /* ★국기는 **여행마다 하나씩** 세운다(같은 나라를 몇 번 갔는지가 보인다).
+       겹쳐 쌓아 한 줄에 담는다 — 겹치는 폭은 그려진 뒤에 재서 정한다(fitFlags). */
+    const flags = trips.flatMap(t => U.flags(t.country));
+    /* '나라 N' 은 가짓수다 — 이건 겹치는 것을 걷는다 */
+    const countries = new Set(trips.flatMap(t => U.codeList(t.country)).filter(c => U.flag(c)));
     /* 도시는 **적힌 대로** 센다. 여러 여행에서 같은 도시를 적었으면 한 번만 센다. */
     const cities = new Set();
     trips.forEach(t => U.cityList(t.cities).forEach(c => cities.add(c)));
-    const n = { countries: flags.length, cities: cities.size, spots: 0, days: 0 };
+    const n = { countries: countries.size, cities: cities.size, spots: 0, days: 0 };
     /* ★★여권은 **다녀온 곳**을 센다. 간 횟수가 아니다. 공항은 갈 때 오고, 호텔은
        묵는 밤마다, 마음에 든 가게는 두 번 온다 — 그대로 세면 66곳이지만 실제로는
        55곳이다(2026-09-02 측정). 좌표로 같은 곳을 하나로 묶는다.
