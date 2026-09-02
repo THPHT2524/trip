@@ -48,6 +48,15 @@ const Plan = (function () {
      사람은 영수증에 적힌 대로(얼마 주고 얼마 받았는지) 넣고, 환율은 우리가 낸다. */
   let settle = null;
   let parentOf = null;      // '결제 추가' 로 열었을 때 붙일 장소 줄의 id
+  /* 원래 있던 안내문. 현금일 때 지갑 상태로 갈아 끼웠다가 되돌리려면 한 벌 갖고 있어야 한다.
+     (HTML 에 적힌 것을 그대로 읽는다 — 문구를 두 곳에 두지 않는다) */
+  const FX_HINT = $('if-fx-hint').textContent;
+  function walletLine() {
+    const w = M.cash;
+    return (w && w.bal > 0)
+      ? `지갑에 ${U.money(w.bal, w.cur)} 있습니다 — 평균 ${w.rate.toFixed(2)}원으로 여기서 빠집니다.`
+      : '환전·출금 기록이 없어 환율을 낼 수 없습니다. 먼저 환전을 넣으세요.';
+  }
   let hasOwnCost = false;   // 고치는 중인 장소 줄에 금액이 얹혀 있나(옛 방식)
   function drawSettle() {
     document.querySelectorAll('#if-settle button').forEach(b =>
@@ -56,11 +65,18 @@ const Plan = (function () {
     /* ★원화로 냈으면 환율은 물을 것이 없다 — 칸도 안내문도 감춘다.
        안내문이 두 줄이라, 원화 결제에서 시트의 세 줄이 쓸데없이 채워져 있었다. */
     const krwOnly = !ex && $('if-cur').value === U.SETTLE;
+    /* ★★현금에는 환율 칸이 없다. 지갑에서 나가는 돈이라 **지갑의 평균 환율**이 곧 그 값이고,
+       여기에 따로 적어 두면 값과 잔액이 갈린다 — 실제로 그래서 ¥970 을 쓰고도 남은 돈이
+       ¥4,000 이었다(2026-09-02). 칸을 감추는 김에 **적혀 있던 값도 비운다.** */
+    const cash = settle === 'cash';
     $('if-cost-lbl').textContent = ex ? '받은 금액' : '단가';
     $('if-qty-wrap').hidden = ex;              // 환전에 '갯수' 는 뜻이 없다
-    $('if-fx-wrap').hidden = ex || krwOnly;
+    $('if-fx-wrap').hidden = ex || krwOnly || cash;
+    if (cash) $('if-fx').value = '';
     $('if-krw-wrap').hidden = !ex;
     $('if-fx-hint').hidden = ex || krwOnly;    // 환율 칸이 숨은 마당에 그 설명만 남으면 안 된다
+    /* 칸을 없앤 자리에 **지갑을 보여 준다** — 얼마 남았는지가 곧 '이걸 현금으로 낼 수 있나' 다 */
+    $('if-fx-hint').textContent = cash ? walletLine() : FX_HINT;
     /* ★'각자 냄' 을 고르면 갯수는 곧 **인원**이다 — 기차를 각자 카드로 찍으면
        단가 하나에 사람 수만큼 결제가 일어난다. 같은 칸이지만 이름이 달라야 뜻이 선다. */
     $('if-qty-lbl').textContent = ($('if-payer').value === 'split') ? '인원' : '갯수';
