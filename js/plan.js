@@ -218,15 +218,18 @@ const Plan = (function () {
         /* 자리 합계 — 다 같은 통화면 **그 통화로** 낸다. 섞였을 때만 원화로 모은다. */
         const paid = [r, ...kids].filter(x => { const p = M.per.get(x.id); return p && p.spend; });
         if (!paid.length) return '';
+        /* '합' 은 **둘 이상**일 때만 붙인다 — 결제가 하나뿐인데 '합' 이라고 하면
+           무엇을 더한 것인지 되묻게 된다. 그냥 그 자리에서 쓴 돈이다. */
+        const lbl = paid.length > 1 ? '합 ' : '';
         const curs = new Set(paid.map(x => x.cost_cur));
         if (curs.size === 1 && paid.every(x => x.cost != null)) {
           const one = paid.reduce((a, x) => a + (+x.cost || 0), 0);
-          return `<span class="money">합 ${esc(U.money(one, paid[0].cost_cur))}</span>`;
+          return `<span class="money">${lbl}${esc(U.money(one, paid[0].cost_cur))}</span>`;
         }
         let sum = 0, miss = 0;
         paid.forEach(x => { const p = M.per.get(x.id);
           if (p.krw == null) miss += 1; else sum += p.krw; });
-        return `<span class="money">합 ${esc(U.money(sum, U.SETTLE))}${
+        return `<span class="money">${lbl}${esc(U.money(sum, U.SETTLE))}${
           miss ? ` <span class="warn">+${miss}건</span>` : ''}</span>`;
       }
       if (r.cost == null) return '';
@@ -238,7 +241,10 @@ const Plan = (function () {
          모든 줄에 세웠더니(v=58) 65줄짜리 여행에서 34.2px × 65 = 2,222px 였다 —
          일정 탭 전체 스크롤의 25%, 이 화면의 서명인 구간 거리(1,612px)보다 큰 자리를
          **한 번도 안 눌린 단추**가 먹고 있었다(2026-09-02 측정).
-         첫 결제는 장소를 눌러 여는 시트 안에서 붙인다 — 거기가 이미 그 장소의 자리다. */
+         첫 결제는 장소를 눌러 여는 시트 안에서 붙인다 — 거기가 이미 그 장소의 자리다.
+         ★결제가 **하나뿐인** 자리에도 안 세운다. 그런 자리가 흔한데(대부분의 가게가 그렇다)
+           거기까지 세우면 아낀 자리를 도로 내주는 셈이다 — 시트의 '＋ 결제 하나 더' 로 족하다.
+           줄이 둘 이상인 자리는 '여기서 결제가 여러 번 일어난다' 는 것이 이미 드러난 곳이다. */
     const payHtml = kids.map(c => {
       const who = c.split ? `각자${+c.qty > 1 ? ' ' + (+c.qty) + '명' : ''}`
                 : (c.payer_id ? (Crew.nameOf(crew, c.payer_id) || '냄') : '');
@@ -274,7 +280,7 @@ const Plan = (function () {
         </span>
       </span>
       ${payHtml}
-      ${kids.length ? `<button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>` : ''}
+      ${kids.length > 1 ? `<button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>` : ''}
     </div>`;
   }
 
