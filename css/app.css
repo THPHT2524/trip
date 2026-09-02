@@ -386,7 +386,11 @@ a { color: var(--route); text-underline-offset: 2px; }
      구간 거리에 0m 가 끼어든다. 레일에도 정거장을 만들지 않는다. */
 .payrow, .payadd {
   position: relative; display: flex; align-items: baseline; gap: 8px;
-  width: calc(100% - var(--gutter) - 12px); margin-left: calc(var(--gutter) + 12px);
+  /* ⚠ `.stop` 이 이미 `padding-left: var(--gutter)` 로 레일 자리를 비워 뒀다. 여기서
+     `--gutter` 를 또 빼면 **두 번 세는 셈**이라, 12px 들여쓰려던 것이 58px 이 됐고
+     결제 줄이 카드보다 58px 좁아져 '난카이 공항급행' 이 잘렸다(2026-09-02).
+     장소에 딸린 줄이라는 것은 12px 들여쓰기와 점선 하나면 충분히 말한다. */
+  width: calc(100% - 12px); margin-left: 12px;
   appearance: none; cursor: pointer; text-align: left;
   background: none; border: 0; border-top: 1px dashed var(--line);
   padding: 7px 2px;
