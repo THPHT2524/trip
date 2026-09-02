@@ -143,6 +143,7 @@ const Plan = (function () {
 
   function drawDays() {
     const el = $('days');
+    closeMemo();                          // 붙어 있던 단추가 곧 사라진다
     if (!rows.length && !days.length) {
       el.innerHTML = '<p class="empty"><strong>아직 일정이 없습니다</strong>'
                    + '아래에서 첫 줄을 넣으세요. 구글맵 링크를 붙이면 장소가 채워집니다.</p>';
@@ -183,7 +184,8 @@ const Plan = (function () {
 
   function stopHtml(r, nid) {
     const k = KVAR[r.kind] || 'k-etc';
-    const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : ''].filter(Boolean).join(' ');
+    const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : '',
+                 r.memo ? 'has-memo' : ''].filter(Boolean).join(' ');
     const time = r.at_time ? r.at_time.slice(0, 5) : '';
     /* ★비용이 없으면 **아무 말도 하지 않는다.** 전에는 '비용 미정' 을 적었는데,
        65줄짜리 여행에서 57줄이 그랬다 — 빈 칸의 이름을 57번 읽는 셈이다.
@@ -226,11 +228,11 @@ const Plan = (function () {
             <span class="kind">${esc(r.kind)}</span>
             ${cost}
             ${r.payer_id ? `<span class="badge who">${esc(Crew.nameOf(crew, r.payer_id) || '냄')}</span>` : ''}
-            ${r.ref_code ? `<span class="badge who">${esc(r.ref_code)}</span>` : ''}
-            ${r.memo ? '<span class="badge">메모</span>' : ''}
           </span>
         </button>
         <span class="acts">
+          ${r.memo ? `<button class="act has" type="button" data-memo="${esc(r.id)}"
+             aria-label="메모 보기">메모</button>` : ''}
           ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
           <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '못 감'}</button>
         </span>
@@ -294,14 +296,12 @@ const Plan = (function () {
     $('if-cost').value = (r && r.cost != null) ? (+r.cost / q) : '';
     $('if-cur').value = (r && r.cost_cur) || (trip && trip.base_cur) || 'KRW';
     $('if-fx').value = (r && r.fx != null) ? r.fx : '';
-    $('if-ref').value = (r && r.ref_code) || '';
-    $('if-book').value = (r && r.book_url) || '';
     $('if-memo').value = (r && r.memo) || '';
     $('if-payer').value = (r && r.split) ? 'split' : ((r && r.payer_id) || '');
     $('if-lat').value = (r && r.lat != null) ? r.lat : '';
     $('if-lng').value = (r && r.lng != null) ? r.lng : '';
     /* ★접어 둔 칸에 값이 들어 있으면 펴 준다 — 안 그러면 고치러 왔다가 못 본다 */
-    $('if-more').open = !!(r && (r.ref_code || r.book_url || r.memo));
+    $('if-more').open = !!(r && r.memo);
     $('if-del').hidden = !r;
     /* 이미 있는 **장소** 줄을 고치는 중일 때만 — 새 줄에는 붙일 부모가 없고,
        결제 줄에는 또 결제를 붙일 수 없다(trip.items_one_level 트리거가 막는다). */
@@ -381,7 +381,6 @@ const Plan = (function () {
       parent_id: parentOf,
       split: $('if-payer').value === 'split',
       payer_id: $('if-payer').value === 'split' ? null : ($('if-payer').value || null),
-      ref_code: $('if-ref').value, book_url: $('if-book').value,
       done: editing ? !!(rows.find(r => r.id === editing) || {}).done : false,
       /* 시각이 없는 줄은 그날 맨 뒤에 붙인다. 시각이 있으면 서버 정렬이 시각을 먼저 본다. */
       seq: editing ? (rows.find(r => r.id === editing) || {}).seq || 0
@@ -389,7 +388,10 @@ const Plan = (function () {
     };
   }
 
-  async function save(ev) {
+  /* next='child' 면 저장한 뒤 시트를 닫지 않고 **그 장소의 결제 줄**로 갈아 끼운다.
+     ★반드시 먼저 저장한다 — '하나 더' 가 폼을 비우는데, 고치던 값이 남아 있으면
+       말없이 날아간다. 저장이 검증에 걸리면(이름 빈 칸 등) 갈아 끼우지도 않는다. */
+  async function save(ev, next) {
     ev.preventDefault();
     $('if-save').disabled = true;
     $('if-err').textContent = '';
@@ -407,6 +409,12 @@ const Plan = (function () {
           : { kind: 'create', tempId: Outbox.tmpId(), tripId: trip.id, row: DB.items.shape(v) });
       }
       await reload();
+      if (next === 'child' && editing) {
+        parentOf = editing;      // 방금 저장한 장소에 붙인다
+        editing = null;
+        openSheet(null);
+        return;
+      }
       fillForm(null);
       closeSheet();
     } catch (e) {
@@ -475,24 +483,64 @@ const Plan = (function () {
       await reload();
       return;
     }
+    const memo = e.target.closest('[data-memo]');
+    if (memo) { showMemo(memo, rows.find(x => x.id === memo.dataset.memo)); return; }
     const pay = e.target.closest('[data-pay]');
     if (pay) { parentOf = pay.dataset.pay; editing = null; openSheet(null); return; }
     const edit = e.target.closest('[data-edit]');
     if (edit) openSheet(rows.find(x => x.id === edit.dataset.edit));
   });
 
+  /* ── 메모 쪽지 ──────────────────────────────────────────────────────
+     ★뒤를 어둡게 덮는 팝업이 아니다. 한 줄짜리 메모를 보려고 화면이 닫히면
+       보던 자리를 잃는다 — 누른 단추 **바로 아래** 붙는 쪽지로 띄운다.
+     ★popover="auto" 라 바깥 누름·Esc·포커스 되돌리기는 브라우저가 해 준다.
+       (카드 앱의 ⓘ 툴팁과 같은 어법이다 — 두 앱이 같은 몸짓을 쓴다.) */
+  const POP = $('memopop');
+  let popAt = null;                       // 지금 이 쪽지가 붙어 있는 단추
+  function placePop() {
+    if (!popAt || !POP.matches(':popover-open')) return;
+    const M = 8, GAP = 6;
+    POP.style.left = '0px'; POP.style.top = '0px';   // 재기 전에 폭이 확정되게
+    const p = POP.getBoundingClientRect(), b = popAt.getBoundingClientRect();
+    /* 오른쪽 끝에 붙은 단추라 그냥 left 를 맞추면 화면 밖으로 나간다 — 오른쪽을 맞춘다 */
+    const left = Math.min(Math.max(M, b.right - p.width), Math.max(M, innerWidth - p.width - M));
+    let top = b.bottom + GAP;
+    if (top + p.height > innerHeight - M) top = Math.max(M, b.top - p.height - GAP);
+    POP.style.left = left + 'px'; POP.style.top = top + 'px';
+  }
+  function showMemo(btn, r) {
+    if (!r || !r.memo) return;
+    /* 같은 단추를 다시 누르면 닫힌다 — 열고 닫는 데 두 손이 필요하지 않게 */
+    if (popAt === btn && POP.matches(':popover-open')) { POP.hidePopover(); return; }
+    POP.textContent = r.memo;             // ★textContent — 메모는 사람이 적은 글이다
+    popAt = btn;
+    if (POP.matches(':popover-open')) POP.hidePopover();
+    POP.showPopover();
+    placePop();
+  }
+  POP.addEventListener('click', () => POP.hidePopover());   // 눌러서 닫는다
+  POP.addEventListener('toggle', e => {
+    if (e.newState === 'open') {
+      addEventListener('scroll', placePop, { passive: true });
+      addEventListener('resize', placePop);
+    } else {
+      removeEventListener('scroll', placePop);
+      removeEventListener('resize', placePop);
+      popAt = null;
+    }
+  });
+  /* 목록을 다시 그리면 붙어 있던 단추가 사라진다 — 떠 있는 쪽지도 같이 걷는다 */
+  function closeMemo() { if (POP.matches(':popover-open')) POP.hidePopover(); }
+
   $('if-form').addEventListener('submit', save);
   $('if-del').addEventListener('click', del);
   $('if-link').addEventListener('change', readLink);
   $('if-link').addEventListener('paste', () => setTimeout(readLink, 0));
   $('fab').addEventListener('click', () => { parentOf = null; openSheet(null); });
-  /* 시트 안에서 '이 자리에 결제 하나 더' — 같은 시트를 자식 모드로 다시 채운다.
+  /* '＋ 결제 하나 더' — 저장하고 같은 시트를 자식 모드로 다시 채운다.
      닫았다 열지 않는다(닫으면 뒤 화면이 스크롤 위치를 잃는다). */
-  $('if-payadd').addEventListener('click', () => {
-    if (!editing) return;
-    parentOf = editing; editing = null;
-    openSheet(null);
-  });
+  $('if-payadd').addEventListener('click', e => { if (editing) save(e, 'child'); });
   $('if-close').addEventListener('click', closeSheet);
   /* 배경을 누르면 닫는다. dialog 자신이 클릭 대상이면 시트 **바깥**을 누른 것이다. */
   $('if-dlg').addEventListener('click', e => { if (e.target === $('if-dlg')) closeSheet(); });

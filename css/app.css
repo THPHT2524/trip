@@ -347,6 +347,31 @@ a { color: var(--route); text-underline-offset: 2px; }
   color: var(--ink-3); text-decoration: none; border-radius: 7px;
 }
 .act:hover, .act:focus-visible { color: var(--route); }
+/* 값이 들어 있어서 뜬 것 — '지도·못 감' 처럼 늘 있는 동작이 아니라 **이 줄에만 있는 것**이라
+   조금 진하게 둔다. 그래야 훑을 때 메모가 붙은 줄이 눈에 걸린다. */
+.act.has { color: var(--ink-2); }
+/* 단추가 셋이 되는 줄만 오른쪽을 더 낸다 — 나머지 줄까지 넓히면 금액이 애먼 데서 접힌다 */
+.stop.has-memo .item .row2 { padding-right: 136px; }
+
+/* ── 메모 쪽지 ─────────────────────────────────────────────────────────
+   ★뒤를 어둡게 덮지 않는다. 한 줄짜리 메모를 보려고 화면이 닫히면 보던 자리를 잃는다.
+     누른 단추 바로 아래 붙는다(자리는 js/plan.js 의 placePop 이 잡는다).
+   ★카드 앱의 ⓘ 툴팁과 같은 어법이다 — 두 앱이 같은 몸짓을 쓴다. */
+.pop {
+  position: fixed; margin: 0; inset: auto;   /* UA 기본값(inset:0 + margin:auto = 가운데)을 끈다 */
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--card); color: var(--ink);
+  padding: 11px 13px; max-width: min(300px, calc(100vw - 24px));
+  font-size: 13px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;   /* 사람이 줄 바꿔 적은 대로 */
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .18);
+  cursor: pointer;                                  /* 눌러서 닫는다 */
+}
+.pop::backdrop { background: none; }                /* ★딤 없음 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .pop { box-shadow: 0 10px 26px rgba(0, 0, 0, .55); }
+}
+:root[data-theme="dark"] .pop { box-shadow: 0 10px 26px rgba(0, 0, 0, .55); }
 
 /* ── 같은 자리의 추가 결제 ─────────────────────────────────────────────
    한 자리에서 결제가 두 번 이상 일어난다(밥값은 A가 카드, 술값은 B가 현금).
@@ -825,14 +850,6 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
   padding: 10px 18px;
 }
 .btn.ghost { background: none; color: var(--ink); }
-/* 시트 안의 '이 자리에 결제 하나 더'. 저장과 나란히 두지 않는다 — 폼을 끝내는 동작이
-   아니라 **같은 폼을 다시 여는** 동작이라, 한 줄 위에 조용히 혼자 선다. */
-.btn.wide {
-  display: block; width: 100%;
-  border-style: dashed; border-color: var(--line); color: var(--ink-2);
-  font-size: 13px; font-weight: 600;
-}
-.btn.wide:hover, .btn.wide:focus-visible { border-color: var(--route); color: var(--route); }
 .btn:active { opacity: .85; }
 
 .empty {
@@ -850,6 +867,15 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 /* ── 폼 ───────────────────────────────────────────────────────────────── */
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label, .field .lbl { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+/* 라벨과 그 칸에 딸린 곁동작을 한 줄 양 끝에 — 지금은 결제 라벨 옆의 '＋ 결제 하나 더' 하나뿐이다 */
+.field .lblrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 20px; }
+.lnk {
+  appearance: none; cursor: pointer; background: none; border: 0;
+  font: inherit; font-size: 12px; font-weight: 600; color: var(--route);
+  /* 여백은 안쪽으로, 음수 마진으로 되돌린다 — 누르는 자리는 넓히되 줄은 안 커진다 */
+  padding: 9px 8px; margin: -9px -8px -9px 0; border-radius: 7px;
+}
+.lnk:hover, .lnk:focus-visible { background: var(--route-w); }
 /* 결제 방식 셋 — 카드 / 현금 / 환전·출금. 라디오지만 눈에는 한 덩어리로 보여야 한다 */
 .seg3 { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg3 button {
