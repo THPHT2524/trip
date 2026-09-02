@@ -743,6 +743,9 @@ input.code {
   font-size: 26px; line-height: 1; letter-spacing: 0;
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
   font-weight: 800;   /* 윈도우는 'JP' 두 글자로 떨어진다 — 그때 코드처럼 읽히게 */
+  /* ★색은 **대체 글자에만** 걸린다(국기 이모지는 제 색을 갖는다). 그래서 여기서
+     톤을 낮추면 폰의 국기는 그대로고, 윈도우의 'JP' 만 제목과 안 다투게 된다. */
+  color: var(--ink-2);
 }
 .pstat {
   margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums;
