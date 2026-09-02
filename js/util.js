@@ -52,7 +52,7 @@ const U = (function () {
     ['HK', '홍콩', '🇭🇰'], ['MO', '마카오', '🇲🇴'], ['CN', '중국', '🇨🇳'],
     ['TH', '태국', '🇹🇭'], ['VN', '베트남', '🇻🇳'], ['SG', '싱가포르', '🇸🇬'],
     ['MY', '말레이시아', '🇲🇾'], ['ID', '인도네시아', '🇮🇩'], ['PH', '필리핀', '🇵🇭'],
-    ['US', '미국', '🇺🇸'], ['CA', '캐나다', '🇨🇦'], ['AU', '호주', '🇦🇺'],
+    ['US', '미국', '🇺🇸'], ['GU', '괌', '🇬🇺'], ['CA', '캐나다', '🇨🇦'], ['AU', '호주', '🇦🇺'],
     ['NZ', '뉴질랜드', '🇳🇿'], ['GB', '영국', '🇬🇧'], ['FR', '프랑스', '🇫🇷'],
     ['DE', '독일', '🇩🇪'], ['IT', '이탈리아', '🇮🇹'], ['ES', '스페인', '🇪🇸'],
     ['CH', '스위스', '🇨🇭'], ['NL', '네덜란드', '🇳🇱'], ['CZ', '체코', '🇨🇿'],
@@ -72,7 +72,10 @@ const U = (function () {
 
   /* 통화를 고르면 나라도 대개 정해진다 — 새 여행 폼에서 **미리 골라 준다**(바꿀 수 있다).
      통화 하나가 여러 나라인 것(EUR·USD)은 비워 둔다. 지어내지 않는다. */
-  const CUR_COUNTRY = { KRW: 'KR', JPY: 'JP', TWD: 'TW', THB: 'TH', VND: 'VN' };
+  const CUR_COUNTRY = {
+    KRW: 'KR', JPY: 'JP', TWD: 'TW', THB: 'TH', VND: 'VN',
+    CNY: 'CN', HKD: 'HK', SGD: 'SG', MOP: 'MO', IDR: 'ID', MYR: 'MY', PHP: 'PH',
+  };
   const guessCountry = cur => CUR_COUNTRY[cur] || '';
 
   /* 사람이 쉼표로 적은 도시를 낱개로. 앞뒤 공백과 빈 칸을 걷는다. */
@@ -113,11 +116,14 @@ const U = (function () {
   }
 
   /* 통화 기호. 없는 통화는 코드를 그대로 앞에 붙인다(추측하지 않는다). */
-  const SIGN = { KRW: '₩', JPY: '¥', USD: '$', EUR: '€', TWD: 'NT$', THB: '฿', VND: '₫', CNY: '¥' };
+  const SIGN = {
+    KRW: '₩', JPY: '¥', USD: '$', EUR: '€', TWD: 'NT$', THB: '฿', VND: '₫',
+    CNY: '¥', HKD: 'HK$', SGD: 'S$', MOP: 'MOP$', IDR: 'Rp', MYR: 'RM', PHP: '₱',
+  };
   /* ★센트가 있는 돈은 **센트까지** 적는다. 전부 반올림했더니 $116.37 이 $116 으로 보였고,
      영수증과 대조할 수가 없었다(2026-09-02). 원·엔·동은 소수점을 쓰지 않는 돈이라 0 이다.
      여기 없는 통화는 2 로 본다 — 세계의 통화 대부분이 센트를 갖는다. */
-  const CENTS = { KRW: 0, JPY: 0, VND: 0, TWD: 0 };
+  const CENTS = { KRW: 0, JPY: 0, VND: 0, TWD: 0, IDR: 0 };
   function money(v, cur) {
     if (v == null || !Number.isFinite(+v)) return '';
     const d = CENTS[cur] != null ? CENTS[cur] : 2;
