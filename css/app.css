@@ -797,6 +797,9 @@ input.code {
      'JP' 로 떨어질 때만 조용해지고, 폰의 국기는 그대로다. */
   font-weight: 800; color: var(--ink-2);
 }
+/* 낱개로 세운다. 붙여 놓으면 폰에서는 국기가 이어져 보이고, 윈도우에서는
+   'JPCNIDUSMOKRESPTTHGUHKTWSG' 라는 한 덩어리가 된다(2026-09-02, 나라 13개에서 확인). */
+.pflags span { display: inline-block; }
 /* 항목과 값. 라벨은 위, 값은 아래 — 여권의 인적사항 칸이 그렇게 생겼다. */
 .pgrid {
   margin: 0; padding: 10px var(--pad-box) var(--pad-box);

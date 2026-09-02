@@ -183,7 +183,8 @@
     if (!cells.length) return '';
 
     return `<section class="pass">
-      ${flags.length ? `<div class="pflags" aria-hidden="true">${flags.join('')}</div>` : ''}
+      ${flags.length ? `<div class="pflags" aria-hidden="true">${
+        flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells, n.spent).map(esc).join('<br>')}</p>
@@ -205,7 +206,11 @@
     /* ★칸이 좁아지면 점을 줄인다. 21일 여행이면 칸이 13px 인데 점 넷은 26px 라 넘친다 —
        그때는 '무엇이 있나' 대신 '있나 없나' 까지만 말한다. 넘쳐서 깨지느니 덜 말한다. */
     const maxDots = days.length > 12 ? 1 : days.length > 7 ? 2 : 4;
-    const rail = days.length ? `<span class="mrail">${days.map(d => {
+    /* ★일정이 하나도 없으면 레일을 세우지 않는다. 이 레일이 말하는 것은 '여행의 모양'
+       인데, 장소가 없으면 모양이랄 것이 없다 — 빈 칸만 늘어선 회색 선이 스무 장 서면
+       고장 난 것처럼 보인다(2026-09-02, 비행 기록에서 여행 19개를 넣고 나서).
+       ★레일이 뜬다는 것 자체가 '이 여행은 계획이 있다' 는 뜻이 된다. */
+    const rail = (days.length && stops.length) ? `<span class="mrail">${days.map(d => {
       const on = stops.filter(r => r.on_date === d);
       return on.length
         ? `<span class="md">${on.slice(0, maxDots).map(r =>
