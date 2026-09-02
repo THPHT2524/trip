@@ -230,9 +230,9 @@ const Plan = (function () {
             ${r.payer_id ? `<span class="badge who">${esc(Crew.nameOf(crew, r.payer_id) || '냄')}</span>` : ''}
           </span>
         </button>
+        ${r.memo ? `<span class="acts top"><button class="act has" type="button"
+           data-memo="${esc(r.id)}" aria-label="메모 보기">메모</button></span>` : ''}
         <span class="acts">
-          ${r.memo ? `<button class="act has" type="button" data-memo="${esc(r.id)}"
-             aria-label="메모 보기">메모</button>` : ''}
           ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
           <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '못 감'}</button>
         </span>
