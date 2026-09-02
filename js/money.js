@@ -50,17 +50,25 @@ const MONEY = (function () {
       /* 원화로 낸 줄은 환율이 필요 없다. */
       if (r.cost_cur === SETTLE) { per.set(r.id, { krw: amt, spend: true, why: 'krw' }); return; }
 
-      /* 사람이 적어 둔 환율이 언제나 이긴다. */
-      if (fx != null) { per.set(r.id, { krw: amt * fx, spend: true, why: 'fx' }); return; }
-
-      /* 현금 — 지갑의 평균 환율로. 모자라면 모른다고 남긴다. */
+      /* ★★현금 — **주머니에서 나간다.** 환율을 적었든 안 적었든 돈은 줄어든다.
+         전에는 위의 'fx 가 이긴다' 에 먼저 걸려서, 환율이 채워진 현금 줄이 지갑을
+         건드리지 않고 지나갔다 — ¥4,000 환전하고 ¥970 을 현금으로 썼는데 남은 돈이
+         ¥4,000 그대로였다(2026-09-02). 환율은 '이 지출을 얼마로 칠까' 를 정하는 것이지
+         '돈이 나갔나' 를 정하는 것이 아니다.
+         ★빠지는 **원가**는 늘 지갑의 평균 환율로 뗀다 — 그래야 남은 돈의 평균이 안 흔들린다.
+           사람이 환율을 적었으면 그 값으로 '치되', 지갑은 제 원가대로 준다. */
       if (r.settle === 'cash' && bal > 0 && (cur == null || r.cost_cur === cur) && amt <= bal + 1e-9) {
         const rate = paid / bal;
-        const krw = amt * rate;
-        bal -= amt; paid -= krw;
-        per.set(r.id, { krw, spend: true, why: 'wallet', rate });
+        const basis = amt * rate;
+        bal -= amt; paid -= basis;
+        per.set(r.id, fx != null
+          ? { krw: amt * fx, spend: true, why: 'fx', rate }
+          : { krw: basis, spend: true, why: 'wallet', rate });
         return;
       }
+
+      /* 사람이 적어 둔 환율이 언제나 이긴다(지갑이 못 대는 현금·카드·계좌이체 전부). */
+      if (fx != null) { per.set(r.id, { krw: amt * fx, spend: true, why: 'fx' }); return; }
 
       per.set(r.id, { krw: null, spend: true, why: 'no-fx' });
     });

@@ -78,10 +78,30 @@ const row = (o) => ({ id: o.id, cost: o.c, cost_cur: o.cur || 'JPY', fx: o.fx ??
   eq(t.miss, 1, '★안 적은 환전이 있으면 그 줄은 모른다고 남긴다');
   eq(t.sum, 0, '모르는 줄은 합계에 안 들어간다');
 }
-// 사람이 적은 환율이 언제나 이긴다
+// 사람이 적은 환율이 값을 정한다 — 그래도 현금은 주머니에서 나간다
 {
   const r = [ row({id:'e', c:50000, fx:9.4, s:'exchange'}), row({id:'a', c:1000, fx:12, s:'cash'}) ];
-  eq(MONEY.total(r).sum, 12000, '★fx 를 직접 적었으면 지갑보다 그게 먼저다');
+  const t = MONEY.total(r);
+  eq(t.sum, 12000, '★fx 를 직접 적었으면 얼마로 칠지는 그게 먼저다');
+  eq(Math.round(t.cash.bal), 49000,
+     '★★그래도 지갑에서는 나간다 — 환율은 값을 정하지 돈이 나갔나를 정하지 않는다');
+  eq(Math.round(t.cash.rate * 100) / 100, 9.4,
+     '남은 돈의 평균은 안 흔들린다 — 원가는 지갑 환율로 뗀다');
+}
+/* 실제로 겪은 것: ¥4,000 환전 → ¥970 현금(환율 채워짐) → 남은 돈이 ¥4,000 그대로였다 */
+{
+  const r = [ row({id:'e', c:4000, fx:8.6245, s:'exchange'}),
+              row({id:'a', c:970,  fx:8.6245, s:'cash'}) ];
+  const t = MONEY.total(r);
+  eq(Math.round(t.cash.bal), 3030, '★¥4,000 에서 ¥970 을 쓰면 ¥3,030 이 남는다');
+  eq(Math.round(t.sum), 8366, '¥970 = ₩8,366');
+}
+// 지갑이 못 대는 현금(잔액 부족)은 적어 둔 환율로 친다
+{
+  const r = [ row({id:'e', c:500, fx:9.4, s:'exchange'}), row({id:'a', c:1000, fx:12, s:'cash'}) ];
+  const t = MONEY.total(r);
+  eq(t.sum, 12000, '지갑이 모자라면 적어 둔 환율로');
+  eq(Math.round(t.cash.bal), 500, '못 뗐으니 지갑은 그대로');
 }
 // 카드(기본)는 지갑을 건드리지 않는다
 {
