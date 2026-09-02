@@ -150,7 +150,10 @@ const DB = (function () {
       const { data, error } = await sb.from('items')
         .select('id,trip_id,on_date,kind,cost,cost_cur,fx,settle,split,payer_id,parent_id')
         .order('on_date', { ascending: true });
-      if (error) return [];          // 못 받아도 목록은 보여준다 — 미니 레일만 빠진다
+      /* ★못 받은 것과 없는 것을 **구별해서** 돌려준다. 전에는 둘 다 [] 였는데,
+         한 번 실패하면 홈 카드가 조용히 '일정 N'과 합계를 잃고 통화 코드만 남았다
+         (2026-09-02, 마이그레이션 직후 실제로 한 번 그랬다). 부르는 쪽이 판단해야 한다. */
+      if (error) return null;
       return data || [];
     },
 

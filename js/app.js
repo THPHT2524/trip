@@ -174,7 +174,11 @@
       /* 둘을 나란히 부른다 — 카드가 '여행의 모양' 을 그리려면 둘 다 있어야 하고,
          차례로 부르면 첫 화면이 두 번 왕복만큼 늦어진다. */
       const [list, sh] = await Promise.all([DB.trips.list(), DB.trips.shape()]);
-      trips = list; shape = sh;
+      trips = list;
+      /* ★못 받았으면(null) **갖고 있던 것을 지우지 않는다.** 빈 배열로 덮으면 카드가
+         '일정 N'과 합계를 잃고 통화 코드만 남는데, 화면은 아무 말도 안 하므로
+         돈을 안 쓴 여행처럼 보인다. 목록 자체는 list 로 이미 그릴 수 있다. */
+      if (sh) shape = sh;
     } catch (e) {
       trips = [];
       $('trips').innerHTML = `<p class="empty"><strong>불러오지 못했습니다</strong>${esc(e.message)}</p>`;
