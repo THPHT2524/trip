@@ -48,6 +48,8 @@ const Plan = (function () {
      사람은 영수증에 적힌 대로(얼마 주고 얼마 받았는지) 넣고, 환율은 우리가 낸다. */
   let settle = null;
   let parentOf = null;      // '결제 추가' 로 열었을 때 붙일 장소 줄의 id
+  let hasOwnCost = false;   // 고치는 중인 장소 줄에 금액이 얹혀 있나(옛 방식)
+  let hasKids = false;      // 그 자리에 이미 결제 줄이 붙어 있나
   function drawSettle() {
     document.querySelectorAll('#if-settle button').forEach(b =>
       b.setAttribute('aria-pressed', String((b.dataset.settle || null) === settle)));
@@ -67,6 +69,13 @@ const Plan = (function () {
     $('if-when-wrap').hidden = kid;
     $('if-name-lbl').textContent = kid ? '결제 이름' : '장소명';
     $('if-name').placeholder = kid ? '술값' : '오사카성';
+    /* ★★장소를 넣을 때는 돈을 묻지 않는다 — 결제는 저장한 뒤 따로 붙인다.
+       한 자리에서 결제가 둘 이상인 일이 흔한데, 첫 결제만 장소 줄에 얹으면
+       같은 것이 두 곳에 살게 된다. 옛 줄(금액이 얹힌 것)은 고칠 수 있어야 하므로 편다. */
+    $('if-pay').hidden = !kid && !hasOwnCost;
+    /* 결제 줄에는 또 결제를 못 붙인다(trip.items_one_level 트리거가 막는다) */
+    $('if-payadd').hidden = kid;
+    $('if-payadd').textContent = (hasKids || hasOwnCost) ? '＋ 결제 하나 더' : '＋ 결제 넣기';
     showSum();
   }
 
@@ -293,6 +302,8 @@ const Plan = (function () {
   function fillForm(r) {
     editing = r ? r.id : null;
     if (r) parentOf = r.parent_id || null;      // 고치기로 열면 그 줄의 소속을 따른다
+    hasOwnCost = !!(r && !r.parent_id && r.cost != null);
+    hasKids = !!(r && !r.parent_id && kidsOf(r.id).length);
     $('if-id').value = r ? r.id : '';
     $('if-link').value = (r && r.map_url) || '';
     $('if-name').value = (r && r.name) || '';
@@ -324,9 +335,6 @@ const Plan = (function () {
     /* ★접어 둔 칸에 값이 들어 있으면 펴 준다 — 안 그러면 고치러 왔다가 못 본다 */
     $('if-more').open = !!(r && r.memo);
     $('if-del').hidden = !r;
-    /* 이미 있는 **장소** 줄을 고치는 중일 때만 — 새 줄에는 붙일 부모가 없고,
-       결제 줄에는 또 결제를 붙일 수 없다(trip.items_one_level 트리거가 막는다). */
-    $('if-payadd').hidden = !(r && !parentOf);
     $('if-sum').textContent = parentOf ? (r ? '결제 고치기' : '결제 추가')
                             : (r ? '일정 고치기' : '일정 추가');
     $('if-err').textContent = '';
@@ -418,9 +426,10 @@ const Plan = (function () {
     $('if-err').textContent = '';
     try {
       const v = valueOf();
+      let made = null;
       try {
         if (editing) await DB.items.update(editing, v);
-        else await DB.items.create(trip.id, v);
+        else made = await DB.items.create(trip.id, v);
       } catch (e) {
         /* 서버가 거절한 것(검증·권한)은 그대로 보여 준다 — 다시 보내도 같다.
            끊겨서 못 보낸 것만 쌓아 둔다. */
@@ -430,8 +439,11 @@ const Plan = (function () {
           : { kind: 'create', tempId: Outbox.tmpId(), tripId: trip.id, row: DB.items.shape(v) });
       }
       await reload();
-      if (next === 'child' && editing) {
-        parentOf = editing;      // 방금 저장한 장소에 붙인다
+      /* 방금 만든 줄이면 서버가 준 id 를 쓴다. 오프라인으로 쌓아 둔 것은 id 가 없어
+         붙일 곳이 없다 — 그때는 그냥 닫고, 연결되면 그 장소를 눌러 붙이면 된다. */
+      const attach = editing || (made && made.id);
+      if (next === 'child' && attach) {
+        parentOf = attach;
         editing = null;
         openSheet(null);
         return;
@@ -561,7 +573,7 @@ const Plan = (function () {
   $('fab').addEventListener('click', () => { parentOf = null; openSheet(null); });
   /* '＋ 결제 하나 더' — 저장하고 같은 시트를 자식 모드로 다시 채운다.
      닫았다 열지 않는다(닫으면 뒤 화면이 스크롤 위치를 잃는다). */
-  $('if-payadd').addEventListener('click', e => { if (editing) save(e, 'child'); });
+  $('if-payadd').addEventListener('click', e => save(e, 'child'));
   $('if-close').addEventListener('click', closeSheet);
   /* 배경을 누르면 닫는다. dialog 자신이 클릭 대상이면 시트 **바깥**을 누른 것이다. */
   $('if-dlg').addEventListener('click', e => { if (e.target === $('if-dlg')) closeSheet(); });

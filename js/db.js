@@ -217,11 +217,13 @@ const DB = (function () {
       const row = items.shape(v);
       if (!row.name) throw new Error('장소명을 입력하세요.');
       if (!row.on_date) throw new Error('날짜를 고르세요.');
-      /* ★.select() 를 붙이지 않는다. RETURNING 은 SELECT 정책까지 보는데, 여기서는
-         이미 멤버라 통과하긴 한다 — 다만 돌려받을 이유가 없다(목록을 다시 받는다).
-         trips 에서 이 성질 때문에 한 번 막혔다(members.sql 주석 참고). */
-      const { error } = await sb.from('items').insert({ ...row, trip_id: tripId });
+      /* ★id 를 돌려받는다 — '＋ 결제 넣기' 가 방금 만든 장소에 결제를 붙이려면 필요하다.
+         RETURNING 은 SELECT 정책까지 보는데 여기서는 이미 멤버라 통과한다
+         (trips 에서는 이 성질 때문에 한 번 막혔다 — members.sql 주석 참고). */
+      const { data, error } = await sb.from('items')
+        .insert({ ...row, trip_id: tripId }).select('id').single();
       if (error) throw new Error(say('일정을 추가하지 못했습니다', error));
+      return data;
     },
 
     update: async (id, v) => {
