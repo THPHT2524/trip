@@ -730,6 +730,25 @@ input.code {
    경로의 축소판이어야 한다 — 며칠짜리인지, 어느 날이 비었는지, 무슨 여행인지가
    카드만 보고 읽힌다. 일정 탭의 레일과 같은 색·같은 어법이다.
    전에는 이름과 날짜 한 줄뿐이라 첫 화면이 회색 상자 더미였다(2026-09-01). */
+/* ── 여권 ────────────────────────────────────────────────────────────────
+   지나온 것의 총량. 목록 위에 조용히 선다 — 카드가 답이고 이건 곁말이다.
+   ★숫자를 크게 세우지 않는다. 이 화면의 일은 '여행을 고르는 것' 이지 자랑이 아니다.
+     플라이티의 여권은 그 자체가 화면 하나지만, 여기서는 목록의 머리띠 한 줄이다. */
+.pass {
+  padding: 14px var(--pad) 0;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.pflags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  font-size: 26px; line-height: 1; letter-spacing: 0;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
+  font-weight: 800;   /* 윈도우는 'JP' 두 글자로 떨어진다 — 그때 코드처럼 읽히게 */
+}
+.pstat {
+  margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 12px; color: var(--ink-3); letter-spacing: .01em;
+}
+
 .trips { padding: var(--pad); display: flex; flex-direction: column; gap: 10px; }
 .trip {
   display: flex; flex-direction: column; gap: 9px;
@@ -737,8 +756,41 @@ input.code {
   appearance: none; cursor: pointer; color: inherit; font: inherit;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
   padding: 14px;
+  position: relative; overflow: hidden;   /* 바탕의 국기가 모서리 밖으로 새지 않게 */
 }
+/* ★★여행지 국기를 **카드 바탕에** 크게 깐다. 곁에 작은 칩으로 달면 이름과 자리를
+     다투는데, 바탕에 두면 목록을 훑을 때 글자를 읽기 **전에** 어느 여행인지 잡힌다.
+   ★윈도우는 국기 이모지를 안 그리고 'JP' 두 글자로 떨어뜨린다(2026-09-02 확인).
+     작게 달면 글꼴이 깨진 것처럼 보이지만, 크게 깔면 그 두 글자가 그대로
+     모노그램으로 읽힌다 — 두 경우 다 제 일을 한다.
+   ★채도는 눌러 둔다. 이 앱에서 진한 색은 장소구분 여섯의 몫이다(범례).
+     국기는 '무엇' 이 아니라 '어디' 를 말하는 바탕이라 소리를 낮춘다. */
+.trip .bgflag {
+  position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+  font-size: 92px; line-height: 1; letter-spacing: -.04em;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
+  font-weight: 800;
+  opacity: .13; filter: saturate(.7);
+  pointer-events: none; user-select: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .trip .bgflag { opacity: .17; }
+}
+:root[data-theme="dark"] .trip .bgflag { opacity: .17; }
+/* 카드의 글자는 바탕 위에 서야 한다 */
+.trip > .top2, .trip > .mrail, .trip > .meta { position: relative; }
 .trip .top2 { display: flex; align-items: baseline; gap: 10px; }
+/* ── 여행지 국기 ────────────────────────────────────────────────────────
+   현지통화에서 따온다(js/util.js 의 FLAG). 여행 목록과 머리말 두 곳에만 단다 —
+   '이 여행이 어디였더라' 를 이름을 읽기 전에 답하는 것이 일이다.
+   ★윈도우는 국기 이모지를 안 그리고 'JP' 같은 두 글자로 떨어뜨린다(2026-09-02 확인).
+     그때 글자가 아래첨자처럼 작아 보이므로 조금 키워 둔다 — 폰에서는 국기가 그만큼
+     또렷해지고, 떨어져도 나라 코드로 읽힌다. 어느 쪽이든 제 일을 한다. */
+.flag {
+  flex: 0 0 auto; font-size: 1.15em; line-height: 1;
+  margin-right: .35em; letter-spacing: 0;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
+}
 .trip .nm {
   flex: 1; min-width: 0; font-size: 18px; font-weight: 700; letter-spacing: -.02em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

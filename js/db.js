@@ -148,7 +148,7 @@ const DB = (function () {
     shape: async () => {
       if (mode() !== 'cloud') return [];
       const { data, error } = await sb.from('items')
-        .select('id,trip_id,on_date,kind,cost,cost_cur,fx,settle,split,payer_id,parent_id')
+        .select('id,trip_id,on_date,kind,lat,lng,cost,cost_cur,fx,settle,split,payer_id,parent_id')
         .order('on_date', { ascending: true });
       /* ★못 받은 것과 없는 것을 **구별해서** 돌려준다. 전에는 둘 다 [] 였는데,
          한 번 실패하면 홈 카드가 조용히 '일정 N'과 합계를 잃고 통화 코드만 남았다

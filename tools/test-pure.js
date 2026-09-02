@@ -41,6 +41,20 @@ eq(GEO.ok({lat:34.6,lng:135.5}), true, '정상 좌표');
 eq(GEO.ok({lat:34.6}), false, 'lng 없음');
 eq(GEO.ok({lat:'34.6',lng:135}), false, '문자열은 안 받는다');
 
+/* 좌표를 묶어 '몇 군데였나' — 여행에 도시 칸이 없어서 이걸로 센다 */
+{
+  const P=(la,ln)=>({lat:la,lng:ln});
+  const osaka=[P(34.6656,135.5010),P(34.6687,135.5013),P(34.6873,135.5259)];
+  const kyoto=[P(34.9858,135.7588),P(35.0116,135.7681)];
+  const kix=[P(34.4342,135.2328)];
+  eq(GEO.areas(osaka), 1, '한 도시 안이면 하나');
+  eq(GEO.areas(osaka.concat(kyoto)), 2, '오사카 + 교토는 둘');
+  eq(GEO.areas(osaka.concat(kyoto, kix)), 3, '★간사이공항까지 셋 — 실제 여행에서 나온 수');
+  eq(GEO.areas([]), 0, '없으면 0');
+  eq(GEO.areas(osaka.concat([{name:'좌표 없음'}])), 1, '좌표 없는 줄은 안 센다');
+  eq(GEO.areas(osaka, 200000), 1, '반경을 넓게 잡으면 하나로 묶인다');
+}
+
 // ★사람이 읽을 이름이 아닌 것을 장소명에 넣지 않는다
 eq(GM.parse('https://www.google.com/maps/place/?q=place_id:ChIJN1t_tDeuEmsRUsoyG83frY4'), null,
    '★place_id 는 이름이 아니다 — 좌표도 없으면 실패로 본다');

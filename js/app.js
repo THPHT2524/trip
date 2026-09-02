@@ -72,7 +72,17 @@
     if (!inTrip) { renderTrips(); return; }
 
     const t = trips.find(x => x.id === tripId);
-    $('trip-name').textContent = t ? t.name : '여행';
+    /* 머리말에도 같은 국기를 단다 — 목록에서 보던 표식이 안에서도 이어져야
+       '지금 어느 여행 안인지' 를 이름 없이도 안다. (이름은 textContent 로 넣는다) */
+    const h1 = $('trip-name');
+    h1.textContent = '';
+    const fg = t && U.flag(t.base_cur);
+    if (fg) {
+      const f = document.createElement('span');
+      f.className = 'flag'; f.setAttribute('aria-hidden', 'true'); f.textContent = fg;
+      h1.appendChild(f);
+    }
+    h1.appendChild(document.createTextNode(t ? t.name : '여행'));
     $('trip-span').textContent = t ? fmtSpan(t.start_on, t.end_on) : '';
     document.querySelectorAll('#tabs button').forEach(b =>
       b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
@@ -98,6 +108,8 @@
                    + '새 여행을 만들거나, 받은 초대 링크를 여세요.</p>';
       return;
     }
+    $('passport').innerHTML = passportHtml();
+
     const group = { now: [], soon: [], past: [] };
     trips.forEach(t => group[phase(t)].push(t));
     const label = { now: '지금', soon: '예정', past: '지난 여행' };
@@ -105,6 +117,36 @@
     el.innerHTML = ['now', 'soon', 'past'].filter(k => group[k].length).map(k =>
       `<h2 class="grouphd">${label[k]}</h2>` + group[k].map(t => card(t, k)).join('')
     ).join('');
+  }
+
+  /* ── 여권 ────────────────────────────────────────────────────────────────
+     **지나온 것의 총량.** 목록 위에 한 줄로 선다.
+     ★여기 세는 것은 전부 이미 갖고 있는 사실이다 — 지어내지 않는다:
+       나라는 여행의 현지통화에서, 지역은 좌표를 15km 로 묶어서(GEO.areas),
+       곳은 장소 줄 수, 일은 여행 기간의 합.
+     ★여행이 하나도 없으면 아무 말도 안 한다. 0개국 0곳은 알려 줄 것이 없다. */
+  function passportHtml() {
+    if (!trips.length) return '';
+    const flags = [...new Set(trips.map(t => U.flag(t.base_cur)).filter(Boolean))];
+    let areas = 0, spots = 0, days = 0;
+    trips.forEach(t => {
+      const mine = shape.filter(r => r.trip_id === t.id && !r.parent_id);
+      areas += GEO.areas(mine);
+      spots += mine.length;
+      if (t.start_on && t.end_on) {
+        days += Math.round((Date.parse(t.end_on) - Date.parse(t.start_on)) / DAYMS) + 1;
+      }
+    });
+    const bits = [];
+    if (flags.length) bits.push(`${flags.length}개국`);
+    if (areas) bits.push(`${areas}개 지역`);
+    if (spots) bits.push(`${spots}곳`);
+    if (days) bits.push(`${days}일`);
+    if (!bits.length) return '';
+    return `<section class="pass">
+      ${flags.length ? `<div class="pflags" aria-hidden="true">${flags.join('')}</div>` : ''}
+      <p class="pstat">${esc(bits.join(' · '))}</p>
+    </section>`;
   }
 
   /* ── 여행 카드 ──────────────────────────────────────────────────────────
@@ -149,6 +191,7 @@
     bits.push(sum ? U.money(sum, U.SETTLE) : (t.base_cur || U.SETTLE));
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
+      ${U.flag(t.base_cur) ? `<span class="bgflag" aria-hidden="true">${U.flag(t.base_cur)}</span>` : ''}
       <span class="top2">
         <span class="nm">${esc(t.name)}</span>
         ${mark ? `<span class="dday${phase === 'now' ? ' hot' : ''}">${esc(mark)}</span>` : ''}

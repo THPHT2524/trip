@@ -40,6 +40,15 @@ const U = (function () {
     return (a || b).slice(2).replace(/-/g, '.');
   }
 
+  /* 여행지 국기 — **현지통화에서 따온다.** 여행에 나라 칸이 따로 없고, 현지통화가
+     '그 나라 돈' 이라는 뜻으로 사람이 직접 고르는 값이라 가장 가까운 단서다.
+     ★유로는 나라가 하나가 아니라 유럽기다 — 프랑스 국기를 지어내지 않는다.
+     ★윈도우는 국기 이모지를 안 그리고 'JP' 같은 두 글자로 떨어뜨린다. 폰에서는
+       제대로 나오고, 떨어져도 어느 나라인지는 읽히므로 그대로 둔다(css 의 .flag 참고).
+     ★모르는 통화면 아무것도 안 내놓는다 — 틀린 국기보다 없는 편이 낫다. */
+  const FLAG = { KRW: '🇰🇷', JPY: '🇯🇵', USD: '🇺🇸', EUR: '🇪🇺', TWD: '🇹🇼', THB: '🇹🇭', VND: '🇻🇳' };
+  const flag = cur => FLAG[cur] || '';
+
   /* 통화 기호. 없는 통화는 코드를 그대로 앞에 붙인다(추측하지 않는다). */
   const SIGN = { KRW: '₩', JPY: '¥', USD: '$', EUR: '€', TWD: 'NT$', THB: '฿', VND: '₫', CNY: '¥' };
   /* ★센트가 있는 돈은 **센트까지** 적는다. 전부 반올림했더니 $116.37 이 $116 으로 보였고,
@@ -61,7 +70,7 @@ const U = (function () {
      (2026-09-02에 뜻을 그렇게 정했다 — 그전에는 base_cur 가 합계 통화였다) */
   const SETTLE = 'KRW';
 
-  return { esc, DOW, todayISO, addDays, dowOf, md, span, money, SETTLE };
+  return { esc, DOW, todayISO, addDays, dowOf, md, span, money, flag, SETTLE };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용
