@@ -817,6 +817,11 @@ input.code {
    부채처럼 겹치는 것은 그림일 때만 읽힌다. 넘치면 잘린다(줄은 하나로 둔다). */
 .pflags.ascii { gap: 8px; font-size: 15px; letter-spacing: .04em; }
 .pflags.ascii b { margin: 0; }
+/* 한 줄에 다 못 담을 때 — 끝을 흐려 '잘린 것' 이 아니라 '더 있다' 로 읽히게 */
+.pflags.cut {
+  -webkit-mask-image: linear-gradient(90deg, #000 84%, transparent);
+  mask-image: linear-gradient(90deg, #000 84%, transparent);
+}
 /* 항목과 값. 라벨은 위, 값은 아래 — 여권의 인적사항 칸이 그렇게 생겼다. */
 /* ★네 칸이 줄을 **고르게 나눠 갖는다.** 전에는 내용만큼만 차지해서 왼쪽에 몰리고
    오른쪽이 비었는데, 여권의 인적사항 칸은 서식이 정해진 자리다 — 값이 짧다고

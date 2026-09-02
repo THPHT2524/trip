@@ -202,7 +202,14 @@
     /* ★글자로 떨어지는 곳에서는 **겹치지 않는다.** 국기를 반씩 겹치면 부채처럼 보이지만
        'JP' 를 반씩 겹치면 글자 뭉치가 된다 — 같은 규칙이 두 곳에서 반대로 작동한다. */
     box.classList.toggle('ascii', !canDrawFlags());
-    if (!drawsFlags) { box.style.setProperty('--lap', '0px'); return; }
+    if (!drawsFlags) {
+      box.style.setProperty('--lap', '0px');
+      /* 다 못 담으면 오른쪽 끝을 흐린다 — 잘린 것이 아니라 더 있다는 뜻이 되게
+         (card-dashboard 의 탭 띠에서 쓰던 것과 같은 단서다) */
+      box.classList.toggle('cut', box.scrollWidth > box.clientWidth + 1);
+      return;
+    }
+    box.classList.remove('cut');
     box.style.setProperty('--lap', '0px');      // 재기 전에 겹침을 푼다
     /* ★한 장 폭 × 장수로 셈하면 안 된다 — 국기마다 폭이 다르다(윈도우에서 두 글자로
        떨어질 때는 더 다르다: JP 19.8 · MO 24…). 실제로 넘친 만큼을 scrollWidth 로 잰다. */
