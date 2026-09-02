@@ -38,32 +38,7 @@ const GEO = (function () {
     return Math.round(m / 1000) + 'km';
   }
 
-  /* ★좌표를 R 미터 안에서 묶어 **몇 군데였나**를 센다. 여행에 '도시' 칸이 없으므로
-     장소가 몰려 있는 덩어리를 하나로 본다 — 오사카 여행이면 간사이공항·오사카·교토 셋이다.
-     ★이웃 병합이다(한 점이 닿으면 같은 덩어리). 완전연결이 아니라 사슬처럼 이어지지만,
-       도시 사이가 수십 km 씩 떨어진 여행에서는 그 차이가 안 난다.
-     ★R 은 10~30km 어디로 잡아도 이 여행에서 같은 답(3)이 나왔다(2026-09-02). 15km 로 둔다. */
-  function areas(pts, meters) {
-    const list = (pts || []).filter(ok);
-    const R = meters || 15000;
-    const seen = new Set();
-    let n = 0;
-    list.forEach((p, i) => {
-      if (seen.has(i)) return;
-      n += 1;
-      const q = [i]; seen.add(i);
-      for (let k = 0; k < q.length; k++) {
-        list.forEach((c, j) => {
-          if (seen.has(j)) return;
-          const d = dist(list[q[k]], c);
-          if (d != null && d <= R) { q.push(j); seen.add(j); }
-        });
-      }
-    });
-    return n;
-  }
-
-  return { dist, label, ok, areas };
+  return { dist, label, ok };
 })();
 
 if (typeof module !== 'undefined') module.exports = GEO;   // tools/test-pure.js 용

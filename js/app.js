@@ -125,7 +125,7 @@
   const MRZ = 44;
   const pad = (t) => (t + '<'.repeat(MRZ)).slice(0, MRZ);
   const mrzSafe = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]+/g, '<');
-  const MRZ_CODE = { '나라': 'C', '지역': 'A', '장소': 'P', '일': 'D' };
+  const MRZ_CODE = { '나라': 'C', '도시': 'T', '장소': 'P', '일': 'D' };
   /* ★위 격자에 **선 칸만** 적는다. 전에는 0 도 그대로 찍어서, 셈을 못 받아 온 날
      '1C<0A<0P<3D' 라고 도장이 찍혔다 — 없는 것을 0 이라고 말한 셈이다(2026-09-02 폰). */
   function mrzLines(cells, spent) {
@@ -137,8 +137,11 @@
 
   function passportHtml() {
     if (!trips.length) return '';
-    const flags = [...new Set(trips.map(t => U.flag(t.base_cur)).filter(Boolean))];
-    const n = { countries: flags.length, areas: 0, spots: 0, days: 0, spent: 0 };
+    const flags = [...new Set(trips.map(t => U.flag(t.country)).filter(Boolean))];
+    /* 도시는 **적힌 대로** 센다. 여러 여행에서 같은 도시를 적었으면 한 번만 센다. */
+    const cities = new Set();
+    trips.forEach(t => U.cityList(t.cities).forEach(c => cities.add(c)));
+    const n = { countries: flags.length, cities: cities.size, spots: 0, days: 0, spent: 0 };
     /* ★★여권은 **다녀온 곳**을 센다. 간 횟수가 아니다. 공항은 갈 때 오고, 호텔은
        묵는 밤마다, 마음에 든 가게는 두 번 온다 — 그대로 세면 66곳이지만 실제로는
        55곳이다(2026-09-02 측정). 좌표로 같은 곳을 하나로 묶는다.
@@ -150,7 +153,8 @@
     let noCoord = 0;
     trips.forEach(t => {
       const mine = shape.filter(r => r.trip_id === t.id);
-      mine.filter(r => !r.parent_id).forEach(r => {
+      const stops = mine.filter(r => !r.parent_id);
+      stops.forEach(r => {
         if (GEO.ok(r)) uniq.set(+(+r.lat).toFixed(5) + ',' + +(+r.lng).toFixed(5), r);
         else noCoord += 1;
       });
@@ -160,12 +164,14 @@
       }
     });
     n.spots = uniq.size + noCoord;
-    /* 지역도 **여행을 통틀어** 묶는다 — 오사카를 두 번 가도 오사카는 한 지역이다.
-       나라가 달라도 안전하다: 다른 나라는 수백 km 밖이라 15km 로 묶일 일이 없다. */
-    n.areas = GEO.areas([...uniq.values()]);
     /* 값이 0 인 칸은 세우지 않는다 — 빈 칸의 이름을 읽히게 두지 않는다 */
+    /* ★나라와 도시는 **적힌 대로**다. 전에는 통화에서 유추하고 좌표를 15km 로 묶어
+       어림했는데, 간사이공항이 오사카·교토와 나란히 '한 지역' 으로 섰다 — 공항은
+       지나온 문이지 다녀온 곳이 아니다. 공항만 붙이고 교토는 가르는 반경은 35~42km
+       사이 7km 창뿐이고 그건 간사이에만 맞는 값이었다(인천 50km · 나리타 60km).
+       **여권에 설명이 필요한 칸을 두지 않는다** — 사람이 한 번 적는 편이 낫다. */
     const cells = [
-      ['나라', n.countries], ['지역', n.areas], ['장소', n.spots], ['일', n.days],
+      ['나라', n.countries], ['도시', n.cities], ['장소', n.spots], ['일', n.days],
     ].filter(([, v]) => v);
     if (n.spent) cells.push(['쓴 돈', U.money(n.spent, U.SETTLE)]);
     if (!cells.length) return '';
@@ -220,7 +226,7 @@
     bits.push(sum ? U.money(sum, U.SETTLE) : (t.base_cur || U.SETTLE));
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      ${U.flag(t.base_cur) ? `<span class="bgflag" aria-hidden="true">${U.flag(t.base_cur)}</span>` : ''}
+      ${U.flag(t.country) ? `<span class="bgflag" aria-hidden="true">${U.flag(t.country)}</span>` : ''}
       <span class="top2">
         <span class="nm">${esc(t.name)}</span>
         ${mark ? `<span class="dday${phase === 'now' ? ' hot' : ''}">${esc(mark)}</span>` : ''}
@@ -302,6 +308,8 @@
         start_on: $('new-from').value || null,
         end_on: $('new-to').value || null,
         base_cur: $('new-cur').value,
+        country: $('new-country').value,
+        cities: $('new-cities').value,
       });
       $('new').reset();
       $('new-dlg').close();
@@ -377,6 +385,13 @@
     d.querySelector('.sheetbody').scrollTop = 0;
     if (focusId) setTimeout(() => $(focusId).focus({ preventScroll: true }), 0);
   };
+  U.fillCountry($('new-country'));
+  U.fillCountry($('set-country'));
+  /* 통화를 고르면 나라도 대개 정해진다 — 아직 안 골랐을 때만 미리 골라 준다.
+     사람이 이미 고른 것을 통화 때문에 바꾸지 않는다. */
+  $('new-cur').addEventListener('change', () => {
+    if (!$('new-country').value) $('new-country').value = U.guessCountry($('new-cur').value);
+  });
   $('new-open').addEventListener('click', () => { $('new-err').textContent = ''; openDlg('new-dlg', 'new-name'); });
   $('join-open').addEventListener('click', () => { $('join-err').textContent = ''; openDlg('join-dlg', 'join-code'); });
   document.querySelectorAll('dialog.dlg').forEach(d => {

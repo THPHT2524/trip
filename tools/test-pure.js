@@ -41,40 +41,25 @@ eq(GEO.ok({lat:34.6,lng:135.5}), true, '정상 좌표');
 eq(GEO.ok({lat:34.6}), false, 'lng 없음');
 eq(GEO.ok({lat:'34.6',lng:135}), false, '문자열은 안 받는다');
 
-/* 좌표를 묶어 '몇 군데였나' — 여행에 도시 칸이 없어서 이걸로 센다 */
-{
-  const P=(la,ln)=>({lat:la,lng:ln});
-  const osaka=[P(34.6656,135.5010),P(34.6687,135.5013),P(34.6873,135.5259)];
-  const kyoto=[P(34.9858,135.7588),P(35.0116,135.7681)];
-  const kix=[P(34.4342,135.2328)];
-  eq(GEO.areas(osaka), 1, '한 도시 안이면 하나');
-  eq(GEO.areas(osaka.concat(kyoto)), 2, '오사카 + 교토는 둘');
-  eq(GEO.areas(osaka.concat(kyoto, kix)), 3, '★간사이공항까지 셋 — 실제 여행에서 나온 수');
-  eq(GEO.areas([]), 0, '없으면 0');
-  eq(GEO.areas(osaka.concat([{name:'좌표 없음'}])), 1, '좌표 없는 줄은 안 센다');
-  eq(GEO.areas(osaka, 200000), 1, '반경을 넓게 잡으면 하나로 묶인다');
-
-  /* ★나라가 늘면 — 여행을 통틀어 묶어도 다른 나라끼리는 섞이지 않는다.
-     오사카(34.7,135.5) ↔ 타이베이(25.0,121.5) 는 1,700km 라 15km 로 묶일 일이 없다. */
-  const taipei=[P(25.0330,121.5654),P(25.0478,121.5170)];
-  const bangkok=[P(13.7563,100.5018)];
-  eq(GEO.areas(osaka.concat(kyoto,kix,taipei)), 4, '★일본 셋 + 대만 하나 = 넷');
-  eq(GEO.areas(osaka.concat(taipei,bangkok)), 3, '세 나라는 셋으로 남는다');
-  /* 같은 도시를 두 번 가도 지역은 하나 — 여권은 '다녀온 곳' 을 센다 */
-  eq(GEO.areas(osaka.concat(osaka)), 1, '★오사카를 두 번 가도 오사카는 한 지역');
-}
-
-/* 좌표로 같은 곳을 하나로 묶는 열쇠 — 여권의 '장소' 가 이 규칙으로 센다.
-   같은 구글맵 링크에서 온 좌표는 정확히 같으므로 5자리에서 자르면 충분하다. */
-{
-  const key = r => +(+r.lat).toFixed(5) + ',' + +(+r.lng).toFixed(5);
-  const kix = { lat: 34.4342, lng: 135.2328 };
-  const kixAgain = { lat: 34.4342, lng: 135.2328 };      // 돌아오는 날 같은 공항
-  const hotel = { lat: 34.6600, lng: 135.5000 };
-  eq(key(kix) === key(kixAgain), true, '★같은 좌표는 같은 열쇠 — 왕복 공항은 한 곳');
-  eq(key(kix) === key(hotel), false, '다른 곳은 다른 열쇠');
-  eq(key({ lat: '34.4342', lng: '135.2328' }), key(kix), '문자열로 와도 같은 열쇠');
-}
+/* ── 나라·도시는 **사람이 적는다** ─────────────────────────────────────────
+   전에는 통화에서 나라를 유추하고 좌표를 15km 로 묶어 도시를 어림했다. 간사이공항이
+   오사카·교토와 나란히 '한 지역' 으로 서는 것을 막을 반경이 없었다(공항 35km·교토 42km,
+   그 7km 창은 간사이에만 맞는 값). 어림을 다듬는 대신 한 번 적는 쪽으로 갔다. */
+eq(U.flag('JP'), '🇯🇵', '나라코드로 국기를 찾는다');
+eq(U.flag('ZZ'), '', '모르는 나라는 국기 없음 — 지어내지 않는다');
+eq(U.flag(''), '', '안 적었으면 국기 없음');
+eq(U.countryName('TW'), '대만', '나라 이름');
+eq(U.guessCountry('JPY'), 'JP', '통화로 나라를 미리 골라 준다');
+eq(U.guessCountry('EUR'), '', '★유로는 나라가 하나가 아니다 — 비워 둔다');
+eq(U.guessCountry('USD'), '', '★달러도 미국 밖에서 쓴다 — 비워 둔다');
+eq(U.cityList('오사카, 교토'), ['오사카', '교토'], '쉼표로 나눈다');
+eq(U.cityList(' 오사카 · 교토 , '), ['오사카', '교토'], '가운뎃점도, 앞뒤 공백도 걷는다');
+eq(U.cityList(''), [], '안 적었으면 없음');
+eq(U.cityList(null), [], 'null 도 없음');
+/* 나라 목록은 코드가 두 글자 대문자여야 한다 — 표의 제약과 같은 규칙(place.sql) */
+eq(U.COUNTRY.every(([c, n, f]) => /^[A-Z]{2}$/.test(c) && n && f), true,
+   '★나라 목록의 코드는 전부 두 글자 대문자');
+eq(new Set(U.COUNTRY.map(c => c[0])).size, U.COUNTRY.length, '나라코드가 겹치지 않는다');
 
 // ★사람이 읽을 이름이 아닌 것을 장소명에 넣지 않는다
 eq(GM.parse('https://www.google.com/maps/place/?q=place_id:ChIJN1t_tDeuEmsRUsoyG83frY4'), null,

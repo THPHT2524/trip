@@ -112,13 +112,16 @@ const DB = (function () {
       return data || [];
     },
 
-    create: async ({ name, start_on, end_on, base_cur }) => {
+    create: async ({ name, start_on, end_on, base_cur, country, cities }) => {
       if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
       const row = {
         name: String(name || '').trim(),
         start_on: start_on || null,
         end_on: end_on || null,
         base_cur: base_cur || 'KRW',
+        /* 두 글자 대문자만 — 표의 제약과 같은 규칙이다(supabase/place.sql) */
+        country: /^[A-Z]{2}$/.test(country || '') ? country : null,
+        cities: String(cities || '').trim() || null,
       };
       if (!row.name) throw new Error('여행 이름을 입력하세요.');
       if (row.start_on && row.end_on && row.start_on > row.end_on) {

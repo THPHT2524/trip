@@ -40,14 +40,45 @@ const U = (function () {
     return (a || b).slice(2).replace(/-/g, '.');
   }
 
-  /* 여행지 국기 — **현지통화에서 따온다.** 여행에 나라 칸이 따로 없고, 현지통화가
-     '그 나라 돈' 이라는 뜻으로 사람이 직접 고르는 값이라 가장 가까운 단서다.
-     ★유로는 나라가 하나가 아니라 유럽기다 — 프랑스 국기를 지어내지 않는다.
-     ★윈도우는 국기 이모지를 안 그리고 'JP' 같은 두 글자로 떨어뜨린다. 폰에서는
-       제대로 나오고, 떨어져도 어느 나라인지는 읽히므로 그대로 둔다(css 의 .flag 참고).
-     ★모르는 통화면 아무것도 안 내놓는다 — 틀린 국기보다 없는 편이 낫다. */
-  const FLAG = { KRW: '🇰🇷', JPY: '🇯🇵', USD: '🇺🇸', EUR: '🇪🇺', TWD: '🇹🇼', THB: '🇹🇭', VND: '🇻🇳' };
-  const flag = cur => FLAG[cur] || '';
+  /* ── 나라 ────────────────────────────────────────────────────────────────
+     ★사람이 여행마다 **직접 고른다.** 전에는 현지통화에서 유추했는데 유로는 나라가
+       열이 넘고 달러는 미국 밖에서도 쓴다 — 어림으로 국기를 붙일 일이 아니다.
+     ★한국 사람이 갈 만한 곳으로 추렸다. 없는 나라가 생기면 여기 한 줄 늘리면 된다
+       (250개를 다 세우면 고르는 일이 일이 된다 — 쓰는 사람이 한 명인 앱이다).
+     ★★윈도우는 국기 이모지를 안 그리고 'JP' 두 글자로 떨어뜨린다. 그래서 화면에서는
+       **크게 바탕에 깔아** 모노그램으로 읽히게 한다(css 의 .bgflag·.pflags 참고). */
+  const COUNTRY = [
+    ['KR', '한국', '🇰🇷'], ['JP', '일본', '🇯🇵'], ['TW', '대만', '🇹🇼'],
+    ['HK', '홍콩', '🇭🇰'], ['MO', '마카오', '🇲🇴'], ['CN', '중국', '🇨🇳'],
+    ['TH', '태국', '🇹🇭'], ['VN', '베트남', '🇻🇳'], ['SG', '싱가포르', '🇸🇬'],
+    ['MY', '말레이시아', '🇲🇾'], ['ID', '인도네시아', '🇮🇩'], ['PH', '필리핀', '🇵🇭'],
+    ['US', '미국', '🇺🇸'], ['CA', '캐나다', '🇨🇦'], ['AU', '호주', '🇦🇺'],
+    ['NZ', '뉴질랜드', '🇳🇿'], ['GB', '영국', '🇬🇧'], ['FR', '프랑스', '🇫🇷'],
+    ['DE', '독일', '🇩🇪'], ['IT', '이탈리아', '🇮🇹'], ['ES', '스페인', '🇪🇸'],
+    ['CH', '스위스', '🇨🇭'], ['NL', '네덜란드', '🇳🇱'], ['CZ', '체코', '🇨🇿'],
+    ['AT', '오스트리아', '🇦🇹'], ['PT', '포르투갈', '🇵🇹'], ['TR', '튀르키예', '🇹🇷'],
+    ['AE', '아랍에미리트', '🇦🇪'], ['IN', '인도', '🇮🇳'], ['MN', '몽골', '🇲🇳'],
+  ];
+  const FLAG = Object.fromEntries(COUNTRY.map(([c, , f]) => [c, f]));
+  const CNAME = Object.fromEntries(COUNTRY.map(([c, n]) => [c, n]));
+  const flag = code => FLAG[code] || '';
+  const countryName = code => CNAME[code] || '';
+
+  /* 통화를 고르면 나라도 대개 정해진다 — 새 여행 폼에서 **미리 골라 준다**(바꿀 수 있다).
+     통화 하나가 여러 나라인 것(EUR·USD)은 비워 둔다. 지어내지 않는다. */
+  const CUR_COUNTRY = { KRW: 'KR', JPY: 'JP', TWD: 'TW', THB: 'TH', VND: 'VN' };
+  const guessCountry = cur => CUR_COUNTRY[cur] || '';
+
+  /* 사람이 쉼표로 적은 도시를 낱개로. 앞뒤 공백과 빈 칸을 걷는다. */
+  const cityList = (t) => String(t || '').split(/[,·]/).map(x => x.trim()).filter(Boolean);
+
+  /* 나라 고르는 칸을 채운다. 두 폼(새 여행·여행 설정)이 같은 목록을 써야 하므로
+     한 곳에서 만든다. '안 적음' 을 맨 위에 둔다 — 나라를 모를 수도 있다. */
+  function fillCountry(sel) {
+    if (!sel) return;
+    sel.innerHTML = '<option value="">안 적음</option>'
+      + COUNTRY.map(([c, n, f]) => `<option value="${c}">${f} ${n}</option>`).join('');
+  }
 
   /* 통화 기호. 없는 통화는 코드를 그대로 앞에 붙인다(추측하지 않는다). */
   const SIGN = { KRW: '₩', JPY: '¥', USD: '$', EUR: '€', TWD: 'NT$', THB: '฿', VND: '₫', CNY: '¥' };
@@ -70,7 +101,8 @@ const U = (function () {
      (2026-09-02에 뜻을 그렇게 정했다 — 그전에는 base_cur 가 합계 통화였다) */
   const SETTLE = 'KRW';
 
-  return { esc, DOW, todayISO, addDays, dowOf, md, span, money, flag, SETTLE };
+  return { esc, DOW, todayISO, addDays, dowOf, md, span, money,
+           COUNTRY, flag, countryName, guessCountry, cityList, fillCountry, SETTLE };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용
