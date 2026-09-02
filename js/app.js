@@ -112,11 +112,37 @@
 
     const group = { now: [], soon: [], past: [] };
     trips.forEach(t => group[phase(t)].push(t));
-    const label = { now: '지금', soon: '예정', past: '지난 여행' };
 
-    el.innerHTML = ['now', 'soon', 'past'].filter(k => group[k].length).map(k =>
-      `<h2 class="grouphd">${label[k]}</h2>` + group[k].map(t => card(t, k)).join('')
-    ).join('');
+    /* ★★지난 여행을 **해마다** 나눈다. 스물넷이 한 덩어리로 3,000px 서 있으면
+       '작년에 어디 갔더라' 를 찾을 방법이 없다 — 연도가 이 목록의 자연스러운 눈금이다.
+       ★나뉘고 나면 카드에서 연도를 뺄 수 있다(머리띠가 이미 말한다) — 같은 말을
+         스물네 번 되풀이하지 않는다.
+       ★지금·예정은 안 나눈다. 앞으로의 것은 몇 개 안 되고, 나누면 오히려 흩어진다. */
+    let html = '';
+    if (group.now.length) html += section('지금', group.now, 'now', false);
+    if (group.soon.length) html += section('예정', group.soon, 'soon', false);
+    const byYear = new Map();
+    group.past.forEach(t => {
+      const y = (t.end_on || t.start_on || '').slice(0, 4) || '언젠가';
+      if (!byYear.has(y)) byYear.set(y, []);
+      byYear.get(y).push(t);
+    });
+    [...byYear.keys()].sort().reverse().forEach(y => {
+      html += section(y, byYear.get(y), 'past', y !== '언젠가');
+    });
+    el.innerHTML = html;
+  }
+
+  /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
+     연도만 적으면 눈금일 뿐이지만, 옆에 '여행 7 · 41일' 이 붙으면 그 해의 크기가 읽힌다. */
+  function section(title, list, ph, bare) {
+    const days = list.reduce((a, t) => a + U.tripDays(t), 0);
+    const bits = [`여행 ${list.length}`];
+    if (days) bits.push(`${days}일`);
+    return `<h2 class="grouphd${bare ? ' year' : ''}">`
+         + `<span class="gt">${esc(title)}</span>`
+         + `<span class="gn">${esc(bits.join(' · '))}</span></h2>`
+         + list.map(t => card(t, ph, bare)).join('');
   }
 
   /* ── 여권 ────────────────────────────────────────────────────────────────
@@ -218,7 +244,7 @@
      날짜 칸이 늘어서고 그 안에 장소구분 색 점이 찍힌다 — 며칠짜리인지, 어느 날이 비었는지,
      무슨 여행인지(식사 위주냐 관광 위주냐)가 카드만 보고 읽힌다.
      ★장식이 아니라 정보다. 일정 탭의 레일과 같은 색·같은 어법을 쓴다. */
-  function card(t, phase) {
+  function card(t, phase, bare) {
     const mine = shape.filter(r => r.trip_id === t.id);
     /* 미니 레일과 '일정 N' 은 **장소 줄만** 센다. 결제 줄(parent_id)은 부모 날짜를
        물려받으므로 같이 세면 점이 두 번 찍히고 개수가 부푼다 — 일정 탭과 같은 규칙이다.
@@ -254,9 +280,11 @@
        (전에는 여기서 따로 셌고, 현금 지갑이 생기면서 곧 갈릴 자리였다) */
     const sum = MONEY.total(mine, FXS.rateOf).sum;
 
-    const bits = [fmtSpan(t.start_on, t.end_on)];
-    if (stops.length) bits.push(`일정 ${stops.length}`);
-    bits.push(sum ? U.money(sum, U.SETTLE) : (t.base_cur || U.SETTLE));
+    /* ★통화 코드를 채워 넣지 않는다. 전에는 쓴 돈이 없으면 'CNY' 를 적었는데,
+       그건 이 여행에 대해 아무것도 말해 주지 않는 자리 메우기였다. */
+    const bits = [fmtSpan(t.start_on, t.end_on, bare)];
+    if (stops.length) bits.push(`${stops.length}곳`);
+    if (sum) bits.push(U.money(sum, U.SETTLE));
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
       ${U.flags(t.country).length ? `<span class="bgflag" aria-hidden="true">${U.flags(t.country).join('')}</span>` : ''}

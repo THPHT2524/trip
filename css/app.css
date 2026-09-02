@@ -923,12 +923,31 @@ input.code {
   box-shadow: 0 0 0 1.5px var(--card);    /* 레일이 점을 관통하지 않게 — 노선도의 정거장 */
 }
 
+/* ── 묶음 머리띠 ─────────────────────────────────────────────────────────
+   왼쪽에 무엇(연도·지금·예정), 오른쪽에 얼마나(여행 수·일수).
+   ★연도는 **눈금**이라 숫자 글꼴로 크게 세운다 — 이 목록에서 해를 건너뛰며 훑는 것이
+     제일 잦은 몸짓이다. '지금·예정' 은 눈금이 아니라 이름이라 작게 둔다. */
 .grouphd {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
   font-size: 11px; font-weight: 700; letter-spacing: .1em;
   color: var(--ink-3); text-transform: uppercase;
-  margin: 14px 0 -2px 2px;
+  margin: 16px 2px -2px;
 }
 .grouphd:first-child { margin-top: 2px; }
+.grouphd .gn {
+  flex: 0 0 auto; font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 11px; font-weight: 500; letter-spacing: .01em; text-transform: none;
+}
+/* 해가 바뀌는 자리에는 실선을 하나 긋는다 — 구획이 눈에 잡혀야 건너뛸 수 있다 */
+.grouphd.year {
+  margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line);
+}
+.grouphd.year .gt {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 17px; font-weight: 600; letter-spacing: -.01em;
+  color: var(--ink); text-transform: none;
+}
+.grouphd.year + .trip { margin-top: 2px; }
 
 /* ── 만들기 · 참여하기 ────────────────────────────────────────────────── */
 /* 접어서 목록 **아래**에 둔다. 위에 펴 두면 폰에서 여행 한 줄을 보려고 폼을 넘겨야 한다. */

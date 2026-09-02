@@ -31,13 +31,21 @@ const U = (function () {
   const md = iso => iso ? iso.slice(5).replace('-', '.') : '';
 
   /* 여행 기간 한 줄. 날짜가 없는 여행도 있다(아직 안 정한 것이지 잘못된 것이 아니다). */
-  function span(a, b) {
+  /* bare=true 면 **연도를 뺀다.** 목록이 해마다 나뉘어 있으면 머리띠가 이미 연도를
+     말하므로, 카드마다 '26.' 을 되풀이하는 것은 같은 말을 스물네 번 하는 것이다. */
+  function span(a, b, bare) {
     if (!a && !b) return '날짜 미정';
+    const head = t => (bare ? md(t) : t.slice(2).replace(/-/g, '.'));
     if (a && b) {
       const days = Math.round((Date.parse(b) - Date.parse(a)) / 86400000) + 1;
-      return `${a.slice(2).replace(/-/g, '.')} – ${md(b)} · ${days}일`;
+      return `${head(a)} – ${md(b)} · ${days}일`;
     }
-    return (a || b).slice(2).replace(/-/g, '.');
+    return head(a || b);
+  }
+  /* 여행이 며칠짜리인가. 날짜가 반쪽이면 셀 수 없다. */
+  function tripDays(t) {
+    if (!t || !t.start_on || !t.end_on) return 0;
+    return Math.round((Date.parse(t.end_on) - Date.parse(t.start_on)) / 86400000) + 1;
   }
 
   /* ── 나라 ────────────────────────────────────────────────────────────────
@@ -149,7 +157,7 @@ const U = (function () {
   const SETTLE = 'KRW';
 
   return { esc, DOW, todayISO, addDays, dowOf, md, span, money,
-           COUNTRY, flag, flags, codeList, countryName, guessCountry,
+           COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
            cityList, countryPicker, SETTLE };
 })();
 
