@@ -146,11 +146,17 @@
   function fitFlags() {
     const box = $('passport').querySelector('.pflags');
     if (!box || box.children.length < 2) return;
-    const w = box.children[0].getBoundingClientRect().width;
     const n = box.children.length;
-    const avail = box.clientWidth;
-    const over = n * w - avail;
-    const lap = over <= 0 ? 0 : Math.min(w * 0.55, over / (n - 1));
+    box.style.setProperty('--lap', '0px');      // 재기 전에 겹침을 푼다
+    /* ★한 장 폭 × 장수로 셈하면 안 된다 — 국기마다 폭이 다르다(윈도우에서 두 글자로
+       떨어질 때는 더 다르다: JP 19.8 · MO 24…). 실제로 넘친 만큼을 scrollWidth 로 잰다. */
+    const cs = getComputedStyle(box);
+    const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+    const content = box.scrollWidth - padX;
+    const avail = box.clientWidth - padX;
+    const over = content - avail;
+    const lap = over <= 0 ? 0
+      : Math.min((content / n) * 0.55, over / (n - 1));   // 반 넘게는 안 가린다
     box.style.setProperty('--lap', lap.toFixed(2) + 'px');
   }
   addEventListener('resize', fitFlags);
