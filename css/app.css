@@ -403,7 +403,8 @@ a { color: var(--route); text-underline-offset: 2px; }
 .payrow .pm { flex: 0 0 auto; margin-left: auto; text-align: right;
   font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
 .payrow:active, .payadd:active { background: var(--sunk); }
-.payadd { color: var(--ink-3); font-weight: 600; }
+/* 글자를 오른쪽 끝으로 — 금액이 서는 자리와 같은 쪽이라 결제 줄 아래에 자연히 붙는다 */
+.payadd { color: var(--ink-3); font-weight: 600; justify-content: flex-end; }
 .payadd:hover, .payadd:focus-visible { color: var(--route); }
 
 /* 비어 있는 날 — 감추지 않는다. 3일차가 비었다는 사실 자체가 정보다. */
@@ -1065,5 +1066,8 @@ html:has(dialog[open]), html:has(dialog[open]) body { overflow: hidden; overscro
   margin: 4px -14px -18px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
   background: var(--card); border-top: 1px solid var(--line);
 }
-/* '＋ 결제 넣기' 는 왼쪽 끝, 저장·지우기는 오른쪽 — 성격이 다른 것을 붙여 두지 않는다 */
-#if-dlg .form .row.btns > .lnk { margin-right: auto; }
+/* 지우기 홀로 왼쪽 끝, 안전한 둘(결제 추가·저장)은 오른쪽에 모은다.
+   가운데의 빈 곳이 곧 안전거리다 — 지우기와 저장을 붙여 두면 손가락이 옆칸을 누른다. */
+#if-dlg .form .row.btns { flex-wrap: nowrap; }
+#if-dlg .form .row.btns > #if-del { margin-right: auto; }
+#if-dlg .form .row.btns > #if-del[hidden] + .lnk { margin-right: auto; }
