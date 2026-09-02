@@ -822,9 +822,16 @@ details[open] > summary::after { content: '−'; }
 .form .row > input { flex: 1 1 0; width: auto; min-width: 0; }
 .form .row > .btn { flex: 0 0 auto; }
 
-.form .row.tight { flex-wrap: nowrap; }
-.form .row.tight .field { flex: 1 1 0; }
-.form .row.tight .field.unit { flex: 0 0 88px; }
+.form .row.tight { flex-wrap: nowrap; gap: 6px; }
+/* ★★단가가 이 줄의 **주인공**이다. 곁칸 셋에 88px 씩 고정으로 주고 나면 375px 폰에서
+     단가에 57px 만 남아 '214000' 이 '2140(' 로 잘렸다(2026-09-02). 남는 자리는 단가가
+     갖고, 곁칸은 **제 내용이 들어갈 만큼만** 갖는다 — 갯수는 한두 자리, 통화는 세 글자,
+     환율은 8.7093 이다. 좁아지면 곁칸이 먼저 줄어든다(0 1 auto). */
+.form .row.tight .field { flex: 1 1 0; min-width: 88px; }
+.form .row.tight .field.unit { flex: 0 1 auto; }
+#if-qty-wrap { width: 58px; }
+#if-cur-wrap { width: 80px; }
+#if-fx-wrap, #if-krw-wrap { width: 84px; }
 .form .row.tight select { padding-right: 24px; background-position: right 11px center, right 6px center; }
 .hint { margin: -4px 0 0; font-size: 12px; color: var(--ink-3); word-break: keep-all; }
 .hint.ok { color: var(--route); }

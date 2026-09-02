@@ -242,9 +242,9 @@ const Plan = (function () {
          일정 탭 전체 스크롤의 25%, 이 화면의 서명인 구간 거리(1,612px)보다 큰 자리를
          **한 번도 안 눌린 단추**가 먹고 있었다(2026-09-02 측정).
          첫 결제는 장소를 눌러 여는 시트 안에서 붙인다 — 거기가 이미 그 장소의 자리다.
-         ★결제가 **하나뿐인** 자리에도 안 세운다. 그런 자리가 흔한데(대부분의 가게가 그렇다)
-           거기까지 세우면 아낀 자리를 도로 내주는 셈이다 — 시트의 '＋ 결제 하나 더' 로 족하다.
-           줄이 둘 이상인 자리는 '여기서 결제가 여러 번 일어난다' 는 것이 이미 드러난 곳이다. */
+         ★한 번 '둘 이상일 때만' 으로 좁혔다가 되돌렸다(v=68→69). 결제 줄이 **이미 보이는**
+           자리에서는 '여기에 하나 더' 가 눈앞에 있어야 한다 — 목록에 결제가 펼쳐져 있는데
+           추가는 시트를 열어야 한다면 두 곳의 규칙이 어긋난다. 자리를 아끼자고 바꿀 것이 아니었다. */
     const payHtml = kids.map(c => {
       const who = c.split ? `각자${+c.qty > 1 ? ' ' + (+c.qty) + '명' : ''}`
                 : (c.payer_id ? (Crew.nameOf(crew, c.payer_id) || '냄') : '');
@@ -280,7 +280,7 @@ const Plan = (function () {
         </span>
       </span>
       ${payHtml}
-      ${kids.length > 1 ? `<button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>` : ''}
+      ${kids.length ? `<button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>` : ''}
     </div>`;
   }
 
