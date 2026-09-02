@@ -42,6 +42,12 @@ const U = (function () {
     }
     return head(a || b);
   }
+  /* 기간만. '· N일' 은 붙이지 않는다 — 카드에서 날짜와 일수가 다른 자리에 선다. */
+  function range(a, b, bare) {
+    if (!a && !b) return '날짜 미정';
+    const head = t => (bare ? md(t) : t.slice(2).replace(/-/g, '.'));
+    return (a && b) ? `${head(a)} – ${md(b)}` : head(a || b);
+  }
   /* 여행이 며칠짜리인가. 날짜가 반쪽이면 셀 수 없다. */
   function tripDays(t) {
     if (!t || !t.start_on || !t.end_on) return 0;
@@ -156,7 +162,7 @@ const U = (function () {
      (2026-09-02에 뜻을 그렇게 정했다 — 그전에는 base_cur 가 합계 통화였다) */
   const SETTLE = 'KRW';
 
-  return { esc, DOW, todayISO, addDays, dowOf, md, span, money,
+  return { esc, DOW, todayISO, addDays, dowOf, md, span, range, money,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
            cityList, countryPicker, SETTLE };
 })();

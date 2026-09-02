@@ -169,10 +169,31 @@
   /* 국기 줄을 **한 줄에 맞춘다.** 몇 장인지에 따라 겹치는 폭이 달라지므로 그려진 뒤에 잰다.
      ★반 넘게 가리지 않는다 — 그 이상 겹치면 국기가 색 띠가 되어 무엇인지 알 수 없다.
        그래도 안 들어가면 넘치는 쪽을 자른다(줄을 늘리지 않는다). */
+  /* ★국기 이모지가 **그림으로 그려지는가.** 윈도우는 안 그리고 'JP' 두 글자로 떨어뜨린다.
+     같은 글꼴로 국기 하나와 글자 두 개를 재서, 폭이 비슷하면 글자로 떨어진 것이다
+     (진짜 국기는 한 글리프라 두 글자보다 눈에 띄게 좁다). */
+  let drawsFlags = null;
+  function canDrawFlags(box) {
+    if (drawsFlags !== null) return drawsFlags;
+    const probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
+    probe.style.font = getComputedStyle(box).font;
+    box.appendChild(probe);
+    probe.textContent = '🇯🇵'; const a = probe.getBoundingClientRect().width;
+    probe.textContent = 'JP';  const b = probe.getBoundingClientRect().width;
+    probe.remove();
+    drawsFlags = a < b * 0.9;
+    return drawsFlags;
+  }
+
   function fitFlags() {
     const box = $('passport').querySelector('.pflags');
     if (!box || box.children.length < 2) return;
     const n = box.children.length;
+    /* ★글자로 떨어지는 곳에서는 **겹치지 않는다.** 국기를 반씩 겹치면 부채처럼 보이지만
+       'JP' 를 반씩 겹치면 글자 뭉치가 된다 — 같은 규칙이 두 곳에서 반대로 작동한다. */
+    box.classList.toggle('ascii', !canDrawFlags(box));
+    if (!drawsFlags) { box.style.setProperty('--lap', '0px'); return; }
     box.style.setProperty('--lap', '0px');      // 재기 전에 겹침을 푼다
     /* ★한 장 폭 × 장수로 셈하면 안 된다 — 국기마다 폭이 다르다(윈도우에서 두 글자로
        떨어질 때는 더 다르다: JP 19.8 · MO 24…). 실제로 넘친 만큼을 scrollWidth 로 잰다. */
@@ -280,17 +301,24 @@
        (전에는 여기서 따로 셌고, 현금 지갑이 생기면서 곧 갈릴 자리였다) */
     const sum = MONEY.total(mine, FXS.rateOf).sum;
 
-    /* ★통화 코드를 채워 넣지 않는다. 전에는 쓴 돈이 없으면 'CNY' 를 적었는데,
+    /* ★날짜는 **오른쪽 열**로 뺀다. 카드마다 오른쪽 끝에서 줄이 맞으므로 스물넷을
+       훑을 때 눈이 한 세로줄만 따라가면 된다(전에는 곁말 맨 앞에 묻혀 있었다).
+       '지금·예정' 여행은 그 자리를 D-day 가 쓰므로 곁말에 남긴다.
+       ★통화 코드를 채워 넣지 않는다. 전에는 쓴 돈이 없으면 'CNY' 를 적었는데,
        그건 이 여행에 대해 아무것도 말해 주지 않는 자리 메우기였다. */
-    const bits = [fmtSpan(t.start_on, t.end_on, bare)];
+    const nDays = U.tripDays(t);
+    const bits = [];
+    if (!bare) bits.push(fmtSpan(t.start_on, t.end_on, false));
+    else if (nDays) bits.push(`${nDays}일`);
     if (stops.length) bits.push(`${stops.length}곳`);
     if (sum) bits.push(U.money(sum, U.SETTLE));
+    const right = bare ? U.range(t.start_on, t.end_on, true) : mark;
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
       ${U.flags(t.country).length ? `<span class="bgflag" aria-hidden="true">${U.flags(t.country).join('')}</span>` : ''}
       <span class="top2">
         <span class="nm">${esc(t.name)}</span>
-        ${mark ? `<span class="dday${phase === 'now' ? ' hot' : ''}">${esc(mark)}</span>` : ''}
+        ${right ? `<span class="dday${(!bare && phase === 'now') ? ' hot' : ''}${bare ? ' when' : ''}">${esc(right)}</span>` : ''}
       </span>
       ${rail}
       <span class="meta">${esc(bits.join(' · '))}</span>
