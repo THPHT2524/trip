@@ -8,6 +8,7 @@
 const GEO = require('../js/geo.js');
 const GM  = require('../js/gmaps.js');
 const API = require('../api/gmaps.js');   // canonical() 만 쓴다
+const U   = require('../js/util.js');
 
 let pass = 0, fail = 0;
 const eq = (got, want, msg) => {
@@ -93,6 +94,16 @@ const row = (o) => ({ id: o.id, cost: o.c, cost_cur: o.cur || 'JPY', fx: o.fx ??
 eq(MONEY.total([row({id:'a', c:30000, cur:'KRW'})]).sum, 30000, '원화 결제는 그대로');
 eq(MONEY.SETTLE, 'KRW', '정산 통화는 원화');
 
+/* 센트가 있는 돈은 센트까지 — $116.37 이 $116 으로 보이면 영수증과 대조가 안 된다 */
+eq(U.money(116.37, 'USD'), '$116.37', '★달러는 센트까지');
+eq(U.money(116, 'USD'), '$116', '센트가 0 이면 .00 을 달지 않는다');
+eq(U.money(1234.567, 'USD'), '$1,234.57', '셋째 자리는 반올림');
+eq(U.money(12.5, 'EUR'), '€12.5', '유로도 센트가 있다');
+eq(U.money(1960, 'JPY'), '¥1,960', '엔은 소수점을 쓰지 않는다');
+eq(U.money(8366.4, 'KRW'), '₩8,366', '원도 소수점을 쓰지 않는다 — 반올림');
+eq(U.money(50000, 'VND'), '₫50,000', '동도 정수');
+eq(U.money(null, 'USD'), '', '값이 없으면 빈 문자열');
+
 /* ★★id 없는 줄을 넘기면 셈이 조용히 부푼다 — per 맵의 키가 전부 undefined 라
    한 칸에 덮어써지고, 합계가 '마지막 줄 × 줄 수' 가 된다.
    실제로 DB.trips.shape() 가 id 를 안 골라서 홈 카드에 ₩1,132,209(실제 ₩621,366)가
@@ -136,7 +147,6 @@ eq(MONEY.SETTLE, 'KRW', '정산 통화는 원화');
 }
 
 // ── U: 정산 통화 ───────────────────────────────────────────────────────
-const U = require('../js/util.js');
 eq(U.SETTLE, 'KRW', '정산 통화는 원화 하나 — 여행의 base_cur 는 현지통화다');
 
 // ── api/gmaps.js: 단축 링크 정규화 (SSRF 방어선) ────────────────────────

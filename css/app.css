@@ -822,6 +822,12 @@ details[open] > summary::after { content: '−'; }
 .form .row > input { flex: 1 1 0; width: auto; min-width: 0; }
 .form .row > .btn { flex: 0 0 auto; }
 
+/* ★★#if-pay 는 결제 칸들을 통째로 감추려고 v=65 에서 두른 껍데기다. 그런데 .form 의
+   `gap:12px` 은 **직계 자식**에만 걸린다 — 안에 든 다섯 칸이 간격을 통째로 잃고 붙어서
+   '단가' 라벨이 결제 막대에 얹히고 '합계 ₩428,000' 이 입력칸에 달라붙었다(2026-09-02).
+   껍데기를 두를 때는 그 껍데기가 부모의 리듬을 물려받아야 한다. */
+#if-pay { display: flex; flex-direction: column; gap: 12px; }
+
 .form .row.tight { flex-wrap: nowrap; gap: 6px; }
 /* ★★단가가 이 줄의 **주인공**이다. 곁칸 셋에 88px 씩 고정으로 주고 나면 375px 폰에서
      단가에 57px 만 남아 '214000' 이 '2140(' 로 잘렸다(2026-09-02). 남는 자리는 단가가

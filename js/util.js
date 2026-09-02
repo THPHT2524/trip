@@ -42,10 +42,16 @@ const U = (function () {
 
   /* 통화 기호. 없는 통화는 코드를 그대로 앞에 붙인다(추측하지 않는다). */
   const SIGN = { KRW: '₩', JPY: '¥', USD: '$', EUR: '€', TWD: 'NT$', THB: '฿', VND: '₫', CNY: '¥' };
+  /* ★센트가 있는 돈은 **센트까지** 적는다. 전부 반올림했더니 $116.37 이 $116 으로 보였고,
+     영수증과 대조할 수가 없었다(2026-09-02). 원·엔·동은 소수점을 쓰지 않는 돈이라 0 이다.
+     여기 없는 통화는 2 로 본다 — 세계의 통화 대부분이 센트를 갖는다. */
+  const CENTS = { KRW: 0, JPY: 0, VND: 0, TWD: 0 };
   function money(v, cur) {
     if (v == null || !Number.isFinite(+v)) return '';
+    const d = CENTS[cur] != null ? CENTS[cur] : 2;
     const s = SIGN[cur];
-    const n = Math.round(+v).toLocaleString('ko-KR');
+    /* 센트가 0 이면 굳이 '.00' 을 달지 않는다 — $12 와 $12.50 이 한 줄에 서도 읽힌다 */
+    const n = (+v).toLocaleString('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: d });
     return s ? s + n : `${n} ${cur || ''}`.trim();
   }
 
