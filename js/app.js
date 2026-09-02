@@ -133,11 +133,10 @@
   const MRZ_CODE = { '나라': 'C', '도시': 'T', '장소': 'P', '일': 'D' };
   /* ★위 격자에 **선 칸만** 적는다. 전에는 0 도 그대로 찍어서, 셈을 못 받아 온 날
      '1C<0A<0P<3D' 라고 도장이 찍혔다 — 없는 것을 0 이라고 말한 셈이다(2026-09-02 폰). */
-  function mrzLines(cells, spent) {
+  function mrzLines(cells) {
     const who = mrzSafe((DB.email() || '').split('@')[0]) || 'TRAVELLER';
-    const parts = cells.filter(([k]) => MRZ_CODE[k]).map(([k, v]) => v + MRZ_CODE[k]);
-    if (spent) parts.push(U.SETTLE + Math.round(spent));
-    return [pad('P<KOR<' + who), pad(parts.join('<'))];
+    return [pad('P<KOR<' + who),
+            pad(cells.filter(([k]) => MRZ_CODE[k]).map(([k, v]) => v + MRZ_CODE[k]).join('<'))];
   }
 
   function passportHtml() {
@@ -147,7 +146,7 @@
     /* 도시는 **적힌 대로** 센다. 여러 여행에서 같은 도시를 적었으면 한 번만 센다. */
     const cities = new Set();
     trips.forEach(t => U.cityList(t.cities).forEach(c => cities.add(c)));
-    const n = { countries: flags.length, cities: cities.size, spots: 0, days: 0, spent: 0 };
+    const n = { countries: flags.length, cities: cities.size, spots: 0, days: 0 };
     /* ★★여권은 **다녀온 곳**을 센다. 간 횟수가 아니다. 공항은 갈 때 오고, 호텔은
        묵는 밤마다, 마음에 든 가게는 두 번 온다 — 그대로 세면 66곳이지만 실제로는
        55곳이다(2026-09-02 측정). 좌표로 같은 곳을 하나로 묶는다.
@@ -164,7 +163,6 @@
         if (GEO.ok(r)) uniq.set(+(+r.lat).toFixed(5) + ',' + +(+r.lng).toFixed(5), r);
         else noCoord += 1;
       });
-      n.spent += MONEY.total(mine, FXS.rateOf).sum;
       if (t.start_on && t.end_on) {
         n.days += Math.round((Date.parse(t.end_on) - Date.parse(t.start_on)) / DAYMS) + 1;
       }
@@ -179,7 +177,6 @@
     const cells = [
       ['나라', n.countries], ['도시', n.cities], ['장소', n.spots], ['일', n.days],
     ].filter(([, v]) => v);
-    if (n.spent) cells.push(['쓴 돈', U.money(n.spent, U.SETTLE)]);
     if (!cells.length) return '';
 
     return `<section class="pass">
@@ -187,7 +184,7 @@
         flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
-      <p class="pmrz" aria-hidden="true">${mrzLines(cells, n.spent).map(esc).join('<br>')}</p>
+      <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
     </section>`;
   }
 

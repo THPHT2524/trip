@@ -66,7 +66,13 @@ eq(new Set(U.COUNTRY.map(c => c[0])).size, U.COUNTRY.length, '나라코드가 �
 eq(U.codeList('JP,TH'), ['JP', 'TH'], '쉼표로 이은 나라');
 eq(U.flags('JP,TH'), ['🇯🇵', '🇹🇭'], '국기도 여럿');
 eq(U.codeList(' jp , TH , JP '), ['JP', 'TH'], '소문자·공백·중복을 걷는다');
-eq(U.codeList('JP,ZZ,TH'), ['JP', 'TH'], '★모르는 코드는 버린다 — 빈 국기를 세지 않는다');
+/* ★★모르는 코드를 **버리지 않는다.** 이 목록이 고르개의 값을 되읽는 데도 쓰여서,
+   아직 새 util.js 를 안 받은 브라우저로 여행 설정을 열었다 저장하면 그 나라가
+   말없이 지워졌다 — 실제로 'MV,AE' 가 'AE' 가 됐다(2026-09-02). */
+eq(U.codeList('JP,ZZ,TH'), ['JP', 'ZZ', 'TH'], '★모르는 코드도 값으로는 남는다');
+eq(U.flags('JP,ZZ,TH'), ['🇯🇵', '🇹🇭'], '국기는 아는 것만 그린다');
+eq(U.codeList('MV, aE , 대한민국, X, TOOLONG'), ['MV', 'AE'],
+   '모양이 안 맞는 것만 버린다 — 표의 제약과 같은 규칙');
 eq(U.codeList(''), [], '안 적었으면 없음');
 eq(U.flags(null), [], 'null 도 없음');
 

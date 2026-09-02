@@ -65,11 +65,16 @@ const U = (function () {
   const flag = code => FLAG[code] || '';
   const countryName = code => CNAME[code] || '';
   /* 여행 하나가 두 나라를 걸치는 일이 있다(방콕+프놈펜, 싱가포르+말레이시아).
-     그래서 나라는 **쉼표로 이은 목록**이다 — 'TH,KH'. 표의 제약과 같은 모양(place.sql). */
+     그래서 나라는 **쉼표로 이은 목록**이다 — 'TH,KH'. 표의 제약과 같은 모양(place.sql).
+     ★★모르는 코드를 **버리지 않는다.** 전에는 FLAG 에 없으면 걸러 냈는데, 그 목록이
+       고르개의 값을 되읽는 데도 쓰여서 — 아직 새 util.js 를 안 받은 브라우저로 여행
+       설정을 열었다 저장하면 그 나라가 **말없이 지워졌다.** 실제로 'MV,AE' 가 'AE' 가
+       됐다(2026-09-02). 모양만 본다(표의 제약과 같은 규칙). 국기는 flags() 가 가린다. */
   const codeList = t => String(t || '').split(',').map(x => x.trim().toUpperCase())
-                          .filter(c => FLAG[c])
+                          .filter(c => /^[A-Z]{2}$/.test(c))
                           .filter((c, i, a) => a.indexOf(c) === i);
-  const flags = t => codeList(t).map(c => FLAG[c]);
+  /* 그릴 수 있는 국기만. 모르는 나라는 국기가 없을 뿐 값은 남아 있다. */
+  const flags = t => codeList(t).map(c => FLAG[c]).filter(Boolean);
 
   /* 통화를 고르면 나라도 대개 정해진다 — 새 여행 폼에서 **미리 골라 준다**(바꿀 수 있다).
      통화 하나가 여러 나라인 것(EUR·USD)은 비워 둔다. 지어내지 않는다. */
@@ -96,7 +101,8 @@ const U = (function () {
     const draw = () => {
       chips.innerHTML = picked.map(c =>
         `<button type="button" class="pick" data-drop="${c}">` +
-        `<span class="pf">${FLAG[c]}</span>${esc(CNAME[c])}<span class="px">✕</span></button>`).join('');
+        (FLAG[c] ? `<span class="pf">${FLAG[c]}</span>` : '') +
+        `${esc(CNAME[c] || c)}<span class="px">✕</span></button>`).join('');
       chips.hidden = !picked.length;
     };
     sel.addEventListener('change', () => {
