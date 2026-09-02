@@ -170,19 +170,28 @@
      ★반 넘게 가리지 않는다 — 그 이상 겹치면 국기가 색 띠가 되어 무엇인지 알 수 없다.
        그래도 안 들어가면 넘치는 쪽을 자른다(줄을 늘리지 않는다). */
   /* ★국기 이모지가 **그림으로 그려지는가.** 윈도우는 안 그리고 'JP' 두 글자로 떨어뜨린다.
-     같은 글꼴로 국기 하나와 글자 두 개를 재서, 폭이 비슷하면 글자로 떨어진 것이다
-     (진짜 국기는 한 글리프라 두 글자보다 눈에 띄게 좁다). */
+     ★폭으로는 못 가른다 — 대체 글자가 본문보다 **작게** 그려져서, 진짜 국기보다
+       좁게 나오는 일이 있다(2026-09-02 측정: 국기 19.8 vs 'JP' 24.2 — 판정이 뒤집혔다).
+     ★**색으로 가른다.** 검은색으로 찍어 보고 색이 남아 있으면 그림이고, 회색조뿐이면
+       글자다. 일장기는 빨간 동그라미가 있어 이 판별에 쓸 수 있다. */
   let drawsFlags = null;
-  function canDrawFlags(box) {
+  function canDrawFlags() {
     if (drawsFlags !== null) return drawsFlags;
-    const probe = document.createElement('span');
-    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
-    probe.style.font = getComputedStyle(box).font;
-    box.appendChild(probe);
-    probe.textContent = '🇯🇵'; const a = probe.getBoundingClientRect().width;
-    probe.textContent = 'JP';  const b = probe.getBoundingClientRect().width;
-    probe.remove();
-    drawsFlags = a < b * 0.9;
+    drawsFlags = false;
+    try {
+      const c = document.createElement('canvas');
+      c.width = c.height = 28;
+      const x = c.getContext('2d', { willReadFrequently: true });
+      x.fillStyle = '#fff'; x.fillRect(0, 0, 28, 28);
+      x.fillStyle = '#000'; x.textBaseline = 'top';
+      x.font = '22px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+      x.fillText('🇯🇵', 0, 0);
+      const d = x.getImageData(0, 0, 28, 28).data;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        if (Math.max(r, g, b) - Math.min(r, g, b) > 30) { drawsFlags = true; break; }
+      }
+    } catch (e) { /* 캔버스를 못 쓰면 안전한 쪽(글자)으로 */ }
     return drawsFlags;
   }
 
@@ -192,7 +201,7 @@
     const n = box.children.length;
     /* ★글자로 떨어지는 곳에서는 **겹치지 않는다.** 국기를 반씩 겹치면 부채처럼 보이지만
        'JP' 를 반씩 겹치면 글자 뭉치가 된다 — 같은 규칙이 두 곳에서 반대로 작동한다. */
-    box.classList.toggle('ascii', !canDrawFlags(box));
+    box.classList.toggle('ascii', !canDrawFlags());
     if (!drawsFlags) { box.style.setProperty('--lap', '0px'); return; }
     box.style.setProperty('--lap', '0px');      // 재기 전에 겹침을 푼다
     /* ★한 장 폭 × 장수로 셈하면 안 된다 — 국기마다 폭이 다르다(윈도우에서 두 글자로
