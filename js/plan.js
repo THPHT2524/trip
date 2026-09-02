@@ -52,6 +52,7 @@ const Plan = (function () {
     $('if-qty-wrap').hidden = ex;              // 환전에 '갯수' 는 뜻이 없다
     $('if-fx-wrap').hidden = ex;
     $('if-krw-wrap').hidden = !ex;
+    $('if-fx-hint').hidden = ex;               // 환율 칸이 숨은 마당에 그 설명만 남으면 안 된다
     showSum();
   }
 
