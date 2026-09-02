@@ -932,14 +932,14 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
 .sheetbody { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 
 /* ── 홈의 떠다니는 두 동작 ─────────────────────────────────────────────
-   ★자리는 **왼쪽**이다. 여행 안으로 들어가면 오른쪽 아래에 일정 추가(＋)가 뜨는데,
-     같은 자리에 다른 뜻의 단추가 번갈아 나오면 손이 먼저 눌러 놓고 확인하게 된다.
-   ★떠다니는 주 동작은 코발트 — 일정 추가(＋)와 같은 규칙이다. 곁 동작은 카드 바탕. */
+   ★떠다니는 주 동작은 코발트 — 일정 추가(＋)와 같은 규칙이다. 곁 동작은 카드 바탕.
+   ★자리는 오른쪽 아래. 여행 안의 일정 추가(＋)와 같은 쪽이라 엄지가 한 곳만 기억하면 된다
+     (두 화면은 함께 보이지 않으므로 헷갈릴 일이 없다). */
 .homefab {
-  position: fixed; left: var(--pad);
+  position: fixed; right: var(--pad);
   bottom: calc(14px + env(safe-area-inset-bottom));
   z-index: 42;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
 }
 .hbtn {
   appearance: none; cursor: pointer; font: inherit;
