@@ -105,7 +105,10 @@ const DB = (function () {
     list: async () => {
       if (mode() !== 'cloud') return [];
       const { data, error } = await sb.from('trips')
-        .select('id,name,start_on,end_on,base_cur,invite_code,owner_id')
+        /* ★칸을 손으로 적는 자리다 — 표에 칸을 더하면 **여기도 더해야** 한다.
+           country·cities 를 빠뜨려서 홈의 국기와 '나라·도시' 가 통째로 안 떴다
+           (2026-09-02). shape() 가 id 를 빠뜨린 것과 같은 사고다. */
+        .select('id,name,start_on,end_on,base_cur,country,cities,invite_code,owner_id')
         .order('start_on', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false });
       if (error) throw new Error(say('여행을 불러오지 못했습니다', error));

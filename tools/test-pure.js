@@ -167,8 +167,17 @@ eq(U.money(null, 'USD'), '', '값이 없으면 빈 문자열');
 /* 부르는 쪽 세 곳이 실제로 id 를 고르는지 원문에서 확인한다 (셈은 맞는데 입력이 빠지는 사고) */
 {
   const src = require('fs').readFileSync(require('path').join(__dirname, '../js/db.js'), 'utf8');
-  const sel = (src.match(/shape:\s*async[\s\S]*?\.select\('([^']+)'\)/) || [])[1] || '';
-  eq(sel.split(',').includes('id'), true, '★DB.trips.shape() 는 id 를 골라야 한다');
+  const cols = (re) => ((src.match(re) || [])[1] || '').split(',');
+  const pick = {
+    shape: cols(/shape:\s*async[\s\S]*?\.select\('([^']+)'\)/),
+    /* ★`const trips = {` 부터 찾는다 — items.list 도 같은 이름이라 그냥 찾으면 남의 것을 문다 */
+    list: cols(/const trips = \{[\s\S]*?list:\s*async[\s\S]*?\.select\('([^']+)'\)/),
+  };
+  eq(pick.shape.includes('id'), true, '★DB.trips.shape() 는 id 를 골라야 한다');
+  /* ★칸 목록을 손으로 적는 자리라 표에 칸을 더하면 여기가 뒤처진다 — 실제로 두 번 그랬다
+     (shape 의 id, list 의 country·cities). 화면이 쓰는 칸을 여기서 못 박는다. */
+  ['id', 'name', 'start_on', 'end_on', 'base_cur', 'country', 'cities', 'owner_id']
+    .forEach(c => eq(pick.list.includes(c), true, `★DB.trips.list() 는 ${c} 를 골라야 한다`));
 }
 
 // ── MONEY.shares: 각자 냄은 **인원(qty)** 으로 나눈다 ────────────────────
