@@ -206,7 +206,7 @@
 
     return `<section class="pass">
       ${flags.length ? `<div class="pflags" aria-hidden="true">${
-        flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}
+        flags.map(f => `<span><b>${f}</b></span>`).join('')}</div>` : ''}
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>

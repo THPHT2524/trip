@@ -805,9 +805,14 @@ input.code {
 .pflags span {
   display: inline-block; flex: 0 0 auto;
   margin-left: calc(-1 * var(--lap, 0px));
-  box-shadow: -2px 0 0 var(--card);   /* 겹친 자리의 경계 */
 }
-.pflags span:first-child { margin-left: 0; box-shadow: none; }
+.pflags span:first-child { margin-left: 0; }
+/* ★★국기 글리프는 그림 좌우에 **제 여백**을 달고 나온다(이모지 글자폭이 그림보다 넓다).
+   그대로 겹치면 그 여백이 국기 사이에 어두운 틈으로 남아 필름이 끊긴 것처럼 보인다
+   (2026-09-02 폰에서 확인). 안쪽 요소를 좌우로 당겨 그 여백을 상자 밖으로 밀어낸다 —
+   그러면 국기끼리 바로 맞붙는다.
+   ★경계선도 걷었다. 틈을 없애려는 판에 선을 그으면 그게 곧 틈이다. */
+.pflags b { display: block; margin: 0 -.13em; font-weight: inherit; }
 /* 항목과 값. 라벨은 위, 값은 아래 — 여권의 인적사항 칸이 그렇게 생겼다. */
 /* ★네 칸이 줄을 **고르게 나눠 갖는다.** 전에는 내용만큼만 차지해서 왼쪽에 몰리고
    오른쪽이 비었는데, 여권의 인적사항 칸은 서식이 정해진 자리다 — 값이 짧다고
