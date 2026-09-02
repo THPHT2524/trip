@@ -809,11 +809,14 @@ input.code {
 }
 .pflags span:first-child { margin-left: 0; box-shadow: none; }
 /* 항목과 값. 라벨은 위, 값은 아래 — 여권의 인적사항 칸이 그렇게 생겼다. */
+/* ★네 칸이 줄을 **고르게 나눠 갖는다.** 전에는 내용만큼만 차지해서 왼쪽에 몰리고
+   오른쪽이 비었는데, 여권의 인적사항 칸은 서식이 정해진 자리다 — 값이 짧다고
+   칸이 좁아지지 않는다. 칸 수가 둘이든 넷이든 같은 규칙으로 나뉜다. */
 .pgrid {
   margin: 0; padding: 10px var(--pad-box) var(--pad-box);
-  display: flex; flex-wrap: wrap; gap: 9px 20px;
+  display: flex; gap: 10px;
 }
-.pgrid > div { display: flex; flex-direction: column; gap: 1px; }
+.pgrid > div { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .pgrid dt {
   font-size: 10px; font-weight: 600; letter-spacing: .06em;
   color: var(--ink-3);
