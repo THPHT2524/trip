@@ -725,15 +725,20 @@ input.code {
   scrollbar-width: none;
 }
 .daytabs::-webkit-scrollbar { display: none; }
+/* ★'D1' 은 코드처럼 읽혔다. 날짜 띠가 이미 'DAY 1' 이라고 말하므로 탭도 같은 말을
+   쓴다 — 한 화면에서 같은 것을 두 이름으로 부르지 않는다. 글꼴도 본문 것으로:
+   이건 계기 눈금이 아니라 **길 안내**다(mono 는 시각·거리·금액의 몫).
+   ★고른 것은 **코발트**다. 하단 탭이 이미 활성 표시에 --route 를 쓰는데 날짜 탭만
+     솔리드 검정이라 '고름' 을 말하는 어법이 두 벌이었다(2026-09-02). 하나로 맞춘다. */
 .daytabs button {
   appearance: none; cursor: pointer; flex: 0 0 auto;
-  font-family: var(--mono); font-size: 12px; font-weight: 500;
+  font-family: inherit; font-size: 12.5px; font-weight: 600; letter-spacing: -.01em;
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 44px; min-height: 35px; padding: 0 12px; border-radius: 999px;
+  min-width: 44px; min-height: 35px; padding: 0 14px; border-radius: 999px;
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
 }
 .daytabs button[aria-selected="true"] {
-  background: var(--ink); border-color: var(--ink); color: var(--paper);
+  background: var(--route); border-color: var(--route); color: var(--paper);
 }
 
 /* ── 여행 목록 ──────────────────────────────────────────────────────────
@@ -818,17 +823,6 @@ input.code {
 /* 카드의 글자는 바탕 위에 서야 한다 */
 .trip > .top2, .trip > .mrail, .trip > .meta { position: relative; }
 .trip .top2 { display: flex; align-items: baseline; gap: 10px; }
-/* ── 여행지 국기 ────────────────────────────────────────────────────────
-   현지통화에서 따온다(js/util.js 의 FLAG). 여행 목록과 머리말 두 곳에만 단다 —
-   '이 여행이 어디였더라' 를 이름을 읽기 전에 답하는 것이 일이다.
-   ★윈도우는 국기 이모지를 안 그리고 'JP' 같은 두 글자로 떨어뜨린다(2026-09-02 확인).
-     그때 글자가 아래첨자처럼 작아 보이므로 조금 키워 둔다 — 폰에서는 국기가 그만큼
-     또렷해지고, 떨어져도 나라 코드로 읽힌다. 어느 쪽이든 제 일을 한다. */
-.flag {
-  flex: 0 0 auto; font-size: 1.15em; line-height: 1;
-  margin-right: .35em; letter-spacing: 0;
-  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
-}
 .trip .nm {
   flex: 1; min-width: 0; font-size: 18px; font-weight: 700; letter-spacing: -.02em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

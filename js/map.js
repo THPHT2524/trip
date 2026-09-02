@@ -182,7 +182,7 @@ const Maps = (function () {
     if (!days.length) { el.hidden = true; return; }
     el.hidden = false;
     el.innerHTML = days.map((d, i) =>
-      `<button type="button" role="tab" data-day="${esc(d)}" aria-selected="${String(pick === d)}">D${i + 1}</button>`
+      `<button type="button" role="tab" data-day="${esc(d)}" aria-selected="${String(pick === d)}">Day ${i + 1}</button>`
     ).join('') +
       `<button type="button" role="tab" data-day="" aria-selected="${String(pick === null)}">전체</button>`;
   }

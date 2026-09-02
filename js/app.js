@@ -72,17 +72,11 @@
     if (!inTrip) { renderTrips(); return; }
 
     const t = trips.find(x => x.id === tripId);
-    /* 머리말에도 같은 국기를 단다 — 목록에서 보던 표식이 안에서도 이어져야
-       '지금 어느 여행 안인지' 를 이름 없이도 안다. (이름은 textContent 로 넣는다) */
-    const h1 = $('trip-name');
-    h1.textContent = '';
-    const fg = t && U.flag(t.base_cur);
-    if (fg) {
-      const f = document.createElement('span');
-      f.className = 'flag'; f.setAttribute('aria-hidden', 'true'); f.textContent = fg;
-      h1.appendChild(f);
-    }
-    h1.appendChild(document.createTextNode(t ? t.name : '여행'));
+    /* ★머리말에는 국기를 안 단다. 작게 달면 윈도우에서 'JP' 두 글자로 떨어져
+       글꼴이 깨진 것처럼 보인다 — 그래서 카드에서는 **크게 바탕에** 깔았다.
+       그리고 여행 안에 들어와 있는 사람은 이미 어느 여행인지 안다(홈의 여권과
+       카드 바탕이 그 일을 한다). 64px 머리말에 세 번째 표식을 넣지 않는다. */
+    $('trip-name').textContent = t ? t.name : '여행';
     $('trip-span').textContent = t ? fmtSpan(t.start_on, t.end_on) : '';
     document.querySelectorAll('#tabs button').forEach(b =>
       b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
