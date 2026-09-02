@@ -89,6 +89,14 @@
   --r:      10px;       /* 담는 것 — 카드·판 */
   --r-lg:   16px;       /* 아래에서 올라오는 시트 */
 
+  /* ★안쪽 여백 **두 단**. 세어 보니 같은 성격의 카드 여섯이 다섯 가지 값을 쓰고 있었다
+     (9/12 · 14 · 10/12 · 9/11 · 11/13). 1px 차이는 아무도 못 보는데 규칙은 다섯 벌이었다.
+     ★'줄' 은 목록 안의 한 줄이고 '판' 은 그 자체로 한 덩이인 것이다 — 이 둘만 가른다.
+       줄 쪽은 제일 빽빽한 일정 카드에 맞춘다(66줄이 그 값으로 서 있어서, 올리면 스크롤이
+       그만큼 는다 — 맞추는 방향은 아래쪽이다). */
+  --pad-row: 9px 12px;  /* 목록 안의 한 줄 — 일정·동행자·준비물·지갑·쪽지 */
+  --pad-box: 14px;      /* 판 — 여행 카드·여권 */
+
   /* ★그림자도 열 가지가 전부 제각각이었고 **검정으로 박혀** 있었다. 순검정 그림자는
      차가운 초록 종이 위에서 때처럼 앉는다 — 잉크색을 섞어 종이에 속하게 한다.
      ★띄우는 것은 셋뿐이다: 떠다니는 단추 · 화면 위에 뜬 것 · 고른 것의 테.
@@ -288,7 +296,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: block; width: 100%; text-align: left;
   appearance: none; border: 1px solid var(--line); background: var(--card);
   border-radius: var(--r);
-  padding: 9px 12px;
+  padding: var(--pad-row);
   margin: 4px 0;
   cursor: pointer;
   color: inherit; font: inherit;
@@ -420,7 +428,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   position: fixed; margin: 0; inset: auto;   /* UA 기본값(inset:0 + margin:auto = 가운데)을 끈다 */
   border: 1px solid var(--line); border-radius: var(--r);
   background: var(--card); color: var(--ink);
-  padding: 11px 13px; max-width: min(300px, calc(100vw - 24px));
+  padding: var(--pad-row); max-width: min(300px, calc(100vw - 24px));
   font-size: 13px; line-height: 1.6;
   white-space: pre-wrap; word-break: break-word;   /* 사람이 줄 바꿔 적은 대로 */
   box-shadow: var(--sh-pop);
@@ -505,7 +513,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* 45×24 였다 — 지도를 보며 한 손으로 누르는 것들이다 */
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 36px; font-family: inherit; font-size: 12px; font-weight: 600;
-  padding: 0 13px; border-radius: 999px;
+  padding: 0 14px; border-radius: 999px;
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
 }
 .basepick button[aria-selected="true"] {
@@ -671,7 +679,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 .crewrow {
   display: flex; align-items: center; gap: 10px;
   border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
-  padding: 10px 12px;
+  padding: var(--pad-row);
 }
 .crewrow .who2 { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .crewrow .nm { font-size: 14px; font-weight: 600; }
@@ -693,7 +701,7 @@ input.code {
 .prow {
   display: flex; align-items: center; gap: 10px;
   border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
-  padding: 9px 11px;
+  padding: var(--pad-row);
 }
 .pchk {
   /* 눈에 보이는 네모는 22px 그대로 두고, 줄 높이(54px)만큼 **위아래로** 눌러 잡는다 —
@@ -782,7 +790,7 @@ input.code {
 }
 .pflags {
   display: flex; flex-wrap: wrap; gap: 7px;
-  padding: 13px 14px 0;
+  padding: var(--pad-box) var(--pad-box) 0;
   font-size: 26px; line-height: 1; letter-spacing: 0;
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
   /* 색은 **대체 글자에만** 걸린다(국기 이모지는 제 색을 갖는다) — 윈도우에서
@@ -791,7 +799,7 @@ input.code {
 }
 /* 항목과 값. 라벨은 위, 값은 아래 — 여권의 인적사항 칸이 그렇게 생겼다. */
 .pgrid {
-  margin: 0; padding: 11px 14px 13px;
+  margin: 0; padding: 10px var(--pad-box) var(--pad-box);
   display: flex; flex-wrap: wrap; gap: 9px 20px;
 }
 .pgrid > div { display: flex; flex-direction: column; gap: 1px; }
@@ -805,7 +813,7 @@ input.code {
 }
 /* 기계판독구역 — 눌린 칸에 고정폭으로 두 줄. 넘치면 잘린다(진짜도 그렇게 생겼다). */
 .pmrz {
-  margin: 0; padding: 9px 14px 10px;
+  margin: 0; padding: 10px var(--pad-box);
   border-top: 1px solid var(--line); background: var(--sunk);
   font-family: var(--mono); font-size: 11px; line-height: 1.5;
   letter-spacing: .06em; color: var(--ink-3);
@@ -818,7 +826,7 @@ input.code {
   width: 100%; text-align: left;
   appearance: none; cursor: pointer; color: inherit; font: inherit;
   background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
-  padding: 14px;
+  padding: var(--pad-box);
   position: relative; overflow: hidden;   /* 바탕의 국기가 모서리 밖으로 새지 않게 */
 }
 /* ★★여행지 국기를 **카드 바탕에** 크게 깐다. 곁에 작은 칩으로 달면 이름과 자리를
@@ -1063,7 +1071,7 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 /* 지갑에 남은 현금 — 비용 탭 머리에 한 줄 */
 .wallet {
   display: flex; align-items: baseline; gap: 8px;
-  padding: 10px 12px; margin: 0 var(--pad) 4px;
+  padding: var(--pad-row); margin: 0 var(--pad) 4px;
   border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
 }
 .wallet .wv { font-family: var(--mono); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
