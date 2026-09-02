@@ -80,7 +80,27 @@
   --rail-x: 15px;       /* 레일의 가로 위치 */
   --gutter: 46px;       /* 레일이 차지하는 왼쪽 폭 */
   --pad:    16px;
-  --r:      10px;       /* 모서리 — 크게 굴리지 않는다. 도면에 가깝게 */
+
+  /* ★모서리 **네 단**. 세어 보니 14가지가 쓰이고 있었고 그중 열은 한 번씩만
+     나왔다(7·8·5·6·4·1px…). 2px 차이는 눈이 못 읽는다 — 규칙이 아니라 그때그때
+     고른 숫자였다는 뜻이다. 이 앱은 노선도라 크게 굴리지 않는다. */
+  --r-xs:   3px;        /* 각인·막대·초점 — 낱말 하나 크기 */
+  --r-sm:   8px;        /* 누르는 것과 입력칸 */
+  --r:      10px;       /* 담는 것 — 카드·판 */
+  --r-lg:   16px;       /* 아래에서 올라오는 시트 */
+
+  /* ★그림자도 열 가지가 전부 제각각이었고 **검정으로 박혀** 있었다. 순검정 그림자는
+     차가운 초록 종이 위에서 때처럼 앉는다 — 잉크색을 섞어 종이에 속하게 한다.
+     ★띄우는 것은 셋뿐이다: 떠다니는 단추 · 화면 위에 뜬 것 · 고른 것의 테.
+       나머지는 테두리로 가른다(도면의 어법이다). */
+  --sh-lift: 0 2px 6px rgba(22, 48, 43, .10), 0 8px 22px rgba(22, 48, 43, .09);
+  --sh-pop:  0 4px 12px rgba(22, 48, 43, .12), 0 16px 40px rgba(22, 48, 43, .16);
+  --sh-ring: 0 0 0 3px var(--route-w);
+  /* ★지도 위의 것은 **우리 종이 그림자를 쓰지 않는다.** 남의 그림(위성 사진·타일) 위라
+     밝고 어두운 데가 뒤섞여 있어서, 잉크색 그림자로는 핀이 배경에 묻힌다.
+     여기서만 검정을 쓴다 — 위성일 때는 더 짙게. */
+  --sh-map:     0 1px 3px rgba(0, 0, 0, .35);
+  --sh-map-sat: 0 1px 5px rgba(0, 0, 0, .70);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -102,6 +122,8 @@
     --k-move:  #A497E0;
     --k-buy:   #DCB65E;
     --k-etc:   #9AAAA6;
+    --sh-lift: 0 2px 6px rgba(0, 0, 0, .40), 0 8px 22px rgba(0, 0, 0, .34);
+    --sh-pop:  0 4px 12px rgba(0, 0, 0, .45), 0 16px 40px rgba(0, 0, 0, .55);
   }
 }
 :root[data-theme="dark"] {
@@ -122,6 +144,8 @@
   --k-move:  #A497E0;
   --k-buy:   #DCB65E;
   --k-etc:   #9AAAA6;
+  --sh-lift: 0 2px 6px rgba(0, 0, 0, .40), 0 8px 22px rgba(0, 0, 0, .34);
+  --sh-pop:  0 4px 12px rgba(0, 0, 0, .45), 0 16px 40px rgba(0, 0, 0, .55);
 }
 
 /* ── 바탕 ─────────────────────────────────────────────────────────────── */
@@ -151,7 +175,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 :focus-visible {
   outline: 2px solid var(--route);
   outline-offset: 2px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
 }
 
 /* ── 앱 셸 ────────────────────────────────────────────────────────────── */
@@ -256,7 +280,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .stop.is-next .item {
   border-color: var(--route);
-  box-shadow: 0 0 0 3px var(--route-w);
+  box-shadow: var(--sh-ring);
 }
 
 /* ── 일정 한 줄 ───────────────────────────────────────────────────────── */
@@ -305,7 +329,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 .money.none { color: var(--ink-3); }
 .badge {
   font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
-  border: 1px solid var(--line); border-radius: 3px;
+  border: 1px solid var(--line); border-radius: var(--r-xs);
   padding: 1px 4px; color: var(--ink-3);
   white-space: nowrap;          /* 좁은 칸에서 '메모' 가 두 글자로 쪼개지지 않게 */
 }
@@ -372,7 +396,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 44px; min-height: 34px; padding: 0 6px;
   font: inherit; font-size: 11px; font-weight: 600;
-  color: var(--ink-3); text-decoration: none; border-radius: 7px;
+  color: var(--ink-3); text-decoration: none; border-radius: var(--r-sm);
 }
 .act:hover, .act:focus-visible { color: var(--route); }
 /* 값이 들어 있어서 뜬 것 — '지도·못 감' 처럼 늘 있는 동작이 아니라 **이 줄에만 있는 것**이라
@@ -399,14 +423,10 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding: 11px 13px; max-width: min(300px, calc(100vw - 24px));
   font-size: 13px; line-height: 1.6;
   white-space: pre-wrap; word-break: break-word;   /* 사람이 줄 바꿔 적은 대로 */
-  box-shadow: 0 10px 26px rgba(0, 0, 0, .18);
+  box-shadow: var(--sh-pop);
   cursor: pointer;                                  /* 눌러서 닫는다 */
 }
 .pop::backdrop { background: none; }                /* ★딤 없음 */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .pop { box-shadow: 0 10px 26px rgba(0, 0, 0, .55); }
-}
-:root[data-theme="dark"] .pop { box-shadow: 0 10px 26px rgba(0, 0, 0, .55); }
 
 /* ── 같은 자리의 추가 결제 ─────────────────────────────────────────────
    한 자리에서 결제가 두 번 이상 일어난다(밥값은 A가 카드, 술값은 B가 현금).
@@ -469,7 +489,7 @@ a { color: var(--route); text-underline-offset: 2px; }
    덩어리로 만들고 도로를 하얗게 튀게 해서 **원본보다 나빴다**(2026-09-01 비교). */
 
 /* 위성 위에서는 마커 테두리를 조금 두껍게 — 사진 위에서 얇은 선은 묻힌다 */
-#map[data-base="sat"] .mpin { border-width: 3.5px; box-shadow: 0 1px 5px rgba(0,0,0,.7); }
+#map[data-base="sat"] .mpin { border-width: 3.5px; box-shadow: var(--sh-map-sat); }
 
 /* 밑그림 고르기 — 날짜 탭과 같은 어법, 자리만 오른쪽 */
 .basepick {
@@ -498,7 +518,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   width: 22px; height: 22px; border-radius: 50%;
   background: var(--card); border: 3px solid var(--k, var(--k-etc));
   color: var(--ink); font-family: var(--mono); font-size: 10px; font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0,0,0,.35);
+  box-shadow: var(--sh-map);
 }
 /* 못 간 곳은 지도에서도 색을 뺀다 — 동선에는 남기되 앞에 서지 않는다 */
 .mpin.is-done { background: var(--card); border-color: var(--rail); color: var(--ink-3); }
@@ -509,8 +529,8 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* 확대·축소 단추 */
 .maplibregl-ctrl-group,
 .maplibregl-ctrl-group:not(:empty) {
-  background: var(--card); border-radius: 7px;
-  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  background: var(--card); border-radius: var(--r-sm);
+  box-shadow: var(--sh-map);
 }
 .maplibregl-ctrl-group button + button { border-top-color: var(--line); }
 .maplibregl-ctrl-group button:hover { background: var(--sunk); }
@@ -530,7 +550,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: color-mix(in srgb, var(--card) 82%, transparent);
   color: var(--ink-3);
   font-family: var(--sans); font-size: 10px; line-height: 1.6;
-  margin: 6px; border-radius: 10px;
+  margin: 6px; border-radius: var(--r);
 }
 .maplibregl-ctrl-attrib a { color: var(--ink-3); text-decoration: none; }
 .maplibregl-ctrl-attrib a:hover { color: var(--ink); text-decoration: underline; }
@@ -548,7 +568,7 @@ a { color: var(--route); text-underline-offset: 2px; }
    ★긴 이름은 자른다. 이름표가 길어지면 옆 핀을 덮는다. */
 .mk .mlbl {
   background: color-mix(in srgb, var(--ink) 86%, transparent);
-  color: var(--paper); border-radius: 5px;
+  color: var(--paper); border-radius: var(--r-sm);
   font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: -.01em;
   padding: 2px 6px;
   max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -607,7 +627,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 .clist .cv { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
 .clist .cn { grid-column: 2 / -1; font-size: 11px; color: var(--ink-3); }
 /* 막대는 크기를 눈으로 견주게 해 준다 — 숫자만으로는 '많다' 가 안 읽힌다 */
-.cbar { display: block; height: 6px; background: var(--sunk); border-radius: 3px; overflow: hidden; }
+.cbar { display: block; height: 6px; background: var(--sunk); border-radius: var(--r-xs); overflow: hidden; }
 /* ★기본값이 **정의되지 않은 토큰**이라 '누가 냈나' 막대가 통째로 안 보였다(2026-09-01).
    사람은 장소구분이 아니라 범례색이 없다 — 구조색(코발트)을 쓴다. */
 .cbar i { display: block; height: 100%; background: var(--k, var(--route)); }
@@ -678,7 +698,7 @@ input.code {
 .pchk {
   /* 눈에 보이는 네모는 22px 그대로 두고, 줄 높이(54px)만큼 **위아래로** 눌러 잡는다 —
      음수 마진이라 줄이 커지지 않는다. 걸으면서 체크하는 것이다. */
-  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 6px; cursor: pointer;
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: var(--r-sm); cursor: pointer;
   padding: 11px; margin: -11px 4px -11px -11px; box-sizing: content-box;
   border: 1.5px solid var(--rail); background: var(--paper);
   color: var(--card); font-size: 13px; line-height: 1;
@@ -836,7 +856,7 @@ input.code {
 .trip .meta {
   font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: .02em;
 }
-.trip.is-now { border-color: var(--route); box-shadow: 0 0 0 3px var(--route-w); }
+.trip.is-now { border-color: var(--route); box-shadow: var(--sh-ring); }
 
 /* 미니 레일 — 일정 탭의 세로 레일을 **눕힌 것**이다. 선 하나가 카드를 가로지르고
    그 위에 정거장이 얹힌다. 날의 경계는 눈금으로 끊는다.
@@ -988,7 +1008,7 @@ details[open] > summary::after { content: '−'; }
 textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .err { margin: 0; font-size: 13px; color: var(--warn); }
 .err:empty { display: none; }
-.btn.sm { padding: 6px 11px; font-size: 13px; border-radius: 7px; }
+.btn.sm { padding: 6px 11px; font-size: 13px; border-radius: var(--r-sm); }
 .btn[disabled] { opacity: .5; cursor: default; }
 
 /* ── 게이트 · 빈 화면 ─────────────────────────────────────────────────── */
@@ -1004,7 +1024,7 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .btn {
   appearance: none; cursor: pointer; font: inherit; font-weight: 600;
   background: var(--ink); color: var(--paper);
-  border: 1px solid var(--ink); border-radius: 8px;
+  border: 1px solid var(--ink); border-radius: var(--r-sm);
   padding: 10px 18px;
 }
 .btn.ghost { background: none; color: var(--ink); }
@@ -1029,7 +1049,7 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label, .field .lbl { font-size: 12px; font-weight: 600; color: var(--ink-2); }
 /* 결제 방식 셋 — 카드 / 현금 / 환전·출금. 라디오지만 눈에는 한 덩어리로 보여야 한다 */
-.seg3 { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg3 { display: flex; gap: 0; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
 .seg3 button {
   flex: 1 1 0; appearance: none; cursor: pointer; border: 0; min-height: 42px;
   background: var(--card); color: var(--ink-2);
@@ -1051,7 +1071,7 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .wallet .wr { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
 input, select, textarea {
   font-family: inherit; font-size: 15px; color: var(--ink);
-  background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: 9px 11px;
   width: 100%;
   min-width: 0;              /* flex 안에서 내재 너비가 칸을 밀어내지 않게 */
@@ -1101,7 +1121,7 @@ input.mono { font-family: var(--mono); }
   background: var(--route); color: var(--paper);
   font: 400 26px/1 var(--sans);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 14px rgba(0,0,0,.28);
+  box-shadow: var(--sh-lift);
 }
 .fab:active { transform: translateY(1px); }
 .fab:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
@@ -1122,7 +1142,7 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
   #if-dlg { margin: auto; max-height: 84dvh; }
   #if-dlg .sheet { border-radius: var(--r); }
 }
-#if-dlg .sheet { border-radius: 16px 16px 0 0; }   /* 아래에 붙으니 위 두 귀만 둥글다 */
+#if-dlg .sheet { border-radius: var(--r-lg) var(--r-lg) 0 0; }   /* 아래에 붙으니 위 두 귀만 둥글다 */
 
 /* ── 가운데 팝업 — 칸이 적은 것들(새 여행·참여) ────────────────────────
    일정 입력은 칸이 열둘이라 아래에서 올라오는 시트를 쓰지만, 여기는 서넛이다.
@@ -1140,7 +1160,7 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
   max-height: inherit;
   background: var(--card); color: var(--ink);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-lg);
 }
 .sheethd {
   display: flex; align-items: center; gap: 10px;
@@ -1151,7 +1171,7 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
 .sheetx {
   appearance: none; border: 0; background: none; cursor: pointer;
   font-size: 16px; line-height: 1; color: var(--ink-3);
-  padding: 6px 8px; margin: -6px -8px -6px 0; border-radius: 8px;
+  padding: 6px 8px; margin: -6px -8px -6px 0; border-radius: var(--r-sm);
 }
 .sheetx:hover, .sheetx:focus-visible { color: var(--ink); background: var(--sunk); }
 /* 본문만 스크롤한다 — 머리말과 저장 단추는 늘 보인다.
@@ -1173,7 +1193,7 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
   font-size: 13px; font-weight: 600; letter-spacing: -.01em;
   padding: 11px 16px; border-radius: 999px;
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
-  box-shadow: 0 3px 12px rgba(0,0,0,.16);
+  box-shadow: var(--sh-lift);
 }
 /* .fab 과 같은 이유로 종이색이다 — 흰 글자는 어두운 화면의 옅은 코발트 위에서 2.46:1 이 된다 */
 .hbtn.primary { background: var(--route); border-color: var(--route); color: var(--paper); }
