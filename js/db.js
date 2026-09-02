@@ -140,11 +140,15 @@ const DB = (function () {
     /* 여행 목록 화면이 카드마다 '그 여행의 모양' 을 그리려면 일정이 필요하다.
        ★여행마다 따로 부르지 않는다 — RLS 가 이미 '내가 속한 여행' 으로 좁혀 주므로
          한 번에 다 받아 와서 클라이언트가 나눈다. 여행이 열 개여도 왕복은 하나다.
-       ★필요한 칸만 고른다. 목록 화면에 메모·링크·예약번호는 쓰이지 않는다. */
+       ★필요한 칸만 고른다. 목록 화면에 메모·링크·예약번호는 쓰이지 않는다.
+       ★★**id 를 빼면 안 된다.** MONEY.walk 는 결과를 `per.set(r.id, …)` 로 담는데
+         id 가 undefined 면 65줄이 전부 같은 칸 하나에 덮어써진다. 그러면 합계가
+         '마지막 줄 × 줄 수' 가 되어 홈 카드에 ₩1,132,209(실제 ₩621,366)가 떴다
+         (2026-09-02 발견). 칸을 줄이는 최적화가 셈을 조용히 망가뜨린 자리다. */
     shape: async () => {
       if (mode() !== 'cloud') return [];
       const { data, error } = await sb.from('items')
-        .select('trip_id,on_date,kind,cost,cost_cur,fx,settle,split,payer_id,parent_id')
+        .select('id,trip_id,on_date,kind,cost,cost_cur,fx,settle,split,payer_id,parent_id')
         .order('on_date', { ascending: true });
       if (error) return [];          // 못 받아도 목록은 보여준다 — 미니 레일만 빠진다
       return data || [];

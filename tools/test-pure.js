@@ -93,6 +93,24 @@ const row = (o) => ({ id: o.id, cost: o.c, cost_cur: o.cur || 'JPY', fx: o.fx ??
 eq(MONEY.total([row({id:'a', c:30000, cur:'KRW'})]).sum, 30000, '원화 결제는 그대로');
 eq(MONEY.SETTLE, 'KRW', '정산 통화는 원화');
 
+/* ★★id 없는 줄을 넘기면 셈이 조용히 부푼다 — per 맵의 키가 전부 undefined 라
+   한 칸에 덮어써지고, 합계가 '마지막 줄 × 줄 수' 가 된다.
+   실제로 DB.trips.shape() 가 id 를 안 골라서 홈 카드에 ₩1,132,209(실제 ₩621,366)가
+   떴다(2026-09-02). 셈을 부르는 쪽이 id 를 빠뜨리지 못하게 여기서 못박는다. */
+{
+  const withId = [row({id:'a', c:10000, cur:'KRW'}), row({id:'b', c:20000, cur:'KRW'})];
+  eq(MONEY.total(withId).sum, 30000, 'id 가 있으면 줄마다 따로 센다');
+  const noId = withId.map(r => { const x = { ...r }; delete x.id; return x; });
+  eq(MONEY.total(noId).sum !== 30000, true,
+     '★id 가 없으면 합계가 틀린다 — 부르는 쪽이 id 를 꼭 골라야 한다는 뜻');
+}
+/* 부르는 쪽 세 곳이 실제로 id 를 고르는지 원문에서 확인한다 (셈은 맞는데 입력이 빠지는 사고) */
+{
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../js/db.js'), 'utf8');
+  const sel = (src.match(/shape:\s*async[\s\S]*?\.select\('([^']+)'\)/) || [])[1] || '';
+  eq(sel.split(',').includes('id'), true, '★DB.trips.shape() 는 id 를 골라야 한다');
+}
+
 // ── MONEY.shares: 각자 냄은 **인원(qty)** 으로 나눈다 ────────────────────
 // ★동행자 수로 나누면 셋 중 둘만 기차를 탄 경우가 틀어진다.
 {

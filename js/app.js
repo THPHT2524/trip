@@ -114,12 +114,16 @@
      ★장식이 아니라 정보다. 일정 탭의 레일과 같은 색·같은 어법을 쓴다. */
   function card(t, phase) {
     const mine = shape.filter(r => r.trip_id === t.id);
-    const days = dayList(t, mine);
+    /* 미니 레일과 '일정 N' 은 **장소 줄만** 센다. 결제 줄(parent_id)은 부모 날짜를
+       물려받으므로 같이 세면 점이 두 번 찍히고 개수가 부푼다 — 일정 탭과 같은 규칙이다.
+       (합계는 mine 전체로 낸다 — 결제 줄에도 돈이 붙어 있다) */
+    const stops = mine.filter(r => !r.parent_id);
+    const days = dayList(t, stops);
     /* ★칸이 좁아지면 점을 줄인다. 21일 여행이면 칸이 13px 인데 점 넷은 26px 라 넘친다 —
        그때는 '무엇이 있나' 대신 '있나 없나' 까지만 말한다. 넘쳐서 깨지느니 덜 말한다. */
     const maxDots = days.length > 12 ? 1 : days.length > 7 ? 2 : 4;
     const rail = days.length ? `<span class="mrail">${days.map(d => {
-      const on = mine.filter(r => r.on_date === d);
+      const on = stops.filter(r => r.on_date === d);
       return on.length
         ? `<span class="md">${on.slice(0, maxDots).map(r =>
             `<i style="--k: var(--${KVAR[r.kind] || 'k-etc'})"></i>`).join('')}</span>`
@@ -141,7 +145,7 @@
     const sum = MONEY.total(mine).sum;
 
     const bits = [fmtSpan(t.start_on, t.end_on)];
-    if (mine.length) bits.push(`일정 ${mine.length}`);
+    if (stops.length) bits.push(`일정 ${stops.length}`);
     bits.push(sum ? U.money(sum, U.SETTLE) : (t.base_cur || U.SETTLE));
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">

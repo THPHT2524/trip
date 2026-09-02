@@ -194,7 +194,12 @@ const Plan = (function () {
                    return (p && p.krw != null && r.cost_cur !== U.SETTLE)
                      ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : ''; })()}</span>`;
     const link = GM.placeUrl(r);
-    /* 같은 자리의 추가 결제 — 장소 아래 들여 붙는다. 지도에는 안 찍힌다(부모가 그 자리다). */
+    /* 같은 자리의 추가 결제 — 장소 아래 들여 붙는다. 지도에는 안 찍힌다(부모가 그 자리다).
+       ★★'＋ 결제 추가' 는 **이미 결제가 둘 이상인 자리에만** 세운다.
+         모든 줄에 세웠더니(v=58) 65줄짜리 여행에서 34.2px × 65 = 2,222px 였다 —
+         일정 탭 전체 스크롤의 25%, 이 화면의 서명인 구간 거리(1,612px)보다 큰 자리를
+         **한 번도 안 눌린 단추**가 먹고 있었다(2026-09-02 측정).
+         첫 결제는 장소를 눌러 여는 시트 안에서 붙인다 — 거기가 이미 그 장소의 자리다. */
     const kids = kidsOf(r.id);
     const payHtml = kids.map(c => {
       const p = M.per.get(c.id);
@@ -211,25 +216,27 @@ const Plan = (function () {
     }).join('');
     return `<div class="${cls}" style="--k: var(--${k})">
       <span class="pin"></span>
-      <button class="item${r.done ? ' is-done' : ''}${r._pending ? ' is-pending' : ''}" type="button" data-edit="${esc(r.id)}">
-        <span class="row1">
-          <span class="time${time ? '' : ' none'}">${esc(time || '시각 미정')}</span>
-          <span class="name">${esc(r.name)}</span>
+      <span class="stopcard">
+        <button class="item${r.done ? ' is-done' : ''}${r._pending ? ' is-pending' : ''}" type="button" data-edit="${esc(r.id)}">
+          <span class="row1">
+            <span class="time${time ? '' : ' none'}">${esc(time || '시각 미정')}</span>
+            <span class="name">${esc(r.name)}</span>
+          </span>
+          <span class="row2">
+            <span class="kind">${esc(r.kind)}</span>
+            ${cost}
+            ${r.payer_id ? `<span class="badge who">${esc(Crew.nameOf(crew, r.payer_id) || '냄')}</span>` : ''}
+            ${r.ref_code ? `<span class="badge who">${esc(r.ref_code)}</span>` : ''}
+            ${r.memo ? '<span class="badge">메모</span>' : ''}
+          </span>
+        </button>
+        <span class="acts">
+          ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
+          <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '못 감'}</button>
         </span>
-        <span class="row2">
-          <span class="kind">${esc(r.kind)}</span>
-          ${cost}
-          ${r.payer_id ? `<span class="badge">${esc(Crew.nameOf(crew, r.payer_id) || '냄')}</span>` : ''}
-          ${r.ref_code ? `<span class="badge">${esc(r.ref_code)}</span>` : ''}
-          ${r.memo ? '<span class="badge">메모</span>' : ''}
-        </span>
-      </button>
-      <span class="acts">
-        ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
-        <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '못 감'}</button>
       </span>
       ${payHtml}
-      <button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>
+      ${kids.length ? `<button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>` : ''}
     </div>`;
   }
 
@@ -296,6 +303,9 @@ const Plan = (function () {
     /* ★접어 둔 칸에 값이 들어 있으면 펴 준다 — 안 그러면 고치러 왔다가 못 본다 */
     $('if-more').open = !!(r && (r.ref_code || r.book_url || r.memo));
     $('if-del').hidden = !r;
+    /* 이미 있는 **장소** 줄을 고치는 중일 때만 — 새 줄에는 붙일 부모가 없고,
+       결제 줄에는 또 결제를 붙일 수 없다(trip.items_one_level 트리거가 막는다). */
+    $('if-payadd').hidden = !(r && !parentOf);
     $('if-sum').textContent = parentOf ? (r ? '결제 고치기' : '결제 추가')
                             : (r ? '일정 고치기' : '일정 추가');
     $('if-err').textContent = '';
@@ -476,6 +486,13 @@ const Plan = (function () {
   $('if-link').addEventListener('change', readLink);
   $('if-link').addEventListener('paste', () => setTimeout(readLink, 0));
   $('fab').addEventListener('click', () => { parentOf = null; openSheet(null); });
+  /* 시트 안에서 '이 자리에 결제 하나 더' — 같은 시트를 자식 모드로 다시 채운다.
+     닫았다 열지 않는다(닫으면 뒤 화면이 스크롤 위치를 잃는다). */
+  $('if-payadd').addEventListener('click', () => {
+    if (!editing) return;
+    parentOf = editing; editing = null;
+    openSheet(null);
+  });
   $('if-close').addEventListener('click', closeSheet);
   /* 배경을 누르면 닫는다. dialog 자신이 클릭 대상이면 시트 **바깥**을 누른 것이다. */
   $('if-dlg').addEventListener('click', e => { if (e.target === $('if-dlg')) closeSheet(); });

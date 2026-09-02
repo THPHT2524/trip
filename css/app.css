@@ -261,9 +261,16 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* ★왼쪽 46px 을 걷었다. 이름 아래로 맞춰 들여 쓰던 자리인데, 오른쪽에 .acts 자리를
      내주고 나니 375px 폰에서 내용이 으깨져 '이동' 이 두 줄로 쪼개졌다(2026-09-01).
      메타는 이름이 아니라 **줄 전체**에 붙는 것이라 왼쪽 끝에서 시작해도 맞다. */
-  margin-top: 3px; padding-right: 80px;   /* 오른쪽은 .acts 자리 */
+  margin-top: 3px; padding-right: 92px;   /* 오른쪽은 .acts 자리 */
+  /* ★넘치면 **접는다.** 65줄 중 메타가 붐비는 것은 10줄뿐이고(2026-09-02 측정:
+     중앙값 19px, 상위 10줄만 203~255px), 그 10줄에서 배지를 '…' 로 잘라 버리면
+     누가 냈는지가 사라진다. 접히면 그 줄만 19px 씩 는다 — 열 줄이면 190px 로,
+     상시 결제 줄을 걷어 아낀 2,222px 에 견주면 싼 값이다. */
+  flex-wrap: wrap; row-gap: 2px;
   font-size: 12px; color: var(--ink-3);
 }
+/* 구분과 금액은 이 줄의 뼈대라 줄이지 않는다 — 접힐 것은 배지 쪽이다 */
+.item .row2 > .kind, .item .row2 > .money { flex: 0 0 auto; }
 .kind {
   font-size: 11px; font-weight: 600; letter-spacing: .02em;
   color: var(--k, var(--k-etc));
@@ -320,15 +327,24 @@ a { color: var(--route); text-underline-offset: 2px; }
      속하지 않아 보였다. 카드의 오른쪽 아래에 얹어 **줄을 없앤다.**
    ★.item 은 button 이라 그 안에 링크·단추를 넣을 수 없다(그래서 밖에 있었다).
      겹쳐 놓으면 마크업은 형제로 두면서 눈에는 카드 안으로 들어온다. */
+/* ★.acts 는 **카드**에 앉아야 한다. 전에는 .stop 기준이었는데, 결제 줄이 붙는 순간
+     .stop 의 바닥이 마지막 결제 줄이라 '지도·못 감' 이 결제 줄 위로 내려앉았다.
+     카드와 .acts 만 감싸는 껍데기를 하나 두어 기준을 카드로 되돌린다. */
+.stopcard { position: relative; display: block; }
 .acts {
-  position: absolute; right: 6px; bottom: 8px;
-  display: flex; gap: 4px;
+  position: absolute; right: 4px; bottom: 4px;
+  display: flex; gap: 2px;
 }
+/* ★손가락 크기. 글자는 11px 그대로 두고 **여백만** 키운다 —
+     절대 위치라 카드가 커지지 않는다. 27×22 였고(2026-09-02 측정) 걸으면서
+     4px 간격으로 둘을 구별해 눌러야 했다. 한쪽('못 감')은 데이터를 바꾼다. */
 .act {
   appearance: none; cursor: pointer;
-  background: none; border: 0; padding: 2px 4px; white-space: nowrap;
+  background: none; border: 0; white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 34px; padding: 0 6px;
   font: inherit; font-size: 11px; font-weight: 600;
-  color: var(--ink-3); text-decoration: none; border-radius: 5px;
+  color: var(--ink-3); text-decoration: none; border-radius: 7px;
 }
 .act:hover, .act:focus-visible { color: var(--route); }
 
@@ -624,7 +640,9 @@ input.code {
 .daytabs {
   position: sticky; top: var(--h-top); z-index: 25;
   display: flex; gap: 6px; overflow-x: auto;
-  padding: 8px var(--pad);
+  /* ★띠 높이(--h-tabs)는 그대로 두고 **단추만** 키운다 — 바깥 여백을 안쪽으로 옮긴 것뿐이다.
+     36×27 이었다(2026-09-02 측정). sticky 라 한 픽셀도 늘리면 세션 내내 낸다. */
+  padding: 4px var(--pad);
   background: var(--paper);
   border-bottom: 1px solid var(--line);
   scrollbar-width: none;
@@ -633,7 +651,8 @@ input.code {
 .daytabs button {
   appearance: none; cursor: pointer; flex: 0 0 auto;
   font-family: var(--mono); font-size: 12px; font-weight: 500;
-  padding: 5px 10px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 35px; padding: 0 12px; border-radius: 999px;
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
 }
 .daytabs button[aria-selected="true"] {
@@ -806,6 +825,14 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
   padding: 10px 18px;
 }
 .btn.ghost { background: none; color: var(--ink); }
+/* 시트 안의 '이 자리에 결제 하나 더'. 저장과 나란히 두지 않는다 — 폼을 끝내는 동작이
+   아니라 **같은 폼을 다시 여는** 동작이라, 한 줄 위에 조용히 혼자 선다. */
+.btn.wide {
+  display: block; width: 100%;
+  border-style: dashed; border-color: var(--line); color: var(--ink-2);
+  font-size: 13px; font-weight: 600;
+}
+.btn.wide:hover, .btn.wide:focus-visible { border-color: var(--route); color: var(--route); }
 .btn:active { opacity: .85; }
 
 .empty {
