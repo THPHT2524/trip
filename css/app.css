@@ -355,7 +355,9 @@ a { color: var(--route); text-underline-offset: 2px; }
      메타 줄에는 자리가 없고 이름 줄에는 있다(이름 폭 중앙값 140px / 칸 271px).
      뜻으로도 맞다: 메모는 이 **장소에 대한 것**이라 이름 곁이고,
      '지도·못 감' 은 이 줄에 **하는 것**이라 아래다. */
-.acts.top { top: 4px; bottom: auto; }
+/* ⚠ 클래스 이름을 `top` 으로 쓰면 안 된다 — 머리말 `.top`(sticky·배경·패딩)이 같이 걸린다.
+   실제로 걸려서 메모 단추가 76×55 짜리 검은 덩어리가 됐다(2026-09-02). */
+.acts.at-name { top: 4px; bottom: auto; }
 .stop.has-memo .item .row1 { padding-right: 52px; }
 
 /* ── 메모 쪽지 ─────────────────────────────────────────────────────────
