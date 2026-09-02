@@ -39,9 +39,16 @@
   --paper:   #F1F4F2;   /* 노선도 종이 — 차가운 초록빛 회색 */
   --card:    #FFFFFF;
   --sunk:    #E7ECE9;   /* 눌린 자리 · 입력칸 */
+  /* ★★글자 세 단. **눈에 보이는 간격**이면서 **읽히기도** 해야 한다.
+     2026-09-02 측정: 밝은 화면에서 ink-3 이 카드 위 3.00:1, 눌린 칸 위 2.51:1 이었다 —
+     AA(4.5) 한참 아래고, 이 앱은 **한낮에 길에서** 쓰는 물건이다. 곁말(거리·지도·못 감·
+     배지·탭 이름·안내문)이 전부 이 색이라 화면의 절반이 흐렸다.
+     ink 를 고정하고 ink-3 을 AA 바로 위(4.57 최저)에 세운 뒤, ink-2 를 둘 사이
+     **대비비의 기하 중간**에 놓았다 — 1.61 · 1.60 으로 세 단이 고르다.
+     (card-dashboard 도 같은 병을 같은 방법으로 고쳤다: 1.76 · 1.62) */
   --ink:     #16302B;   /* 소나무 잉크. 검정을 쓰지 않는다 */
-  --ink-2:   #4B635C;
-  --ink-3:   #869993;
+  --ink-2:   #3C4F49;
+  --ink-3:   #5C6D68;
   --line:    #DCE4E0;   /* 실선 구획 */
   --rail:    #C4D0CB;   /* 레일 — 지나온 구간 */
   --route:   #2B4ACB;   /* 구조색: 활성 레일 · 링크 · 초점 */
@@ -78,8 +85,8 @@
     --card:    #16241F;
     --sunk:    #1D2E29;
     --ink:     #DFEAE5;
-    --ink-2:   #9FB3AC;
-    --ink-3:   #708580;
+    --ink-2:   #ABBDB7;
+    --ink-3:   #829691;
     --line:    #25352F;
     --rail:    #2E4139;
     --route:   #8AA0FF;
@@ -98,8 +105,8 @@
   --card:    #16241F;
   --sunk:    #1D2E29;
   --ink:     #DFEAE5;
-  --ink-2:   #9FB3AC;
-  --ink-3:   #708580;
+  --ink-2:   #ABBDB7;
+  --ink-3:   #829691;
   --line:    #25352F;
   --rail:    #2E4139;
   --route:   #8AA0FF;
@@ -153,10 +160,13 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding: 10px var(--pad);
   display: flex; align-items: center; gap: 10px;
 }
+/* 32×28 이었다. 머리말이 64px 이라 자리는 있다 — 글자 크기는 그대로 두고 칸만 넓힌다 */
 .top .back {
   appearance: none; border: 0; background: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; flex: 0 0 auto;
   color: var(--ink-2); font-size: 20px; line-height: 1;
-  padding: 4px 6px; margin-left: -6px;
+  padding: 0; margin-left: -10px;
 }
 .top .who { flex: 1; min-width: 0; }
 .top h1 {
@@ -454,8 +464,10 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .basepick button {
   appearance: none; cursor: pointer;
-  font-family: inherit; font-size: 12px; font-weight: 600;
-  padding: 4px 11px; border-radius: 999px;
+  /* 45×24 였다 — 지도를 보며 한 손으로 누르는 것들이다 */
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 36px; font-family: inherit; font-size: 12px; font-weight: 600;
+  padding: 0 13px; border-radius: 999px;
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
 }
 .basepick button[aria-selected="true"] {
@@ -664,9 +676,13 @@ input.code {
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
 }
+/* ★이 앱에서 제일 많이 눌리는 것인데 75×34 였다(2026-09-02). 그런데 body 는 이미
+   58px 을 비워 두고 있었다 — 바는 34px 이라 **24px 이 놀고 있었다.** 그 자리를 단추에
+   준다. 비워 둔 넓이도, 화면에 보이는 바의 자리도 그대로다(48 < 58). */
 .tabs button {
   flex: 1; appearance: none; border: 0; background: none; cursor: pointer;
-  padding: 9px 4px 10px;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 48px; padding: 0 4px;
   font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: -.01em;
   color: var(--ink-3);
   border-top: 2px solid transparent; margin-top: -1px;
@@ -966,7 +982,10 @@ input.mono { font-family: var(--mono); }
   width: 52px; height: 52px; border-radius: 50%;
   appearance: none; cursor: pointer;
   border: 1px solid var(--route);
-  background: var(--route); color: #fff;
+  /* ★색을 박지 않는다. 흰 글자는 밝은 화면(코발트 #2B4ACB)에서는 7.13:1 이지만
+     어두운 화면의 옅은 코발트(#8AA0FF) 위에서는 2.46:1 로 무너진다.
+     종이색을 쓰면 두 화면 모두 뒤집혀 맞는다 — 6.44 / 7.26. */
+  background: var(--route); color: var(--paper);
   font: 400 26px/1 var(--sans);
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4px 14px rgba(0,0,0,.28);
@@ -1043,7 +1062,8 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
   box-shadow: 0 3px 12px rgba(0,0,0,.16);
 }
-.hbtn.primary { background: var(--route); border-color: var(--route); color: #fff; }
+/* .fab 과 같은 이유로 종이색이다 — 흰 글자는 어두운 화면의 옅은 코발트 위에서 2.46:1 이 된다 */
+.hbtn.primary { background: var(--route); border-color: var(--route); color: var(--paper); }
 .hbtn:active { transform: translateY(1px); }
 .hbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
