@@ -125,27 +125,48 @@
        나라는 여행의 현지통화에서, 지역은 좌표를 15km 로 묶어서(GEO.areas),
        곳은 장소 줄 수, 일은 여행 기간의 합.
      ★여행이 하나도 없으면 아무 말도 안 한다. 0개국 0곳은 알려 줄 것이 없다. */
+  /* 여권 아래 기계판독구역(MRZ). 진짜 여권처럼 44칸 두 줄에 `<` 로 채운다.
+     ★장식이 아니라 **같은 사실을 다른 문법으로 한 번 더** 적은 것이다 — 위 격자가
+       사람용이면 이건 도장 자국이다. 지어낸 값은 한 칸도 없다. */
+  const MRZ = 44;
+  const pad = (t) => (t + '<'.repeat(MRZ)).slice(0, MRZ);
+  const mrzSafe = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]+/g, '<');
+  function mrzLines(n) {
+    const who = mrzSafe((DB.email() || '').split('@')[0]) || 'TRAVELLER';
+    const money = n.spent ? U.SETTLE + Math.round(n.spent) : '';
+    return [
+      pad('P<KOR<' + who),
+      pad([n.countries + 'C', n.areas + 'A', n.spots + 'P', n.days + 'D', money]
+            .filter(Boolean).join('<')),
+    ];
+  }
+
   function passportHtml() {
     if (!trips.length) return '';
     const flags = [...new Set(trips.map(t => U.flag(t.base_cur)).filter(Boolean))];
-    let areas = 0, spots = 0, days = 0;
+    const n = { countries: flags.length, areas: 0, spots: 0, days: 0, spent: 0 };
     trips.forEach(t => {
-      const mine = shape.filter(r => r.trip_id === t.id && !r.parent_id);
-      areas += GEO.areas(mine);
-      spots += mine.length;
+      const mine = shape.filter(r => r.trip_id === t.id);
+      const stops = mine.filter(r => !r.parent_id);
+      n.areas += GEO.areas(stops);
+      n.spots += stops.length;
+      n.spent += MONEY.total(mine, FXS.rateOf).sum;
       if (t.start_on && t.end_on) {
-        days += Math.round((Date.parse(t.end_on) - Date.parse(t.start_on)) / DAYMS) + 1;
+        n.days += Math.round((Date.parse(t.end_on) - Date.parse(t.start_on)) / DAYMS) + 1;
       }
     });
-    const bits = [];
-    if (flags.length) bits.push(`${flags.length}개국`);
-    if (areas) bits.push(`${areas}개 지역`);
-    if (spots) bits.push(`${spots}곳`);
-    if (days) bits.push(`${days}일`);
-    if (!bits.length) return '';
+    /* 값이 0 인 칸은 세우지 않는다 — 빈 칸의 이름을 읽히게 두지 않는다 */
+    const cells = [
+      ['나라', n.countries], ['지역', n.areas], ['장소', n.spots], ['일', n.days],
+    ].filter(([, v]) => v);
+    if (n.spent) cells.push(['쓴 돈', U.money(n.spent, U.SETTLE)]);
+    if (!cells.length) return '';
+
     return `<section class="pass">
       ${flags.length ? `<div class="pflags" aria-hidden="true">${flags.join('')}</div>` : ''}
-      <p class="pstat">${esc(bits.join(' · '))}</p>
+      <dl class="pgrid">${cells.map(([k, v]) =>
+        `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
+      <p class="pmrz" aria-hidden="true">${mrzLines(n).map(esc).join('<br>')}</p>
     </section>`;
   }
 
