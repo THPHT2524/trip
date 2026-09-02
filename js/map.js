@@ -173,7 +173,9 @@ const Maps = (function () {
     return map;
   }
 
-  const withGeo = list => list.filter(r => GEO.ok(r));
+  /* ★결제 줄(parent_id 가 있는 줄)은 지도에 안 찍는다 — 장소는 부모가 이미 갖고 있어서
+     같은 자리에 핀이 겹치고 동선이 제자리를 맴돈다. */
+  const withGeo = list => list.filter(r => !r.parent_id && GEO.ok(r));
 
   function drawTabs() {
     const el = $('mapdays');

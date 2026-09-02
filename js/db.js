@@ -144,7 +144,7 @@ const DB = (function () {
     shape: async () => {
       if (mode() !== 'cloud') return [];
       const { data, error } = await sb.from('items')
-        .select('trip_id,on_date,kind,cost,cost_cur,fx,settle,split,payer_id')
+        .select('trip_id,on_date,kind,cost,cost_cur,fx,settle,split,payer_id,parent_id')
         .order('on_date', { ascending: true });
       if (error) return [];          // 못 받아도 목록은 보여준다 — 미니 레일만 빠진다
       return data || [];
@@ -164,7 +164,7 @@ const DB = (function () {
   /* 화면이 늘 이 순서로 읽는다: 날짜 → 시각(없으면 뒤) → 순번.
      ★정렬을 서버에 맡긴다. 클라이언트에서 또 정렬하면 두 규칙이 생기고 언젠가 갈린다. */
   const COLS = 'id,trip_id,author_id,on_date,at_time,seq,kind,name,memo,done,' +
-               'map_url,lat,lng,cost,cost_cur,qty,fx,settle,split,payer_id,ref_code,book_url';
+               'map_url,lat,lng,cost,cost_cur,qty,fx,settle,split,payer_id,ref_code,book_url,parent_id';
 
   const num = v => (v === '' || v == null) ? null : (Number.isFinite(+v) ? +v : null);
 
@@ -190,6 +190,8 @@ const DB = (function () {
       name: String(v.name || '').trim(),
       memo: (v.memo || '').trim() || null,
       done: !!v.done,
+      /* 같은 장소의 추가 결제면 부모 줄의 id. 장소 줄은 null */
+      parent_id: v.parent_id || null,
       map_url: (v.map_url || '').trim() || null,
       lat: num(v.lat), lng: num(v.lng),
       cost: num(v.cost),

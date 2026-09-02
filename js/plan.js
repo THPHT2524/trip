@@ -39,11 +39,15 @@ const Plan = (function () {
     return has;
   }
 
-  const ofDay = d => rows.filter(r => r.on_date === d);
+  /* ★목록에 서는 것은 **장소 줄**뿐이다. 결제 줄(parent_id 가 있는 줄)은 부모 밑에 붙는다 —
+     따로 세우면 같은 자리가 두 번 나오고 구간 거리가 0m 로 끼어든다. */
+  const ofDay = d => rows.filter(r => r.on_date === d && !r.parent_id);
+  const kidsOf = id => rows.filter(r => r.parent_id === id);
 
   /* 결제 방식 셋. 환전을 고르면 '비용' 이 '받은 금액' 이 되고 환율 대신 낸 원화를 받는다 —
      사람은 영수증에 적힌 대로(얼마 주고 얼마 받았는지) 넣고, 환율은 우리가 낸다. */
   let settle = null;
+  let parentOf = null;      // '결제 추가' 로 열었을 때 붙일 장소 줄의 id
   function drawSettle() {
     document.querySelectorAll('#if-settle button').forEach(b =>
       b.setAttribute('aria-pressed', String((b.dataset.settle || null) === settle)));
@@ -56,6 +60,13 @@ const Plan = (function () {
     /* ★'각자 냄' 을 고르면 갯수는 곧 **인원**이다 — 기차를 각자 카드로 찍으면
        단가 하나에 사람 수만큼 결제가 일어난다. 같은 칸이지만 이름이 달라야 뜻이 선다. */
     $('if-qty-lbl').textContent = ($('if-payer').value === 'split') ? '인원' : '갯수';
+    /* 결제 줄에는 장소가 없다 — 장소는 부모가 갖는다. 링크·구분·시각을 감춘다. */
+    const kid = !!parentOf;
+    $('if-place-wrap').hidden = kid;
+    $('if-kind-wrap').hidden = kid;
+    $('if-when-wrap').hidden = kid;
+    $('if-name-lbl').textContent = kid ? '결제 이름' : '장소명';
+    $('if-name').placeholder = kid ? '술값' : '오사카성';
     showSum();
   }
 
@@ -183,6 +194,21 @@ const Plan = (function () {
                    return (p && p.krw != null && r.cost_cur !== U.SETTLE)
                      ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : ''; })()}</span>`;
     const link = GM.placeUrl(r);
+    /* 같은 자리의 추가 결제 — 장소 아래 들여 붙는다. 지도에는 안 찍힌다(부모가 그 자리다). */
+    const kids = kidsOf(r.id);
+    const payHtml = kids.map(c => {
+      const p = M.per.get(c.id);
+      const won = (p && p.krw != null && c.cost_cur !== U.SETTLE) ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : '';
+      const who = c.split ? `각자${+c.qty > 1 ? ' ' + (+c.qty) + '명' : ''}`
+                : (c.payer_id ? (Crew.nameOf(crew, c.payer_id) || '냄') : '');
+      const way = c.settle === 'cash' ? '현금' : c.settle === 'exchange' ? '환전' : '';
+      return `<button class="payrow" type="button" data-edit="${esc(c.id)}">
+        <span class="pn">${esc(c.name)}</span>
+        <span class="pm">${esc(U.money(c.cost, c.cost_cur))}${won}</span>
+        ${way ? `<span class="badge">${esc(way)}</span>` : ''}
+        ${who ? `<span class="badge">${esc(who)}</span>` : ''}
+      </button>`;
+    }).join('');
     return `<div class="${cls}" style="--k: var(--${k})">
       <span class="pin"></span>
       <button class="item${r.done ? ' is-done' : ''}${r._pending ? ' is-pending' : ''}" type="button" data-edit="${esc(r.id)}">
@@ -202,6 +228,8 @@ const Plan = (function () {
         ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
         <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '못 감'}</button>
       </span>
+      ${payHtml}
+      <button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>
     </div>`;
   }
 
@@ -234,6 +262,7 @@ const Plan = (function () {
 
   function fillForm(r) {
     editing = r ? r.id : null;
+    if (r) parentOf = r.parent_id || null;      // 고치기로 열면 그 줄의 소속을 따른다
     $('if-id').value = r ? r.id : '';
     $('if-link').value = (r && r.map_url) || '';
     $('if-name').value = (r && r.name) || '';
@@ -267,7 +296,8 @@ const Plan = (function () {
     /* ★접어 둔 칸에 값이 들어 있으면 펴 준다 — 안 그러면 고치러 왔다가 못 본다 */
     $('if-more').open = !!(r && (r.ref_code || r.book_url || r.memo));
     $('if-del').hidden = !r;
-    $('if-sum').textContent = r ? '일정 고치기' : '일정 추가';
+    $('if-sum').textContent = parentOf ? (r ? '결제 고치기' : '결제 추가')
+                            : (r ? '일정 고치기' : '일정 추가');
     $('if-err').textContent = '';
     markGeo();
   }
@@ -318,10 +348,13 @@ const Plan = (function () {
   }
 
   function valueOf() {
+    /* 결제 줄은 **부모의 날짜·구분을 물려받는다** — 따로 적게 두면 어긋난 채 저장되고
+       그러면 그 결제가 다른 날 합계에 들어간다. */
+    const par = parentOf ? rows.find(x => x.id === parentOf) : null;
     return {
-      on_date: $('if-date').value,
-      at_time: $('if-time').value || null,
-      kind: $('if-kind').value,
+      on_date: par ? par.on_date : $('if-date').value,
+      at_time: par ? par.at_time : ($('if-time').value || null),
+      kind: par ? par.kind : $('if-kind').value,
       name: $('if-name').value,
       memo: $('if-memo').value,
       map_url: $('if-link').value,
@@ -335,6 +368,7 @@ const Plan = (function () {
         ? (+$('if-cost').value > 0 ? String(+$('if-krw').value / +$('if-cost').value) : '')
         : $('if-fx').value,
       settle,
+      parent_id: parentOf,
       split: $('if-payer').value === 'split',
       payer_id: $('if-payer').value === 'split' ? null : ($('if-payer').value || null),
       ref_code: $('if-ref').value, book_url: $('if-book').value,
@@ -431,6 +465,8 @@ const Plan = (function () {
       await reload();
       return;
     }
+    const pay = e.target.closest('[data-pay]');
+    if (pay) { parentOf = pay.dataset.pay; editing = null; openSheet(null); return; }
     const edit = e.target.closest('[data-edit]');
     if (edit) openSheet(rows.find(x => x.id === edit.dataset.edit));
   });
@@ -439,7 +475,7 @@ const Plan = (function () {
   $('if-del').addEventListener('click', del);
   $('if-link').addEventListener('change', readLink);
   $('if-link').addEventListener('paste', () => setTimeout(readLink, 0));
-  $('fab').addEventListener('click', () => openSheet(null));
+  $('fab').addEventListener('click', () => { parentOf = null; openSheet(null); });
   $('if-close').addEventListener('click', closeSheet);
   /* 배경을 누르면 닫는다. dialog 자신이 클릭 대상이면 시트 **바깥**을 누른 것이다. */
   $('if-dlg').addEventListener('click', e => { if (e.target === $('if-dlg')) closeSheet(); });

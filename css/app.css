@@ -332,6 +332,25 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .act:hover, .act:focus-visible { color: var(--route); }
 
+/* ── 같은 자리의 추가 결제 ─────────────────────────────────────────────
+   한 자리에서 결제가 두 번 이상 일어난다(밥값은 A가 카드, 술값은 B가 현금).
+   ★장소 아래 **들여** 붙인다 — 목록에 따로 세우면 같은 자리가 두 번 나오고
+     구간 거리에 0m 가 끼어든다. 레일에도 정거장을 만들지 않는다. */
+.payrow, .payadd {
+  position: relative; display: flex; align-items: baseline; gap: 8px;
+  width: calc(100% - var(--gutter) - 12px); margin-left: calc(var(--gutter) + 12px);
+  appearance: none; cursor: pointer; text-align: left;
+  background: none; border: 0; border-top: 1px dashed var(--line);
+  padding: 7px 2px;
+  font: inherit; font-size: 12px; color: var(--ink-2);
+}
+.payrow .pn { flex: 1; min-width: 0; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.payrow .pm { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+.payrow:active, .payadd:active { background: var(--sunk); }
+.payadd { color: var(--ink-3); font-weight: 600; }
+.payadd:hover, .payadd:focus-visible { color: var(--route); }
+
 /* 비어 있는 날 — 감추지 않는다. 3일차가 비었다는 사실 자체가 정보다. */
 .blank {
   margin: 0; padding: 10px 0 10px var(--gutter);
