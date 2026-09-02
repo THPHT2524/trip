@@ -125,14 +125,14 @@
   const MRZ = 44;
   const pad = (t) => (t + '<'.repeat(MRZ)).slice(0, MRZ);
   const mrzSafe = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]+/g, '<');
-  function mrzLines(n) {
+  const MRZ_CODE = { '나라': 'C', '지역': 'A', '장소': 'P', '일': 'D' };
+  /* ★위 격자에 **선 칸만** 적는다. 전에는 0 도 그대로 찍어서, 셈을 못 받아 온 날
+     '1C<0A<0P<3D' 라고 도장이 찍혔다 — 없는 것을 0 이라고 말한 셈이다(2026-09-02 폰). */
+  function mrzLines(cells, spent) {
     const who = mrzSafe((DB.email() || '').split('@')[0]) || 'TRAVELLER';
-    const money = n.spent ? U.SETTLE + Math.round(n.spent) : '';
-    return [
-      pad('P<KOR<' + who),
-      pad([n.countries + 'C', n.areas + 'A', n.spots + 'P', n.days + 'D', money]
-            .filter(Boolean).join('<')),
-    ];
+    const parts = cells.filter(([k]) => MRZ_CODE[k]).map(([k, v]) => v + MRZ_CODE[k]);
+    if (spent) parts.push(U.SETTLE + Math.round(spent));
+    return [pad('P<KOR<' + who), pad(parts.join('<'))];
   }
 
   function passportHtml() {
@@ -160,7 +160,7 @@
       ${flags.length ? `<div class="pflags" aria-hidden="true">${flags.join('')}</div>` : ''}
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
-      <p class="pmrz" aria-hidden="true">${mrzLines(n).map(esc).join('<br>')}</p>
+      <p class="pmrz" aria-hidden="true">${mrzLines(cells, n.spent).map(esc).join('<br>')}</p>
     </section>`;
   }
 
@@ -226,6 +226,26 @@
     return out;
   }
 
+  /* ★★못 받은 셈을 **다시 묻는다.** 지우지 않는 것만으로는 모자랐다 — 첫 화면에서
+     흘려지면 지킬 것도 없어서 여권과 카드의 숫자가 통째로 빠진 채 굳는다.
+     LTE 에서 두 요청을 나란히 보내면 하나가 흘려지는 일이 있다(2026-09-02 폰에서
+     '나라 1 · 일 3' 만 뜨고 지역·장소·쓴 돈이 없었다). 조용히 비워 두느니 다시 묻는다.
+     ★두 번까지만. 계속 안 되면 네트워크가 없는 것이고, 그때는 목록만으로도 앱은 쓸 수 있다. */
+  let shapeTries = 0;
+  function retryShape() {
+    if (shapeTries >= 2) return;
+    shapeTries += 1;
+    setTimeout(async () => {
+      const again = await DB.trips.shape().catch(() => null);
+      if (again && again.length) {
+        shape = again; shapeTries = 0; render();
+        FXS.ensure(shape).then(got => { if (got) render(); }).catch(() => {});
+      } else if (!again) {
+        retryShape();
+      }
+    }, 900 * shapeTries);
+  }
+
   // ── 여행 불러오기 ─────────────────────────────────────────────────────
   async function load(openBest) {
     try {
@@ -236,7 +256,7 @@
       /* ★못 받았으면(null) **갖고 있던 것을 지우지 않는다.** 빈 배열로 덮으면 카드가
          '일정 N'과 합계를 잃고 통화 코드만 남는데, 화면은 아무 말도 안 하므로
          돈을 안 쓴 여행처럼 보인다. 목록 자체는 list 로 이미 그릴 수 있다. */
-      if (sh) shape = sh;
+      if (sh) shape = sh; else retryShape();
     } catch (e) {
       trips = [];
       $('trips').innerHTML = `<p class="empty"><strong>불러오지 못했습니다</strong>${esc(e.message)}</p>`;
