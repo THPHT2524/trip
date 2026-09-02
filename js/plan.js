@@ -54,11 +54,14 @@ const Plan = (function () {
     document.querySelectorAll('#if-settle button').forEach(b =>
       b.setAttribute('aria-pressed', String((b.dataset.settle || null) === settle)));
     const ex = settle === 'exchange';
+    /* ★원화로 냈으면 환율은 물을 것이 없다 — 칸도 안내문도 감춘다.
+       안내문이 두 줄이라, 원화 결제에서 시트의 세 줄이 쓸데없이 채워져 있었다. */
+    const krwOnly = !ex && $('if-cur').value === U.SETTLE;
     $('if-cost-lbl').textContent = ex ? '받은 금액' : '단가';
     $('if-qty-wrap').hidden = ex;              // 환전에 '갯수' 는 뜻이 없다
-    $('if-fx-wrap').hidden = ex;
+    $('if-fx-wrap').hidden = ex || krwOnly;
     $('if-krw-wrap').hidden = !ex;
-    $('if-fx-hint').hidden = ex;               // 환율 칸이 숨은 마당에 그 설명만 남으면 안 된다
+    $('if-fx-hint').hidden = ex || krwOnly;    // 환율 칸이 숨은 마당에 그 설명만 남으면 안 된다
     /* ★'각자 냄' 을 고르면 갯수는 곧 **인원**이다 — 기차를 각자 카드로 찍으면
        단가 하나에 사람 수만큼 결제가 일어난다. 같은 칸이지만 이름이 달라야 뜻이 선다. */
     $('if-qty-lbl').textContent = ($('if-payer').value === 'split') ? '인원' : '갯수';
@@ -99,6 +102,7 @@ const Plan = (function () {
   ['if-cost', 'if-qty', 'if-fx', 'if-krw', 'if-cur'].forEach(id =>
     $(id).addEventListener('input', showSum));
   $('if-payer').addEventListener('change', drawSettle);
+  $('if-cur').addEventListener('change', drawSettle);   // 통화가 바뀌면 환율 칸의 뜻도 바뀐다
   $('if-settle').addEventListener('click', e => {
     const b = e.target.closest('button[data-settle]');
     if (!b) return;

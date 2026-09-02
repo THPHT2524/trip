@@ -845,7 +845,6 @@ details[open] > summary::after { content: '−'; }
 /* 지우기만 있고 저장이 없을 일은 없지만, 하나뿐이면 그 하나가 오른쪽에 선다 */
 .form .row.btns.split > .btn:only-child { margin-left: auto; }
 .form .row.btns .btn { flex: 0 0 auto; }
-.btn.danger { color: var(--warn); border-color: var(--line); }
 textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .err { margin: 0; font-size: 13px; color: var(--warn); }
 .err:empty { display: none; }
@@ -869,6 +868,9 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
   padding: 10px 18px;
 }
 .btn.ghost { background: none; color: var(--ink); }
+/* ⚠ .btn.ghost **뒤**에 와야 한다. 앞에 두었더니 특정도가 같아 ghost 의 --ink 가 이겼고
+   '지우기' 가 빨갛지 않았다(2026-09-02). 위험한 단추는 색으로 먼저 말해야 한다. */
+.btn.danger { color: var(--warn); border-color: var(--line); }
 .btn:active { opacity: .85; }
 
 .empty {
