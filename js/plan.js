@@ -223,16 +223,26 @@ const Plan = (function () {
 
     if (!list.length) return band + `<section class="day"><p class="blank">비어 있는 날</p></section>`;
 
+    /* ★★정거장 번호. **지도 탭과 같은 규칙으로** 센다 — 날짜마다 1부터, 좌표가 있는
+       줄만(js/map.js 의 withGeo → pinEl(r, i+1)). 지도에서 본 5번이 목록의 어느 줄인지
+       찾을 수 있어야 두 화면이 한 여행을 말한다. 전에는 지도만 번호를 달고 목록은
+       빈 링이라 대조할 방법이 없었다(2026-09-02).
+       ★좌표가 없는 줄은 번호가 없다 — 지도에 안 찍히니 번호를 줄 수도 없고,
+         '이 줄은 지도에서 빠진다' 는 사실이 점 크기로 드러난다. */
+    let seq = 0;
+    const num = new Map();
+    list.forEach(r => { if (GEO.ok(r)) num.set(r.id, ++seq); });
+
     let html = '';
     list.forEach((r, i) => {
-      html += stopHtml(r, nid);
+      html += stopHtml(r, nid, num.get(r.id));
       const nx = list[i + 1];
       if (nx) html += segHtml(r, nx);
     });
     return band + `<section class="day">${html}</section>`;
   }
 
-  function stopHtml(r, nid) {
+  function stopHtml(r, nid, num) {
     const k = KVAR[r.kind] || 'k-etc';
     const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : '',
                  r.memo ? 'has-memo' : ''].filter(Boolean).join(' ');
@@ -293,7 +303,7 @@ const Plan = (function () {
       </button>`;
     }).join('');
     return `<div class="${cls}" style="--k: var(--${k})">
-      <span class="pin"></span>
+      <span class="pin">${num || ''}</span>
       <span class="stopcard">
         <button class="item${r.done ? ' is-done' : ''}${r._pending ? ' is-pending' : ''}" type="button" data-edit="${esc(r.id)}">
           <span class="row1">

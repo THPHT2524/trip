@@ -227,12 +227,23 @@ a { color: var(--route); text-underline-offset: 2px; }
 .stop { position: relative; padding-left: var(--gutter); }
 
 /* 정거장 표식 — 구분 색이 여기서만 진하게 나온다 */
+/* ★번호는 **지도 탭의 핀과 같은 수**다(날짜마다 1부터, 좌표 있는 줄만).
+   두 화면이 같은 번호를 쓰면 '지도의 5번' 을 목록에서 바로 짚을 수 있다.
+   ★좌표가 없어 번호를 못 받은 줄은 **작은 점**으로 남는다 — 지도에서 빠진다는
+     사실이 크기로 드러난다. 따로 적어 주지 않아도 된다. */
 .stop > .pin {
-  position: absolute; left: calc(var(--rail-x) - 5px); top: 16px;
-  width: 12px; height: 12px; border-radius: 50%;
+  position: absolute; left: calc(var(--rail-x) - 9px); top: 12px;
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
   background: var(--card);
-  border: 3px solid var(--k, var(--k-etc));
+  border: 2.5px solid var(--k, var(--k-etc));
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 10px; font-weight: 600; color: var(--ink); line-height: 1;
   z-index: 1;
+}
+.stop > .pin:empty {
+  left: calc(var(--rail-x) - 5px); top: 16px;
+  width: 12px; height: 12px; border-width: 3px;
 }
 /* ★못 간 곳. **채우지 않는다** — 채운 점은 '다녀왔다' 로 읽힌다.
    구분 색을 걷고 레일 색으로 되돌려 노선에서 빠진 정거장으로 보이게 한다. */
