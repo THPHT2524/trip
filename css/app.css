@@ -827,8 +827,10 @@ details[open] > summary::after { content: '−'; }
      단가에 57px 만 남아 '214000' 이 '2140(' 로 잘렸다(2026-09-02). 남는 자리는 단가가
      갖고, 곁칸은 **제 내용이 들어갈 만큼만** 갖는다 — 갯수는 한두 자리, 통화는 세 글자,
      환율은 8.7093 이다. 좁아지면 곁칸이 먼저 줄어든다(0 1 auto). */
-.form .row.tight .field { flex: 1 1 0; min-width: 88px; }
-.form .row.tight .field.unit { flex: 0 1 auto; }
+/* ⚠ min-width 를 `.field` 에 걸면 `.field.unit` 도 같이 맞는다 — width 보다 min-width 가
+   세서 곁칸 셋이 도로 88px 이 됐다(v=69 에서 그렇게 틀렸다). :not(.unit) 으로 가른다. */
+.form .row.tight .field:not(.unit) { flex: 1 1 0; min-width: 88px; }
+.form .row.tight .field.unit { flex: 0 1 auto; min-width: 0; }
 #if-qty-wrap { width: 58px; }
 #if-cur-wrap { width: 80px; }
 #if-fx-wrap, #if-krw-wrap { width: 84px; }
