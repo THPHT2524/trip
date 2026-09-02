@@ -190,11 +190,29 @@ const Plan = (function () {
     /* ★비용이 없으면 **아무 말도 하지 않는다.** 전에는 '비용 미정' 을 적었는데,
        65줄짜리 여행에서 57줄이 그랬다 — 빈 칸의 이름을 57번 읽는 셈이다.
        관광지에 값을 안 적는 것은 실수가 아니라 보통이다. */
-    const cost = r.cost == null ? ''
-      : `<span class="money">${esc(U.money(r.cost, r.cost_cur))}${
-          (() => { const p = M.per.get(r.id);
-                   return (p && p.krw != null && r.cost_cur !== U.SETTLE)
-                     ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : ''; })()}</span>`;
+    const kids = kidsOf(r.id);
+    /* ★결제가 여럿인 자리는 **그 자리의 합**을 적는다. 공항에서 항공권과 환전을 따로
+       넣었더니 장소 줄에는 아무 금액도 안 남았다 — ₩462,498 을 쓴 자리가 빈 줄로 보였다.
+       (환전은 지출이 아니라 지갑에 넣는 것이라 합계에서 빠진다 — p.spend 가 가른다) */
+    const cost = (() => {
+      if (kids.length) {
+        let sum = 0, miss = 0, n = 0;
+        [r, ...kids].forEach(x => {
+          const p = M.per.get(x.id);
+          if (!p || !p.spend) return;
+          n += 1;
+          if (p.krw == null) miss += 1; else sum += p.krw;
+        });
+        if (!n) return '';
+        return `<span class="money">합 ${esc(U.money(sum, U.SETTLE))}${
+          miss ? ` <span class="warn">+${miss}건</span>` : ''}</span>`;
+      }
+      if (r.cost == null) return '';
+      const p = M.per.get(r.id);
+      return `<span class="money">${esc(U.money(r.cost, r.cost_cur))}${
+        (p && p.krw != null && r.cost_cur !== U.SETTLE)
+          ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : ''}</span>`;
+    })();
     const link = GM.placeUrl(r);
     /* 같은 자리의 추가 결제 — 장소 아래 들여 붙는다. 지도에는 안 찍힌다(부모가 그 자리다).
        ★★'＋ 결제 추가' 는 **이미 결제가 둘 이상인 자리에만** 세운다.
@@ -202,18 +220,19 @@ const Plan = (function () {
          일정 탭 전체 스크롤의 25%, 이 화면의 서명인 구간 거리(1,612px)보다 큰 자리를
          **한 번도 안 눌린 단추**가 먹고 있었다(2026-09-02 측정).
          첫 결제는 장소를 눌러 여는 시트 안에서 붙인다 — 거기가 이미 그 장소의 자리다. */
-    const kids = kidsOf(r.id);
     const payHtml = kids.map(c => {
       const p = M.per.get(c.id);
       const won = (p && p.krw != null && c.cost_cur !== U.SETTLE) ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : '';
       const who = c.split ? `각자${+c.qty > 1 ? ' ' + (+c.qty) + '명' : ''}`
                 : (c.payer_id ? (Crew.nameOf(crew, c.payer_id) || '냄') : '');
       const way = c.settle === 'cash' ? '현금' : c.settle === 'exchange' ? '환전' : '';
+      /* ★금액이 **맨 뒤**다. 앞에 두면 배지 개수에 따라 숫자가 좌우로 밀려서
+         결제 줄이 둘만 돼도 자릿수가 안 맞는다 — 세로로 읽히라고 mono 를 쓰는 판에. */
       return `<button class="payrow" type="button" data-edit="${esc(c.id)}">
         <span class="pn">${esc(c.name)}</span>
-        <span class="pm">${esc(U.money(c.cost, c.cost_cur))}${won}</span>
         ${way ? `<span class="badge">${esc(way)}</span>` : ''}
         ${who ? `<span class="badge">${esc(who)}</span>` : ''}
+        <span class="pm">${esc(U.money(c.cost, c.cost_cur))}${won}</span>
       </button>`;
     }).join('');
     return `<div class="${cls}" style="--k: var(--${k})">

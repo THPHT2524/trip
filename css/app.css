@@ -394,7 +394,10 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .payrow .pn { flex: 1; min-width: 0; font-weight: 600;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.payrow .pm { font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+.payrow .badge { flex: 0 0 auto; }
+/* 금액은 줄 맨 끝에서 오른쪽으로 맞춘다 — 결제 줄 여럿이 세로로 자릿수가 맞아야 한다 */
+.payrow .pm { flex: 0 0 auto; margin-left: auto; text-align: right;
+  font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
 .payrow:active, .payadd:active { background: var(--sunk); }
 .payadd { color: var(--ink-3); font-weight: 600; }
 .payadd:hover, .payadd:focus-visible { color: var(--route); }
