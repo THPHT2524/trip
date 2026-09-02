@@ -167,8 +167,14 @@ const Plan = (function () {
 
   function dayHtml(d, n, nid) {
     const list = ofDay(d);
-    const { sum, miss } = dayCost(list);
-    const cost = list.some(r => r.cost != null)
+    /* ★★하루 합계는 **결제 줄까지** 센다. 목록에는 장소 줄만 세우지만(ofDay), 돈은
+       자식에도 붙어 있다 — 장소 줄만 세었더니 항공권 ₩428,000 을 결제 줄로 옮긴 날의
+       띠가 ₩595,238 에서 ₩177,238 로 떨어졌다(2026-09-02). 비용 탭은 전체 rows 를
+       쓰기 때문에 맞았고, 그래서 두 화면의 숫자가 갈렸다. 결제 줄은 부모의 날짜를
+       물려받으므로 on_date 로 고르면 둘 다 들어온다. */
+    const money = rows.filter(r => r.on_date === d);
+    const { sum, miss } = dayCost(money);
+    const cost = money.some(r => r.cost != null)
       /* ★숫자만 붉게 둔다. 이 띠는 sticky 라 하루치 40줄을 넘기는 내내 화면에 남는데,
          문장 전체가 붉으면 스크롤하는 동안 계속 소리친다. 셀 것은 건수다. */
       ? U.money(sum, U.SETTLE) + (miss ? ` <span class="warn">+${miss}건</span> 환율 없음` : '')

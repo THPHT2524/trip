@@ -104,6 +104,15 @@ eq(MONEY.SETTLE, 'KRW', '정산 통화는 원화');
   eq(MONEY.total(noId).sum !== 30000, true,
      '★id 가 없으면 합계가 틀린다 — 부르는 쪽이 id 를 꼭 골라야 한다는 뜻');
 }
+/* ★하루 띠·홈 카드·비용 탭이 **같은 rows 집합**을 세는지. 장소 줄만 세면 결제 줄에
+   붙은 돈이 통째로 빠진다 — 실제로 하루 띠가 ₩595,238 → ₩177,238 로 떨어졌다. */
+{
+  const parent = row({ id: 'p', c: null, cur: 'KRW' });
+  const kid = { ...row({ id: 'k', c: 428000, cur: 'KRW' }), parent_id: 'p' };
+  const stopsOnly = [parent];
+  eq(MONEY.total(stopsOnly).sum, 0, '장소 줄만 세면 0 — 그 자리 돈은 결제 줄에 있다');
+  eq(MONEY.total([parent, kid]).sum, 428000, '★결제 줄까지 세야 하루 합계가 맞는다');
+}
 /* 부르는 쪽 세 곳이 실제로 id 를 고르는지 원문에서 확인한다 (셈은 맞는데 입력이 빠지는 사고) */
 {
   const src = require('fs').readFileSync(require('path').join(__dirname, '../js/db.js'), 'utf8');
