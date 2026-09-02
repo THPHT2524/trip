@@ -350,7 +350,6 @@ const Plan = (function () {
     settle = (r && r.settle) || null;
     $('if-krw').value = (r && r.settle === 'exchange' && r.cost != null && r.fx != null)
       ? Math.round(+r.cost * +r.fx) : '';
-    drawSettle();
     /* ★DB 에는 **총액**이 있고 화면에는 단가를 보여 준다(qty 로 되나눈다).
        총액을 저장하는 이유: 갯수를 나중에 지워도 쓴 돈이 안 바뀐다. */
     const q = (r && +r.qty > 1) ? +r.qty : 1;
@@ -368,6 +367,10 @@ const Plan = (function () {
     $('if-sum').textContent = parentOf ? (r ? '결제 고치기' : '결제 추가')
                             : (r ? '일정 고치기' : '일정 추가');
     $('if-err').textContent = '';
+    /* ★★맨 **끝**에서 부른다. 중간에 있었더니 두 가지가 어긋났다(2026-09-02):
+       현금일 때 비운 환율 칸이 바로 아래에서 다시 채워졌고, '각자 냄' 을 아직 안 읽어
+       갯수 라벨이 '인원' 으로 안 바뀌었다. 폼의 모양은 값을 다 넣은 **뒤에** 정한다. */
+    drawSettle();
     markGeo();
   }
 
@@ -433,9 +436,11 @@ const Plan = (function () {
       qty: Math.max(1, +$('if-qty').value || 1),
       cost_cur: $('if-cur').value,
       /* 환전은 '얼마 주고 얼마 받았나' 로 받아 환율을 우리가 낸다 — 사람이 9.4 를 계산하게 두지 않는다 */
-      fx: settle === 'exchange'
-        ? (+$('if-cost').value > 0 ? String(+$('if-krw').value / +$('if-cost').value) : '')
-        : $('if-fx').value,
+      /* 현금은 환율을 갖지 않는다 — 지갑의 평균으로 센다. 감춘 칸에 값이 남아 있어도 안 보낸다. */
+      fx: settle === 'cash' ? ''
+        : settle === 'exchange'
+          ? (+$('if-cost').value > 0 ? String(+$('if-krw').value / +$('if-cost').value) : '')
+          : $('if-fx').value,
       settle,
       parent_id: parentOf,
       split: $('if-payer').value === 'split',
