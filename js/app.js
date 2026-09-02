@@ -139,16 +139,30 @@
     if (!trips.length) return '';
     const flags = [...new Set(trips.map(t => U.flag(t.base_cur)).filter(Boolean))];
     const n = { countries: flags.length, areas: 0, spots: 0, days: 0, spent: 0 };
+    /* ★★여권은 **다녀온 곳**을 센다. 간 횟수가 아니다. 공항은 갈 때 오고, 호텔은
+       묵는 밤마다, 마음에 든 가게는 두 번 온다 — 그대로 세면 66곳이지만 실제로는
+       55곳이다(2026-09-02 측정). 좌표로 같은 곳을 하나로 묶는다.
+       ★좌표를 열쇠로 쓰는 이유: 같은 구글맵 링크에서 온 값이라 **정확히 같고**,
+         이름으로 세어 봐도 결과가 똑같았다(55 = 55). 링크(map_url)는 같은 곳을
+         다른 주소로 넣은 적이 있어 62가 나온다 — 열쇠로 못 쓴다.
+       ★좌표가 없는 줄은 서로 구별할 방법이 없으니 각각 한 곳으로 센다. */
+    const uniq = new Map();
+    let noCoord = 0;
     trips.forEach(t => {
       const mine = shape.filter(r => r.trip_id === t.id);
-      const stops = mine.filter(r => !r.parent_id);
-      n.areas += GEO.areas(stops);
-      n.spots += stops.length;
+      mine.filter(r => !r.parent_id).forEach(r => {
+        if (GEO.ok(r)) uniq.set(+(+r.lat).toFixed(5) + ',' + +(+r.lng).toFixed(5), r);
+        else noCoord += 1;
+      });
       n.spent += MONEY.total(mine, FXS.rateOf).sum;
       if (t.start_on && t.end_on) {
         n.days += Math.round((Date.parse(t.end_on) - Date.parse(t.start_on)) / DAYMS) + 1;
       }
     });
+    n.spots = uniq.size + noCoord;
+    /* 지역도 **여행을 통틀어** 묶는다 — 오사카를 두 번 가도 오사카는 한 지역이다.
+       나라가 달라도 안전하다: 다른 나라는 수백 km 밖이라 15km 로 묶일 일이 없다. */
+    n.areas = GEO.areas([...uniq.values()]);
     /* 값이 0 인 칸은 세우지 않는다 — 빈 칸의 이름을 읽히게 두지 않는다 */
     const cells = [
       ['나라', n.countries], ['지역', n.areas], ['장소', n.spots], ['일', n.days],

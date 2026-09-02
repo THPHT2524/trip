@@ -53,6 +53,27 @@ eq(GEO.ok({lat:'34.6',lng:135}), false, '문자열은 안 받는다');
   eq(GEO.areas([]), 0, '없으면 0');
   eq(GEO.areas(osaka.concat([{name:'좌표 없음'}])), 1, '좌표 없는 줄은 안 센다');
   eq(GEO.areas(osaka, 200000), 1, '반경을 넓게 잡으면 하나로 묶인다');
+
+  /* ★나라가 늘면 — 여행을 통틀어 묶어도 다른 나라끼리는 섞이지 않는다.
+     오사카(34.7,135.5) ↔ 타이베이(25.0,121.5) 는 1,700km 라 15km 로 묶일 일이 없다. */
+  const taipei=[P(25.0330,121.5654),P(25.0478,121.5170)];
+  const bangkok=[P(13.7563,100.5018)];
+  eq(GEO.areas(osaka.concat(kyoto,kix,taipei)), 4, '★일본 셋 + 대만 하나 = 넷');
+  eq(GEO.areas(osaka.concat(taipei,bangkok)), 3, '세 나라는 셋으로 남는다');
+  /* 같은 도시를 두 번 가도 지역은 하나 — 여권은 '다녀온 곳' 을 센다 */
+  eq(GEO.areas(osaka.concat(osaka)), 1, '★오사카를 두 번 가도 오사카는 한 지역');
+}
+
+/* 좌표로 같은 곳을 하나로 묶는 열쇠 — 여권의 '장소' 가 이 규칙으로 센다.
+   같은 구글맵 링크에서 온 좌표는 정확히 같으므로 5자리에서 자르면 충분하다. */
+{
+  const key = r => +(+r.lat).toFixed(5) + ',' + +(+r.lng).toFixed(5);
+  const kix = { lat: 34.4342, lng: 135.2328 };
+  const kixAgain = { lat: 34.4342, lng: 135.2328 };      // 돌아오는 날 같은 공항
+  const hotel = { lat: 34.6600, lng: 135.5000 };
+  eq(key(kix) === key(kixAgain), true, '★같은 좌표는 같은 열쇠 — 왕복 공항은 한 곳');
+  eq(key(kix) === key(hotel), false, '다른 곳은 다른 열쇠');
+  eq(key({ lat: '34.4342', lng: '135.2328' }), key(kix), '문자열로 와도 같은 열쇠');
 }
 
 // ★사람이 읽을 이름이 아닌 것을 장소명에 넣지 않는다
