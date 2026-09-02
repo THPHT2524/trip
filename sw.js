@@ -8,31 +8,31 @@
 
    ★V 를 올려야 새 파일이 나간다. index.html 의 ?v=N 과 함께 올린다.
      안 올리면 이미 받아 간 브라우저가 옛 앱을 계속 쓴다(card-dashboard 에서 실제로 겪은 사고다). */
-const V = 79;   // assets-sha:ba082c37c3d9
+const V = 80;   // assets-sha:6257a73302d9
 const CACHE = `trip-shell-v${V}`;
 
 const SHELL = [
   '/',
   '/index.html',
-  '/css/app.css?v=79',
+  '/css/app.css?v=80',
   '/css/maplibre-gl-5.24.0.css',
   '/js/vendor/supabase-js-2.111.0.js',
   '/js/vendor/maplibre-gl-csp-5.24.0.js',
   '/js/vendor/maplibre-gl-csp-worker-5.24.0.js',
-  '/js/supabase-config.js?v=79',
-  '/js/map-config.js?v=79',
-  '/js/money.js?v=79',
-  '/js/util.js?v=79',
-  '/js/geo.js?v=79',
-  '/js/gmaps.js?v=79',
-  '/js/db.js?v=79',
-  '/js/outbox.js?v=79',
-  '/js/plan.js?v=79',
-  '/js/map.js?v=79',
-  '/js/crew.js?v=79',
-  '/js/cost.js?v=79',
-  '/js/prep.js?v=79',
-  '/js/app.js?v=79',
+  '/js/supabase-config.js?v=80',
+  '/js/map-config.js?v=80',
+  '/js/money.js?v=80',
+  '/js/util.js?v=80',
+  '/js/geo.js?v=80',
+  '/js/gmaps.js?v=80',
+  '/js/db.js?v=80',
+  '/js/outbox.js?v=80',
+  '/js/plan.js?v=80',
+  '/js/map.js?v=80',
+  '/js/crew.js?v=80',
+  '/js/cost.js?v=80',
+  '/js/prep.js?v=80',
+  '/js/app.js?v=80',
   '/fonts/ibm-plex-mono-400.woff2',
   '/fonts/ibm-plex-mono-500.woff2',
   '/fonts/ibm-plex-mono-600.woff2',

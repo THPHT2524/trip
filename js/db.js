@@ -314,7 +314,9 @@ const DB = (function () {
   async function fx(date, from, to, kind) {
     if (!date || !from || !to) return null;
     if (from === to) return { rate: 1, on: date, exact: true };
-    const key = `${date}|${from}|${to}`;
+    /* ⚠ kind 를 키에 넣어야 한다 — 전신환매도율과 현찰 살 때는 값이 다르다.
+       빼면 먼저 부른 종류가 다른 종류 자리까지 차지한다. */
+    const key = `${date}|${from}|${to}|${kind || 'tts'}`;
     if (fxMemo.has(key)) return fxMemo.get(key);
     const tok = await accessToken();
     if (!tok) throw new Error('로그인이 필요합니다.');

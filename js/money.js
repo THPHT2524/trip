@@ -28,7 +28,15 @@ const MONEY = (function () {
 
   /* 줄들을 **주어진 순서대로** 훑는다. DB 가 날짜 → 시각 → 순번으로 정렬해 준다 —
      현금 지갑은 시간 순서가 곧 뜻이라 여기서 다시 정렬하지 않는다(두 규칙이 생긴다). */
-  function walk(rows) {
+  /* rateOf(row) — 줄에 fx 가 없을 때 쓸 **자동 환율**을 돌려주는 함수(js/fx.js 가 준다).
+     ★줄의 fx 는 덮어쓰기다. 적혀 있으면 그게 이기고, 비어 있으면 여기서 받아 온다.
+       안 넘기면(테스트 등) 전처럼 '환율 없음' 으로 남는다 — 셈 자체는 그대로 순수하다. */
+  function walk(rows, rateOf) {
+    const auto = (r) => {
+      if (typeof rateOf !== 'function') return null;
+      const v = rateOf(r);
+      return (typeof v === 'number' && isFinite(v) && v > 0) ? v : null;
+    };
     let bal = 0;        // 지갑에 남은 현지통화
     let paid = 0;       // 그 잔액을 만드는 데 든 원화
     let cur = null;     // 지갑의 통화
@@ -37,13 +45,15 @@ const MONEY = (function () {
     (rows || []).forEach(r => {
       const amt = n(r.cost);
       if (amt == null) return;                       // 값을 안 적은 줄은 셈에 없다
-      const fx = n(r.fx);
+      const own = n(r.fx);                           // 사람이 적어 둔 것
+      const at = own != null ? null : auto(r);       // 없으면 그날 고시로
+      const fx = own != null ? own : at;
 
       /* 환전·출금 — 지갑에 들어온다. 지출로는 세지 않는다. */
       if (r.settle === 'exchange') {
         if (fx == null) { per.set(r.id, { krw: null, spend: false, why: 'no-fx' }); return; }
         bal += amt; paid += amt * fx; cur = r.cost_cur || cur;
-        per.set(r.id, { krw: amt * fx, spend: false, why: 'exchange' });
+        per.set(r.id, { krw: amt * fx, spend: false, why: 'exchange', auto: at != null });
         return;
       }
 
@@ -62,13 +72,13 @@ const MONEY = (function () {
         const basis = amt * rate;
         bal -= amt; paid -= basis;
         per.set(r.id, fx != null
-          ? { krw: amt * fx, spend: true, why: 'fx', rate }
+          ? { krw: amt * fx, spend: true, why: 'fx', rate, auto: at != null }
           : { krw: basis, spend: true, why: 'wallet', rate });
         return;
       }
 
       /* 사람이 적어 둔 환율이 언제나 이긴다(지갑이 못 대는 현금·카드·계좌이체 전부). */
-      if (fx != null) { per.set(r.id, { krw: amt * fx, spend: true, why: 'fx' }); return; }
+      if (fx != null) { per.set(r.id, { krw: amt * fx, spend: true, why: 'fx', auto: at != null }); return; }
 
       per.set(r.id, { krw: null, spend: true, why: 'no-fx' });
     });
@@ -81,8 +91,8 @@ const MONEY = (function () {
   }
 
   /* 합계 한 벌. spend 인 줄만 더하고, 환율을 못 낸 줄은 세어서 따로 알린다. */
-  function total(rows) {
-    const w = walk(rows);
+  function total(rows, rateOf) {
+    const w = walk(rows, rateOf);
     let sum = 0, miss = 0, cnt = 0;
     (rows || []).forEach(r => {
       const p = w.per.get(r.id);

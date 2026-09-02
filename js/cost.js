@@ -106,7 +106,7 @@ const Cost = (function () {
   }
 
   function draw() {
-    M = MONEY.total(rows);                     // 현금 지갑까지 한 번에 — 아래는 결과만 읽는다
+    M = MONEY.total(rows, FXS.rateOf);                     // 현금 지갑까지 한 번에 — 아래는 결과만 읽는다
     const paid = rows.filter(has);
     const total = paid.reduce((s, r) => s + (inBase(r) || 0), 0);
     const miss = paid.filter(r => inBase(r) == null);

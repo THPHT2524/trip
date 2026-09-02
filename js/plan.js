@@ -107,9 +107,28 @@ const Plan = (function () {
       return;
     }
     const tot = unit * qty;
-    const fx = +$('if-fx').value || 0;
-    el.textContent = (qty > 1 ? `합계 ${U.money(tot, cur)}` : '')
-      + (fx ? `${qty > 1 ? ' · ' : ''}${U.money(tot * fx, U.SETTLE)}` : '');
+    const head = qty > 1 ? `합계 ${U.money(tot, cur)}` : '';
+    const own = +$('if-fx').value || 0;
+    if (own) { el.textContent = head + `${head ? ' · ' : ''}${U.money(tot * own, U.SETTLE)}`; return; }
+    if (cur === U.SETTLE) { el.textContent = head; return; }
+
+    /* ★환율 칸이 비어 있으면 **그날 고시로 미리 셈해 보여 준다.** 저장한 뒤 비용 탭에
+       가서야 얼마인지 아는 것은 늦다 — 지금 쓴 돈이 원화로 얼마인지가 이 칸의 용건이다.
+       (현금은 지갑 평균으로 빠지므로 여기서 셈하지 않는다 — 위 안내가 지갑을 말한다) */
+    const probe = { on_date: $('if-date').value, cost_cur: cur, settle };
+    const auto = FXS.rateOf(probe);
+    if (auto) {
+      const note = FXS.noteOf(probe);
+      el.textContent = head + `${head ? ' · ' : ''}${U.money(tot * auto, U.SETTLE)}`
+        + ` — ${note && !note.exact ? note.on + ' ' : ''}전신환매도율 ${auto}`;
+      return;
+    }
+    el.textContent = head;
+    /* 아직 안 받아 온 날짜·통화면 받아 두고 다시 그린다. 한 번이면 뒤로는 즉시 뜬다. */
+    if (settle !== 'cash' && probe.on_date) {
+      FXS.ensure([{ cost: tot, fx: null, on_date: probe.on_date, cost_cur: cur, settle }])
+        .then(got => { if (got) showSum(); }).catch(() => {});
+    }
   }
   ['if-cost', 'if-qty', 'if-fx', 'if-krw', 'if-cur'].forEach(id =>
     $(id).addEventListener('input', showSum));
@@ -174,7 +193,7 @@ const Plan = (function () {
                    + '아래에서 첫 줄을 넣으세요. 구글맵 링크를 붙이면 장소가 채워집니다.</p>';
       return;
     }
-    M = MONEY.total(rows);                    // 이번 그리기에서 쓸 셈 한 벌
+    M = MONEY.total(rows, FXS.rateOf);        // 이번 그리기에서 쓸 셈 한 벌
     const show = pick ? [pick] : days;
     const nid = nextId();
     el.innerHTML = (offline ? '<p class="note">연결이 없어 마지막으로 받아 둔 일정을 보여줍니다</p>' : '')
@@ -511,6 +530,9 @@ const Plan = (function () {
     }
     rows = Outbox.apply(trip.id, base);
     render();
+    /* ★환율은 **기다리지 않는다.** 먼저 그리고, 받아 오면 다시 그린다 —
+       현지에서 네트워크가 느릴 때 일정이 그것 때문에 늦게 뜨면 안 된다. */
+    FXS.ensure(rows).then(got => { if (got) render(); }).catch(() => {});
   }
 
   // ── 붙이기 ────────────────────────────────────────────────────────────

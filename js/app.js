@@ -142,7 +142,7 @@
 
     /* 합계는 js/money.js 한 곳에서 낸다 — 비용 탭·일정 탭과 같은 함수다.
        (전에는 여기서 따로 셌고, 현금 지갑이 생기면서 곧 갈릴 자리였다) */
-    const sum = MONEY.total(mine).sum;
+    const sum = MONEY.total(mine, FXS.rateOf).sum;
 
     const bits = [fmtSpan(t.start_on, t.end_on)];
     if (stops.length) bits.push(`일정 ${stops.length}`);
@@ -191,6 +191,8 @@
       if (now) { go(now.id, 'plan', true); return; }
     }
     render();
+    /* 환율은 기다리지 않는다 — 먼저 그리고, 받아 오면 카드의 합계만 다시 낸다 */
+    FXS.ensure(shape).then(got => { if (got) render(); }).catch(() => {});
   }
 
   // ── 폼 ────────────────────────────────────────────────────────────────
