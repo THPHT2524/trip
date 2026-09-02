@@ -53,6 +53,9 @@ const Plan = (function () {
     $('if-fx-wrap').hidden = ex;
     $('if-krw-wrap').hidden = !ex;
     $('if-fx-hint').hidden = ex;               // 환율 칸이 숨은 마당에 그 설명만 남으면 안 된다
+    /* ★'각자 냄' 을 고르면 갯수는 곧 **인원**이다 — 기차를 각자 카드로 찍으면
+       단가 하나에 사람 수만큼 결제가 일어난다. 같은 칸이지만 이름이 달라야 뜻이 선다. */
+    $('if-qty-lbl').textContent = ($('if-payer').value === 'split') ? '인원' : '갯수';
     showSum();
   }
 
@@ -61,7 +64,7 @@ const Plan = (function () {
     const unit = +$('if-cost').value || 0;
     const qty = Math.max(1, +$('if-qty').value || 1);
     const cur = $('if-cur').value;
-    const el = $('if-sum');
+    const el = $('if-calc');
     if (!unit) { el.textContent = ''; return; }
     if (settle === 'exchange') {
       const krw = +$('if-krw').value || 0;
@@ -75,6 +78,7 @@ const Plan = (function () {
   }
   ['if-cost', 'if-qty', 'if-fx', 'if-krw', 'if-cur'].forEach(id =>
     $(id).addEventListener('input', showSum));
+  $('if-payer').addEventListener('change', drawSettle);
   $('if-settle').addEventListener('click', e => {
     const b = e.target.closest('button[data-settle]');
     if (!b) return;

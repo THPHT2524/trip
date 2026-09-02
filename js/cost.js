@@ -131,15 +131,14 @@ const Cost = (function () {
       if (miss) c.miss += 1; else c.sum += krw;
       c.n += 1; pm.set(k, c);
     };
+    const crewIds = crew.map(m => m.user_id);
     rows.filter(has).forEach(r => {
       const v = inBase(r);
-      if (r.split && crew.length > 1) {
-        crew.forEach(m => put(Crew.nameOf(crew, m.user_id) || '알 수 없음',
-                              v == null ? 0 : v / crew.length, v == null));
-        return;
-      }
-      if (r.split) { put('각자 냄', v, v == null); return; }
-      put(r.payer_id ? (Crew.nameOf(crew, r.payer_id) || '알 수 없음') : '안 적음', v, v == null);
+      MONEY.shares(r, v, crewIds).forEach(s => {
+        const label = s.id ? (Crew.nameOf(crew, s.id) || '알 수 없음')
+                    : (s.group ? `각자 냄 ${s.group}명` : '안 적음');
+        put(label, s.krw, v == null);
+      });
     });
     const byPayer = [...pm.entries()].sort((a, b) => b[1].sum - a[1].sum);
 

@@ -93,6 +93,21 @@ const row = (o) => ({ id: o.id, cost: o.c, cost_cur: o.cur || 'JPY', fx: o.fx ??
 eq(MONEY.total([row({id:'a', c:30000, cur:'KRW'})]).sum, 30000, '원화 결제는 그대로');
 eq(MONEY.SETTLE, 'KRW', '정산 통화는 원화');
 
+// ── MONEY.shares: 각자 냄은 **인원(qty)** 으로 나눈다 ────────────────────
+// ★동행자 수로 나누면 셋 중 둘만 기차를 탄 경우가 틀어진다.
+{
+  const crew = ['A', 'B', 'C'];
+  // 셋이 각자 카드로 찍었다 → 셋에게 하나씩
+  eq(MONEY.shares({ split: true, qty: 3 }, 9000, crew).map(s => [s.id, s.krw]),
+     [['A',3000],['B',3000],['C',3000]], '★인원 = 동행자 수면 각자에게 붙는다');
+  // 셋 중 둘만 탔다 → 누구였는지 모른다. 지어내지 않는다
+  eq(MONEY.shares({ split: true, qty: 2 }, 6000, crew), [{ id: null, group: 2, krw: 6000 }],
+     '★인원이 동행자 수와 다르면 누구인지 모른다 — 한 칸으로 남긴다');
+  // 각자 냄이 아니면 낸 사람 하나
+  eq(MONEY.shares({ payer_id: 'A' }, 5000, crew), [{ id: 'A', krw: 5000 }], '보통 줄은 낸 사람에게');
+  eq(MONEY.shares({}, 5000, crew), [{ id: null, krw: 5000 }], '안 적었으면 주인 없음');
+}
+
 // ── U: 정산 통화 ───────────────────────────────────────────────────────
 const U = require('../js/util.js');
 eq(U.SETTLE, 'KRW', '정산 통화는 원화 하나 — 여행의 base_cur 는 현지통화다');

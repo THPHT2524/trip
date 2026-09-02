@@ -85,7 +85,23 @@ const MONEY = (function () {
     return { sum, miss, cnt, per: w.per, cash: w.cash };
   }
 
-  return { SETTLE, walk, total };
+  /* 이 줄의 돈을 **누구에게** 붙일 것인가.
+     ★각자 냄(split)이면 '몇 명이 각자 냈나' 가 곧 갯수(qty)다 — 기차를 각자 카드로
+       찍으면 단가 하나에 인원만큼 결제가 일어난 것이다.
+     ★인원이 동행자 수와 같으면 동행자에게 단가만큼 하나씩 붙인다.
+       다르면(셋 중 둘만 탔다면) **누구였는지 알 수 없다** — 한 칸으로 남긴다.
+       모르는 것을 아는 척하며 없는 사람에게 배분하지 않는다. */
+  function shares(r, krw, crewIds) {
+    if (!r || !r.split) return [{ id: (r && r.payer_id) || null, krw }];
+    const head = Math.max(1, +r.qty || 1);      // ★위의 헬퍼 n 을 가리지 않게 이름을 따로 쓴다
+    const ids = crewIds || [];
+    if (head > 1 && ids.length === head) {
+      return ids.map(id => ({ id, krw: krw == null ? null : krw / head }));
+    }
+    return [{ id: null, group: head, krw }];
+  }
+
+  return { SETTLE, walk, total, shares };
 })();
 
 if (typeof module !== 'undefined') module.exports = MONEY;   // tools/test-pure.js 용
