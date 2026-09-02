@@ -37,6 +37,7 @@ const CODE = {
      ★네이버에 없는 코드면 404 가 오고, 부르는 쪽은 '직접 넣어 주세요' 로 떨어진다.
        지어내지 않으므로 없는 통화를 여기 적어 두어도 조용히 틀리지는 않는다. */
   IDR: 'FX_IDRKRW', MOP: 'FX_MOPKRW', MYR: 'FX_MYRKRW', PHP: 'FX_PHPKRW',
+  AED: 'FX_AEDKRW', MVR: 'FX_MVRKRW',
 };
 /* 100 단위로 고시되는 통화. 여기 빠뜨리면 환산액이 조용히 100배가 된다. */
 const PER100 = { JPY: true, VND: true, IDR: true };

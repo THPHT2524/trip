@@ -57,7 +57,8 @@ const U = (function () {
     ['DE', '독일', '🇩🇪'], ['IT', '이탈리아', '🇮🇹'], ['ES', '스페인', '🇪🇸'],
     ['CH', '스위스', '🇨🇭'], ['NL', '네덜란드', '🇳🇱'], ['CZ', '체코', '🇨🇿'],
     ['AT', '오스트리아', '🇦🇹'], ['PT', '포르투갈', '🇵🇹'], ['TR', '튀르키예', '🇹🇷'],
-    ['AE', '아랍에미리트', '🇦🇪'], ['IN', '인도', '🇮🇳'], ['MN', '몽골', '🇲🇳'],
+    ['AE', '아랍에미리트', '🇦🇪'], ['MV', '몰디브', '🇲🇻'],
+    ['IN', '인도', '🇮🇳'], ['MN', '몽골', '🇲🇳'],
   ];
   const FLAG = Object.fromEntries(COUNTRY.map(([c, , f]) => [c, f]));
   const CNAME = Object.fromEntries(COUNTRY.map(([c, n]) => [c, n]));
@@ -75,6 +76,7 @@ const U = (function () {
   const CUR_COUNTRY = {
     KRW: 'KR', JPY: 'JP', TWD: 'TW', THB: 'TH', VND: 'VN',
     CNY: 'CN', HKD: 'HK', SGD: 'SG', MOP: 'MO', IDR: 'ID', MYR: 'MY', PHP: 'PH',
+    AED: 'AE', MVR: 'MV', GBP: 'GB', AUD: 'AU', CAD: 'CA',
   };
   const guessCountry = cur => CUR_COUNTRY[cur] || '';
 
@@ -119,6 +121,7 @@ const U = (function () {
   const SIGN = {
     KRW: '₩', JPY: '¥', USD: '$', EUR: '€', TWD: 'NT$', THB: '฿', VND: '₫',
     CNY: '¥', HKD: 'HK$', SGD: 'S$', MOP: 'MOP$', IDR: 'Rp', MYR: 'RM', PHP: '₱',
+    AED: 'AED ', MVR: 'MVR ', GBP: '£', AUD: 'A$', CAD: 'C$',
   };
   /* ★센트가 있는 돈은 **센트까지** 적는다. 전부 반올림했더니 $116.37 이 $116 으로 보였고,
      영수증과 대조할 수가 없었다(2026-09-02). 원·엔·동은 소수점을 쓰지 않는 돈이라 0 이다.
