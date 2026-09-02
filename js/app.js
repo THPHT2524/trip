@@ -103,6 +103,11 @@
       return;
     }
     $('passport').innerHTML = passportHtml();
+    /* 전에 적은 도시를 제안한다 — 같은 도시를 다른 철자로 적어 두 곳으로 세지 않게 */
+    const seen = new Set();
+    trips.forEach(t => U.cityList(t.cities).forEach(c => seen.add(c)));
+    $('citylist').innerHTML = [...seen].sort()
+      .map(c => `<option value="${esc(c)}"></option>`).join('');
 
     const group = { now: [], soon: [], past: [] };
     trips.forEach(t => group[phase(t)].push(t));
@@ -137,7 +142,8 @@
 
   function passportHtml() {
     if (!trips.length) return '';
-    const flags = [...new Set(trips.map(t => U.flag(t.country)).filter(Boolean))];
+    /* 나라는 여행마다 여럿일 수 있다 — 전부 펴서 겹치는 것을 걷는다 */
+    const flags = [...new Set(trips.flatMap(t => U.flags(t.country)))];
     /* 도시는 **적힌 대로** 센다. 여러 여행에서 같은 도시를 적었으면 한 번만 센다. */
     const cities = new Set();
     trips.forEach(t => U.cityList(t.cities).forEach(c => cities.add(c)));
@@ -226,7 +232,7 @@
     bits.push(sum ? U.money(sum, U.SETTLE) : (t.base_cur || U.SETTLE));
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      ${U.flag(t.country) ? `<span class="bgflag" aria-hidden="true">${U.flag(t.country)}</span>` : ''}
+      ${U.flags(t.country).length ? `<span class="bgflag" aria-hidden="true">${U.flags(t.country).join('')}</span>` : ''}
       <span class="top2">
         <span class="nm">${esc(t.name)}</span>
         ${mark ? `<span class="dday${phase === 'now' ? ' hot' : ''}">${esc(mark)}</span>` : ''}
@@ -308,10 +314,11 @@
         start_on: $('new-from').value || null,
         end_on: $('new-to').value || null,
         base_cur: $('new-cur').value,
-        country: $('new-country').value,
+        country: newPick.get(),
         cities: $('new-cities').value,
       });
       $('new').reset();
+      newPick.set('');
       $('new-dlg').close();
       /* ★만든 사람은 트리거가 첫 멤버로 넣는다. 그게 없으면 방금 만든 여행이
          정책에 걸려 자기 눈에도 안 보인다 — 목록을 다시 받아 그 사실을 확인한다. */
@@ -385,12 +392,15 @@
     d.querySelector('.sheetbody').scrollTop = 0;
     if (focusId) setTimeout(() => $(focusId).focus({ preventScroll: true }), 0);
   };
-  U.fillCountry($('new-country'));
-  U.fillCountry($('set-country'));
-  /* 통화를 고르면 나라도 대개 정해진다 — 아직 안 골랐을 때만 미리 골라 준다.
+  /* 나라 고르개 둘. crew.js 가 여행 설정 쪽을 쓰므로 전역에 얹어 준다. */
+  const newPick = U.countryPicker($('new-country'), $('new-flags'));
+  window.SETPICK = U.countryPicker($('set-country'), $('set-flags'));
+  /* 통화를 고르면 나라도 대개 정해진다 — 아직 아무것도 안 골랐을 때만 미리 골라 준다.
      사람이 이미 고른 것을 통화 때문에 바꾸지 않는다. */
   $('new-cur').addEventListener('change', () => {
-    if (!$('new-country').value) $('new-country').value = U.guessCountry($('new-cur').value);
+    if (newPick.get()) return;
+    const c = U.guessCountry($('new-cur').value);
+    if (c) newPick.set(c);
   });
   $('new-open').addEventListener('click', () => { $('new-err').textContent = ''; openDlg('new-dlg', 'new-name'); });
   $('join-open').addEventListener('click', () => { $('join-err').textContent = ''; openDlg('join-dlg', 'join-code'); });

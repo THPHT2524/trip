@@ -63,6 +63,12 @@ const U = (function () {
   const CNAME = Object.fromEntries(COUNTRY.map(([c, n]) => [c, n]));
   const flag = code => FLAG[code] || '';
   const countryName = code => CNAME[code] || '';
+  /* 여행 하나가 두 나라를 걸치는 일이 있다(방콕+프놈펜, 싱가포르+말레이시아).
+     그래서 나라는 **쉼표로 이은 목록**이다 — 'TH,KH'. 표의 제약과 같은 모양(place.sql). */
+  const codeList = t => String(t || '').split(',').map(x => x.trim().toUpperCase())
+                          .filter(c => FLAG[c])
+                          .filter((c, i, a) => a.indexOf(c) === i);
+  const flags = t => codeList(t).map(c => FLAG[c]);
 
   /* 통화를 고르면 나라도 대개 정해진다 — 새 여행 폼에서 **미리 골라 준다**(바꿀 수 있다).
      통화 하나가 여러 나라인 것(EUR·USD)은 비워 둔다. 지어내지 않는다. */
@@ -72,12 +78,38 @@ const U = (function () {
   /* 사람이 쉼표로 적은 도시를 낱개로. 앞뒤 공백과 빈 칸을 걷는다. */
   const cityList = (t) => String(t || '').split(/[,·]/).map(x => x.trim()).filter(Boolean);
 
-  /* 나라 고르는 칸을 채운다. 두 폼(새 여행·여행 설정)이 같은 목록을 써야 하므로
-     한 곳에서 만든다. '안 적음' 을 맨 위에 둔다 — 나라를 모를 수도 있다. */
-  function fillCountry(sel) {
-    if (!sel) return;
-    sel.innerHTML = '<option value="">안 적음</option>'
+  /* ── 나라 고르개 ─────────────────────────────────────────────────────────
+     고르면 아래에 조각으로 쌓이고, 조각을 누르면 빠진다. 여러 나라를 담기 위해서다.
+     ★<select multiple> 을 쓰지 않는다 — 폰에서 여러 개를 고르는 일이 고역이다.
+       한 번에 하나씩 고르고 고른 것이 눈에 남는 편이 손이 적다.
+     ★두 폼(새 여행·여행 설정)이 같은 목록·같은 몸짓을 써야 하므로 한 곳에서 만든다. */
+  function countryPicker(sel, chips) {
+    if (!sel || !chips) return { get: () => '', set: () => {} };
+    let picked = [];
+    sel.innerHTML = '<option value="">나라 고르기…</option>'
       + COUNTRY.map(([c, n, f]) => `<option value="${c}">${f} ${n}</option>`).join('');
+    const draw = () => {
+      chips.innerHTML = picked.map(c =>
+        `<button type="button" class="pick" data-drop="${c}">` +
+        `<span class="pf">${FLAG[c]}</span>${esc(CNAME[c])}<span class="px">✕</span></button>`).join('');
+      chips.hidden = !picked.length;
+    };
+    sel.addEventListener('change', () => {
+      const c = sel.value;
+      sel.value = '';
+      if (c && !picked.includes(c)) { picked.push(c); draw(); }
+    });
+    chips.addEventListener('click', e => {
+      const b = e.target.closest('[data-drop]');
+      if (!b) return;
+      picked = picked.filter(c => c !== b.dataset.drop);
+      draw();
+    });
+    return {
+      get: () => picked.join(','),
+      set: (csv) => { picked = codeList(csv); draw(); },
+      disable: (off) => { sel.disabled = off; chips.querySelectorAll('button').forEach(b => { b.disabled = off; }); },
+    };
   }
 
   /* 통화 기호. 없는 통화는 코드를 그대로 앞에 붙인다(추측하지 않는다). */
@@ -102,7 +134,8 @@ const U = (function () {
   const SETTLE = 'KRW';
 
   return { esc, DOW, todayISO, addDays, dowOf, md, span, money,
-           COUNTRY, flag, countryName, guessCountry, cityList, fillCountry, SETTLE };
+           COUNTRY, flag, flags, codeList, countryName, guessCountry,
+           cityList, countryPicker, SETTLE };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용

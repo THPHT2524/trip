@@ -10,7 +10,9 @@
 -- ★★그래서 **사람이 한 번 적는다.** 여행 하나에 두 칸이고 만들 때 같이 적는다 —
 --   정교한 어림보다 적힌 사실이 낫다. 여권에 설명이 필요한 칸을 두지 않는다.
 --
--- country: ISO 3166-1 alpha-2 (JP·TW·TH…). 국기와 '몇 개국' 이 여기서 나온다.
+-- country: ISO 3166-1 alpha-2. **여럿이면 쉼표로** — 'TH,KH'. 국기와 '몇 개국' 이 여기서 나온다.
+--   ★한 여행이 두 나라를 걸치는 일이 있다(방콕+프놈펜, 싱가포르+말레이시아).
+--     칸을 하나로 두면 그런 여행에 국기가 하나만 뜬다.
 -- cities:  사람이 적은 대로. 여럿이면 쉼표로 나눈다 — '오사카, 교토'.
 --          표를 따로 만들지 않는다. 도시는 세는 것 말고 할 일이 없고,
 --          이름을 정규화할 근거(도시 목록)도 우리에게 없다.
@@ -22,15 +24,12 @@ alter table trip.trips
   add column if not exists cities  text;
 
 comment on column trip.trips.country is
-  'ISO 3166-1 alpha-2 국가코드. 국기와 여권의 ''몇 개국''이 여기서 나온다. 없으면 국기 없음';
+  'ISO 3166-1 alpha-2 국가코드. 여럿이면 쉼표로(''TH,KH''). 없으면 국기 없음';
 comment on column trip.trips.cities is
   '다녀온 도시. 쉼표로 나눠 적는다(''오사카, 교토''). 여권의 ''몇 개 도시''가 여기서 나온다';
 
--- 두 글자 대문자만 받는다 — 소문자·전체 이름이 섞이면 국기를 못 찾는다
-do $$
-begin
-  if not exists (select 1 from pg_constraint where conname = 'trips_country_chk') then
-    alter table trip.trips
-      add constraint trips_country_chk check (country is null or country ~ '^[A-Z]{2}$');
-  end if;
-end $$;
+-- 두 글자 대문자를 쉼표로 이은 것만 받는다 — 소문자·전체 이름이 섞이면 국기를 못 찾는다
+alter table trip.trips drop constraint if exists trips_country_chk;
+alter table trip.trips
+  add constraint trips_country_chk
+  check (country is null or country ~ '^[A-Z]{2}(,[A-Z]{2})*$');

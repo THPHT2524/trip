@@ -54,10 +54,11 @@ const Crew = (function () {
     $('set-from').value = trip.start_on || '';
     $('set-to').value = trip.end_on || '';
     $('set-cur').value = trip.base_cur || 'KRW';
-    $('set-country').value = trip.country || '';
+    SETPICK.set(trip.country || '');
     $('set-cities').value = trip.cities || '';
-    ['set-name', 'set-from', 'set-to', 'set-cur', 'set-country', 'set-cities', 'set-save']
+    ['set-name', 'set-from', 'set-to', 'set-cur', 'set-cities', 'set-save']
       .forEach(id => { $(id).disabled = !owner; });
+    SETPICK.disable(!owner);
     $('set-del').hidden = !owner;
     $('set-danger').hidden = !owner;
     $('set-note').textContent = owner ? '' : '여행을 만든 사람만 고칠 수 있습니다.';
@@ -86,7 +87,7 @@ const Crew = (function () {
         end_on: $('set-to').value || null,
         base_cur: $('set-cur').value,
         /* 두 글자 대문자만 — 표의 제약과 같은 규칙이다(supabase/place.sql) */
-        country: /^[A-Z]{2}$/.test($('set-country').value) ? $('set-country').value : null,
+        country: SETPICK.get() || null,
         cities: $('set-cities').value.trim() || null,
       };
       if (!patch.name) throw new Error('여행 이름을 입력하세요.');

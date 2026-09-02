@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=97">
+<link rel="stylesheet" href="/css/app.css?v=99">
 </head>
 <body>
 
@@ -133,13 +133,14 @@
                 <option>EUR</option><option>TWD</option><option>THB</option><option>VND</option>
               </select></div>
           </div>
-          <div class="row">
-            <div class="field kind"><label for="set-country">나라</label>
-              <select id="set-country"></select></div>
-            <div class="field"><label for="set-cities">도시</label>
-              <input id="set-cities" type="text" maxlength="120"
-                     placeholder="오사카, 교토" autocomplete="off"></div>
+          <div class="field">
+            <label for="set-country">나라</label>
+            <select id="set-country"></select>
+            <div class="picks" id="set-flags" hidden></div>
           </div>
+          <div class="field"><label for="set-cities">도시</label>
+            <input id="set-cities" type="text" maxlength="120" list="citylist"
+                   placeholder="오사카, 교토" autocomplete="off"></div>
           <div class="row">
             <div class="field"><label for="set-from">시작</label>
               <input id="set-from" type="date" class="mono"></div>
@@ -163,6 +164,10 @@
   </section>
 
 </div>
+
+<!-- 전에 적은 도시를 제안한다. 손으로 적는 칸이라 '오사카' 와 'Osaka' 가 섞이면
+     여권이 두 도시로 센다 — 앞서 쓴 철자를 눈앞에 두어 그 갈림을 막는다(js/app.js). -->
+<datalist id="citylist"></datalist>
 
 <div class="obox" id="obox" hidden></div>
 
@@ -200,13 +205,14 @@
             </select>
           </div>
         </div>
-        <div class="row">
-          <div class="field kind"><label for="new-country">나라</label>
-            <select id="new-country" name="country"></select></div>
-          <div class="field"><label for="new-cities">도시</label>
-            <input id="new-cities" name="cities" type="text" maxlength="120"
-                   placeholder="오사카, 교토" autocomplete="off"></div>
+        <div class="field">
+          <label for="new-country">나라</label>
+          <select id="new-country" name="country"></select>
+          <div class="picks" id="new-flags" hidden></div>
         </div>
+        <div class="field"><label for="new-cities">도시</label>
+          <input id="new-cities" name="cities" type="text" maxlength="120" list="citylist"
+                 placeholder="오사카, 교토" autocomplete="off"></div>
         <div class="row">
           <div class="field"><label for="new-from">시작</label>
             <input id="new-from" name="from" type="date" class="mono"></div>
@@ -360,22 +366,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=97"></script>
-<script src="/js/map-config.js?v=97"></script>
-<script src="/js/money.js?v=97"></script>
-<script src="/js/util.js?v=97"></script>
-<script src="/js/geo.js?v=97"></script>
-<script src="/js/gmaps.js?v=97"></script>
-<script src="/js/db.js?v=97"></script>
-<script src="/js/fx.js?v=97"></script>
-<script src="/js/outbox.js?v=97"></script>
+<script src="/js/supabase-config.js?v=99"></script>
+<script src="/js/map-config.js?v=99"></script>
+<script src="/js/money.js?v=99"></script>
+<script src="/js/util.js?v=99"></script>
+<script src="/js/geo.js?v=99"></script>
+<script src="/js/gmaps.js?v=99"></script>
+<script src="/js/db.js?v=99"></script>
+<script src="/js/fx.js?v=99"></script>
+<script src="/js/outbox.js?v=99"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=97"></script>
-<script src="/js/plan.js?v=97"></script>
-<script src="/js/map.js?v=97"></script>
-<script src="/js/cost.js?v=97"></script>
-<script src="/js/prep.js?v=97"></script>
-<script src="/js/app.js?v=97"></script>
+<script src="/js/crew.js?v=99"></script>
+<script src="/js/plan.js?v=99"></script>
+<script src="/js/map.js?v=99"></script>
+<script src="/js/cost.js?v=99"></script>
+<script src="/js/prep.js?v=99"></script>
+<script src="/js/app.js?v=99"></script>
 
 </body>
 </html>

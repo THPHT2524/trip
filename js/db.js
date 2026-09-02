@@ -122,8 +122,8 @@ const DB = (function () {
         start_on: start_on || null,
         end_on: end_on || null,
         base_cur: base_cur || 'KRW',
-        /* 두 글자 대문자만 — 표의 제약과 같은 규칙이다(supabase/place.sql) */
-        country: /^[A-Z]{2}$/.test(country || '') ? country : null,
+        /* 두 글자 대문자를 쉼표로 이은 것만 — 표의 제약과 같은 규칙이다(supabase/place.sql) */
+        country: /^[A-Z]{2}(,[A-Z]{2})*$/.test(country || '') ? country : null,
         cities: String(cities || '').trim() || null,
       };
       if (!row.name) throw new Error('여행 이름을 입력하세요.');

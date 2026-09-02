@@ -60,6 +60,15 @@ eq(U.cityList(null), [], 'null 도 없음');
 eq(U.COUNTRY.every(([c, n, f]) => /^[A-Z]{2}$/.test(c) && n && f), true,
    '★나라 목록의 코드는 전부 두 글자 대문자');
 eq(new Set(U.COUNTRY.map(c => c[0])).size, U.COUNTRY.length, '나라코드가 겹치지 않는다');
+/* ★한 여행이 두 나라를 걸치는 일이 있다(방콕+프놈펜) — 나라는 쉼표로 이은 목록이다.
+   자동으로 뽑는 길도 재 봤지만(MapTiler 역지오코딩) 도시는 못 쓴다:
+   간사이공항이 '다지리초' 로 나와서 좌표로 묶던 것과 같은 답이 된다. 나라만 확실하다. */
+eq(U.codeList('JP,TH'), ['JP', 'TH'], '쉼표로 이은 나라');
+eq(U.flags('JP,TH'), ['🇯🇵', '🇹🇭'], '국기도 여럿');
+eq(U.codeList(' jp , TH , JP '), ['JP', 'TH'], '소문자·공백·중복을 걷는다');
+eq(U.codeList('JP,ZZ,TH'), ['JP', 'TH'], '★모르는 코드는 버린다 — 빈 국기를 세지 않는다');
+eq(U.codeList(''), [], '안 적었으면 없음');
+eq(U.flags(null), [], 'null 도 없음');
 
 // ★사람이 읽을 이름이 아닌 것을 장소명에 넣지 않는다
 eq(GM.parse('https://www.google.com/maps/place/?q=place_id:ChIJN1t_tDeuEmsRUsoyG83frY4'), null,

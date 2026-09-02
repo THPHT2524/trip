@@ -943,6 +943,25 @@ details[open] > summary::after { content: '−'; }
    껍데기를 두를 때는 그 껍데기가 부모의 리듬을 물려받아야 한다. */
 #if-pay { display: flex; flex-direction: column; gap: 12px; }
 
+/* 고른 나라가 쌓이는 자리. 조각을 누르면 빠진다.
+   ★<select multiple> 을 안 쓰는 이유: 폰에서 여러 개를 고르는 일이 고역이다.
+     하나씩 고르고 고른 것이 눈에 남는 편이 손이 적다. */
+.picks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.picks:empty { display: none; }
+.pick {
+  appearance: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 34px; padding: 0 8px 0 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--sunk); color: var(--ink);
+  font: inherit; font-size: 12.5px; font-weight: 600;
+}
+/* 윈도우에서 국기가 'JP' 두 글자로 떨어져도 조각 안에서 코드처럼 읽힌다 */
+.pick .pf { font-size: 15px; line-height: 1;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans); }
+.pick .px { color: var(--ink-3); font-size: 11px; }
+.pick:hover .px, .pick:focus-visible .px { color: var(--warn); }
+.pick[disabled] { opacity: .5; cursor: default; }
+
 .form .row.tight { flex-wrap: nowrap; gap: 6px; }
 /* ★★단가가 이 줄의 **주인공**이다. 곁칸 셋에 88px 씩 고정으로 주고 나면 375px 폰에서
      단가에 57px 만 남아 '214000' 이 '2140(' 로 잘렸다(2026-09-02). 남는 자리는 단가가
