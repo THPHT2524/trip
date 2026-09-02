@@ -899,13 +899,6 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 /* ── 폼 ───────────────────────────────────────────────────────────────── */
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label, .field .lbl { font-size: 12px; font-weight: 600; color: var(--ink-2); }
-.lnk {
-  appearance: none; cursor: pointer; background: none; border: 0;
-  font: inherit; font-size: 12px; font-weight: 600; color: var(--route);
-  /* 여백은 안쪽으로, 음수 마진으로 되돌린다 — 누르는 자리는 넓히되 줄은 안 커진다 */
-  padding: 9px 8px; margin: -9px -8px -9px 0; border-radius: 7px;
-}
-.lnk:hover, .lnk:focus-visible { background: var(--route-w); }
 /* 결제 방식 셋 — 카드 / 현금 / 환전·출금. 라디오지만 눈에는 한 덩어리로 보여야 한다 */
 .seg3 { display: flex; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg3 button {
@@ -1066,8 +1059,7 @@ html:has(dialog[open]), html:has(dialog[open]) body { overflow: hidden; overscro
   margin: 4px -14px -18px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
   background: var(--card); border-top: 1px solid var(--line);
 }
-/* 지우기 홀로 왼쪽 끝, 안전한 둘(결제 추가·저장)은 오른쪽에 모은다.
-   가운데의 빈 곳이 곧 안전거리다 — 지우기와 저장을 붙여 두면 손가락이 옆칸을 누른다. */
+/* 지우기 홀로 왼쪽 끝, 저장은 오른쪽 끝. 가운데의 빈 곳이 곧 안전거리다. */
 #if-dlg .form .row.btns { flex-wrap: nowrap; }
 #if-dlg .form .row.btns > #if-del { margin-right: auto; }
-#if-dlg .form .row.btns > #if-del[hidden] + .lnk { margin-right: auto; }
+#if-dlg .form .row.btns > #if-save { margin-left: auto; }

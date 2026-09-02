@@ -91,10 +91,6 @@ const Plan = (function () {
        한 자리에서 결제가 둘 이상인 일이 흔한데, 첫 결제만 장소 줄에 얹으면
        같은 것이 두 곳에 살게 된다. 옛 줄(금액이 얹힌 것)은 고칠 수 있어야 하므로 편다. */
     $('if-pay').hidden = !kid && !hasOwnCost;
-    /* 결제 줄에는 또 결제를 못 붙인다(trip.items_one_level 트리거가 막는다) */
-    $('if-payadd').hidden = kid;
-    /* 목록의 단추와 **같은 이름**이다 — 같은 동작을 두 곳에서 달리 부르지 않는다 */
-    $('if-payadd').textContent = '＋ 결제 추가';
     showSum();
   }
 
@@ -452,19 +448,15 @@ const Plan = (function () {
     };
   }
 
-  /* next='child' 면 저장한 뒤 시트를 닫지 않고 **그 장소의 결제 줄**로 갈아 끼운다.
-     ★반드시 먼저 저장한다 — '하나 더' 가 폼을 비우는데, 고치던 값이 남아 있으면
-       말없이 날아간다. 저장이 검증에 걸리면(이름 빈 칸 등) 갈아 끼우지도 않는다. */
-  async function save(ev, next) {
+  async function save(ev) {
     ev.preventDefault();
     $('if-save').disabled = true;
     $('if-err').textContent = '';
     try {
       const v = valueOf();
-      let made = null;
       try {
         if (editing) await DB.items.update(editing, v);
-        else made = await DB.items.create(trip.id, v);
+        else await DB.items.create(trip.id, v);
       } catch (e) {
         /* 서버가 거절한 것(검증·권한)은 그대로 보여 준다 — 다시 보내도 같다.
            끊겨서 못 보낸 것만 쌓아 둔다. */
@@ -474,15 +466,6 @@ const Plan = (function () {
           : { kind: 'create', tempId: Outbox.tmpId(), tripId: trip.id, row: DB.items.shape(v) });
       }
       await reload();
-      /* 방금 만든 줄이면 서버가 준 id 를 쓴다. 오프라인으로 쌓아 둔 것은 id 가 없어
-         붙일 곳이 없다 — 그때는 그냥 닫고, 연결되면 그 장소를 눌러 붙이면 된다. */
-      const attach = editing || (made && made.id);
-      if (next === 'child' && attach) {
-        parentOf = attach;
-        editing = null;
-        openSheet(null);
-        return;
-      }
       fillForm(null);
       closeSheet();
     } catch (e) {
@@ -606,9 +589,6 @@ const Plan = (function () {
   $('if-link').addEventListener('change', readLink);
   $('if-link').addEventListener('paste', () => setTimeout(readLink, 0));
   $('fab').addEventListener('click', () => { parentOf = null; openSheet(null); });
-  /* '＋ 결제 하나 더' — 저장하고 같은 시트를 자식 모드로 다시 채운다.
-     닫았다 열지 않는다(닫으면 뒤 화면이 스크롤 위치를 잃는다). */
-  $('if-payadd').addEventListener('click', e => save(e, 'child'));
   $('if-close').addEventListener('click', closeSheet);
   /* 배경을 누르면 닫는다. dialog 자신이 클릭 대상이면 시트 **바깥**을 누른 것이다. */
   $('if-dlg').addEventListener('click', e => { if (e.target === $('if-dlg')) closeSheet(); });

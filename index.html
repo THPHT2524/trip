@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=78">
+<link rel="stylesheet" href="/css/app.css?v=79">
 </head>
 <body>
 
@@ -315,13 +315,13 @@
             </div>
           </details>
 
-          <!-- ★이 줄은 sticky 다(app.css) — 그래서 '＋ 결제 추가' 도 여기 둔다.
-               폼 안에 두었더니 칸 아홉 밑이라 스크롤하지 않으면 안 보였다.
-               ★지우기는 왼쪽 끝, 저장은 오른쪽 끝 — 가운데를 비우는 것이 곧 안전거리다.
-                 붙여 두면 손가락이 옆칸을 누른다(여행 설정 폼과 같은 규칙). -->
+          <!-- 지우기는 왼쪽 끝, 저장은 오른쪽 끝 — 가운데를 비우는 것이 곧 안전거리다.
+               붙여 두면 손가락이 옆칸을 누른다(여행 설정 폼과 같은 규칙).
+               ★'＋ 결제 추가' 는 여기 없다. v=73 부터 **목록의 모든 장소 줄**에 있어서
+                 같은 동작으로 가는 문이 둘이 됐고, 저장 옆에 두면 성격이 다른 단추가
+                 손가락 폭 안에 붙는다. 결제는 목록에서 그 자리를 보며 붙이는 것이 맞다. -->
           <div class="row btns">
             <button class="btn ghost danger" id="if-del" type="button" hidden>지우기</button>
-            <button class="lnk" id="if-payadd" type="button" hidden>＋ 결제 추가</button>
             <button class="btn" id="if-save" type="submit">저장</button>
           </div>
           <p class="err" id="if-err"></p>
@@ -342,21 +342,21 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=78"></script>
-<script src="/js/map-config.js?v=78"></script>
-<script src="/js/money.js?v=78"></script>
-<script src="/js/util.js?v=78"></script>
-<script src="/js/geo.js?v=78"></script>
-<script src="/js/gmaps.js?v=78"></script>
-<script src="/js/db.js?v=78"></script>
-<script src="/js/outbox.js?v=78"></script>
+<script src="/js/supabase-config.js?v=79"></script>
+<script src="/js/map-config.js?v=79"></script>
+<script src="/js/money.js?v=79"></script>
+<script src="/js/util.js?v=79"></script>
+<script src="/js/geo.js?v=79"></script>
+<script src="/js/gmaps.js?v=79"></script>
+<script src="/js/db.js?v=79"></script>
+<script src="/js/outbox.js?v=79"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=78"></script>
-<script src="/js/plan.js?v=78"></script>
-<script src="/js/map.js?v=78"></script>
-<script src="/js/cost.js?v=78"></script>
-<script src="/js/prep.js?v=78"></script>
-<script src="/js/app.js?v=78"></script>
+<script src="/js/crew.js?v=79"></script>
+<script src="/js/plan.js?v=79"></script>
+<script src="/js/map.js?v=79"></script>
+<script src="/js/cost.js?v=79"></script>
+<script src="/js/prep.js?v=79"></script>
+<script src="/js/app.js?v=79"></script>
 
 </body>
 </html>
