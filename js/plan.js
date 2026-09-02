@@ -194,24 +194,28 @@ const Plan = (function () {
     /* ★결제가 여럿인 자리는 **그 자리의 합**을 적는다. 공항에서 항공권과 환전을 따로
        넣었더니 장소 줄에는 아무 금액도 안 남았다 — ₩462,498 을 쓴 자리가 빈 줄로 보였다.
        (환전은 지출이 아니라 지갑에 넣는 것이라 합계에서 빠진다 — p.spend 가 가른다) */
+    /* ★★목록에는 **적은 그대로**만 보인다. 엔으로 넣었으면 엔만 — 원화 환산은
+       한 줄마다 붙으면 숫자가 두 배가 되는데, 그 자리에서 알고 싶은 것은 '얼마 냈나' 이지
+       '원으로 얼마인가' 가 아니다. 원화는 셈이 필요한 곳에만 둔다:
+       하루 띠·비용 탭·통화가 섞인 자리 합계. 시트의 계산 힌트에도 그대로 남는다. */
     const cost = (() => {
       if (kids.length) {
-        let sum = 0, miss = 0, n = 0;
-        [r, ...kids].forEach(x => {
-          const p = M.per.get(x.id);
-          if (!p || !p.spend) return;
-          n += 1;
-          if (p.krw == null) miss += 1; else sum += p.krw;
-        });
-        if (!n) return '';
+        /* 자리 합계 — 다 같은 통화면 **그 통화로** 낸다. 섞였을 때만 원화로 모은다. */
+        const paid = [r, ...kids].filter(x => { const p = M.per.get(x.id); return p && p.spend; });
+        if (!paid.length) return '';
+        const curs = new Set(paid.map(x => x.cost_cur));
+        if (curs.size === 1 && paid.every(x => x.cost != null)) {
+          const one = paid.reduce((a, x) => a + (+x.cost || 0), 0);
+          return `<span class="money">합 ${esc(U.money(one, paid[0].cost_cur))}</span>`;
+        }
+        let sum = 0, miss = 0;
+        paid.forEach(x => { const p = M.per.get(x.id);
+          if (p.krw == null) miss += 1; else sum += p.krw; });
         return `<span class="money">합 ${esc(U.money(sum, U.SETTLE))}${
           miss ? ` <span class="warn">+${miss}건</span>` : ''}</span>`;
       }
       if (r.cost == null) return '';
-      const p = M.per.get(r.id);
-      return `<span class="money">${esc(U.money(r.cost, r.cost_cur))}${
-        (p && p.krw != null && r.cost_cur !== U.SETTLE)
-          ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : ''}</span>`;
+      return `<span class="money">${esc(U.money(r.cost, r.cost_cur))}</span>`;
     })();
     const link = GM.placeUrl(r);
     /* 같은 자리의 추가 결제 — 장소 아래 들여 붙는다. 지도에는 안 찍힌다(부모가 그 자리다).
@@ -221,8 +225,6 @@ const Plan = (function () {
          **한 번도 안 눌린 단추**가 먹고 있었다(2026-09-02 측정).
          첫 결제는 장소를 눌러 여는 시트 안에서 붙인다 — 거기가 이미 그 장소의 자리다. */
     const payHtml = kids.map(c => {
-      const p = M.per.get(c.id);
-      const won = (p && p.krw != null && c.cost_cur !== U.SETTLE) ? ' · ' + esc(U.money(p.krw, U.SETTLE)) : '';
       const who = c.split ? `각자${+c.qty > 1 ? ' ' + (+c.qty) + '명' : ''}`
                 : (c.payer_id ? (Crew.nameOf(crew, c.payer_id) || '냄') : '');
       const way = c.settle === 'cash' ? '현금' : c.settle === 'exchange' ? '환전' : '';
@@ -232,7 +234,7 @@ const Plan = (function () {
         <span class="pn">${esc(c.name)}</span>
         ${way ? `<span class="badge">${esc(way)}</span>` : ''}
         ${who ? `<span class="badge">${esc(who)}</span>` : ''}
-        <span class="pm">${esc(U.money(c.cost, c.cost_cur))}${won}</span>
+        <span class="pm">${esc(U.money(c.cost, c.cost_cur))}</span>
       </button>`;
     }).join('');
     return `<div class="${cls}" style="--k: var(--${k})">
