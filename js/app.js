@@ -332,14 +332,14 @@
     const content = box.scrollWidth - padX;
     const over = content - (box.clientWidth - padX);
     if (drawsFlags) {
-      /* ★★**늘 4분의 1씩 겹친다.** 넘칠 때만 겹치게 했더니 나라마다 한 장으로 줄고
+      /* ★★**늘 5분의 1씩 겹친다.** 넘칠 때만 겹치게 했더니 나라마다 한 장으로 줄고
          나서는 열여섯 장이 그냥 들어가 버려서, 부채가 아니라 국기를 늘어놓은 줄이
          됐다(2026-09-03). 겹쳐야 여권에 도장이 포개진 것처럼 읽힌다.
-         ★비율은 반 → 5분의 2 → 3분의 1 → 4분의 1 로 세 번 내렸다. 겹칠수록 부채처럼
+         ★비율은 반 → 5분의 2 → 3분의 1 → 4분의 1 → 5분의 1 로 네 번 내렸다. 겹칠수록 부채처럼
            보이지만 어느 선을 넘으면 국기가 색 띠로 뭉쳐 무엇인지 알 수 없다.
          ★넘쳐도 더 겹치지 않는다. 대신 fitFlags 가 줄을 하나 더 쓴다 —
            뭉개진 한 줄보다 두 줄이 낫다. */
-      box.style.setProperty('--lap', (content / n / 4).toFixed(2) + 'px');
+      box.style.setProperty('--lap', (content / n / 5).toFixed(2) + 'px');
     }
     return box.scrollWidth - box.clientWidth;   // 겹치고도 남은 것
   }
