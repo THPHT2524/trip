@@ -946,6 +946,8 @@ input.code {
    그러면 국기끼리 바로 맞붙는다.
    ★경계선도 걷었다. 틈을 없애려는 판에 선을 그으면 그게 곧 틈이다. */
 .pflags b { display: block; margin: 0 -.13em; font-weight: inherit; }
+/* 한 장의 **맨 폭**을 재는 동안만 당김을 푼다 — js/app.js 의 fitRow 를 보라. */
+.pflags.bare b { margin: 0; }
 /* 국기가 안 그려지는 곳(윈도우) — 두 글자 코드가 되므로 겹치지 않고 띄워서 세운다.
    부채처럼 겹치는 것은 그림일 때만 읽힌다. 넘치면 잘린다(줄은 하나로 둔다). */
 .pflags.ascii { gap: 8px; font-size: var(--t-read); letter-spacing: .04em; }

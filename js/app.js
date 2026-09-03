@@ -334,18 +334,21 @@
     if (drawsFlags) {
       /* ★★겹침을 '얼마나 가리나' 가 아니라 **'얼마나 보이나'** 로 센다.
          겹침이 두 군데서 왔기 때문이다: `--lap` 말고도 `.pflags b` 의 음수 여백이
-         양옆에서 0.26em 을 이미 당기고 있다(이모지 제 여백을 걷으려고 넣은 것인데
-         실제 글리프에서는 그보다 더 먹는다). 둘을 따로 두니 5분의 1로 적어 놓고
-         화면에서는 5분의 2가 겹쳤다(2026-09-03 아이폰).
-         ★이제 **한 장이 SHOW 만큼 보이게** 총합으로 맞춘다 — b 가 당긴 몫을 빼고
-           남는 만큼만 --lap 에 준다. 이미 충분히 겹쳐 있으면 0 이 된다.
+         이모지 제 여백을 걷는다며 양옆을 당기고 있다. 둘을 따로 두니 5분의 1로
+         적어 놓고 화면에서는 5분의 2가 겹쳤다(2026-09-03 아이폰).
+         ★★그리고 **국기 한 장의 진짜 폭을 잰다.** 애플 이모지 폭을 1.16em 으로
+           어림해서 셈했더니 화면과 안 맞았다 — 이모지 폭은 글꼴마다 다르고 우리가
+           그것을 알 방법이 없다. 그러니 b 의 여백을 잠깐 걷고(.bare) 한 번 재서
+           **맨 글리프 폭**을 얻는다. 재는 값이 둘이라 레이아웃을 두 번 훑지만
+           국기 열댓 장짜리 줄이라 부담이 없고, 대신 어림한 상수가 하나도 안 남는다.
          ★넘쳐도 더 겹치지 않는다. 대신 fitFlags 가 줄을 하나 더 쓴다 —
            뭉개진 한 줄보다 두 줄이 낫다. */
-      const SHOW = 0.75;                                 // 한 장이 4분의 3은 보인다
-      const w = content / n;                             // 지금 한 장이 차지하는 폭
-      const bleed = 0.26 * parseFloat(cs.fontSize);      // b 가 양옆에서 당겨 둔 양
+      const SHOW = 0.75;                          // 한 장이 4분의 3은 보인다
+      box.classList.add('bare');
+      const bare = box.scrollWidth - padX;        // 국기끼리 안 당겼을 때
+      box.classList.remove('bare');
       box.style.setProperty('--lap',
-        Math.max(0, w - (w + bleed) * SHOW).toFixed(2) + 'px');
+        Math.max(0, (content - bare * SHOW) / n).toFixed(2) + 'px');
     }
     return box.scrollWidth - box.clientWidth;   // 겹치고도 남은 것
   }
