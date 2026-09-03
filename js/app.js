@@ -335,11 +335,13 @@
       /* ★★넘칠 때만 겹치던 것을 **늘 조금은 겹치게** 바꿨다. 나라마다 한 장으로 줄고
          나서는 열여섯 장이 그냥 들어가 버려서, 부채가 아니라 국기를 늘어놓은 줄이
          됐다(2026-09-03). 겹쳐야 여권에 도장이 포개진 것처럼 읽힌다.
-         ★넘치면 더 겹치되 반 넘게는 안 가린다 — 그 이상이면 무엇인지 알 수 없다. */
+         ★넘치면 더 겹치되 **5분의 2까지만** 가린다. 반씩 겹쳐 봤더니 국기가 색 띠로
+           뭉쳐서 무엇인지 알 수 없었다(2026-09-03). 여기서 더 안 들어가면 겹침을
+           키우는 대신 줄을 하나 더 쓴다 — 아래 fitFlags 가 그렇게 한다. */
       const per = content / n;                                  // 국기 한 장의 폭
       const need = over > 0 ? over / (n - 1) : 0;
       box.style.setProperty('--lap',
-        Math.min(per * 0.55, Math.max(per * 0.3, need)).toFixed(2) + 'px');
+        Math.min(per * 0.4, Math.max(per * 0.3, need)).toFixed(2) + 'px');
     }
     return box.scrollWidth - box.clientWidth;   // 겹치고도 남은 것
   }
