@@ -12,3 +12,6 @@ __pycache__/
 
 # supabase CLI 가 만드는 로컬 상태 (프로젝트 링크 등)
 supabase/.temp/
+
+# 디자인 점검용 스텁 (로컬 전용)
+_stub*

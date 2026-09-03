@@ -13,25 +13,34 @@
      (card-dashboard 도 같은 이유로 라틴만 self-host 한다).
      **숫자와 라벨만 IBM Plex Mono** 를 직접 호스팅한다 — 시각·거리·금액이 자리를 맞춰
      세로로 읽히는 것이 이 화면에서 중요하다. 시간표가 그렇게 생겼다.
+
+   ★★**서브셋에 없는 글자를 unicode-range 가 있다고 적어 두고 있었다**(2026-09-03 실측).
+     ₩(U+20A9)와 →(U+2192)가 그랬다 — 파일의 229자 중 나머지는 전부 600/1000 등폭인데
+     이 둘만 대체 글꼴로 떨어진다(28px 에서 ₩ 14.84 vs 숫자 16.25). 선언이 거짓말을 하면
+     '왜 여기만 격자가 어긋나지' 를 글꼴 밖에서 찾게 된다. 범위를 **파일에 실제로 있는
+     것**으로 좁혔다. 그린 결과는 그대로다 — 브라우저는 이미 대체하고 있었다.
+   ★그래서 **₩ 는 등폭이 아니다.** 돈을 크게 쓰는 자리에서 음수 자간을 주면 ₩ 가 뒤
+     숫자에 붙는다(아래 .ctotal .big 을 보라). ฿ ₫ ₱ 도 애초에 범위 밖이라 같은 처지다.
+     제대로 고치려면 원본 IBM Plex Mono 로 서브셋을 다시 떠야 한다.
    ────────────────────────────────────────────────────────────────────────── */
 
 @font-face {
   font-family: 'Plex Mono';
   src: url('../fonts/ibm-plex-mono-400.woff2') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
-  unicode-range: U+0000-00FF, U+2000-206F, U+2190-21BB, U+2212, U+20A9, U+20AC;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2212, U+20AC;
 }
 @font-face {
   font-family: 'Plex Mono';
   src: url('../fonts/ibm-plex-mono-500.woff2') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
-  unicode-range: U+0000-00FF, U+2000-206F, U+2190-21BB, U+2212, U+20A9, U+20AC;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2212, U+20AC;
 }
 @font-face {
   font-family: 'Plex Mono';
   src: url('../fonts/ibm-plex-mono-600.woff2') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
-  unicode-range: U+0000-00FF, U+2000-206F, U+2190-21BB, U+2212, U+20A9, U+20AC;
+  unicode-range: U+0000-00FF, U+2000-206F, U+2212, U+20AC;
 }
 
 /* ── 토큰 ─────────────────────────────────────────────────────────────── */
@@ -51,7 +60,10 @@
   --ink-3:   #5C6D68;
   --line:    #DCE4E0;   /* 실선 구획 */
   --wsea:    #E4EBE7;   /* 여권 지도의 바다 */
-  --wland:   #9DB4AA;   /* 여권 지도의 육지 — 바다와 1.8:1. 어두운 쪽(2.3:1)에 맞춘 값 */
+  /* ★여권 지도의 육지. **어두운 쪽에 맞췄다고 적어 놓고 안 맞아 있었다** —
+     밝은 1.82 vs 어두운 2.26 이라 밝은 화면에서만 대륙이 흐릿하게 번졌다
+     (2026-09-03 실측). 색상·채도는 그대로 두고 명도만 내려 2.25 로 맞춘다. */
+  --wland:   #86A396;   /* 여권 지도의 육지 — 바다와 2.25:1 (어두운 쪽 2.26 과 같다) */
   --rail:    #C4D0CB;   /* 레일 — 지나온 구간 */
   --route:   #2B4ACB;   /* 구조색: 활성 레일 · 링크 · 초점 */
   --route-w: #E3E8FB;   /* 코발트의 옅은 바탕 */
@@ -612,8 +624,14 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding: 18px var(--pad) 6px;
   display: flex; flex-direction: column; gap: 2px;
 }
+/* ★★**돈에는 음수 자간을 주지 않는다.** ₩ 가 서브셋에 없어 대체 글꼴로 떨어지는데
+   (위 @font-face 설명 참고) 그 글리프는 등폭이 아니라 숫자보다 좁다 — 28px 에서
+   14.84 vs 16.25. 거기에 -.02em 까지 얹히니 ₩ 의 두 가로줄이 뒤 8 에 닿아
+   '₩883,341' 이 한 덩어리로 뭉쳤다(2026-09-03 실측). 자간을 0 으로 되돌린다.
+   ★큰 글자에 음수 자간을 주던 이유(제목이 헐거워 보인다)는 여기 해당하지 않는다 —
+     등폭 숫자는 애초에 헐겁게 설계된 글꼴이고, 그 헐거움이 자리를 맞춰 준다. */
 .ctotal .big {
-  font-family: var(--mono); font-size: 28px; font-weight: 600; letter-spacing: -.02em;
+  font-family: var(--mono); font-size: 28px; font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 .ctotal .sub { font-size: var(--t-cap); color: var(--ink-3); }
