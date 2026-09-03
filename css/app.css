@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=181') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=182') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=181') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=182') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=181') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=182') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -774,6 +774,27 @@ a { color: var(--route); text-underline-offset: 2px; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .mhero dd.warn { color: var(--warn); }
+
+/* ★권하는 줄 — 지금 넣은 금액이 999 에서 멀 때만 뜬다. 답 바로 밑에 붙어 있어서
+   '이게 답이고, 이렇게 하면 더 낫다' 로 이어 읽힌다.
+   ★할 말이 없으면 통째로 사라진다(hidden). 늘 자리를 지키는 안내문이 아니다. */
+.mnudge { border-bottom: 1px solid var(--line); background: var(--route-w); }
+.mnudge button {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  width: 100%; padding: 9px var(--pad); text-align: left;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-family: inherit; font-size: var(--t-body); color: var(--ink);
+}
+.mnudge b {
+  font-family: var(--mono); font-weight: 600;
+  font-variant-numeric: tabular-nums; color: var(--route);
+}
+/* 그렇게 하면 어떤 값이 되는지 — 권유 뒤에 조용히 붙는다 */
+.mnudge .mgo {
+  margin-left: auto; font-family: var(--mono); font-size: var(--t-cap);
+  font-variant-numeric: tabular-nums; color: var(--ink-3); white-space: nowrap;
+}
+.mnudge .mgo b { color: var(--ink-2); }
 
 /* ─ 표 ─────────────────────────────────────────────────────────────────── */
 /* 열여섯 줄이 세로로 서므로 **줄 높이와 자릿수 정렬**이 전부다.

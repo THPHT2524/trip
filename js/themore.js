@@ -204,6 +204,28 @@
     const d = MORE.digits(cur);
     const fmt = x => x.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d });
 
+    /* ★★**쓸모없는 답을 내놓고 끝내지 않는다.** 6.00 을 넣으면 청구 8,391 — 꼬리가
+       391 이라 782P 뿐인데, 42센트만 더 긁으면 8,987 이 되어 1,974P 다. 그 답은 이미
+       아래 표에 있지만 사람이 눈으로 찾아 견줘야 했다(2026-09-04). 이 화면이 있는
+       이유가 바로 그 비교인데, 정작 비교를 사람에게 떠넘기고 있었다.
+     ★가장 **가까운** 줄을 고른다. 가장 이득이 큰 줄이 아니다 — 5,999 로 내려가라는
+       말은 6달러를 쓰려던 사람에게 소용이 없다. 위아래를 가리지 않는다: 4.30 을 넣었으면
+       1센트를 **덜** 긁는 것이 답이다.
+     ★적립이 늘지 않는 줄은 아예 후보가 아니다. 그래서 이미 제일 좋은 값을 넣었으면
+       이 줄은 뜨지 않는다 — 할 말이 없을 때 자리를 차지하지 않는다. */
+    const near = one && list.reduce((best, x) => {
+      if (x.f === amt || x.b.point <= one.point) return best;
+      return (!best || Math.abs(x.f - amt) < Math.abs(best.f - amt)) ? x : best;
+    }, null);
+    $('mc-near').hidden = !near;
+    if (near) {
+      const gap = fmt(Math.abs(+(near.f - amt).toFixed(d)));
+      $('mc-near').innerHTML = `<button type="button" data-f="${near.f}">`
+        + `<b>${esc(gap)}</b> ${near.f > amt ? '더' : '덜'} 긁으면 `
+        + `<b>${(near.b.point - one.point).toLocaleString('ko-KR')}P</b> 더 쌓입니다`
+        + `<span class="mgo">${esc(fmt(near.f))} → ${won(near.b.krw)}</span></button>`;
+    }
+
     $('mc-tab').innerHTML = list.length ? `
       <table class="mtab">
         <thead><tr><th>긁을 금액 · ${esc(cur)}</th><th>청구</th><th>이득</th></tr></thead>
@@ -288,9 +310,10 @@
   $('mc-when').max = now;
   $('mc-when').min = MORE.kstDay(Date.now() - BACK_DAYS * 864e5) + 'T00:00';
 
-  /* 표의 금액을 누르면 위 칸이 그 값으로 바뀐다 — 줄을 눈으로 고르고 손으로 옮겨
-     적는 일이 없게. 고른 줄은 표에서 짚어 준다(.on). */
-  $('mc-tab').addEventListener('click', e => {
+  /* 금액이 적힌 것을 누르면 위 칸이 그 값으로 바뀐다 — 줄을 눈으로 고르고 손으로
+     옮겨 적는 일이 없게. 고른 줄은 표에서 짚어 준다(.on).
+     ★표만이 아니라 **권하는 줄(mnudge)도 같은 단추**다. 자리를 나누지 않고 한 곳에서 듣는다. */
+  document.addEventListener('click', e => {
     const b = e.target.closest('button[data-f]');
     if (!b) return;
     $('mc-amt').value = b.dataset.f;
