@@ -61,6 +61,27 @@
   }
 
   // ── 그리기 ────────────────────────────────────────────────────────────
+  /* ★★sticky 층의 높이를 **잰다.** 손으로 적은 64px 이 실제와 어긋난 것이 이번이
+     두 번째다(2026-09-01 날짜 탭이 잘렸고, 2026-09-03 연도 머리띠 아래로 스크롤이
+     비쳤다). 머리말 높이는 글꼴이 정하고 글꼴은 기기가 정한다 — 우리가 미리 알 수
+     없는 값을 CSS 에 적어 두고 있었다. 실제로 지금도 **화면마다 다르다**:
+     홈 64.19px · 여행 65px(뒤로 단추의 최소 높이 44px 때문). 상수는 하나였다.
+   ★**내림한다.** 붙는 자리가 머리말 바닥보다 낮으면 그 틈으로 스크롤이 비쳐 보이고,
+     높으면 머리말이 덮는다(z-index 가 더 크다). 어긋날 거면 덮는 쪽으로 어긋나야 한다.
+   ★CSS 의 64px·44px 은 그대로 둔다 — 첫 페인트에는 잴 것이 아직 없다. */
+  const shellSet = (name, el) => {
+    if (!el) return;
+    const h = Math.floor(el.getBoundingClientRect().height);
+    if (h > 0) document.documentElement.style.setProperty(name, h + 'px');
+  };
+  function measureShell() {
+    shellSet('--h-top', document.querySelector('.wrap:not([hidden]) .top'));
+    shellSet('--h-tabs', document.querySelector('.daytabs:not([hidden])'));
+  }
+  /* 글꼴이 늦게 와도(font-display: swap) 높이가 바뀐다 — 그때 다시 잰다. */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureShell);
+  addEventListener('resize', measureShell);
+
   function render() {
     const inTrip = !!tripId;
     $('view-trips').hidden = inTrip;
@@ -68,7 +89,7 @@
     $('tabs').hidden = !inTrip;
     document.body.dataset.view = inTrip ? 'trip' : 'trips';
 
-    if (!inTrip) { renderTrips(); return; }
+    if (!inTrip) { renderTrips(); measureShell(); return; }
 
     const t = trips.find(x => x.id === tripId);
     /* ★머리말에는 국기를 안 단다. 작게 달면 윈도우에서 'JP' 두 글자로 떨어져
@@ -91,6 +112,7 @@
       if (tab === 'cost') Cost.open(t, Plan.rows());
     });
     if (tab === 'info') Crew.open(t);
+    measureShell();
   }
 
   function renderTrips() {
