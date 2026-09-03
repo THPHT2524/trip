@@ -148,6 +148,26 @@
          + `</section>`;
   }
 
+  /* 여권의 머리 — 이름 한 줄, 종류 한 줄, 그리고 오른쪽에 이 앱의 표식.
+     ★진짜 여권의 인적사항면이 그렇게 생겼다: 발급기관 이름과 문서 종류가 위에,
+       사진(또는 표식)이 옆에. 아래 격자·MRZ 와 합쳐 한 장이 된다.
+     ★표식은 앱 아이콘 그대로다(세로 레일에 점 둘) — 새로 그리지 않는다.
+     ★글자가 아닌 것은 읽어 줄 필요가 없다(aria-hidden). 'MY TRIPLOG' 만 읽힌다. */
+  const PHEAD = `<div class="phead">
+    <div class="pname">
+      <b>MY TRIPLOG</b>
+      <span class="ptype" aria-hidden="true"><svg viewBox="0 0 14 12" class="pico">
+        <rect x=".8" y=".8" width="12.4" height="10.4" rx="2.2"/>
+        <circle cx="4.9" cy="6" r="1.7" class="f"/>
+        <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg> <i>·</i> PASSPORT</span>
+    </div>
+    <svg viewBox="0 0 32 32" class="pmark" aria-hidden="true">
+      <rect width="32" height="32" rx="8" class="bg"/>
+      <path d="M12 7.5v17" class="rail"/>
+      <circle cx="12" cy="12" r="3.4" class="d1"/>
+      <circle cx="12" cy="22.5" r="3.4" class="d2"/></svg>
+  </div>`;
+
   /* ── 여권 위의 세계지도 ──────────────────────────────────────────────────
      **다녀온 공항을 점으로 찍는다.** 여권 격자가 '얼마나' 를 말한다면 지도는 '어디를'
      말한다 — 같은 사실을 두 번 적는 것이 아니라 서로 다른 것을 센다.
@@ -177,10 +197,14 @@
       byTrip.get(r.trip_id).push(r);
     });
     const key = p => p.x.toFixed(1) + ',' + p.y.toFixed(1);
-    const out = new Map();                 // 같은 구간은 한 번만 (서울–제주가 열세 번이다)
+    /* ★선은 **중복을 걷고**(서울–제주가 열세 번이다), 세는 것은 **안 걷는다**
+       — 그림은 길을 보여 주고 숫자는 횟수를 말한다. 둘은 다른 물음이다. */
+    const out = new Map();
+    let flown = 0;
     const add = (a, b) => {
       const pa = WORLD.at(a.lat, a.lng), pb = WORLD.at(b.lat, b.lng);
       if (!pa || !pb || key(pa) === key(pb)) return;
+      flown += 1;
       const k = [key(pa), key(pb)].sort().join('|');
       if (!out.has(k)) out.set(k, [a, b]);
     };
@@ -193,13 +217,13 @@
         if (stamp(rows[i]) - stamp(rows[i - 1]) <= FLIGHT_H * 36e5) add(rows[i - 1], rows[i]);
       }
     });
-    return [...out.values()];
+    return { lines: [...out.values()], flown };
   }
 
-  function worldHtml() {
+  function worldHtml(air, legs) {
     /* 같은 공항을 **몇 번** 지났는지까지 센다 — 점 크기가 그 수다. */
     const seen = new Map();
-    shape.forEach(r => {
+    air.forEach(r => {
       if (!/공항$/.test(String(r.name || ''))) return;
       const p = WORLD.at(r.lat, r.lng);      // 좌표가 없거나 이상하면 null 을 준다
       if (!p) return;
@@ -210,8 +234,7 @@
     if (seen.size < 2) return '';            // 점 하나짜리 지도는 지도가 아니다
 
     /* 항로를 **점 아래에** 깐다 — 위에 그으면 선이 점을 가로지른다. */
-    const air = shape.filter(r => /공항$/.test(String(r.name || '')) && WORLD.at(r.lat, r.lng));
-    const legs = legsOf(air).map(([a, b]) => WORLD.arc(a, b)).filter(Boolean)
+    const arcs = legs.lines.map(([a, b]) => WORLD.arc(a, b)).filter(Boolean)
       .map(d => `<path d="${d}"/>`).join('');
 
     /* ★★점을 다 같은 크기로 찍었더니 밋밋했다. 실제로는 제주 26번·홍콩 6번·포르투 1번
@@ -224,14 +247,20 @@
     const rOf = n => 3.5 + Math.min(4, Math.sqrt(n - 1) * 1.7);
     const pts = [...seen.values()];
     const c = (p, r) => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r.toFixed(1)}"/>`;
-    /* 후광을 **먼저** 다 깔고 점을 얹는다 — 섞어 그리면 옆 점의 후광이 앞 점을 덮는다. */
-    const glow = pts.map(p => c(p, rOf(p.n) * 2.6)).join('');
+    /* 후광을 **먼저** 다 깔고 점을 얹는다 — 섞어 그리면 옆 점의 후광이 앞 점을 덮는다.
+       ★★반짝임은 **어긋난 박자**로. 스물여섯이 한 박자로 뛰면 지도가 숨쉬는 게 아니라
+         깜빡이는 경고등이 된다. 시작점을 음수로 흩어 저마다 다른 데서 시작하게 한다.
+         자리에서 뽑으므로 다시 그려도 같은 박자다 — 새로 고칠 때마다 튀지 않는다.
+       ★움직임을 줄여 달라는 설정이면 css 의 전역 규칙이 통째로 끈다. */
+    const glow = pts.map((p, i) =>
+      `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(rOf(p.n) * 2).toFixed(1)}"`
+      + ` style="animation-delay:-${((i * 1.37) % 5).toFixed(2)}s"/>`).join('');
     const dots = pts.map(p => c(p, rOf(p.n))).join('');
     /* 집은 **속이 빈 점**. 다녀온 곳이 아니라 떠나온 곳이라 다르게 그린다. */
     const home = WORLD.at(HOME.lat, HOME.lng);
     return `<svg class="wmap" viewBox="${WORLD.vb}" role="img"`
          + ` aria-label="다녀온 공항 ${seen.size}곳"><path class="wland" d="${WORLD.d}"/>`
-         + `<g class="wleg">${legs}</g>`
+         + `<g class="wleg">${arcs}</g>`
          + `<g class="wglow">${glow}</g><g class="wdot">${dots}</g>`
          + `<circle class="whome" cx="${home.x.toFixed(1)}" cy="${home.y.toFixed(1)}" r="4.5"/></svg>`;
   }
@@ -249,7 +278,7 @@
   const pad = (t) => (t + '<'.repeat(MRZ)).slice(0, MRZ);
   const mrzSafe = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]+/g, '<');
   /* ★격자 라벨과 **같은 열쇠**를 쓴다 — 라벨을 바꾸면 여기도 바꿔야 도장이 찍힌다. */
-  const MRZ_CODE = { COUNTRIES: 'C', CITIES: 'T', PLACES: 'P', DAYS: 'D' };
+  const MRZ_CODE = { COUNTRIES: 'C', CITIES: 'T', FLIGHTS: 'F', DAYS: 'D' };
   /* ★위 격자에 **선 칸만** 적는다. 전에는 0 도 그대로 찍어서, 셈을 못 받아 온 날
      '1C<0A<0P<3D' 라고 도장이 찍혔다 — 없는 것을 0 이라고 말한 셈이다(2026-09-02 폰). */
   function mrzLines(cells) {
@@ -359,28 +388,20 @@
     /* 도시는 **적힌 대로** 센다. 여러 여행에서 같은 도시를 적었으면 한 번만 센다. */
     const cities = new Set();
     trips.forEach(t => U.cityList(t.cities).forEach(c => cities.add(c)));
-    const n = { countries: countries.size, cities: cities.size, spots: 0, days: 0 };
-    /* ★★여권은 **다녀온 곳**을 센다. 간 횟수가 아니다. 공항은 갈 때 오고, 호텔은
-       묵는 밤마다, 마음에 든 가게는 두 번 온다 — 그대로 세면 66곳이지만 실제로는
-       55곳이다(2026-09-02 측정). 좌표로 같은 곳을 하나로 묶는다.
-       ★좌표를 열쇠로 쓰는 이유: 같은 구글맵 링크에서 온 값이라 **정확히 같고**,
-         이름으로 세어 봐도 결과가 똑같았다(55 = 55). 링크(map_url)는 같은 곳을
-         다른 주소로 넣은 적이 있어 62가 나온다 — 열쇠로 못 쓴다.
-       ★좌표가 없는 줄은 서로 구별할 방법이 없으니 각각 한 곳으로 센다. */
-    const uniq = new Map();
-    let noCoord = 0;
+    const n = { countries: countries.size, cities: cities.size, days: 0 };
     trips.forEach(t => {
-      const mine = shape.filter(r => r.trip_id === t.id);
-      const stops = mine.filter(r => !r.parent_id);
-      stops.forEach(r => {
-        if (GEO.ok(r)) uniq.set(+(+r.lat).toFixed(5) + ',' + +(+r.lng).toFixed(5), r);
-        else noCoord += 1;
-      });
       if (t.start_on && t.end_on) {
         n.days += Math.round((Date.parse(t.end_on) - Date.parse(t.start_on)) / DAYMS) + 1;
       }
     });
-    n.spots = uniq.size + noCoord;
+    /* ★★'장소' 를 빼고 '비행' 을 넣었다. 장소는 좌표로 겹치는 것을 걷어 센 수였는데,
+       바로 위 지도가 말하는 것과 아무 상관이 없었다. 비행은 **지도에 그린 그 선들**을
+       센 것이다 — 그림과 숫자가 같은 것을 말한다.
+       ★여행마다 서울 오가는 두 번 + 여행 안에서 갈아탄 것. 우리 기록으로 셀 수 있는
+         구간이라, 경유가 있었으면 그건 한 번으로 센다. */
+    const air = shape.filter(r => /공항$/.test(String(r.name || '')) && WORLD.at(r.lat, r.lng));
+    const legs = legsOf(air);
+    n.flights = legs.flown;
     /* 값이 0 인 칸은 세우지 않는다 — 빈 칸의 이름을 읽히게 두지 않는다 */
     /* ★나라와 도시는 **적힌 대로**다. 전에는 통화에서 유추하고 좌표를 15km 로 묶어
        어림했는데, 간사이공항이 오사카·교토와 나란히 '한 지역' 으로 섰다 — 공항은
@@ -390,15 +411,15 @@
     /* 라벨은 영문이다 — 진짜 여권이 그렇다(한국 여권도 모든 칸이 국·영문 병기다).
        아래 MRZ 도 로마자라 둘이 한 덩어리로 읽힌다. */
     const cells = [
-      ['COUNTRIES', n.countries], ['CITIES', n.cities], ['PLACES', n.spots], ['DAYS', n.days],
+      ['COUNTRIES', n.countries], ['CITIES', n.cities], ['FLIGHTS', n.flights], ['DAYS', n.days],
     ].filter(([, v]) => v);
     if (!cells.length) return '';
 
     return `<section class="pass">
-      ${worldHtml()}
+      ${worldHtml(air, legs)}
       ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
         flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
-      <p class="ptype" aria-hidden="true">여권 <span>·</span> PASSPORT <span>·</span> PASSEPORT</p>
+      ${PHEAD}
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
