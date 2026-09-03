@@ -1199,8 +1199,12 @@ input, select, textarea {
   min-height: 42px;          /* date·time·select 의 내재 높이가 제각각이라 맞춘다 */
   box-sizing: border-box;
 }
-/* iOS 는 date·time 을 가운데 정렬하고 제 여백을 얹는다 — 다른 칸과 나란히 서게 맞춘다 */
-input[type="date"], input[type="time"] {
+/* iOS 는 date·time 을 가운데 정렬하고 제 여백을 얹는다 — 다른 칸과 나란히 서게 맞춘다.
+   ★★datetime-local 을 여기 빠뜨렸다가 두 가지가 한꺼번에 났다(2026-09-03 아이폰):
+     값이 칸 가운데로 밀렸고, **초점이 가면 페이지가 확대됐다.** appearance 가 살아
+     있으면 사파리가 날짜를 제 내부 글꼴로 그리는데 그게 16px 미만이라, 아래
+     `font-size: 16px` 규칙이 안 먹는다. 세 종류를 늘 함께 적는다. */
+input[type="date"], input[type="time"], input[type="datetime-local"] {
   -webkit-appearance: none; appearance: none;
   text-align: left; line-height: normal;
 }
@@ -1218,6 +1222,13 @@ input.mono { font-family: var(--mono); }
    못 읽는 사람에게서 확대를 빼앗는 대신 글자를 키운다. (stock 에서 같은 판단을 했다) */
 @media (hover: none) {
   input, select, textarea { font-size: 16px; }
+  /* ★날짜 칸은 **안쪽 글자**까지 짚어야 한다. 겉 글꼴만 16px 로 두면 사파리가 제
+     내부 필드를 작게 그리고 그걸 기준으로 확대한다. */
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value {
+    font-size: 16px; text-align: left;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
