@@ -65,7 +65,7 @@ const Cost = (function () {
        하루짜리 여행에서는 날짜별 막대가 자기 자신과 100% 비교라 아무 말도 안 했다).
      ★빈 날은 바닥에 가는 선만 남긴다 — 미니 레일과 같은 어법이다. */
   function dayBars() {
-    const days = tripDays();
+    const days = dayList();
     if (days.length < 2) return '';        // 하루뿐이면 견줄 것이 없다
     const per = days.map(d => {
       const list = rows.filter(r => r.on_date === d && has(r));
@@ -93,8 +93,14 @@ const Cost = (function () {
     </section>`;
   }
 
-  /* 여행 기간이 있으면 빈 날도 센다 — 안 쓴 날도 '하루에 얼마씩' 의 일부다 */
-  function tripDays() {
+  /* 여행 기간이 있으면 빈 날도 센다 — 안 쓴 날도 '하루에 얼마씩' 의 일부다.
+     ★이름이 U.tripDays 와 같았다. 그쪽은 **일수(숫자)** 를 주고 이쪽은 **날짜 목록**이라,
+       한 글자도 안 겹치는 두 가지가 같은 이름을 쓰고 있었다(2026-09-03).
+     ★app.js 의 dayList 와는 사촌이지만 규칙이 다르다 — 저쪽은 21일에서 자르고 기간
+       밖 날짜를 버린다(카드의 미니 레일이 그보다 길어질 수 없다). 여기는 31일까지
+       세고 기간 밖에 적힌 날도 도로 넣는다 — 합계에서 돈이 사라지면 안 되기 때문이다.
+       규칙이 다르니 합치지 않는다. 한 함수에 깃발을 달면 둘 다 읽기 어려워진다. */
+  function dayList() {
     const has2 = [...new Set(rows.map(r => r.on_date))].sort();
     if (!trip.start_on || !trip.end_on) return has2;
     const out = [];
