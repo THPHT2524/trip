@@ -5,10 +5,12 @@
      · 일정 데이터 — 그건 outbox.js 가 localStorage 에 둔다(서비스워커가 손댈 이유가 없다).
      · 지도 타일 — MapTiler 약관이 대량 캐시를 권하지 않는다. 오프라인에서 지도는 포기한다.
      · /api/* — 프록시 응답은 세션에 달려 있다. 캐시하면 남의 응답이 나갈 수 있다.
+       (/api/more 만은 세션과 무관하지만 **날마다 바뀌는 환율**이라 역시 안 잡는다 —
+        어제 고시로 오늘 999 를 맞추면 조용히 틀린다.)
 
    ★V 를 올려야 새 파일이 나간다. index.html 의 ?v=N 과 함께 올린다.
      안 올리면 이미 받아 간 브라우저가 옛 앱을 계속 쓴다(card-dashboard 에서 실제로 겪은 사고다). */
-const V = 132;   // assets-sha:7fcf6ee8c630
+const V = 134;   // assets-sha:3bf99f994f85
 const CACHE = `trip-shell-v${V}`;
 
 const SHELL = [
@@ -16,26 +18,26 @@ const SHELL = [
   '/index.html',
   '/themore',
   '/themore.html',
-  '/css/app.css?v=132',
+  '/css/app.css?v=134',
   '/css/maplibre-gl-5.24.0.css',
   '/js/vendor/supabase-js-2.111.0.js',
   '/js/vendor/maplibre-gl-csp-5.24.0.js',
   '/js/vendor/maplibre-gl-csp-worker-5.24.0.js',
-  '/js/supabase-config.js?v=132',
-  '/js/map-config.js?v=132',
-  '/js/money.js?v=132',
-  '/js/more.js?v=132',
-  '/js/themore.js?v=132',
-  '/js/util.js?v=132',
-  '/js/geo.js?v=132',
-  '/js/gmaps.js?v=132',
-  '/js/db.js?v=132',
-  '/js/outbox.js?v=132',
-  '/js/plan.js?v=132',
-  '/js/map.js?v=132',
-  '/js/crew.js?v=132',
-  '/js/cost.js?v=132',
-  '/js/app.js?v=132',
+  '/js/supabase-config.js?v=134',
+  '/js/map-config.js?v=134',
+  '/js/money.js?v=134',
+  '/js/more.js?v=134',
+  '/js/themore.js?v=134',
+  '/js/util.js?v=134',
+  '/js/geo.js?v=134',
+  '/js/gmaps.js?v=134',
+  '/js/db.js?v=134',
+  '/js/outbox.js?v=134',
+  '/js/plan.js?v=134',
+  '/js/map.js?v=134',
+  '/js/crew.js?v=134',
+  '/js/cost.js?v=134',
+  '/js/app.js?v=134',
   '/fonts/ibm-plex-mono-400.woff2',
   '/fonts/ibm-plex-mono-500.woff2',
   '/fonts/ibm-plex-mono-600.woff2',
@@ -64,7 +66,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;          // 타일·Supabase 는 손대지 않는다
-  if (url.pathname.startsWith('/api/')) return;        // 세션에 달린 응답은 캐시하지 않는다
+  if (url.pathname.startsWith('/api/')) return;        // 세션에 달렸거나 날마다 바뀐다
 
   /* 경로 탭(/t/<id>...)은 문서를 달라는 것이다 — 껍데기를 준다.
      서버 리라이트와 같은 판단이라 오프라인에서도 새로고침이 살아 있다. */

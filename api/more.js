@@ -30,40 +30,26 @@ const UA = 'thpht-trip/1.0 (+https://thpht-trip.vercel.app; personal travel log)
 /* 신한이 데이터를 갖고 있는 범위 밖을 물으면 FAIL 이 온다. 넉넉히 잡아 둔다. */
 const FLOOR = '2000-01-01';
 
-const SB_URL = process.env.SUPABASE_URL || 'https://slakyumsnufoywxrdhhx.supabase.co';
-const SB_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_5xTTEUeViqzY1JgFLv0z6A_NAVJZcUz';
-
-const TOKEN_TTL = 5 * 60 * 1000;
-const seen = new Map();
-
-async function authorized(req) {
-  const raw = req.headers['authorization'] || '';
-  const token = /^Bearer\s+(.+)$/i.test(raw) ? raw.replace(/^Bearer\s+/i, '').trim() : '';
-  if (!token) return false;
-  const hit = seen.get(token);
-  if (hit && hit > Date.now()) return true;
-  try {
-    const r = await fetch(`${SB_URL}/auth/v1/user`, {
-      headers: { apikey: SB_ANON, Authorization: `Bearer ${token}` },
-    });
-    if (!r.ok) { seen.delete(token); return false; }
-    if (seen.size > 200) seen.clear();
-    seen.set(token, Date.now() + TOKEN_TTL);
-    return true;
-  } catch (e) { return false; }        // 못 물어보면 통과시키지 않는다(fail closed)
-}
-
-/* 계산기를 여는 사람 한 명이 한 번에 한 날짜만 본다. 폴링이 없다. */
-const RATE_MAX = 30;
+/* ★★여기만 **로그인 없이** 연다(2026-09-03). 앱의 다른 프록시(api/fx·api/gmaps)와 다르다.
+     왜 되나: 오가는 것이 **공개 고시환율뿐**이라 지킬 개인 정보가 없고, 아래 memo 가
+     날짜별로 붙들고 있어서 **누가 몇 번을 부르든 신한에는 하루 한두 번**만 나간다.
+   ★그래도 남는 위험은 우리 함수를 낭비당하는 것이다. 그래서 둘로 막는다:
+       ① IP 별 분당 상한 — 사람 한 명에게는 넉넉하고 긁어 가기에는 좁다
+       ② 응답에 s-maxage — 같은 날짜는 Vercel 가장자리가 대신 내주고 함수는 안 깨어난다
+   ★공개라고 해서 아무 말이나 내보내지 않는다. 응답에 사용자와 관련된 것은 한 칸도 없다. */
+const RATE_MAX = 20;
 const RATE_WIN = 60 * 1000;
 const rate = new Map();
 
-function overLimit(token) {
+const ipOf = (req) => String(req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || '')
+  .split(',')[0].trim() || 'unknown';
+
+function overLimit(who) {
   const now = Date.now();
-  const hit = rate.get(token);
+  const hit = rate.get(who);
   if (!hit || hit.until <= now) {
     if (rate.size > 500) rate.clear();
-    rate.set(token, { n: 1, until: now + RATE_WIN });
+    rate.set(who, { n: 1, until: now + RATE_WIN });
     return 0;
   }
   hit.n += 1;
@@ -137,17 +123,19 @@ async function ask(day) {                       // day = 'YYYYMMDD'
 const memo = new Map();
 const FRESH = 5 * 60 * 1000;
 
+/* s-maxage 를 함께 준다 — 같은 날짜를 다시 물으면 Vercel 가장자리가 내주고 함수는
+   깨어나지 않는다. 지난 날의 1회차는 다시 안 바뀌므로 하루, 오늘 것은 5분. */
+const cache = (past) => {
+  const n = past ? 86400 : 300;
+  return `public, max-age=${n}, s-maxage=${n}`;
+};
+
 const kstToday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
 const dayBefore = (d) => new Date(Date.parse(`${d}T00:00:00Z`) - 864e5).toISOString().slice(0, 10);
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') { res.status(405).json({ error: 'GET 만 받습니다.' }); return; }
-  if (!(await authorized(req))) {
-    res.setHeader('Cache-Control', 'no-store');
-    res.status(401).json({ error: '로그인이 필요합니다.' });
-    return;
-  }
-  const wait = overLimit(String(req.headers['authorization'] || ''));
+  const wait = overLimit(ipOf(req));
   if (wait) {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Retry-After', String(wait));
@@ -170,7 +158,7 @@ module.exports = async (req, res) => {
   const past = at < today;
   const hit = memo.get(at);
   if (hit && (past || Date.now() - hit.saved < FRESH)) {
-    res.setHeader('Cache-Control', `private, max-age=${past ? 86400 : 300}`);
+    res.setHeader('Cache-Control', cache(past));
     res.status(200).json(hit.body);
     return;
   }
@@ -188,7 +176,7 @@ module.exports = async (req, res) => {
     if (memo.size > 60) {
       for (const k of memo.keys()) { if (memo.size <= 40) break; memo.delete(k); }
     }
-    res.setHeader('Cache-Control', `private, max-age=${past ? 86400 : 300}`);
+    res.setHeader('Cache-Control', cache(past));
     res.status(200).json(body);
   } catch (e) {
     if (hit) {                                  // 받아 둔 게 있으면 그거라도 준다

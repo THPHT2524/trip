@@ -3,6 +3,10 @@
    셈은 js/more.js 한 곳에서만 한다(money.js 와 같은 규칙). 여기는 화면뿐이다.
    환율은 api/more.js 가 신한은행 고시표에서 1회차를 받아 온다.
 
+   ★★**로그인이 없다.** 앱의 다른 화면과 다른 점이다 — 여기서 오가는 것은 공개 고시환율
+     뿐이라 지킬 개인 정보가 없다. 그래서 supabase 번들도 db.js 도 안 싣고, /api/more 를
+     그냥 부른다. 주소만 알면 폰에서 바로 열린다.
+
    ★비자 환율만 우리가 못 가져온다. 비우면 신한 **대미환산율**로 갈음하고 안전 여유를
      얹는다(MORE.SAFETY). 직접 넣으면 그 값이 이기고 여유도 안 쓴다 —
      trip 이 일정 줄의 `fx` 칸에 쓰는 규칙과 같다: **적으면 그게 이기고, 비면 자동.**
@@ -95,7 +99,11 @@
   async function load() {
     $('mc-src').textContent = '환율을 가져오는 중…';
     try {
-      rate = await DB.more(MORE.kstDay());
+      const day = MORE.kstDay();
+      const r = await fetch(`/api/more?at=${encodeURIComponent(day)}`);
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || `환율을 가져오지 못했습니다 (${r.status})`);
+      rate = body;
     } catch (e) {
       rate = null;
       $('mc-src').textContent = e.message;
@@ -127,16 +135,5 @@
     load();
   }
 
-  // ── 부팅 ──────────────────────────────────────────────────────────────
-  DB.onError(m => { $('gate-err').textContent = m; });
-  $('signin').addEventListener('click', () => DB.signIn());
-
-  function show() {
-    const inn = DB.mode() === 'cloud';
-    $('gate').hidden = inn;
-    $('app').hidden = !inn;
-    if (inn && !rate) start();
-  }
-  DB.onAuth(show);
-  DB.initAuth().then(show);
+  start();
 })();

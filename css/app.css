@@ -705,7 +705,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 .mcbody .warn { color: var(--warn); }
 /* 한 장짜리 페이지라 아래에 탭바가 없다 — 판이 바닥에 붙지 않게 여백을 준다.
    (.pane 의 padding-bottom 은 여행 화면 것이라 여기엔 안 걸린다) */
-#app > .wrap > .mcbody { padding-left: var(--pad); padding-right: var(--pad);
+.wrap > .mcbody { padding-left: var(--pad); padding-right: var(--pad);
                          padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
 
 /* 표. 서른 줄이 세로로 서므로 **줄 높이와 자릿수 정렬**이 전부다.

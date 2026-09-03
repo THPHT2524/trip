@@ -307,23 +307,6 @@ const DB = (function () {
     return body;
   }
 
-  /* ── 더모아 환율 ────────────────────────────────────────────────────
-     신한 고시는 하루에 두 칸(0시·9시)뿐이라 한 번 받으면 그 칸 동안 다시 안 묻는다.
-     ★fx() 와 달리 통화를 안 받는다 — 한 번에 비자 환율을 통째로 준다. */
-  const moreMemo = new Map();
-  async function more(at) {
-    if (!at) return null;
-    if (moreMemo.has(at)) return moreMemo.get(at);
-    const tok = await accessToken();
-    if (!tok) throw new Error('로그인이 필요합니다.');
-    const r = await fetch(`/api/more?at=${encodeURIComponent(at)}`,
-                          { headers: { Authorization: 'Bearer ' + tok } });
-    const body = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(body.error || `환율을 가져오지 못했습니다 (${r.status})`);
-    moreMemo.set(at, body);
-    return body;
-  }
-
   /* 초대 코드로 들어가기. 표에 직접 쓰지 않고 RPC 하나로만 통과한다 —
      클라이언트에 trip_members insert 를 열어 주면 남의 여행에 자기를 밀어 넣을 수 있다. */
   async function join(code) {
@@ -337,5 +320,5 @@ const DB = (function () {
 
   return { mode, email, uid,
            onAuth, onError, initAuth, signIn, signOut,
-           trips, items, crew, removeMember, fx, more, join, expandMapUrl };
+           trips, items, crew, removeMember, fx, join, expandMapUrl };
 })();
