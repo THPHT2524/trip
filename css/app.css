@@ -94,7 +94,7 @@
      ★'줄' 은 목록 안의 한 줄이고 '판' 은 그 자체로 한 덩이인 것이다 — 이 둘만 가른다.
        줄 쪽은 제일 빽빽한 일정 카드에 맞춘다(66줄이 그 값으로 서 있어서, 올리면 스크롤이
        그만큼 는다 — 맞추는 방향은 아래쪽이다). */
-  --pad-row: 9px 12px;  /* 목록 안의 한 줄 — 일정·동행자·준비물·지갑·쪽지 */
+  --pad-row: 9px 12px;  /* 목록 안의 한 줄 — 일정·동행자·지갑·쪽지 */
   --pad-box: 14px;      /* 판 — 여행 카드·여권 */
 
   /* ★그림자도 열 가지가 전부 제각각이었고 **검정으로 박혀** 있었다. 순검정 그림자는
@@ -696,27 +696,6 @@ input.code {
   background: var(--sunk);
 }
 
-/* ── 준비물 ───────────────────────────────────────────────────────────── */
-.prep { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-.prow {
-  display: flex; align-items: center; gap: 10px;
-  border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
-  padding: var(--pad-row);
-}
-.pchk {
-  /* 눈에 보이는 네모는 22px 그대로 두고, 줄 높이(54px)만큼 **위아래로** 눌러 잡는다 —
-     음수 마진이라 줄이 커지지 않는다. 걸으면서 체크하는 것이다. */
-  flex: 0 0 auto; width: 22px; height: 22px; border-radius: var(--r-sm); cursor: pointer;
-  padding: 11px; margin: -11px 4px -11px -11px; box-sizing: content-box;
-  border: 1.5px solid var(--rail); background: var(--paper);
-  color: var(--card); font-size: 13px; line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-}
-/* ★여기도 정의되지 않은 토큰이었다 — **챙긴 표시가 안 보였다.** */
-.prow.is-done .pchk { background: var(--route); border-color: var(--route); }
-.ptext { flex: 1; min-width: 0; font-size: 14px; }
-.prow.is-done .ptext { color: var(--ink-3); text-decoration: line-through; }
-
 /* ── 하단 탭 ──────────────────────────────────────────────────────────── */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
@@ -788,12 +767,16 @@ input.code {
   background: var(--card);
   overflow: hidden;            /* MRZ 가 모서리 밖으로 새지 않게 */
 }
-/* ★여행마다 한 장씩, **겹쳐 쌓아 한 줄**로. 몇 장이든 한 줄에 들어간다
-   (겹치는 폭은 js/app.js 의 fitFlags 가 재서 정한다).
+/* ★여행마다 한 장씩, **겹쳐 쌓아** 담는다. 한 줄에 안 들어가면 두 줄이 된다
+   (몇 줄로 나눌지도, 겹치는 폭도 js/app.js 의 fitFlags 가 재서 정한다 —
+   줄을 여기서 미리 나누지 않는다).
    ★겹쳐도 서로 갈리게 종이색 테를 두른다 — 안 두르면 색 띠 하나로 뭉친다. */
+.pflagwrap {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: var(--pad-box) var(--pad-box) 0;
+}
 .pflags {
   display: flex; flex-wrap: nowrap; overflow: hidden;
-  padding: var(--pad-box) var(--pad-box) 0;
   font-size: 26px; line-height: 1; letter-spacing: 0;
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
   /* 색은 **대체 글자에만** 걸린다(국기 이모지는 제 색을 갖는다) — 윈도우에서
@@ -999,7 +982,7 @@ details[open] > summary::after { content: '−'; }
   display: flex; flex-direction: column; gap: 12px; padding-top: 12px;
 }
 /* ★.cblock 안에 들어가는 폼은 **카드 여백을 다시 갖지 않는다.**
-   준비물 입력칸이 위 목록보다 15px 오른쪽으로 밀려 있었다 — 여백이 두 번 걸려서다. */
+   입력칸이 위 목록보다 15px 오른쪽으로 밀려 있었다 — 여백이 두 번 걸려서다. */
 .form.inline { padding: 10px 0 0; gap: 8px; }
 /* ★★한 줄에 세 칸을 **강제로** 넣지 않는다. iOS 사파리의 date·time 입력은
    최소 너비가 고정이라(로케일 형식만큼) 375px 화면에서 3등분하면 100px 남짓이 되어
@@ -1014,7 +997,7 @@ details[open] > summary::after { content: '−'; }
    줄이 갈리면 '얼마를 무슨 돈으로 얼마에' 가 끊겨 읽힌다.
    숫자·선택 칸은 date 와 달리 내재 최소 너비가 작아서 좁혀도 깨지지 않는다. */
 /* ★`.field` 로 감싸지 않고 `.row` 에 직접 놓인 입력칸은 width:100% 를 받아
-   버튼을 다음 줄로 밀어낸다(준비물 추가·초대 링크에서 그렇게 갈렸다 — 2026-09-01).
+   버튼을 다음 줄로 밀어낸다(초대 링크에서 그렇게 갈렸다 — 2026-09-01).
    직접 놓인 것들은 flex 로 나눠 갖게 한다. */
 /* ★flex-basis 는 **0** 이어야 한다. auto 로 두면 input 이 `size` 속성(기본 20자)만큼
    내재 너비를 주장해서, 글자가 큰 칸(초대 코드)에서는 그것만으로 줄을 다 먹고

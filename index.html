@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=116">
+<link rel="stylesheet" href="/css/app.css?v=118">
 </head>
 <body>
 
@@ -86,41 +86,9 @@
       <p class="note" id="cost-msg"></p>
     </div>
 
-    <!-- 준비물 — js/prep.js -->
-    <div class="pane" data-tab="prep" hidden>
-      <div class="cblock">
-        <h3 class="chd">준비물 <span class="cn" id="prep-count"></span></h3>
-        <ul class="prep" id="prep-list"></ul>
-        <form id="prep-form" class="form inline">
-          <div class="row">
-            <input id="prep-text" type="text" maxlength="120" placeholder="유심 · 비자 · 상비약 · 콘센트 어댑터"
-                   autocomplete="off">
-            <button class="btn" id="prep-add" type="submit">추가</button>
-          </div>
-          <p class="err" id="prep-err"></p>
-        </form>
-      </div>
-    </div>
-
-    <!-- 동행자 · 여행 설정 — js/crew.js -->
-    <div class="pane" data-tab="crew" hidden>
-      <section class="cblock">
-        <h3 class="chd">동행자 <span class="cn" id="crew-count"></span></h3>
-        <ul class="crew" id="crew-list"></ul>
-      </section>
-
-      <section class="cblock">
-        <h3 class="chd">초대</h3>
-        <div class="form inline">
-          <div class="row">
-            <input id="crew-link" type="text" class="mono code" readonly aria-label="초대 코드">
-            <button class="btn" id="crew-copy" type="button">링크 복사</button>
-          </div>
-          <p class="hint">코드를 불러 주거나 링크를 보내세요. 받은 사람은 이 여행에 참여합니다 —
-            참여하면 <strong>서로의 이메일이 보입니다.</strong></p>
-        </div>
-      </section>
-
+    <!-- 여행정보 — js/crew.js. 여행 설정이 위, 동행자가 아래다:
+         혼자 다니는 여행이 더 많아서 매번 보는 것은 설정 쪽이다. -->
+    <div class="pane" data-tab="info" hidden>
       <section class="cblock">
         <h3 class="chd">여행 설정</h3>
         <form id="crew-form" class="form inline">
@@ -156,9 +124,22 @@
             <button class="btn ghost danger" id="set-del" type="button" hidden>여행 지우기</button>
             <button class="btn" id="set-save" type="submit">저장</button>
           </div>
-          <p class="hint" id="set-danger" hidden>여행을 지우면 일정·비용·준비물이 전부 함께 지워지고 되돌릴 수 없습니다.</p>
+          <p class="hint" id="set-danger" hidden>여행을 지우면 일정과 비용이 전부 함께 지워지고 되돌릴 수 없습니다.</p>
           <p class="err" id="set-err"></p>
         </form>
+      </section>
+
+      <section class="cblock">
+        <h3 class="chd">동행자 <span class="cn" id="crew-count"></span></h3>
+        <ul class="crew" id="crew-list"></ul>
+        <div class="form inline">
+          <div class="row">
+            <input id="crew-link" type="text" class="mono code" readonly aria-label="초대 코드">
+            <button class="btn" id="crew-copy" type="button">링크 복사</button>
+          </div>
+          <p class="hint">코드를 불러 주거나 링크를 보내세요. 받은 사람은 이 여행에 참여합니다 —
+            참여하면 <strong>서로의 이메일이 보입니다.</strong></p>
+        </div>
       </section>
 
       <p class="note" id="crew-msg"></p>
@@ -372,29 +353,27 @@
   <button type="button" role="tab" data-tab="plan" aria-selected="true">일정</button>
   <button type="button" role="tab" data-tab="map"  aria-selected="false">지도</button>
   <button type="button" role="tab" data-tab="cost" aria-selected="false">비용</button>
-  <button type="button" role="tab" data-tab="prep" aria-selected="false">준비물</button>
-  <button type="button" role="tab" data-tab="crew" aria-selected="false">동행자</button>
+  <button type="button" role="tab" data-tab="info" aria-selected="false">여행정보</button>
 </nav>
 
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=116"></script>
-<script src="/js/map-config.js?v=116"></script>
-<script src="/js/money.js?v=116"></script>
-<script src="/js/util.js?v=116"></script>
-<script src="/js/geo.js?v=116"></script>
-<script src="/js/gmaps.js?v=116"></script>
-<script src="/js/db.js?v=116"></script>
-<script src="/js/fx.js?v=116"></script>
-<script src="/js/outbox.js?v=116"></script>
+<script src="/js/supabase-config.js?v=118"></script>
+<script src="/js/map-config.js?v=118"></script>
+<script src="/js/money.js?v=118"></script>
+<script src="/js/util.js?v=118"></script>
+<script src="/js/geo.js?v=118"></script>
+<script src="/js/gmaps.js?v=118"></script>
+<script src="/js/db.js?v=118"></script>
+<script src="/js/fx.js?v=118"></script>
+<script src="/js/outbox.js?v=118"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=116"></script>
-<script src="/js/plan.js?v=116"></script>
-<script src="/js/map.js?v=116"></script>
-<script src="/js/cost.js?v=116"></script>
-<script src="/js/prep.js?v=116"></script>
-<script src="/js/app.js?v=116"></script>
+<script src="/js/crew.js?v=118"></script>
+<script src="/js/plan.js?v=118"></script>
+<script src="/js/map.js?v=118"></script>
+<script src="/js/cost.js?v=118"></script>
+<script src="/js/app.js?v=118"></script>
 
 </body>
 </html>

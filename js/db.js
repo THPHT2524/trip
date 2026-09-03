@@ -270,33 +270,6 @@ const DB = (function () {
     return body.url;
   }
 
-  // ── 준비물 ──────────────────────────────────────────────────────────
-  /* 준비물은 '적는 것' 이 아니라 **'지우는 것'** 이다 — 그래서 자유 메모가 아니라 표다. */
-  const checklist = {
-    list: async (tripId) => {
-      if (mode() !== 'cloud') return [];
-      const { data, error } = await sb.from('checklist')
-        .select('id,text,done,seq').eq('trip_id', tripId)
-        .order('seq', { ascending: true });
-      if (error) throw new Error(say('준비물을 불러오지 못했습니다', error));
-      return data || [];
-    },
-    add: async (tripId, text, seq) => {
-      const t = String(text || '').trim();
-      if (!t) throw new Error('내용을 적으세요.');
-      const { error } = await sb.from('checklist').insert({ trip_id: tripId, text: t, seq: seq || 0 });
-      if (error) throw new Error(say('준비물을 추가하지 못했습니다', error));
-    },
-    setDone: async (id, done) => {
-      const { error } = await sb.from('checklist').update({ done: !!done }).eq('id', id);
-      if (error) throw new Error(say('표시를 바꾸지 못했습니다', error));
-    },
-    remove: async (id) => {
-      const { error } = await sb.from('checklist').delete().eq('id', id);
-      if (error) throw new Error(say('준비물을 지우지 못했습니다', error));
-    },
-  };
-
   // ── 동행자 ──────────────────────────────────────────────────────────
   /* trip_members 를 직접 읽으면 uuid 뿐이라 화면에 쓸 이름이 없다.
      auth.users 는 클라이언트가 못 읽는다(읽히면 이 프로젝트의 남의 계정까지 노출된다 —
@@ -347,5 +320,5 @@ const DB = (function () {
 
   return { CONFIGURED, mode, email, uid, accessToken,
            onAuth, onError, initAuth, signIn, signOut,
-           trips, items, checklist, crew, removeMember, fx, join, expandMapUrl };
+           trips, items, crew, removeMember, fx, join, expandMapUrl };
 })();

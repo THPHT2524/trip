@@ -5,7 +5,7 @@
 
      /            여행 목록
      /t/<id>      일정   ← 여행 안의 첫 화면
-     /t/<id>/map · /cost · /prep · /crew
+     /t/<id>/map · /cost · /info
 
    ★그래도 진행 중이거나 곧 시작할 여행이 있으면 **목록을 건너뛰고 바로 연다.**
      현지에서 앱을 여는 이유가 그 여행이지 목록이 아니다.
@@ -14,8 +14,8 @@
      vercel.json 의 `/t/(.*)` → `/index.html` 리라이트가 새로고침을 견디게 해 준다. */
 (function () {
   const $ = id => document.getElementById(id);
-  const TABS = ['plan', 'map', 'cost', 'prep', 'crew'];
-  const SEG = { plan: '', map: 'map', cost: 'cost', prep: 'prep', crew: 'crew' };
+  const TABS = ['plan', 'map', 'cost', 'info'];
+  const SEG = { plan: '', map: 'map', cost: 'cost', info: 'info' };
 
   let trips = [];          // 마지막으로 받은 여행 목록
   let shape = [];          // 카드에 그릴 '여행의 모양' (일정의 날짜·구분·비용만)
@@ -91,8 +91,7 @@
       if (tab === 'map') Maps.open(t, Plan.rows());
       if (tab === 'cost') Cost.open(t, Plan.rows());
     });
-    if (tab === 'prep') Prep.open(t);
-    if (tab === 'crew') Crew.open(t);
+    if (tab === 'info') Crew.open(t);
   }
 
   function renderTrips() {
@@ -166,9 +165,9 @@
             pad(cells.filter(([k]) => MRZ_CODE[k]).map(([k, v]) => v + MRZ_CODE[k]).join('<'))];
   }
 
-  /* 국기 줄을 **한 줄에 맞춘다.** 몇 장인지에 따라 겹치는 폭이 달라지므로 그려진 뒤에 잰다.
+  /* 국기 줄을 **판에 맞춘다.** 몇 장인지에 따라 겹치는 폭도 줄 수도 달라지므로 그려진 뒤에 잰다.
      ★반 넘게 가리지 않는다 — 그 이상 겹치면 국기가 색 띠가 되어 무엇인지 알 수 없다.
-       그래도 안 들어가면 넘치는 쪽을 자른다(줄을 늘리지 않는다). */
+       그래도 안 들어가면 줄을 하나 더 준다(세 줄까지). 거기서도 넘치면 끝을 흐린다. */
   /* ★국기 이모지가 **그림으로 그려지는가.** 윈도우는 안 그리고 'JP' 두 글자로 떨어뜨린다.
      ★폭으로는 못 가른다 — 대체 글자가 본문보다 **작게** 그려져서, 진짜 국기보다
        좁게 나오는 일이 있다(2026-09-02 측정: 국기 19.8 vs 'JP' 24.2 — 판정이 뒤집혔다).
@@ -195,39 +194,67 @@
     return drawsFlags;
   }
 
-  function fitFlags() {
-    const box = $('passport').querySelector('.pflags');
-    if (!box || box.children.length < 2) return;
+  /* 한 줄을 재서 겹침을 정한다. **겹치고도 남은 넘침(px)** 을 돌려준다 —
+     부르는 쪽이 그 값으로 줄을 하나 더 쓸지 정한다. */
+  function fitRow(box) {
     const n = box.children.length;
     /* ★글자로 떨어지는 곳에서는 **겹치지 않는다.** 국기를 반씩 겹치면 부채처럼 보이지만
        'JP' 를 반씩 겹치면 글자 뭉치가 된다 — 같은 규칙이 두 곳에서 반대로 작동한다. */
     box.classList.toggle('ascii', !canDrawFlags());
-    if (!drawsFlags) {
-      box.style.setProperty('--lap', '0px');
-      /* 다 못 담으면 오른쪽 끝을 흐린다 — 잘린 것이 아니라 더 있다는 뜻이 되게
-         (card-dashboard 의 탭 띠에서 쓰던 것과 같은 단서다) */
-      box.classList.toggle('cut', box.scrollWidth > box.clientWidth + 1);
-      return;
-    }
-    box.classList.remove('cut');
     box.style.setProperty('--lap', '0px');      // 재기 전에 겹침을 푼다
+    if (n < 2) return 0;
     /* ★한 장 폭 × 장수로 셈하면 안 된다 — 국기마다 폭이 다르다(윈도우에서 두 글자로
        떨어질 때는 더 다르다: JP 19.8 · MO 24…). 실제로 넘친 만큼을 scrollWidth 로 잰다. */
     const cs = getComputedStyle(box);
     const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
     const content = box.scrollWidth - padX;
-    const avail = box.clientWidth - padX;
-    const over = content - avail;
-    const lap = over <= 0 ? 0
-      : Math.min((content / n) * 0.55, over / (n - 1));   // 반 넘게는 안 가린다
-    box.style.setProperty('--lap', lap.toFixed(2) + 'px');
+    const over = content - (box.clientWidth - padX);
+    if (drawsFlags && over > 0) {
+      box.style.setProperty('--lap',
+        Math.min((content / n) * 0.55, over / (n - 1)).toFixed(2) + 'px');  // 반 넘게는 안 가린다
+    }
+    return box.scrollWidth - box.clientWidth;   // 겹치고도 남은 것
+  }
+
+  /* ★★줄 수는 **재서 정한다.** 여행이 서른여덟이 되자 국기가 43장이 됐고, 한 줄로는
+     겹침이 상한(반)에 걸려 오른쪽이 잘려 나갔다(2026-09-03). 겹치고도 넘치면 줄을
+     하나 더 준다 — 국기를 버리는 것보다 줄을 늘리는 편이 낫다.
+     ★넘칠 때만 늘린다. 국기 셋을 두 줄로 가르면 여백만 늘고 읽히는 것은 없다.
+     ★세 줄에서 멈춘다. 그보다 길어지면 국기 띠가 여권을 잡아먹는다 — 그때는 끝을
+       흐려서 '잘린 것' 이 아니라 '더 있다' 로 읽히게 둔다. */
+  function fitFlags() {
+    const wrap = $('passport').querySelector('.pflagwrap');
+    if (!wrap) return;
+    /* 다시 잴 때는 낱장을 모두 걷어 낸다 — 나눠 둔 채로는 '한 줄에 들어가나' 를
+       물을 수 없다(창을 넓히면 다시 한 줄로 돌아와야 한다). */
+    const all = [];
+    [...wrap.children].forEach(r => { all.push(...r.children); r.remove(); });
+    if (!all.length) return;
+    for (let k = 1; k <= 3; k++) {
+      wrap.textContent = '';
+      const per = Math.ceil(all.length / k);
+      const rows = [];
+      for (let i = 0; i < all.length; i += per) {
+        const row = document.createElement('div');
+        row.className = 'pflags';
+        all.slice(i, i + per).forEach(el => row.append(el));
+        wrap.append(row);
+        rows.push(row);
+      }
+      const left = rows.map(fitRow);
+      if (k === 3 || left.every(o => o <= 1)) {
+        rows.forEach((r, i) => r.classList.toggle('cut', left[i] > 1));
+        return;
+      }
+    }
   }
   addEventListener('resize', fitFlags);
 
   function passportHtml() {
     if (!trips.length) return '';
     /* ★국기는 **여행마다 하나씩** 세운다(같은 나라를 몇 번 갔는지가 보인다).
-       겹쳐 쌓아 한 줄에 담는다 — 겹치는 폭은 그려진 뒤에 재서 정한다(fitFlags). */
+       겹쳐 쌓아 담는다 — 겹치는 폭도, 한 줄로 둘지 두 줄로 나눌지도 그려진 뒤에
+       재서 정한다(fitFlags). 그래서 여기서는 **한 줄로만** 내보낸다. */
     const flags = trips.flatMap(t => U.flags(t.country));
     /* '나라 N' 은 가짓수다 — 이건 겹치는 것을 걷는다 */
     const countries = new Set(trips.flatMap(t => U.codeList(t.country)).filter(c => U.flag(c)));
@@ -268,8 +295,8 @@
     if (!cells.length) return '';
 
     return `<section class="pass">
-      ${flags.length ? `<div class="pflags" aria-hidden="true">${
-        flags.map(f => `<span><b>${f}</b></span>`).join('')}</div>` : ''}
+      ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
+        flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>

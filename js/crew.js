@@ -122,7 +122,7 @@ const Crew = (function () {
   });
 
   $('set-del').addEventListener('click', async () => {
-    if (!confirm(`'${trip.name}' 여행을 지울까요?\n일정·비용·준비물이 전부 함께 지워지고 되돌릴 수 없습니다.`)) return;
+    if (!confirm(`'${trip.name}' 여행을 지울까요?\n일정과 비용이 전부 함께 지워지고 되돌릴 수 없습니다.`)) return;
     try {
       await DB.trips.remove(trip.id);
       document.dispatchEvent(new CustomEvent('trip:deleted'));
