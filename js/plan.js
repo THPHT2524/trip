@@ -21,8 +21,6 @@ const Plan = (function () {
   let offline = false;  // 마지막 읽기가 로컬 사본이었나
   let crew = [];        // 동행자 — '누가 냈나' 를 사람 이름으로 고르게 한다
 
-  const KINDS = ['숙소', '식사', '관광', '이동', '쇼핑', '기타'];
-  const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
 
   /* 세울 날짜를 정한다.
      ★여행 기간이 있으면 **비어 있는 날도 세운다** — 3일차가 비었다는 사실 자체가 정보다.
@@ -243,7 +241,7 @@ const Plan = (function () {
   }
 
   function stopHtml(r, nid, num) {
-    const k = KVAR[r.kind] || 'k-etc';
+    const k = U.kvar(r.kind);
     const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : '',
                  r.memo ? 'has-memo' : ''].filter(Boolean).join(' ');
     const time = r.at_time ? r.at_time.slice(0, 5) : '';
@@ -625,7 +623,7 @@ const Plan = (function () {
   /* 배경을 누르면 닫는다. dialog 자신이 클릭 대상이면 시트 **바깥**을 누른 것이다. */
   $('if-dlg').addEventListener('click', e => { if (e.target === $('if-dlg')) closeSheet(); });
 
-  $('if-kind').innerHTML = KINDS.map(k => `<option value="${k}">${k}</option>`).join('');
+  $('if-kind').innerHTML = U.KINDS.map(k => `<option value="${k}">${k}</option>`).join('');
 
   return {
     /* ★탭을 옮길 때마다 불린다(지도·비용도 같은 rows 를 쓴다).

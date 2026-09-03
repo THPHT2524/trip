@@ -29,7 +29,6 @@ const GM = (function () {
      그대로 두면 장소명 칸에 `place_id:ChIJN1t_...` 가 박힌다(2026-09-01에 그렇게 나왔다). */
   const NOT_A_NAME = /^(place_id:|ftid=|0x[0-9a-f]+:)/i;
 
-  function isMapUrl(s) { return SHORT.test(s || '') || FULL.test(s || ''); }
   function needsServer(s) { return SHORT.test(s || ''); }
 
   /* /place/<이름>/ 에서 장소명. `+` 는 공백이고 나머지는 퍼센트 인코딩이다. */
@@ -126,7 +125,7 @@ const GM = (function () {
     return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
   }
 
-  return { isMapUrl, needsServer, parse, dirUrl, placeUrl };
+  return { needsServer, parse, dirUrl, placeUrl };
 })();
 
 if (typeof module !== 'undefined') {                      // tools/test-pure.js 용

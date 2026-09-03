@@ -22,7 +22,6 @@
   let tripId = null;       // 지금 열어 둔 여행
   let tab = 'plan';
 
-  const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
   const DAYMS = 86400000;
 
   /* 문자열 이스케이프와 날짜·금액 서식은 util.js(U)에 있다 — plan.js 도 같은 것을 쓴다.
@@ -349,7 +348,7 @@
       const on = stops.filter(r => r.on_date === d);
       return on.length
         ? `<span class="md">${on.slice(0, maxDots).map(r =>
-            `<i style="--k: var(--${KVAR[r.kind] || 'k-etc'})"></i>`).join('')}</span>`
+            `<i style="--k: var(--${U.kvar(r.kind)})"></i>`).join('')}</span>`
         : '<span class="md is-empty"></span>';
     }).join('')}</span>` : '';
 

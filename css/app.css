@@ -112,7 +112,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :root {
     --paper:   #0E1A17;
     --card:    #16241F;
     --sunk:    #1D2E29;
@@ -133,27 +133,6 @@
     --sh-lift: 0 2px 6px rgba(0, 0, 0, .40), 0 8px 22px rgba(0, 0, 0, .34);
     --sh-pop:  0 4px 12px rgba(0, 0, 0, .45), 0 16px 40px rgba(0, 0, 0, .55);
   }
-}
-:root[data-theme="dark"] {
-  --paper:   #0E1A17;
-  --card:    #16241F;
-  --sunk:    #1D2E29;
-  --ink:     #DFEAE5;
-  --ink-2:   #ABBDB7;
-  --ink-3:   #829691;
-  --line:    #25352F;
-  --rail:    #2E4139;
-  --route:   #8AA0FF;
-  --route-w: #1B2440;
-  --warn:    #E9877A;
-  --k-stay:  #79A8DA;
-  --k-eat:   #E28E77;
-  --k-see:   #6CBE96;
-  --k-move:  #A497E0;
-  --k-buy:   #DCB65E;
-  --k-etc:   #9AAAA6;
-  --sh-lift: 0 2px 6px rgba(0, 0, 0, .40), 0 8px 22px rgba(0, 0, 0, .34);
-  --sh-pop:  0 4px 12px rgba(0, 0, 0, .45), 0 16px 40px rgba(0, 0, 0, .55);
 }
 
 /* ── 바탕 ─────────────────────────────────────────────────────────────── */
@@ -544,11 +523,9 @@ a { color: var(--route); text-underline-offset: 2px; }
 .maplibregl-ctrl-group button:hover { background: var(--sunk); }
 /* ★아이콘이 검정 SVG 라 어두운 테마에서 검정 위 검정이 된다 — 반전시킨다. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .maplibregl-ctrl-icon,
-  :root:not([data-theme="light"]) .maplibregl-ctrl-attrib-button { filter: invert(1); }
+  :root .maplibregl-ctrl-icon,
+  :root .maplibregl-ctrl-attrib-button { filter: invert(1); }
 }
-:root[data-theme="dark"] .maplibregl-ctrl-icon,
-:root[data-theme="dark"] .maplibregl-ctrl-attrib-button { filter: invert(1); }
 
 /* ★저작자 표시는 **지울 수 없다** — MapTiler 약관과 OSM 의 ODbL 이 둘 다 요구한다.
    MapLibre 의 compact 모드가 ⓘ 로 접어 준다(눌러야 펴진다):
@@ -866,9 +843,8 @@ input.code {
   pointer-events: none; user-select: none;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .trip .bgflag { opacity: .17; }
+  :root .trip .bgflag { opacity: .17; }
 }
-:root[data-theme="dark"] .trip .bgflag { opacity: .17; }
 /* ★나라를 여럿 걸친 여행. 크기를 그대로 두면 폭이 장수만큼 늘어난다 —
    한 장 84px(카드의 24%)인데 세 장이 244px(71%) 이었다(2026-09-03 측정).
    바탕이 카드를 다 덮으면 그건 바탕이 아니다. 폭이 대충 같아지게 낮춘다. */
@@ -1205,11 +1181,14 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
   max-height: 88dvh;
 }
 #if-dlg::backdrop { background: rgba(10, 22, 19, .45); }
+#if-dlg .sheet { border-radius: var(--r-lg) var(--r-lg) 0 0; }   /* 아래에 붙으니 위 두 귀만 둥글다 */
+/* ★기본 규칙이 이 미디어쿼리 **뒤에** 있었다. 특이도가 같아 나중 것이 이기므로
+   넓은 화면에서도 위 두 귀만 둥근 채였다 — 규칙은 살아 있는데 효과가 없었다
+   (2026-09-03). 기본을 위로 올려 순서를 바로잡는다. */
 @media (min-width: 560px) {            /* 넓은 화면에서는 가운데 상자 */
   #if-dlg { margin: auto; max-height: 84dvh; }
   #if-dlg .sheet { border-radius: var(--r); }
 }
-#if-dlg .sheet { border-radius: var(--r-lg) var(--r-lg) 0 0; }   /* 아래에 붙으니 위 두 귀만 둥글다 */
 
 /* ── 가운데 팝업 — 칸이 적은 것들(새 여행·참여) ────────────────────────
    일정 입력은 칸이 열둘이라 아래에서 올라오는 시트를 쓰지만, 여기는 서넛이다.

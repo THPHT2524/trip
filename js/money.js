@@ -119,7 +119,7 @@ const MONEY = (function () {
     return [{ id: null, group: head, krw }];
   }
 
-  return { SETTLE, walk, total, shares };
+  return { SETTLE, total, shares };
 })();
 
 if (typeof module !== 'undefined') module.exports = MONEY;   // tools/test-pure.js 용

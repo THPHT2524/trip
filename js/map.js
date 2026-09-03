@@ -17,7 +17,6 @@ const Maps = (function () {
   const $ = id => document.getElementById(id);
   const esc = U.esc;
 
-  const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
 
   let map = null, markers = [], route = { type: 'FeatureCollection', features: [] };
   let trip = null, rows = [], days = [], pick = null;
@@ -191,7 +190,7 @@ const Maps = (function () {
      일정 탭으로 돌아가게 된다 — 지도를 여는 이유가 그걸 안 하기 위해서다.
      이름표와 핀을 한 요소에 담고, 아래끝을 좌표에 맞춘 뒤 핀 반지름만큼 내린다. */
   function pinEl(r, n) {
-    const k = KVAR[r.kind] || 'k-etc';
+    const k = U.kvar(r.kind);
     const el = document.createElement('div');
     el.className = 'mk';
     el.title = r.name;

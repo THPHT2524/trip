@@ -318,7 +318,7 @@ const DB = (function () {
     return data;                       // 참여한 여행의 id
   }
 
-  return { CONFIGURED, mode, email, uid, accessToken,
+  return { mode, email, uid,
            onAuth, onError, initAuth, signIn, signOut,
            trips, items, crew, removeMember, fx, join, expandMapUrl };
 })();

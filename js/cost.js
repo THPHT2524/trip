@@ -13,8 +13,6 @@ const Cost = (function () {
   const $ = id => document.getElementById(id);
   const esc = U.esc;
 
-  const KINDS = ['숙소', '식사', '관광', '이동', '쇼핑', '기타'];
-  const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
 
   let trip = null, rows = [], crew = [];
 
@@ -86,8 +84,8 @@ const Cost = (function () {
       <h3 class="chd">하루에 얼마씩</h3>
       <div class="daybars">${per.map((x, i) => `
         <div class="dbar">
-          <span class="col">${x.sum ? KINDS.filter(k => x.byK[k]).map(k =>
-            `<i style="--k: var(--${KVAR[k]}); height:${(x.byK[k] / max * 100).toFixed(1)}%"></i>`
+          <span class="col">${x.sum ? U.KINDS.filter(k => x.byK[k]).map(k =>
+            `<i style="--k: var(--${U.kvar(k)}); height:${(x.byK[k] / max * 100).toFixed(1)}%"></i>`
           ).join('') : '<em></em>'}</span>
           <span class="lb">D${i + 1}</span>
           ${wide ? `<span class="amt">${x.sum ? esc(U.money(x.sum, U.SETTLE)) : ''}</span>` : ''}
@@ -120,7 +118,7 @@ const Cost = (function () {
          + '</span>'
       : '<span class="sub">아직 비용을 적은 일정이 없습니다</span>';
 
-    const byKind = KINDS.map(k => [k, group(r => r.kind).get(k)])
+    const byKind = U.KINDS.map(k => [k, group(r => r.kind).get(k)])
       .filter(e => e[1]).sort((a, b) => b[1].sum - a[1].sum);
     /* ★'각자 냄' 은 한 사람에게 몰지 않는다 — 교통카드처럼 각자 자기 걸로 찍은 줄이라
        동행자 수로 나눠 각자에게 붙인다. 동행자를 모르면(혼자거나 못 받았으면) 나눌 곳이
@@ -144,7 +142,7 @@ const Cost = (function () {
 
     $('cost-blocks').innerHTML =
         dayBars()
-      + table('무엇에', byKind, k => KVAR[k] || 'k-etc')
+      + table('무엇에', byKind, U.kvar)
       + (byPayer.length > 1 || (byPayer[0] && byPayer[0][0] !== '안 적음')
           ? table('누가 냈나', byPayer) : '');
 

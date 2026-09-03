@@ -13,6 +13,15 @@ const U = (function () {
 
   const DOW = ['일', '월', '화', '수', '목', '금', '토'];
 
+  /* 장소구분 여섯과 그 색 이름 — **노선도의 범례**다.
+     ★네 파일(app·plan·map·cost)에 같은 표가 그대로 복사돼 있었다(2026-09-03).
+       구분을 하나 더하거나 색 이름을 바꾸면 네 곳을 고쳐야 하고, 세 곳만 고치면
+       한 화면에서만 색이 어긋난다 — esc 를 여기로 모은 것과 똑같은 이유로 모은다.
+     ★색값 자체는 css 에 있다(--k-stay 등). 여기 있는 것은 **이름표**뿐이다. */
+  const KINDS = ['숙소', '식사', '관광', '이동', '쇼핑', '기타'];
+  const KVAR = { 숙소: 'k-stay', 식사: 'k-eat', 관광: 'k-see', 이동: 'k-move', 쇼핑: 'k-buy', 기타: 'k-etc' };
+  const kvar = kind => KVAR[kind] || 'k-etc';
+
   /* 오늘(현지 시각 기준 YYYY-MM-DD).
      ★UTC 로 자르면 한국에서 오전 9시 전에 어제가 된다. 시간대 보정을 먼저 한다. */
   function todayISO() {
@@ -33,20 +42,21 @@ const U = (function () {
   /* 여행 기간 한 줄. 날짜가 없는 여행도 있다(아직 안 정한 것이지 잘못된 것이 아니다). */
   /* bare=true 면 **연도를 뺀다.** 목록이 해마다 나뉘어 있으면 머리띠가 이미 연도를
      말하므로, 카드마다 '26.' 을 되풀이하는 것은 같은 말을 스물네 번 하는 것이다. */
+  /* 시작 쪽 표기. bare 면 연도를 뺀다 — span 과 range 가 같은 규칙을 써야 한다
+     (전에는 같은 한 줄이 두 함수에 따로 있었다). */
+  const head = (t, bare) => (bare ? md(t) : t.slice(2).replace(/-/g, '.'));
   function span(a, b, bare) {
     if (!a && !b) return '날짜 미정';
-    const head = t => (bare ? md(t) : t.slice(2).replace(/-/g, '.'));
     if (a && b) {
       const days = Math.round((Date.parse(b) - Date.parse(a)) / 86400000) + 1;
-      return `${head(a)} – ${md(b)} · ${days}일`;
+      return `${head(a, bare)} – ${md(b)} · ${days}일`;
     }
-    return head(a || b);
+    return head(a || b, bare);
   }
   /* 기간만. '· N일' 은 붙이지 않는다 — 카드에서 날짜와 일수가 다른 자리에 선다. */
   function range(a, b, bare) {
     if (!a && !b) return '날짜 미정';
-    const head = t => (bare ? md(t) : t.slice(2).replace(/-/g, '.'));
-    return (a && b) ? `${head(a)} – ${md(b)}` : head(a || b);
+    return (a && b) ? `${head(a, bare)} – ${md(b)}` : head(a || b, bare);
   }
   /* 여행이 며칠짜리인가. 날짜가 반쪽이면 셀 수 없다. */
   function tripDays(t) {
@@ -162,7 +172,7 @@ const U = (function () {
      (2026-09-02에 뜻을 그렇게 정했다 — 그전에는 base_cur 가 합계 통화였다) */
   const SETTLE = 'KRW';
 
-  return { esc, DOW, todayISO, addDays, dowOf, md, span, range, money,
+  return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
            cityList, countryPicker, SETTLE };
 })();

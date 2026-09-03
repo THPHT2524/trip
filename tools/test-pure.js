@@ -213,6 +213,22 @@ eq(U.money(null, 'USD'), '', '값이 없으면 빈 문자열');
 // ── U: 정산 통화 ───────────────────────────────────────────────────────
 eq(U.SETTLE, 'KRW', '정산 통화는 원화 하나 — 여행의 base_cur 는 현지통화다');
 
+// ── U: 장소구분 범례 ────────────────────────────────────────────────────
+// ★app·plan·map·cost 네 파일에 같은 표가 복사돼 있던 것을 util 로 모았다(2026-09-03).
+//   다시 흩어지면 한 화면에서만 색이 어긋나므로, **네 파일에 사본이 없는지** 여기서 지킨다.
+eq(U.KINDS.length, 6, '장소구분은 여섯');
+eq(U.KINDS.join(','), '숙소,식사,관광,이동,쇼핑,기타', '범례의 차례까지 고정 — 비용 화면이 이 차례로 센다');
+U.KINDS.forEach(k => eq(/^k-[a-z]+$/.test(U.kvar(k)), true, `${k} 에 색 이름이 있다`));
+eq(U.kvar('식사'), 'k-eat', '식사는 k-eat');
+eq(U.kvar('없는구분'), 'k-etc', '모르는 구분은 k-etc 로 떨어진다 — 색 없는 점을 찍지 않는다');
+{
+  const fs = require('fs'), path = require('path');
+  const copies = ['app.js', 'plan.js', 'map.js', 'cost.js'].filter(f =>
+    /^\s*const\s+(KVAR|KINDS)\s*=/m.test(
+      fs.readFileSync(path.join(__dirname, '../js/' + f), 'utf8')));
+  eq(copies.length, 0, `★범례 사본이 다시 생기지 않았다 (생겼다면: ${copies.join(' ') || '없음'})`);
+}
+
 // ── api/gmaps.js: 단축 링크 정규화 (SSRF 방어선) ────────────────────────
 // ★폰 공유 링크에는 추적 파라미터가 붙는다. 전에 이걸 403 으로 막아서
 //   **폰에서 붙여넣은 링크는 자동 채움이 한 번도 안 됐다.**
