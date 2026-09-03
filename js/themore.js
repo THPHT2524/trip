@@ -44,6 +44,7 @@
   try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
   const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} };
 
+  let autoAmt = true;                    // '이만큼 긁으면' 이 아직 자동으로 채운 값인가
   const sh = new Map();                  // 고시일자 → 신한 응답
   const visa = new Map();                // '통화|고시일자' → 비자 환율
   const TODAY = MORE.fxDay(MORE.kstNow());
@@ -121,6 +122,20 @@
     }
     $('mc-amt').placeholder = cur;
 
+    /* 역방향 — 목표 청구금액마다 '얼마를 부르면 되나'. 여기가 계산기의 본체다.
+       ★먼저 낸다. **첫 줄이 곧 '이만큼 긁으면' 의 기본값**이기 때문이다. */
+    const list = MORE.targets().slice(0, ROWS).map(t => {
+      const s = MORE.solve(t, v, rate.tt, cur, 0);
+      if (!s) return null;
+      const b = MORE.bill(s.foreign, v, rate.tt, rate.mid);
+      return b ? { f: s.foreign, b } : null;
+    }).filter(Boolean);
+
+    /* ★칸을 비워 두지 않는다. 열자마자 5,999원에 가장 가까운 금액이 들어가 있어야
+       그 자리에서 바로 읽고 그대로 부를 수 있다. 통화를 바꾸면 그 통화의 첫 줄로 갈린다.
+       ★사람이 한 번이라도 고치면 그때부터 손대지 않는다 — 남이 적은 것을 덮지 않는다. */
+    if (autoAmt && list.length) $('mc-amt').value = String(list[0].f);
+
     /* 정방향 — '이만큼 긁으면 얼마 찍히나' */
     const amt = parseFloat($('mc-amt').value);
     const one = amt > 0 ? MORE.bill(amt, v, rate.tt, rate.mid) : null;
@@ -130,14 +145,6 @@
                      : `적립 없음(${MORE.MIN.toLocaleString('ko-KR')}원 미만) · `)
         + `<span class="${one.gain < 0 ? 'warn' : ''}">이득 ${one.gain.toFixed(1)}%</span>`
       : '';
-
-    /* 역방향 — 목표 청구금액마다 '얼마를 부르면 되나'. 여기가 계산기의 본체다. */
-    const list = MORE.targets().slice(0, ROWS).map(t => {
-      const s = MORE.solve(t, v, rate.tt, cur, 0);
-      if (!s) return null;
-      const b = MORE.bill(s.foreign, v, rate.tt, rate.mid);
-      return b ? { f: s.foreign, b } : null;
-    }).filter(Boolean);
 
     /* ★★금액에 기호를 안 붙인다. 통화를 갈아 끼우며 보는 화면이라 **위안이 ¥ 로 찍히면
        엔으로 읽힌다**(U.money 는 CNY 도 ¥ 다 — 여행 하나에 통화 하나일 때는 문제가 없었다).
@@ -224,8 +231,8 @@
   $('mc-when').min = MORE.kstDay(Date.now() - BACK_DAYS * 864e5) + 'T00:00';
 
   $('mc-form').addEventListener('input', e => {
-    if (e.target.id === 'mc-amt') { draw(); return; }   // 금액만 바뀌면 다시 안 부른다
-    if (e.target.id === 'mc-cur') $('mc-amt').value = '';
+    if (e.target.id === 'mc-amt') { autoAmt = false; draw(); return; }  // 금액만 바뀌면 다시 안 부른다
+    if (e.target.id === 'mc-cur') autoAmt = true;      // 통화가 바뀌면 그 통화의 첫 줄로
     load();
   });
   load();
