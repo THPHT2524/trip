@@ -683,6 +683,10 @@ a { color: var(--route); text-underline-offset: 2px; }
 .mcbody { padding: 4px var(--pad-box) 14px; display: flex; flex-direction: column; gap: 10px; }
 .mcalc .hint { margin: 0; }
 
+/* 설정(통화·보정)과 '이만큼 긁으면' 을 선으로 끊는다 — 안내문이 두 칸 사이에 끼어
+   있어서 어느 칸을 가리키는지 눈으로 안 갈렸다. */
+.mctry { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 4px; }
+
 /* '이만큼 긁으면' 의 답. 값이 없을 때도 자리를 지킨다 — 입력할 때마다 표가 위아래로
    튀면 읽던 줄을 놓친다. */
 .mcone {

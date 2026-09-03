@@ -114,16 +114,23 @@ module.exports = async (req, res) => {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 8000);
   try {
+    /* ★저쪽 페이지가 보내는 것과 **같은 모양으로** 부른다. Vercel 에서 502 가 났는데
+       로컬 curl 은 되던 것이라(2026-09-03), 데이터센터 IP 를 앞단이 걸러 낸 쪽으로 본다.
+       api/fx.js 가 네이버에 Referer 를 달아 주는 것과 같은 이유다.
+       우리가 누구인지는 User-Agent 에 그대로 밝힌다 — 브라우저인 척하지는 않는다. */
     const r = await fetch(`${UP}?date=${encodeURIComponent(at)}`, {
       signal: ctl.signal,
-      headers: { 'User-Agent': UA, Accept: 'application/json' },
+      headers: {
+        'User-Agent': UA, Accept: 'application/json',
+        Origin: 'https://themore.app', Referer: 'https://themore.app/',
+      },
     });
-    if (!r.ok) throw new Error(`upstream ${r.status}`);
+    if (!r.ok) throw new Error(`환율 제공처가 ${r.status} 를 돌려줬습니다`);
     const b = await r.json();
     const sh = (b && b.sh) || {};
     const tt = +sh.usdkrw_tt_rate;
     const mid = +sh.usdkrw_midrate;
-    if (!(tt > 0) || !(mid > 0)) throw new Error('no rate');
+    if (!(tt > 0) || !(mid > 0)) throw new Error('환율 제공처가 빈 값을 줬습니다');
 
     /* 우리가 쓰는 모양으로 바꿔서 넘긴다 — 저쪽 응답 모양이 바뀌어도 고칠 곳이 여기뿐이다. */
     const visa = {};
@@ -152,11 +159,14 @@ module.exports = async (req, res) => {
       res.status(200).json(hit.body);
       return;
     }
+    /* ★★왜 못 가져왔는지를 **화면까지** 올린다. 처음 배포했을 때 '환율을 가져오지
+       못했습니다' 만 떠서 원인을 못 봤고, 로그를 따로 뒤져야 했다(2026-09-03).
+       고칠 수 있는 사람이 한 명뿐인 앱이라 그 한 명에게 이유를 보여 주는 편이 낫다. */
     const timedOut = e && e.name === 'AbortError';
     res.setHeader('Cache-Control', 'no-store');
     res.status(timedOut ? 504 : 502).json({
-      error: timedOut ? '환율 응답 시간 초과' : '환율을 가져오지 못했습니다.',
-      detail: String((e && e.message) || e),
+      error: timedOut ? '환율 응답 시간 초과 — 잠시 뒤 다시 열어 보세요.'
+                      : `환율을 가져오지 못했습니다 — ${String((e && e.message) || e)}`,
     });
   } finally { clearTimeout(timer); }
 };

@@ -234,6 +234,7 @@ const Cost = (function () {
     const cur = $('mc-cur').value;
     const pad = +$('mc-pad').value || 0;
     if (!mrate) return;
+    $('mc-amt').placeholder = cur;
     const visa = mrate.visa[cur];
     if (!(visa > 0)) {
       $('mc-tab').innerHTML = '';
