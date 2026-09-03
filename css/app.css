@@ -923,7 +923,8 @@ input.code {
   padding: var(--pad-box) var(--pad-box) 0;
 }
 .pflags {
-  display: flex; flex-wrap: nowrap; overflow: hidden;
+  /* 가운데로 모은다 — 도장을 한쪽으로 몰아 찍지 않는다. */
+  display: flex; flex-wrap: nowrap; overflow: hidden; justify-content: center;
   font-size: 26px; line-height: 1; letter-spacing: 0;
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
   /* 색은 **대체 글자에만** 걸린다(국기 이모지는 제 색을 갖는다) — 윈도우에서
@@ -1001,7 +1002,7 @@ input.code {
   border-top: 1px solid var(--line); background: var(--sunk);
   font-family: var(--mono); font-size: var(--t-meta); line-height: 1.5;
   letter-spacing: .06em; color: var(--ink-3);
-  white-space: nowrap; overflow: hidden;
+  white-space: nowrap; overflow: hidden; text-align: center;
 }
 
 /* ★마지막 카드가 떠다니는 두 단추에 덮이고 있었다(2026-09-02 폰에서 확인).

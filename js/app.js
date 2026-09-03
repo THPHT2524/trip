@@ -162,10 +162,10 @@
         <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg> <i>·</i> PASSPORT</span>
     </div>
     <svg viewBox="0 0 32 32" class="pmark" aria-hidden="true">
-      <rect width="32" height="32" rx="8" class="bg"/>
-      <path d="M12 7.5v17" class="rail"/>
-      <circle cx="12" cy="12" r="3.4" class="d1"/>
-      <circle cx="12" cy="22.5" r="3.4" class="d2"/></svg>
+      <rect width="32" height="32" rx="7" class="bg"/>
+      <path d="M11 6v20" class="rail"/>
+      <circle cx="11" cy="11" r="3.6" class="d1"/>
+      <circle cx="11" cy="22" r="3.6" class="d2"/></svg>
   </div>`;
 
   /* ── 여권 위의 세계지도 ──────────────────────────────────────────────────
@@ -331,9 +331,15 @@
     const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
     const content = box.scrollWidth - padX;
     const over = content - (box.clientWidth - padX);
-    if (drawsFlags && over > 0) {
+    if (drawsFlags) {
+      /* ★★넘칠 때만 겹치던 것을 **늘 조금은 겹치게** 바꿨다. 나라마다 한 장으로 줄고
+         나서는 열여섯 장이 그냥 들어가 버려서, 부채가 아니라 국기를 늘어놓은 줄이
+         됐다(2026-09-03). 겹쳐야 여권에 도장이 포개진 것처럼 읽힌다.
+         ★넘치면 더 겹치되 반 넘게는 안 가린다 — 그 이상이면 무엇인지 알 수 없다. */
+      const per = content / n;                                  // 국기 한 장의 폭
+      const need = over > 0 ? over / (n - 1) : 0;
       box.style.setProperty('--lap',
-        Math.min((content / n) * 0.55, over / (n - 1)).toFixed(2) + 'px');  // 반 넘게는 안 가린다
+        Math.min(per * 0.55, Math.max(per * 0.3, need)).toFixed(2) + 'px');
     }
     return box.scrollWidth - box.clientWidth;   // 겹치고도 남은 것
   }
