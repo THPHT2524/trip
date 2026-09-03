@@ -211,10 +211,17 @@
      ★가장 **가까운** 줄을 고른다. 가장 이득이 큰 줄이 아니다 — 5,999 로 내려가라는
        말은 6달러를 쓰려던 사람에게 소용이 없다. 위아래를 가리지 않는다: 4.30 을 넣었으면
        1센트를 **덜** 긁는 것이 답이다.
-     ★적립이 늘지 않는 줄은 아예 후보가 아니다. 그래서 이미 제일 좋은 값을 넣었으면
-       이 줄은 뜨지 않는다 — 할 말이 없을 때 자리를 차지하지 않는다. */
-    const near = one && list.reduce((best, x) => {
-      if (x.f === amt || x.b.point <= one.point) return best;
+     ★★**잔소리를 안 한다.** 처음엔 '적립이 늘기만 하면' 권했더니 이미 최선인 4.29 에도
+       '2.86 더 긁으면 4P 더' 가 떴다(2026-09-04). 꼬리가 99x 인 값끼리는 적립이 몇 P
+       차이라 늘 무언가를 권하게 된다 — 그건 도움이 아니라 소음이다. 둘로 막는다:
+         ① 표에 있는 값이면 입을 다문다. 그 줄들이 곧 답이라 더 나은 것이 없다
+            (13,973 처럼 꼬리가 아쉬운 줄도 그 구간에서는 최선이다).
+         ② 그 밖에는 **WORTH 이상 늘 때만** 권한다. 센트 한 칸이 청구 28원까지
+            움직이니 56P 쯤은 어차피 못 줄이는 몫이다 — 그 배를 문턱으로 둔다. */
+    const WORTH = 200;
+    const onRow = list.some(x => x.f === amt);
+    const near = one && !onRow && list.reduce((best, x) => {
+      if (x.b.point - one.point < WORTH) return best;
       return (!best || Math.abs(x.f - amt) < Math.abs(best.f - amt)) ? x : best;
     }, null);
     $('mc-near').hidden = !near;
