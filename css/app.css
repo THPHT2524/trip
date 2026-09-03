@@ -869,11 +869,18 @@ input.code {
 @media (prefers-color-scheme: dark) {
   :root .trip .bgflag { opacity: .17; }
 }
-/* ★나라를 여럿 걸친 여행. 크기를 그대로 두면 폭이 장수만큼 늘어난다 —
-   한 장 84px(카드의 24%)인데 세 장이 244px(71%) 이었다(2026-09-03 측정).
-   바탕이 카드를 다 덮으면 그건 바탕이 아니다. 폭이 대충 같아지게 낮춘다. */
-.trip .bgflag.n2 { font-size: 58px; }
-.trip .bgflag.n3 { font-size: 44px; }
+/* ★나라를 여럿 걸친 여행 — **크기는 그대로 두고 살짝 겹친다.**
+   그냥 늘어놓으면 세 장이 244px(카드의 71%)이 되어 이름을 덮는데, 크기를 줄이면
+   이번엔 그 카드만 혼자 힘이 없다. 겹치면 둘 다 피한다.
+   ★겹치는 폭은 **글리프의 3분의 1**. 92px 국기가 대략 70px 폭이니 두 장 116px,
+     세 장 162px 로 들어온다 — 한 장 70px 과 견줘 바탕으로 남는 크기다.
+     여권 국기 줄은 반까지 겹치지만 거기는 마흔세 장을 한 판에 넣느라 그런 것이고,
+     여기는 셋을 넘지 않으니 부채로 보일 만큼만 포갠다.
+   ★★윈도우는 여기 안 온다 — 글자로 떨어지는 곳에서는 js 가 첫 나라만 내보낸다.
+     'ES' 와 'PT' 를 겹치면 부채가 아니라 글자 뭉치다(js/app.js 의 bgflag). */
+.trip .bgflag b { display: block; font-weight: inherit; }
+.trip .bgflag.lap { display: flex; }
+.trip .bgflag.lap b + b { margin-left: -.26em; }
 /* 카드의 글자는 바탕 위에 서야 한다 */
 .trip > .top2, .trip > .mrail, .trip > .meta { position: relative; }
 .trip .top2 { display: flex; align-items: baseline; gap: 10px; }
