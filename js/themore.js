@@ -137,6 +137,18 @@
     return null;
   }
 
+  /* ★★**999 꼬리.** 이 카드는 청구액의 끝 세 자리를 두 배로 돌려준다 — 그게 이 화면의
+     전부다. 그래서 청구액이 나오는 자리마다 꼬리를 갈라 밝힌다. 5,996 을 보면
+     996×2 가 보이고, 13,973 은 973 뿐이라서 나쁘 줄임이 한눈에 읽힌다.
+     ★장식이 아니라 **규칙을 그린 것**이다. 그래서 5,000원 미만이면 적립이 없으므로
+       꼬리를 안 밝힌다 — 문장 하나 안 쓰고 그 규칙을 가르친다. */
+  function won(n) {
+    const s = n.toLocaleString('ko-KR');
+    const i = s.lastIndexOf(',');
+    if (i < 0 || n < MORE.MIN) return esc(s);
+    return `${esc(s.slice(0, i + 1))}<b>${esc(s.slice(i + 1))}</b>`;
+  }
+
   // ── 그리기 ────────────────────────────────────────────────────────────
   function draw() {
     const cur = $('mc-cur').value;
@@ -176,7 +188,7 @@
     /* ★★₩ 를 안 붙인다. Plex Mono 에 ₩ 가 없어서 대체 글꼴로 떨어지는데(폭 12.10 vs
        숫자 13.20), 거기에 음수 자간이 겹쳐 **숫자를 파고든다**(2026-09-03 아이폰).
        아래 표에서 쓰는 방식과 같게 — 단위는 머리칸(청구 · 원)이 말하고 칸은 수만 적는다. */
-    $('mc-krw').textContent = one ? one.krw.toLocaleString('ko-KR') : '—';
+    $('mc-krw').innerHTML = one ? won(one.krw) : '—';
     /* ★5,000원 미만이면 한 푼도 안 쌓인다. 0P 라고 적으면 '적립이 되긴 하는데 0' 으로
        읽히므로, 안 되는 이유를 그 자리에 적는다. */
     $('mc-pt').textContent = !one ? '—'
@@ -194,12 +206,11 @@
 
     $('mc-tab').innerHTML = list.length ? `
       <table class="mtab">
-        <thead><tr><th>긁을 금액 · ${esc(cur)}</th><th>청구</th><th>적립</th><th>이득</th></tr></thead>
+        <thead><tr><th>긁을 금액 · ${esc(cur)}</th><th>청구</th><th>이득</th></tr></thead>
         <tbody>${list.map(x => `
           <tr${x.f === amt ? ' class="on"' : ''}>
             <th scope="row"><button type="button" data-f="${x.f}">${esc(fmt(x.f))}</button></th>
-            <td>${x.b.krw.toLocaleString('ko-KR')}</td>
-            <td>${x.b.point.toLocaleString('ko-KR')}<em>P</em></td>
+            <td class="krw">${won(x.b.krw)}</td>
             <td class="${x.b.gain < 0 ? 'warn' : ''}">${x.b.gain.toFixed(1)}%</td>
           </tr>`).join('')}</tbody>
       </table>` : '';
