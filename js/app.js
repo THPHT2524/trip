@@ -341,7 +341,7 @@
            남는 만큼만 --lap 에 준다. 이미 충분히 겹쳐 있으면 0 이 된다.
          ★넘쳐도 더 겹치지 않는다. 대신 fitFlags 가 줄을 하나 더 쓴다 —
            뭉개진 한 줄보다 두 줄이 낫다. */
-      const SHOW = 0.8;                                  // 한 장이 5분의 4는 보인다
+      const SHOW = 0.75;                                 // 한 장이 4분의 3은 보인다
       const w = content / n;                             // 지금 한 장이 차지하는 폭
       const bleed = 0.26 * parseFloat(cs.fontSize);      // b 가 양옆에서 당겨 둔 양
       box.style.setProperty('--lap',
