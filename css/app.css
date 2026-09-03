@@ -689,16 +689,26 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* '비워도 됩니다' — 라벨 옆의 곁말. 라벨만큼 진하면 둘 다 라벨로 읽힌다. */
 .field label .opt { font-weight: 400; color: var(--ink-3); font-size: var(--t-meta); }
 
-/* '이만큼 긁으면' 의 답. 값이 없을 때도 자리를 지킨다 — 입력할 때마다 표가 위아래로
-   튀면 읽던 줄을 놓친다. */
-.mcone {
-  margin: 0; min-height: 1.25em; font-size: var(--t-body); color: var(--ink-2);
+/* ★답이 화면 맨 위에 선다. '얼마 찍히나' 가 이 화면의 유일한 질문이라, 묻는 칸보다
+   답이 먼저 보이는 편이 낫다(비용 탭의 .ctotal 과 같은 어법이다).
+   ★칸에 늘 기본값이 있어서 **빈 상태가 없다** — 그래서 자리를 고정으로 잡아도 된다.
+   ★청구 칸을 넓게 준다. ₩1,061,475 처럼 열 자리가 들어와도 줄이 안 무너지게. */
+.mhero {
+  margin: 0; padding: 16px var(--pad) 14px;
+  display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 4px 12px;
+  border-bottom: 1px solid var(--line);
 }
-.mcone b {
-  font-family: var(--mono); font-weight: 600; color: var(--ink);
-  font-variant-numeric: tabular-nums;
+.mhero > div { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.mhero dt {
+  font-size: var(--t-micro); font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-3);
 }
-.mcbody .warn { color: var(--warn); }
+.mhero dd {
+  margin: 0; font-family: var(--mono); font-size: 22px; font-weight: 600;
+  letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mhero dd.warn, .mcbody .warn { color: var(--warn); }
 /* 한 장짜리 페이지라 아래에 탭바가 없다 — 판이 바닥에 붙지 않게 여백을 준다.
    (.pane 의 padding-bottom 은 여행 화면 것이라 여기엔 안 걸린다) */
 .wrap > .mcbody { padding-left: var(--pad); padding-right: var(--pad);

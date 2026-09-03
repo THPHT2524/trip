@@ -116,7 +116,6 @@
 
     if (!(v > 0)) {
       $('mc-tab').innerHTML = '';
-      $('mc-one').textContent = '';
       $('mc-src').textContent = `${cur} 환율을 구하지 못했습니다.`;
       return;
     }
@@ -136,15 +135,17 @@
        ★사람이 한 번이라도 고치면 그때부터 손대지 않는다 — 남이 적은 것을 덮지 않는다. */
     if (autoAmt && list.length) $('mc-amt').value = String(list[0].f);
 
-    /* 정방향 — '이만큼 긁으면 얼마 찍히나' */
+    /* 정방향 — '이만큼 긁으면 얼마 찍히나'. 화면 맨 위 큰 칸 셋이 이 답이다. */
     const amt = parseFloat($('mc-amt').value);
     const one = amt > 0 ? MORE.bill(amt, v, rate.tt, rate.mid) : null;
-    $('mc-one').innerHTML = one
-      ? `<b>${esc(U.money(one.krw, U.SETTLE))}</b> 청구 · `
-        + (one.point ? `${one.point.toLocaleString('ko-KR')}P 적립 · `
-                     : `적립 없음(${MORE.MIN.toLocaleString('ko-KR')}원 미만) · `)
-        + `<span class="${one.gain < 0 ? 'warn' : ''}">이득 ${one.gain.toFixed(1)}%</span>`
-      : '';
+    $('mc-krw').textContent = one ? U.money(one.krw, U.SETTLE) : '—';
+    /* ★5,000원 미만이면 한 푼도 안 쌓인다. 0P 라고 적으면 '적립이 되긴 하는데 0' 으로
+       읽히므로, 안 되는 이유를 그 자리에 적는다. */
+    $('mc-pt').textContent = !one ? '—'
+      : one.point ? one.point.toLocaleString('ko-KR') + 'P' : '없음';
+    $('mc-pt').classList.toggle('warn', !!one && !one.point);
+    $('mc-gain').textContent = one ? one.gain.toFixed(1) + '%' : '—';
+    $('mc-gain').classList.toggle('warn', !!one && one.gain < 0);
 
     /* ★★금액에 기호를 안 붙인다. 통화를 갈아 끼우며 보는 화면이라 **위안이 ¥ 로 찍히면
        엔으로 읽힌다**(U.money 는 CNY 도 ¥ 다 — 여행 하나에 통화 하나일 때는 문제가 없었다).
@@ -189,7 +190,7 @@
       $('mc-src').textContent = '환율을 가져오는 중…';
       try { await askSh(day); } catch (e) {
         if (me !== busy) return;
-        $('mc-tab').innerHTML = ''; $('mc-one').textContent = '';
+        $('mc-tab').innerHTML = '';
         $('mc-src').textContent = e.message;
         return;
       }
