@@ -652,6 +652,10 @@
         const b = sessionStorage.getItem('back1');
         if (b) { to = b; sessionStorage.removeItem('back1'); }
       } catch (e) { /* 시크릿 모드 등에서 막히면 루트로 */ }
+      /* ★앱이 아는 길은 '/' 와 '/t/…' 뿐이다. /themore 처럼 **다른 페이지**에서
+         로그인을 눌렀으면 주소만 바꿔선 안 된다 — 지금 떠 있는 것은 index.html 이라
+         여행 목록이 /themore 주소로 그려진다. 그럴 때는 진짜로 그리로 보낸다. */
+      if (to !== '/' && !/^\/t\//.test(to)) { location.replace(to); return; }
       history.replaceState(null, '', to);
     }
     const u = readUrl();

@@ -106,18 +106,27 @@ const MORE = (function () {
      ★한 끼 밥값부터 호텔 하루치까지가 이 안에 들어온다. */
   const targets = () => Array.from({ length: 30 }, (_, i) => (i + 5) * 1000 + 999);
 
-  /* api/more 에 물어볼 시각 칸. 신한 고시는 **오전 9시에 한 번** 바뀌므로
-     하루에 칸이 둘뿐이다 — 그래서 캐시가 잘 듣는다.
+  /* api/more 에 물어볼 날짜. 신한 1회차는 **하루에 한 번**뿐이라 날짜가 곧 키다.
      ★한국시간으로 잘라야 한다. 폰이 현지 시각(방콕·하와이)에 맞춰져 있어도
-       기준은 서울의 9시다. */
-  function bucket(t) {
+       기준은 서울의 아침 고시다. */
+  function kstDay(t) {
     const k = new Date((t == null ? Date.now() : +t) + 9 * 3600e3);
     const p = n => String(n).padStart(2, '0');
-    return `${k.getUTCFullYear()}-${p(k.getUTCMonth() + 1)}-${p(k.getUTCDate())}`
-         + `T${k.getUTCHours() < 9 ? '00' : '09'}`;
+    return `${k.getUTCFullYear()}-${p(k.getUTCMonth() + 1)}-${p(k.getUTCDate())}`;
   }
 
-  return { bill, solve, targets, digits, bucket, MIN };
+  /* ★★비자 환율을 신한 **대미환산율**로 갈음할 때 얹는 여유(%).
+     둘은 같은 아침 값인데도 어긋난다 — 2026-09-03 실측으로 엔 -0.343% ·
+     바트 -0.354% · 파운드 -0.351%, 홍콩달러와 위안은 0.03% 안쪽이었다.
+     ★방향이 나쁘다. 신한 쪽이 **낮게** 나오므로 그대로 쓰면 청구액을 실제보다 적게
+       보고, 999 를 넘겨 버린다(6,020원에 찍히면 980포인트가 날아간다).
+       그래서 환율을 그만큼 **높게** 잡아 항상 아래로 떨어지게 한다.
+     ★대가는 작다: 5,999 대신 5,960쯤에 맞으니 2,000 중 60포인트쯤 손해다(3%).
+     ★하루치 관측뿐이라 넉넉히 잡았다. 비자 환율을 직접 넣으면 이 여유는 쓰지 않는다. */
+  const SAFETY = 0.5;
+  const hedge = v => (v > 0 ? v * (1 + SAFETY / 100) : v);
+
+  return { bill, solve, targets, digits, kstDay, hedge, SAFETY, MIN };
 })();
 
 if (typeof module !== 'undefined') module.exports = MORE;   // tools/test-pure.js 용

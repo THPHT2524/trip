@@ -1,32 +1,34 @@
-/* api/more.js — 더모아 계산에 쓸 환율 (Vercel 서버리스 함수).
+/* api/more.js — 더모아 계산에 쓸 **신한 1회차 고시환율** (Vercel 서버리스 함수).
    ─────────────────────────────────────────────────────────────────────────
    왜 api/fx.js 로 안 되나: 저쪽은 네이버 **일별 종가**를 준다. 더모아 셈에 필요한 것은
-   그날 **1회차** 신한 전신환매도율이고, 둘은 같은 날에도 다르다
-   (2026-09-03 실측: 신한 1회차 1,382.50 · 네이버 종가 1,373.70 — 0.64%).
-   5,999원에서 38원 차이라 999 경계를 그냥 넘어간다. 그리고 엔·바트는 **비자 환율**로
-   달러를 거치는데 그 값은 네이버에 아예 없다.
+   그날 **1회차**(오전 첫 고시) 신한 전신환매도율이다. 2026-09-03 실측으로 신한 1회차
+   1,382.50 · 네이버 종가 1,373.70 — 0.64% 벌어진다. 5,999원에서 38원이면 999 경계를
+   그냥 넘어가므로 종가로 계산하면 **틀린 금액을 알려 주는 계산기**가 된다.
 
-   ★★그래서 themore.app 의 공개 API 를 그대로 끌어온다. 브라우저에서는 못 부른다 —
-     CORS 를 안 열어 두었고(thpht-trip.vercel.app 에서 실측 Failed to fetch),
-     우리 CSP 도 connect-src 'self' 다. **서버끼리는** 인증도 헤더도 없이 열려 있다.
+   ★★처음에는 themore.app 의 API 를 끌어왔다가 막혔다(2026-09-03). 같은 회선에서
+     브라우저는 200, 서버는 403 → 나중엔 응답 자체가 없음. 데이터센터 필터가 아니라
+     **자기 페이지 밖에서는 안 쓰게 막아 둔 것**이다. 브라우저인 척해서 뚫지 않는다.
+     대신 신한은행이 제 고시표를 그대로 열어 두고 있어서 **원천에서 직접** 받는다 —
+     남에게 기대지 않고, 값도 themore 가 주던 것과 세 날짜 모두 정확히 같았다.
 
-   ★남의 무료 API 다. 지키는 쪽으로 만든다:
-     · 고시는 **하루에 두 번**(0시·9시) 바뀌므로 칸이 이틀치라도 넷뿐이다 → 세게 캐시한다
-     · 우리가 누구인지 User-Agent 에 밝힌다. 막고 싶으면 막을 수 있어야 한다
-     · 죽으면 계산기만 안 뜨면 된다. 여행 기록은 이것과 무관하다
+   ★비자 환율은 여기서 못 준다. 비자 공식 API 는 Cloudflare 챌린지에 막히고, 신한의
+     대미환산율(제 매매기준율끼리의 교차)은 비자와 최대 0.35% 어긋난다(엔 기준
+     5,999원에서 21원). 그래서 그 값을 '갈음' 으로 주고, 부르는 쪽이 안전 여유를 얹거나
+     사람이 비자 환율을 직접 넣게 한다 — js/more.js 의 SAFETY 를 보라.
 
-   호출 규약:  GET /api/more?at=2026-09-03T09
-   응답:       { at, on, type, tt, mid, visa: { JPY: 0.0063175122, ... } }
-               tt  신한 전신환매도율(USD/KRW) — 카드가 이 값으로 청구한다
-               mid 매매기준율 — 이득률의 기준('수수료 없는 카드였다면')
-               visa 그 통화 1단위가 몇 달러인가 */
+   호출 규약:  GET /api/more?at=2026-09-03            (한국시간 날짜)
+   응답:       { on, at, round, tt, mid, usd: { JPY: 0.0062958, ... } }
+               on    실제 고시 일자 — 주말·공휴일이면 직전 영업일이 온다
+               tt    USD/KRW 전신환매도율 — 카드가 이 값으로 청구한다
+               mid   USD/KRW 매매기준율 — 이득률의 기준('수수료 없는 카드였다면')
+               usd   그 통화 1단위가 몇 달러인가 (신한 매매기준율끼리의 교차) */
 
-const UP = 'https://api.themore.app/api/v1/rate';
+const UP = 'https://bank.shinhan.com/serviceEndpoint/httpDigital';
 /* ★HTTP 헤더는 latin-1 만 된다 — 한글을 넣었다가 fetch 가 통째로 터졌다(ByteString). */
 const UA = 'thpht-trip/1.0 (+https://thpht-trip.vercel.app; personal travel log)';
 
-/* themore 가 데이터를 갖고 있는 시작점. 그 앞을 물어봐야 빈 값만 온다. */
-const FLOOR = '2023-12-01';
+/* 신한이 데이터를 갖고 있는 범위 밖을 물으면 FAIL 이 온다. 넉넉히 잡아 둔다. */
+const FLOOR = '2000-01-01';
 
 const SB_URL = process.env.SUPABASE_URL || 'https://slakyumsnufoywxrdhhx.supabase.co';
 const SB_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_5xTTEUeViqzY1JgFLv0z6A_NAVJZcUz';
@@ -51,7 +53,7 @@ async function authorized(req) {
   } catch (e) { return false; }        // 못 물어보면 통과시키지 않는다(fail closed)
 }
 
-/* 계산기를 여는 사람 한 명이 한 번에 한 칸만 본다. 폴링이 없다. */
+/* 계산기를 여는 사람 한 명이 한 번에 한 날짜만 본다. 폴링이 없다. */
 const RATE_MAX = 30;
 const RATE_WIN = 60 * 1000;
 const rate = new Map();
@@ -68,12 +70,75 @@ function overLimit(token) {
   return hit.n > RATE_MAX ? Math.ceil((hit.until - now) / 1000) : 0;
 }
 
-/* 받아 둔 칸. 지난 칸의 고시는 다시 안 바뀌므로 인스턴스가 사는 동안 그대로 쓴다.
-   ★오늘 칸은 짧게만 잡는다 — 9시 5분까지 비자 환율이 갱신되는 중일 수 있다. */
+/* ★★신한 응답을 우리 모양으로. **여기만 순수 함수라** tools/test-pure.js 가 검증한다.
+   ★단위가 통화마다 다르다 — '일본 100엔' · '베트남 100동' 처럼 표시 이름에 배수가
+     적혀 있다. 놓치면 환산액이 조용히 100배가 된다(api/fx.js 도 같은 함정을 적어 뒀다).
+   ★대미환산환율 칸을 그냥 쓰지 않는다. 소수 넷째 자리에서 잘려 있어서(엔 0.6296)
+     매매기준율끼리 직접 나누는 편이 정확하다. */
+function parse(body) {
+  const b = (body && body.dataBody) || {};
+  const rows = b.R_RIBF3730_1;
+  if (!Array.isArray(rows) || !rows.length) return null;
+
+  const unit = (r) => {
+    const m = String(r['통화CODE_display'] || '').match(/(\d+)/);
+    return m ? +m[1] : 1;
+  };
+  const usdRow = rows.find(r => r['통화CODE'] === 'USD');
+  if (!usdRow) return null;
+  const tt = +usdRow['전신환매도환율'];
+  const mid = +usdRow['매매기준환율'];
+  if (!(tt > 0) || !(mid > 0)) return null;
+
+  /* 금·은은 통화가 아니다(XAU 는 1g 값이라 섞이면 통화 목록이 지저분해진다). */
+  const usd = {};
+  rows.forEach(r => {
+    const c = String(r['통화CODE'] || '').toUpperCase();
+    const v = +r['매매기준환율'];
+    if (!/^[A-Z]{3}$/.test(c) || c === 'XAU' || c === 'XAG' || !(v > 0)) return;
+    usd[c] = (v / unit(r)) / mid;
+  });
+
+  const on = String(b['고시일자'] || '');
+  return {
+    on: /^\d{8}$/.test(on) ? `${on.slice(0, 4)}-${on.slice(4, 6)}-${on.slice(6)}` : null,
+    at: b['고시시간_display'] || null,
+    round: +b['고시회차'] || null,
+    tt, mid, usd,
+  };
+}
+
+async function ask(day) {                       // day = 'YYYYMMDD'
+  const payload = {
+    dataBody: {
+      ricInptRootInfo: { serviceType: 'GU', serviceCode: 'F3730', language: 'ko',
+                         isRule: 'N', webUri: '/index.jsp' },
+      '조회구분': '', '조회일자': day, '고시회차': 1,
+      '조회일자_display': '', startPoint: '', endPoint: '',
+    },
+    dataHeader: { trxCd: 'RSHRC0213A01', language: 'ko', subChannel: '49', channelGbn: 'D0' },
+  };
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(UP, {
+      method: 'POST', signal: ctl.signal,
+      headers: { 'Content-Type': 'application/json; charset=UTF-8',
+                 'User-Agent': UA, Accept: 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) throw new Error(`신한은행이 ${r.status} 를 돌려줬습니다`);
+    return parse(await r.json());
+  } finally { clearTimeout(timer); }
+}
+
+/* 받아 둔 날짜. 지난 날의 1회차는 다시 안 바뀌므로 인스턴스가 사는 동안 그대로 쓴다.
+   ★오늘 것만 짧게 잡는다 — 아침 고시 전에 물어봤을 수 있다. */
 const memo = new Map();
 const FRESH = 5 * 60 * 1000;
 
 const kstToday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+const dayBefore = (d) => new Date(Date.parse(`${d}T00:00:00Z`) - 864e5).toISOString().slice(0, 10);
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') { res.status(405).json({ error: 'GET 만 받습니다.' }); return; }
@@ -91,82 +156,56 @@ module.exports = async (req, res) => {
   }
 
   const at = String((req.query || {}).at || '');
-  if (!/^\d{4}-\d{2}-\d{2}T(00|09)$/.test(at)) {
-    res.status(400).json({ error: 'at=YYYY-MM-DDT00 또는 T09 가 필요합니다.' });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(at)) {
+    res.status(400).json({ error: 'at=YYYY-MM-DD 가 필요합니다.' });
     return;
   }
-  const day = at.slice(0, 10);
   const today = kstToday();
-  if (day < FLOOR || day > today) {
+  if (at < FLOOR || at > today) {
     res.setHeader('Cache-Control', 'no-store');
-    res.status(422).json({ error: `${FLOOR} 부터 오늘까지만 볼 수 있습니다.` });
+    res.status(422).json({ error: '오늘까지만 볼 수 있습니다.' });
     return;
   }
 
-  const past = day < today;
+  const past = at < today;
   const hit = memo.get(at);
-  if (hit && (past || Date.now() - hit.at < FRESH)) {
+  if (hit && (past || Date.now() - hit.saved < FRESH)) {
     res.setHeader('Cache-Control', `private, max-age=${past ? 86400 : 300}`);
     res.status(200).json(hit.body);
     return;
   }
 
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 8000);
   try {
-    /* ★저쪽 페이지가 보내는 것과 **같은 모양으로** 부른다. Vercel 에서 502 가 났는데
-       로컬 curl 은 되던 것이라(2026-09-03), 데이터센터 IP 를 앞단이 걸러 낸 쪽으로 본다.
-       api/fx.js 가 네이버에 Referer 를 달아 주는 것과 같은 이유다.
-       우리가 누구인지는 User-Agent 에 그대로 밝힌다 — 브라우저인 척하지는 않는다. */
-    const r = await fetch(`${UP}?date=${encodeURIComponent(at)}`, {
-      signal: ctl.signal,
-      headers: {
-        'User-Agent': UA, Accept: 'application/json',
-        Origin: 'https://themore.app', Referer: 'https://themore.app/',
-      },
-    });
-    if (!r.ok) throw new Error(`환율 제공처가 ${r.status} 를 돌려줬습니다`);
-    const b = await r.json();
-    const sh = (b && b.sh) || {};
-    const tt = +sh.usdkrw_tt_rate;
-    const mid = +sh.usdkrw_midrate;
-    if (!(tt > 0) || !(mid > 0)) throw new Error('환율 제공처가 빈 값을 줬습니다');
+    /* ★주말·공휴일은 신한이 알아서 직전 영업일로 물러난다(일요일에 물으면 금요일 고시가
+       온다). 다만 **아침 고시 전**에 물으면 값이 없으므로 그때만 하루 뒤로 물러선다 —
+       하와이·미국에서는 한국시간 새벽에도 가게가 열려 있다. */
+    let got = await ask(at.replace(/-/g, ''));
+    if (!got && at === today) got = await ask(dayBefore(at).replace(/-/g, ''));
+    if (!got) throw new Error('그 날짜의 고시가 없습니다');
 
-    /* 우리가 쓰는 모양으로 바꿔서 넘긴다 — 저쪽 응답 모양이 바뀌어도 고칠 곳이 여기뿐이다. */
-    const visa = {};
-    (Array.isArray(b.visa) ? b.visa : []).forEach(v => {
-      const c = String(v && v.currency || '').toUpperCase();
-      const x = +(v && v.usdFxRate);
-      if (/^[A-Z]{3}$/.test(c) && x > 0) visa[c] = x;
-    });
-
-    const body = {
-      at,
-      on: sh.fxRateDateTime || null,   // 이 고시가 언제 것인가(주말이면 직전 영업일)
-      type: sh.fxRateType || null,     // 'AC' 면 1회차 확정, 아니면 예측
-      tt, mid, visa,
-    };
-    memo.set(at, { at: Date.now(), body });
-    if (memo.size > 60) {              // 과거 칸이 쌓여도 인스턴스 하나에 60칸이면 넉넉하다
+    const body = { ...got, asked: at };
+    memo.set(at, { saved: Date.now(), body });
+    if (memo.size > 60) {
       for (const k of memo.keys()) { if (memo.size <= 40) break; memo.delete(k); }
     }
     res.setHeader('Cache-Control', `private, max-age=${past ? 86400 : 300}`);
     res.status(200).json(body);
   } catch (e) {
-    /* 지난 칸이라도 받아 둔 게 있으면 그걸 준다 — 없는 것보다 낫다. */
-    if (hit) {
+    if (hit) {                                  // 받아 둔 게 있으면 그거라도 준다
       res.setHeader('Cache-Control', 'no-store');
       res.status(200).json(hit.body);
       return;
     }
-    /* ★★왜 못 가져왔는지를 **화면까지** 올린다. 처음 배포했을 때 '환율을 가져오지
-       못했습니다' 만 떠서 원인을 못 봤고, 로그를 따로 뒤져야 했다(2026-09-03).
-       고칠 수 있는 사람이 한 명뿐인 앱이라 그 한 명에게 이유를 보여 주는 편이 낫다. */
+    /* ★★왜 못 가져왔는지를 화면까지 올린다. 처음에는 '환율을 가져오지 못했습니다' 만
+       떠서 원인을 못 보고 로그를 따로 뒤져야 했다. 고칠 수 있는 사람이 한 명뿐인 앱이라
+       그 한 명에게 이유를 보여 주는 편이 낫다. */
     const timedOut = e && e.name === 'AbortError';
     res.setHeader('Cache-Control', 'no-store');
     res.status(timedOut ? 504 : 502).json({
       error: timedOut ? '환율 응답 시간 초과 — 잠시 뒤 다시 열어 보세요.'
                       : `환율을 가져오지 못했습니다 — ${String((e && e.message) || e)}`,
     });
-  } finally { clearTimeout(timer); }
+  }
 };
+
+module.exports.parse = parse;                   // tools/test-pure.js 용

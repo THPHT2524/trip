@@ -16,7 +16,10 @@
 import hashlib, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INDEX = os.path.join(ROOT, "index.html")
+# ?v 를 쓰는 HTML 이 둘이다 — /themore 를 더하면서 늘었다.
+# 하나만 올리면 다른 쪽이 옛 버전을 가리키고, check 가 "?v 가 서로 다릅니다" 로 막는다.
+PAGES = [os.path.join(ROOT, "index.html"), os.path.join(ROOT, "themore.html")]
+INDEX = PAGES[0]
 SW = os.path.join(ROOT, "sw.js")
 
 read = lambda p: open(p, encoding="utf-8", newline="").read()
@@ -28,10 +31,10 @@ def write(p, s):
 
 def versioned():
     """?v 가 붙어 나가는 자산 = 버전이 안 바뀌면 갱신이 안 되는 파일들."""
-    idx = read(INDEX)
     out = []
-    for m in re.finditer(r'(?:src|href)="/((?:js|css)/[^"?]+)\?v=', idx):
-        out.append(os.path.join(ROOT, m.group(1)))
+    for page in PAGES:
+        for m in re.finditer(r'(?:src|href)="/((?:js|css)/[^"?]+)\?v=', read(page)):
+            out.append(os.path.join(ROOT, m.group(1)))
     return sorted(set(out))
 
 
@@ -48,20 +51,20 @@ def assets_sha():
 
 
 def main():
-    idx, sw = read(INDEX), read(SW)
+    sw = read(SW)
 
-    cur = sorted({int(v) for v in re.findall(r"\?v=(\d+)", idx)})
+    cur = sorted({int(v) for p in PAGES for v in re.findall(r"\?v=(\d+)", read(p))})
     if len(cur) != 1:
-        print("FAIL - index.html 의 ?v 가 서로 다릅니다: %s" % cur)
+        print("FAIL - HTML 의 ?v 가 서로 다릅니다: %s" % cur)
         print("       (부분 범프 사고다 — 손으로 맞춘 뒤 다시 돌리세요)")
         return 1
     old = cur[0]
     new = old + 1
 
-    idx = idx.replace("?v=%d" % old, "?v=%d" % new)
+    for p in PAGES:
+        write(p, read(p).replace("?v=%d" % old, "?v=%d" % new))
     sw = re.sub(r"^const V = \d+;", "const V = %d;" % new, sw, count=1, flags=re.M)
     sw = re.sub(r"\?v=\d+", "?v=%d" % new, sw)
-    write(INDEX, idx)
     write(SW, sw)
 
     sha = assets_sha()
@@ -72,9 +75,9 @@ def main():
                         "const V = %d;   // assets-sha:%s" % (new, sha), 1)
     write(SW, sw)
 
-    # 셋이 실제로 맞았는지 되읽어 확인한다 — 고쳐 놓고 안 맞으면 소용이 없다
-    idx2, sw2 = read(INDEX), read(SW)
-    ok = ({int(v) for v in re.findall(r"\?v=(\d+)", idx2)} == {new}
+    # 실제로 맞았는지 되읽어 확인한다 — 고쳐 놓고 안 맞으면 소용이 없다
+    sw2 = read(SW)
+    ok = (all({int(v) for v in re.findall(r"\?v=(\d+)", read(p))} == {new} for p in PAGES)
           and {int(v) for v in re.findall(r"\?v=(\d+)", sw2)} == {new}
           and re.search(r"const V = %d;" % new, sw2))
     if not ok:

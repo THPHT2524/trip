@@ -213,6 +213,9 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ★로그아웃은 **가장 안 쓰는 동작**이다. 테두리 버튼으로 두면 첫 화면에서 제일 밝은 것이
    되어 눈이 거기 먼저 앉는다 — 대담함은 서명(미니 레일)에만 쓴다. */
 .top .act { flex: 0 0 auto; }
+/* ★곁말이 한글이면 mono 를 벗긴다 — 자간 .01em 이 낱자를 흩어 놓는다.
+   .top .span 은 '26.08.29 – 08.31' 같은 **숫자**를 세우려고 만든 것이다. */
+.top .span.ko { font-family: var(--sans); letter-spacing: 0; }
 
 /* ── Day 머리띠 ───────────────────────────────────────────────────────── */
 /* 레일이 이 띠를 **뚫고 지나간다**. 여행 하나가 경로 하나라서 끊지 않는다. */
@@ -675,13 +678,16 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .clist .act { justify-self: end; }
 
-/* ── 더모아 계산기 ──────────────────────────────────────────────────────
-   비용 탭 맨 아래, 접힌 카드 하나. 다른 cblock 처럼 판 폭을 다 쓰지 않고
-   **카드로 서 있는다** — 위쪽은 이 여행의 기록이고 이것은 도구라, 성격이 다르다.
-   여닫는 ＋/− 표시는 앱 전체의 details 규칙을 그대로 물려받는다. */
-.mcalc { margin: 14px var(--pad) 4px; }
-.mcbody { padding: 4px var(--pad-box) 14px; display: flex; flex-direction: column; gap: 10px; }
-.mcalc .hint { margin: 0; }
+/* ── 더모아 계산기 (/themore) ────────────────────────────────────────────
+   여행에 딸리지 않은 도구라 제 주소에 한 장으로 산다. 앱과 같은 토큰·같은 부품을
+   쓰되 판을 나누지 않는다 — 한 화면에 설정 셋과 표 하나뿐이다.
+   비용 탭에는 찾아갈 수 있게 링크 한 줄만 둔다(.colink). */
+.mcbody { padding: 4px 0 14px; display: flex; flex-direction: column; gap: 10px; }
+.mcbody .hint { margin: 0; }
+.colink { margin: 18px var(--pad) 4px; font-size: var(--t-body); }
+.colink a { color: var(--route); font-weight: 500; }
+/* '비워도 됩니다' — 라벨 옆의 곁말. 라벨만큼 진하면 둘 다 라벨로 읽힌다. */
+.field label .opt { font-weight: 400; color: var(--ink-3); font-size: var(--t-meta); }
 
 /* 설정(통화·보정)과 '이만큼 긁으면' 을 선으로 끊는다 — 안내문이 두 칸 사이에 끼어
    있어서 어느 칸을 가리키는지 눈으로 안 갈렸다. */
@@ -696,7 +702,11 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-family: var(--mono); font-weight: 600; color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
-.mcalc .warn { color: var(--warn); }
+.mcbody .warn { color: var(--warn); }
+/* 한 장짜리 페이지라 아래에 탭바가 없다 — 판이 바닥에 붙지 않게 여백을 준다.
+   (.pane 의 padding-bottom 은 여행 화면 것이라 여기엔 안 걸린다) */
+#app > .wrap > .mcbody { padding-left: var(--pad); padding-right: var(--pad);
+                         padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
 
 /* 표. 서른 줄이 세로로 서므로 **줄 높이와 자릿수 정렬**이 전부다.
    ★금액은 오른쪽, 긁을 금액만 왼쪽 — 눈이 왼쪽에서 답을 찾고 오른쪽에서 견준다. */

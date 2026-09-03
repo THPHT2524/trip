@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=130">
+<link rel="stylesheet" href="/css/app.css?v=132">
 </head>
 <body>
 
@@ -85,38 +85,9 @@
       <div id="cost-miss"></div>
       <p class="note" id="cost-msg"></p>
 
-      <!-- 더모아 계산기 — js/cost.js. **접어 둔다.** 여행 중 몇 번 쓰는 도구라
-           늘 펼쳐 둘 만큼은 아니고, 자리는 언제나 비용 탭 맨 아래다.
-           원화만 쓰는 여행에서는 통째로 감춘다(국내 결제는 적립이 1배라 셈이 다르다). -->
-      <details class="mcalc" id="mcalc" hidden>
-        <summary>더모아 계산기</summary>
-        <div class="mcbody">
-
-        <form class="form inline" id="mc-form" onsubmit="return false">
-          <div class="row tight">
-            <div class="field"><label for="mc-cur">통화</label>
-              <select id="mc-cur"></select></div>
-            <div class="field"><label for="mc-pad">환율 보정 %</label>
-              <input id="mc-pad" type="number" inputmode="decimal"
-                     step="0.5" min="0" max="10" placeholder="0"></div>
-          </div>
-          <p class="hint"><b>보정</b>은 매입일까지 환율이 오를 만큼 미리 얹어 두는 값입니다.
-            감이 없으면 3 — 사나흘 사이에 3% 넘게 오르는 일은 드뭅니다.</p>
-
-          <!-- ★윗줄 안내가 '감이 없으면 3' 으로 끝나는데 이 칸이 바로 아래 붙어 있어서,
-               보정에 넣을 3 을 여기 적는 일이 실제로 있었다(2026-09-03). 선으로 끊고
-               라벨을 '얼마 찍히나' 까지 늘려 두 칸이 다른 질문임을 분명히 한다. -->
-          <div class="field mctry">
-            <label for="mc-amt">이만큼 긁으면 얼마 찍히나</label>
-            <input id="mc-amt" type="number" inputmode="decimal" step="any" min="0">
-            <p class="mcone" id="mc-one"></p>
-          </div>
-        </form>
-
-        <div id="mc-tab"></div>
-        <p class="hint" id="mc-src"></p>
-        </div>
-      </details>
+      <!-- 계산기는 여행에 딸린 것이 아니라 도구라 제 주소(/themore)에 따로 산다.
+           여기서는 찾아갈 수 있게 한 줄만 둔다 — 주소를 외우게 하지 않는다. -->
+      <p class="colink"><a href="/themore">더모아 계산기 — 얼마를 긁어야 999원에 맞나 →</a></p>
     </div>
 
     <!-- 여행정보 — js/crew.js. 여행 설정이 위, 동행자가 아래다:
@@ -398,22 +369,21 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=130"></script>
-<script src="/js/map-config.js?v=130"></script>
-<script src="/js/money.js?v=130"></script>
-<script src="/js/more.js?v=130"></script>
-<script src="/js/util.js?v=130"></script>
-<script src="/js/geo.js?v=130"></script>
-<script src="/js/gmaps.js?v=130"></script>
-<script src="/js/db.js?v=130"></script>
-<script src="/js/fx.js?v=130"></script>
-<script src="/js/outbox.js?v=130"></script>
+<script src="/js/supabase-config.js?v=132"></script>
+<script src="/js/map-config.js?v=132"></script>
+<script src="/js/money.js?v=132"></script>
+<script src="/js/util.js?v=132"></script>
+<script src="/js/geo.js?v=132"></script>
+<script src="/js/gmaps.js?v=132"></script>
+<script src="/js/db.js?v=132"></script>
+<script src="/js/fx.js?v=132"></script>
+<script src="/js/outbox.js?v=132"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=130"></script>
-<script src="/js/plan.js?v=130"></script>
-<script src="/js/map.js?v=130"></script>
-<script src="/js/cost.js?v=130"></script>
-<script src="/js/app.js?v=130"></script>
+<script src="/js/crew.js?v=132"></script>
+<script src="/js/plan.js?v=132"></script>
+<script src="/js/map.js?v=132"></script>
+<script src="/js/cost.js?v=132"></script>
+<script src="/js/app.js?v=132"></script>
 
 </body>
 </html>
