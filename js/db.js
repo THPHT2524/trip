@@ -147,7 +147,8 @@ const DB = (function () {
        ★여행마다 따로 부르지 않는다 — RLS 가 이미 '내가 속한 여행' 으로 좁혀 주므로
          한 번에 다 받아 와서 클라이언트가 나눈다. 여행이 열 개여도 왕복은 하나다.
        ★필요한 칸만 고른다. 목록 화면에 메모·링크·예약번호는 쓰이지 않는다.
-       ★name 은 여권 지도가 **공항을 가려내는 데** 쓴다(이름이 '공항' 으로 끝나는 줄).
+       ★name·at_time 은 여권 지도가 쓴다 — name 으로 공항을 가려내고(이름이 '공항' 으로
+         끝나는 줄), at_time 으로 **그게 비행이었는지**를 가른다(아래 legsOf 참고).
          따로 한 번 더 묻지 않으려고 여기 얹었다 — 어차피 한 번에 다 받아 오는 길이다.
        ★★**id 를 빼면 안 된다.** MONEY.walk 는 결과를 `per.set(r.id, …)` 로 담는데
          id 가 undefined 면 65줄이 전부 같은 칸 하나에 덮어써진다. 그러면 합계가
@@ -156,7 +157,7 @@ const DB = (function () {
     shape: async () => {
       if (mode() !== 'cloud') return [];
       const { data, error } = await sb.from('items')
-        .select('id,trip_id,on_date,kind,name,lat,lng,cost,cost_cur,fx,settle,split,payer_id,parent_id')
+        .select('id,trip_id,on_date,at_time,kind,name,lat,lng,cost,cost_cur,fx,settle,split,payer_id,parent_id')
         .order('on_date', { ascending: true });
       /* ★못 받은 것과 없는 것을 **구별해서** 돌려준다. 전에는 둘 다 [] 였는데,
          한 번 실패하면 홈 카드가 조용히 '일정 N'과 합계를 잃고 통화 코드만 남았다

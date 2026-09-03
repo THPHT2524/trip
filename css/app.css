@@ -893,9 +893,16 @@ input.code {
 .wland { fill: var(--wland); }
 /* 다녀온 공항. 바닷빛 테를 둘러 몰려 있어도 서로 갈리게 한다
    (간사이·나리타·하네다가 한 덩어리로 뭉치지 않게). */
-.wdot circle { fill: var(--route); stroke: var(--wsea); stroke-width: 2.5; }
+.wdot circle { fill: var(--route); stroke: var(--wsea); stroke-width: 1.8; }
 /* 후광 — 자주 지난 문일수록 크게 번진다. 점만으로는 화면이 죽어서 얹었다. */
 .wglow circle { fill: var(--route); opacity: .16; }
+/* 항로. 여행마다 서울→첫 공항, 여행 안의 실제 항공편, 마지막 공항→서울.
+   ★점보다 **뒤에, 얇게** 깐다. 스물몇 줄이 서울 한 점에 모이므로 선이 진하면
+     아시아가 실뭉치가 된다 — 선은 흐름만 보여 주고 읽는 것은 점이다. */
+.wleg path { fill: none; stroke: var(--route); stroke-width: 1.1; opacity: .3; }
+/* 집. 다녀온 곳이 아니라 떠나온 곳이라 속을 비운다. */
+.whome { fill: var(--wsea); stroke: var(--route); stroke-width: 2; }
+
 
 /* ★여행마다 한 장씩, **겹쳐 쌓아** 담는다. 한 줄에 안 들어가면 두 줄이 된다
    (몇 줄로 나눌지도, 겹치는 폭도 js/app.js 의 fitFlags 가 재서 정한다 —
@@ -939,8 +946,18 @@ input.code {
 /* ★네 칸이 줄을 **고르게 나눠 갖는다.** 전에는 내용만큼만 차지해서 왼쪽에 몰리고
    오른쪽이 비었는데, 여권의 인적사항 칸은 서식이 정해진 자리다 — 값이 짧다고
    칸이 좁아지지 않는다. 칸 수가 둘이든 넷이든 같은 규칙으로 나뉜다. */
+/* 국기와 격자 사이 한 줄. 진짜 한국 여권 표지에 찍힌 삼개국어 그대로다 —
+   이 블록이 무엇인지 이름을 붙이면서, 여권이라는 어법을 한 번 더 못 박는다.
+   ★가운뎃점만 흐리게 둔다. 낱말 셋이 같은 무게로 서야 병기(倂記)로 읽힌다. */
+.ptype {
+  margin: 0; padding: 7px var(--pad-box) 0;
+  font-family: var(--mono); font-size: var(--t-micro); font-weight: 500;
+  letter-spacing: .16em; color: var(--ink-3);
+}
+.ptype span { opacity: .5; margin: 0 .1em; }
+
 .pgrid {
-  margin: 0; padding: 10px var(--pad-box) var(--pad-box);
+  margin: 0; padding: 8px var(--pad-box) var(--pad-box);
   display: flex; gap: 10px;
 }
 .pgrid > div { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 1px; }

@@ -156,6 +156,46 @@
      ★공항은 **이름으로** 가려낸다(끝이 '공항'). '간사이공항점' 같은 가게가 딸려 오므로
        포함이 아니라 **끝나는지**를 본다(2026-09-03에 식당 셋이 딸려 왔다).
      ★같은 공항을 여러 번 갔어도 점은 하나다. 몇 번 갔는지는 여권 격자와 카드가 말한다. */
+  /* 집. 모든 여행이 여기서 시작하고 여기로 돌아온다.
+     ★**일정 줄로 넣지 않는다.** 넣으면 지도 탭이 그날 화면을 인천까지 잡느라 확 넓어지고,
+       안 지나간 줄이 하나 늘고, 여권의 '장소' 수도 같이 오른다 — 그림 때문에 기록을
+       바꾸는 것은 거꾸로다. 여기서는 **화면에만 쓰는 상수**로 둔다.
+     ★인천이 아니라 '서울' 이다. 제주는 김포에서 갔고 둘은 지도에서 1픽셀 안쪽이다. */
+  const HOME = { lat: 37.50, lng: 126.60 };
+  /* 연속한 두 공항이 이만큼 안에 붙어 있으면 **비행기로 건넜다**고 본다.
+     ★날짜 순서만으로 이으면 안 탄 노선이 생긴다: 포르투→리스본은 143시간(육로),
+       LA→라스베가스는 151시간(차)이다. 실제 항공편은 바르셀로나→포르투 1.0시간,
+       라스베가스→샌프란시스코 1.7시간, 리스본→도하 8.9시간, 두바이→말레 9.8시간 —
+       열두 시간이면 둘이 깨끗하게 갈린다(2026-09-03에 전 여행을 훑어 확인). */
+  const FLIGHT_H = 12;
+
+  /* 그을 항로. 여행마다 **서울→첫 공항**, 여행 안의 실제 항공편, **마지막 공항→서울**. */
+  function legsOf(air) {
+    const byTrip = new Map();
+    air.forEach(r => {
+      if (!byTrip.has(r.trip_id)) byTrip.set(r.trip_id, []);
+      byTrip.get(r.trip_id).push(r);
+    });
+    const key = p => p.x.toFixed(1) + ',' + p.y.toFixed(1);
+    const out = new Map();                 // 같은 구간은 한 번만 (서울–제주가 열세 번이다)
+    const add = (a, b) => {
+      const pa = WORLD.at(a.lat, a.lng), pb = WORLD.at(b.lat, b.lng);
+      if (!pa || !pb || key(pa) === key(pb)) return;
+      const k = [key(pa), key(pb)].sort().join('|');
+      if (!out.has(k)) out.set(k, [a, b]);
+    };
+    const stamp = r => Date.parse(r.on_date + 'T' + (r.at_time || '00:00:00') + 'Z');
+    byTrip.forEach(rows => {
+      rows.sort((x, y) => stamp(x) - stamp(y));
+      add(HOME, rows[0]);
+      add(rows[rows.length - 1], HOME);
+      for (let i = 1; i < rows.length; i += 1) {
+        if (stamp(rows[i]) - stamp(rows[i - 1]) <= FLIGHT_H * 36e5) add(rows[i - 1], rows[i]);
+      }
+    });
+    return [...out.values()];
+  }
+
   function worldHtml() {
     /* 같은 공항을 **몇 번** 지났는지까지 센다 — 점 크기가 그 수다. */
     const seen = new Map();
@@ -169,19 +209,31 @@
     });
     if (seen.size < 2) return '';            // 점 하나짜리 지도는 지도가 아니다
 
+    /* 항로를 **점 아래에** 깐다 — 위에 그으면 선이 점을 가로지른다. */
+    const air = shape.filter(r => /공항$/.test(String(r.name || '')) && WORLD.at(r.lat, r.lng));
+    const legs = legsOf(air).map(([a, b]) => WORLD.arc(a, b)).filter(Boolean)
+      .map(d => `<path d="${d}"/>`).join('');
+
     /* ★★점을 다 같은 크기로 찍었더니 밋밋했다. 실제로는 제주 26번·홍콩 6번·포르투 1번
        으로 **크게 다른데** 그걸 안 보여 주고 있었다. 넓이가 아니라 **지름을 제곱근**으로
        키운다 — 넓이로 키우면 제주 하나가 동해를 덮는다.
        ★위계가 생기면서 화면도 산다: 자주 지난 문이 크고, 한 번뿐인 곳은 작다. */
-    const rOf = n => 5 + Math.min(6, Math.sqrt(n - 1) * 2.4);
+    /* ★선을 그은 뒤로 점을 줄였다. 항로가 서울 한 점에 모이는데 점이 크면 선의
+       끝이 점 안으로 파묻혀 어디서 어디로 가는지가 안 읽힌다 — 점은 자리를,
+       선은 흐름을 맡는다. */
+    const rOf = n => 3.5 + Math.min(4, Math.sqrt(n - 1) * 1.7);
     const pts = [...seen.values()];
     const c = (p, r) => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r.toFixed(1)}"/>`;
     /* 후광을 **먼저** 다 깔고 점을 얹는다 — 섞어 그리면 옆 점의 후광이 앞 점을 덮는다. */
-    const glow = pts.map(p => c(p, rOf(p.n) * 2.3)).join('');
+    const glow = pts.map(p => c(p, rOf(p.n) * 2.6)).join('');
     const dots = pts.map(p => c(p, rOf(p.n))).join('');
+    /* 집은 **속이 빈 점**. 다녀온 곳이 아니라 떠나온 곳이라 다르게 그린다. */
+    const home = WORLD.at(HOME.lat, HOME.lng);
     return `<svg class="wmap" viewBox="${WORLD.vb}" role="img"`
          + ` aria-label="다녀온 공항 ${seen.size}곳"><path class="wland" d="${WORLD.d}"/>`
-         + `<g class="wglow">${glow}</g><g class="wdot">${dots}</g></svg>`;
+         + `<g class="wleg">${legs}</g>`
+         + `<g class="wglow">${glow}</g><g class="wdot">${dots}</g>`
+         + `<circle class="whome" cx="${home.x.toFixed(1)}" cy="${home.y.toFixed(1)}" r="4.5"/></svg>`;
   }
 
   /* ── 여권 ────────────────────────────────────────────────────────────────
@@ -196,7 +248,8 @@
   const MRZ = 44;
   const pad = (t) => (t + '<'.repeat(MRZ)).slice(0, MRZ);
   const mrzSafe = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]+/g, '<');
-  const MRZ_CODE = { '나라': 'C', '도시': 'T', '장소': 'P', '일': 'D' };
+  /* ★격자 라벨과 **같은 열쇠**를 쓴다 — 라벨을 바꾸면 여기도 바꿔야 도장이 찍힌다. */
+  const MRZ_CODE = { COUNTRIES: 'C', CITIES: 'T', PLACES: 'P', DAYS: 'D' };
   /* ★위 격자에 **선 칸만** 적는다. 전에는 0 도 그대로 찍어서, 셈을 못 받아 온 날
      '1C<0A<0P<3D' 라고 도장이 찍혔다 — 없는 것을 0 이라고 말한 셈이다(2026-09-02 폰). */
   function mrzLines(cells) {
@@ -292,16 +345,15 @@
 
   function passportHtml() {
     if (!trips.length) return '';
-    /* ★국기는 **여행마다 하나씩** 세운다(같은 나라를 몇 번 갔는지가 보인다).
-       겹쳐 쌓아 담는다 — 겹치는 폭도, 한 줄로 둘지 두 줄로 나눌지도 그려진 뒤에
-       재서 정한다(fitFlags). 그래서 여기서는 **한 줄로만** 내보낸다.
-       ★★그림으로 안 그려지는 곳(윈도우)에서는 **가짓수만** 세운다. 여행 38개의
-         국기 43장이 'JP CN ID US MO KR US JP JP…' 두 줄이 되면 그건 그림도 목록도
-         아닌 글자 무더기다(2026-09-03). 부채로 겹쳐야 '몇 번' 이 읽히는데 글자는
-         겹칠 수가 없다 — 글자로 옮길 수 있는 사실은 '어느 나라' 까지다.
-         '몇 번' 은 바로 아래 격자의 '여행 N' 과 해마다의 머리띠가 이미 말한다. */
-    const every = trips.flatMap(t => U.flags(t.country));
-    const flags = canDrawFlags() ? every : [...new Set(every)];
+    /* ★국기는 **나라마다 하나씩**, 최근에 간 순으로 세운다.
+       ★전에는 여행마다 한 장씩 쌓아 '몇 번 갔는지' 를 보여 줬는데, 여행 38개면 43장이
+         되어 부채가 두 줄로 넘치고 같은 국기가 열세 번 나왔다 — 되풀이는 그림이 아니라
+         소음이었다(2026-09-03). '몇 번' 은 해마다의 머리띠와 여행 카드가 이미 말한다.
+       ★trips 가 이미 최신순(start_on desc)이라 앞에서부터 겹치는 것만 걷으면
+         **가장 최근에 간 나라가 앞**에 선다 — 순서가 곧 최근성이다.
+       ★겹치는 폭도, 한 줄로 둘지 두 줄로 나눌지도 그려진 뒤에 재서 정한다(fitFlags).
+         그래서 여기서는 한 줄로만 내보낸다. */
+    const flags = [...new Set(trips.flatMap(t => U.flags(t.country)))];
     /* '나라 N' 은 가짓수다 — 이건 겹치는 것을 걷는다 */
     const countries = new Set(trips.flatMap(t => U.codeList(t.country)).filter(c => U.flag(c)));
     /* 도시는 **적힌 대로** 센다. 여러 여행에서 같은 도시를 적었으면 한 번만 센다. */
@@ -335,8 +387,10 @@
        지나온 문이지 다녀온 곳이 아니다. 공항만 붙이고 교토는 가르는 반경은 35~42km
        사이 7km 창뿐이고 그건 간사이에만 맞는 값이었다(인천 50km · 나리타 60km).
        **여권에 설명이 필요한 칸을 두지 않는다** — 사람이 한 번 적는 편이 낫다. */
+    /* 라벨은 영문이다 — 진짜 여권이 그렇다(한국 여권도 모든 칸이 국·영문 병기다).
+       아래 MRZ 도 로마자라 둘이 한 덩어리로 읽힌다. */
     const cells = [
-      ['나라', n.countries], ['도시', n.cities], ['장소', n.spots], ['일', n.days],
+      ['COUNTRIES', n.countries], ['CITIES', n.cities], ['PLACES', n.spots], ['DAYS', n.days],
     ].filter(([, v]) => v);
     if (!cells.length) return '';
 
@@ -344,6 +398,7 @@
       ${worldHtml()}
       ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
         flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
+      <p class="ptype" aria-hidden="true">여권 <span>·</span> PASSPORT <span>·</span> PASSEPORT</p>
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
