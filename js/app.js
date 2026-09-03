@@ -157,18 +157,31 @@
        포함이 아니라 **끝나는지**를 본다(2026-09-03에 식당 셋이 딸려 왔다).
      ★같은 공항을 여러 번 갔어도 점은 하나다. 몇 번 갔는지는 여권 격자와 카드가 말한다. */
   function worldHtml() {
+    /* 같은 공항을 **몇 번** 지났는지까지 센다 — 점 크기가 그 수다. */
     const seen = new Map();
     shape.forEach(r => {
       if (!/공항$/.test(String(r.name || ''))) return;
       const p = WORLD.at(r.lat, r.lng);      // 좌표가 없거나 이상하면 null 을 준다
-      if (p) seen.set(p.x.toFixed(1) + ',' + p.y.toFixed(1), p);
+      if (!p) return;
+      const k = p.x.toFixed(1) + ',' + p.y.toFixed(1);
+      const hit = seen.get(k);
+      if (hit) hit.n += 1; else seen.set(k, { x: p.x, y: p.y, n: 1 });
     });
     if (seen.size < 2) return '';            // 점 하나짜리 지도는 지도가 아니다
-    const dots = [...seen.values()].map(p =>
-      `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7"/>`).join('');
+
+    /* ★★점을 다 같은 크기로 찍었더니 밋밋했다. 실제로는 제주 26번·홍콩 6번·포르투 1번
+       으로 **크게 다른데** 그걸 안 보여 주고 있었다. 넓이가 아니라 **지름을 제곱근**으로
+       키운다 — 넓이로 키우면 제주 하나가 동해를 덮는다.
+       ★위계가 생기면서 화면도 산다: 자주 지난 문이 크고, 한 번뿐인 곳은 작다. */
+    const rOf = n => 5 + Math.min(6, Math.sqrt(n - 1) * 2.4);
+    const pts = [...seen.values()];
+    const c = (p, r) => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r.toFixed(1)}"/>`;
+    /* 후광을 **먼저** 다 깔고 점을 얹는다 — 섞어 그리면 옆 점의 후광이 앞 점을 덮는다. */
+    const glow = pts.map(p => c(p, rOf(p.n) * 2.3)).join('');
+    const dots = pts.map(p => c(p, rOf(p.n))).join('');
     return `<svg class="wmap" viewBox="${WORLD.vb}" role="img"`
          + ` aria-label="다녀온 공항 ${seen.size}곳"><path class="wland" d="${WORLD.d}"/>`
-         + `<g class="wdot">${dots}</g></svg>`;
+         + `<g class="wglow">${glow}</g><g class="wdot">${dots}</g></svg>`;
   }
 
   /* ── 여권 ────────────────────────────────────────────────────────────────
