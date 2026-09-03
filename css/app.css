@@ -918,9 +918,11 @@ input.code {
    (몇 줄로 나눌지도, 겹치는 폭도 js/app.js 의 fitFlags 가 재서 정한다 —
    줄을 여기서 미리 나누지 않는다).
    ★겹쳐도 서로 갈리게 종이색 테를 두른다 — 안 두르면 색 띠 하나로 뭉친다. */
+/* 여권 카드의 세로 가락은 넷이다: 지도 16 · 국기 20 · 머리 18 · 격자 16.
+   같은 눈금(4의 배수)에서 고르면 칸마다 제 무게가 있으면서도 한 장으로 읽힌다. */
 .pflagwrap {
   display: flex; flex-direction: column; gap: 5px;
-  padding: var(--pad-box) var(--pad-box) 0;
+  padding: 16px var(--pad-box) 0;
 }
 .pflags {
   /* 가운데로 모은다 — 도장을 한쪽으로 몰아 찍지 않는다. */
@@ -960,9 +962,9 @@ input.code {
 /* 여권의 머리 — 이름·종류가 왼쪽, 앱 표식이 오른쪽. 진짜 여권 인적사항면의 배치다. */
 .phead {
   display: flex; align-items: center; gap: 12px;
-  padding: 12px var(--pad-box) 0;
+  padding: 20px var(--pad-box) 0;
 }
-.pname { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pname { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .pname b {
   font-size: var(--t-read); font-weight: 700; letter-spacing: .1em; color: var(--ink);
 }
@@ -984,10 +986,10 @@ input.code {
 .pmark .d2 { fill: var(--route); }
 
 .pgrid {
-  margin: 0; padding: 8px var(--pad-box) var(--pad-box);
+  margin: 0; padding: 18px var(--pad-box) 16px;
   display: flex; gap: 10px;
 }
-.pgrid > div { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.pgrid > div { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .pgrid dt {
   font-size: var(--t-micro); font-weight: 600; letter-spacing: .06em;
   color: var(--ink-3);
