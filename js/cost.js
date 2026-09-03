@@ -213,6 +213,115 @@ const Cost = (function () {
     document.dispatchEvent(new CustomEvent('items:changed'));
   }
 
+  /* ── 더모아 계산기 ────────────────────────────────────────────────────
+     ★셈은 js/more.js 한 곳에서만 한다(money.js 와 같은 규칙). 여기는 화면뿐이다.
+     ★환율은 api/more.js 가 themore.app 에서 끌어온다 — 우리 api/fx 는 일별 **종가**라
+       이 셈에 못 쓴다. 종가와 1회차는 0.64% 벌어지고, 5,999원에서 38원이면
+       999 경계를 그냥 넘어간다.
+     ★펼칠 때 처음 한 번만 받는다. 안 펼치면 네트워크를 쓰지 않는다. */
+  const PAD_KEY = 'trip.more.pad';
+  let mrate = null;                       // { at, tt, mid, visa, on, type }
+
+  /* 이 여행에서 실제로 쓴 통화들. 원화는 뺀다 — 국내 결제는 적립이 1배라 셈이 다르고,
+     비자 환율도 없다. */
+  function mcurs() {
+    const set = new Set(rows.map(r => r.cost_cur).filter(Boolean));
+    if (trip && trip.base_cur) set.add(trip.base_cur);
+    return [...set].filter(c => c && c !== U.SETTLE).sort();
+  }
+
+  function mdraw() {
+    const cur = $('mc-cur').value;
+    const pad = +$('mc-pad').value || 0;
+    if (!mrate) return;
+    const visa = mrate.visa[cur];
+    if (!(visa > 0)) {
+      $('mc-tab').innerHTML = '';
+      $('mc-one').textContent = '';
+      $('mc-src').textContent = `${cur} 는 비자 환율이 없어 계산하지 못합니다.`;
+      return;
+    }
+
+    /* 정방향 — '이만큼 긁으면 얼마 찍히나'. 보정은 여기에도 먹인다(같은 최악의 경우). */
+    const amt = parseFloat($('mc-amt').value);
+    const one = amt > 0 ? MORE.bill(amt, visa, mrate.tt * (1 + pad / 100), mrate.mid) : null;
+    $('mc-one').innerHTML = one
+      ? `<b>${esc(U.money(one.krw, U.SETTLE))}</b> 청구 · `
+        + (one.point ? `${one.point.toLocaleString('ko-KR')}P 적립 · ` : `적립 없음(${MORE.MIN.toLocaleString('ko-KR')}원 미만) · `)
+        + `<span class="${one.gain < 0 ? 'warn' : ''}">이득 ${one.gain.toFixed(1)}%</span>`
+      : '';
+
+    /* 역방향 — 목표 청구금액마다 '얼마를 부르면 되나'. 여기가 계산기의 본체다. */
+    const list = MORE.targets().map(t => {
+      const s2 = MORE.solve(t, visa, mrate.tt, cur, pad);
+      if (!s2) return null;
+      const b = MORE.bill(s2.foreign, visa, s2.rate, mrate.mid);
+      return b ? { f: s2.foreign, d: s2.digits, b } : null;
+    }).filter(Boolean);
+
+    $('mc-tab').innerHTML = list.length ? `
+      <table class="mtab">
+        <thead><tr><th>긁을 금액</th><th>청구</th><th>적립</th><th>이득</th></tr></thead>
+        <tbody>${list.map(x => `
+          <tr>
+            <th scope="row">${esc(U.money(x.f, cur))}</th>
+            <td>${x.b.krw.toLocaleString('ko-KR')}</td>
+            <td>${x.b.point.toLocaleString('ko-KR')}<em>P</em></td>
+            <td class="${x.b.gain < 0 ? 'warn' : ''}">${x.b.gain.toFixed(1)}%</td>
+          </tr>`).join('')}</tbody>
+      </table>` : '';
+
+    /* ★어느 환율로 셌는지 반드시 적는다. 이 계산기는 환율이 틀리면 통째로 틀린다. */
+    const when = (mrate.on || '').slice(5, 16);
+    $('mc-src').innerHTML =
+      `신한 USD/KRW ${mrate.tt.toLocaleString('ko-KR')}`
+      + (mrate.type === 'AC' ? ' <b>1회차</b>' : ' <span class="warn">예측</span>')
+      + (when ? ` (${esc(when)})` : '')
+      + ` · 비자 ${esc(cur)} ${visa}`
+      + (pad ? ` · 보정 ${pad}% — <b>표의 청구금액은 최악의 경우</b>입니다. 환율이 안 오르면 그보다 적게 찍힙니다.` : '');
+  }
+
+  async function mload() {
+    const at = MORE.bucket();
+    if (mrate && mrate.at === at) { mdraw(); return; }
+    $('mc-src').textContent = '환율을 가져오는 중…';
+    try {
+      mrate = await DB.more(at);
+    } catch (e) {
+      mrate = null;
+      $('mc-src').textContent = e.message;
+      return;
+    }
+    mdraw();
+  }
+
+  $('mcalc').addEventListener('toggle', () => { if ($('mcalc').open) mload(); });
+  $('mc-form').addEventListener('input', e => {
+    if (e.target.id === 'mc-pad') {
+      try { localStorage.setItem(PAD_KEY, $('mc-pad').value); } catch (e2) {}
+    }
+    if (e.target.id === 'mc-cur') $('mc-amt').value = '';   // 통화가 바뀌면 금액은 뜻을 잃는다
+    mdraw();
+  });
+
+  /* 여행을 열 때마다 통화 목록을 다시 세운다. 받아 둔 환율은 여행과 무관하니 그대로 둔다. */
+  function msetup() {
+    const curs = mcurs();
+    const box = $('mcalc');
+    box.hidden = !curs.length;
+    if (!curs.length) { box.open = false; return; }
+    const sel = $('mc-cur');
+    const keep = sel.value;
+    sel.innerHTML = curs.map(c => `<option>${esc(c)}</option>`).join('');
+    sel.value = curs.includes(keep) ? keep
+              : (curs.includes(trip.base_cur) ? trip.base_cur : curs[0]);
+    if (!$('mc-pad').value) {
+      try { $('mc-pad').value = localStorage.getItem(PAD_KEY) || ''; } catch (e) {}
+    }
+    $('mc-amt').value = '';
+    if (box.open) mload();
+  }
+
   $('cost-miss').addEventListener('click', e => {
     if (e.target.closest('[data-fxall]')) { fillAll(); return; }
     const b = e.target.closest('[data-fx]');
@@ -228,6 +337,7 @@ const Cost = (function () {
       if (!keepMsg) $('cost-msg').textContent = '';
       try { crew = await Crew.of(t.id); } catch (e) { crew = []; }
       draw();
+      msetup();
     },
   };
 })();

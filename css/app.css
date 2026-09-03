@@ -675,6 +675,46 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .clist .act { justify-self: end; }
 
+/* ── 더모아 계산기 ──────────────────────────────────────────────────────
+   비용 탭 맨 아래, 접힌 카드 하나. 다른 cblock 처럼 판 폭을 다 쓰지 않고
+   **카드로 서 있는다** — 위쪽은 이 여행의 기록이고 이것은 도구라, 성격이 다르다.
+   여닫는 ＋/− 표시는 앱 전체의 details 규칙을 그대로 물려받는다. */
+.mcalc { margin: 14px var(--pad) 4px; }
+.mcbody { padding: 4px var(--pad-box) 14px; display: flex; flex-direction: column; gap: 10px; }
+.mcalc .hint { margin: 0; }
+
+/* '이만큼 긁으면' 의 답. 값이 없을 때도 자리를 지킨다 — 입력할 때마다 표가 위아래로
+   튀면 읽던 줄을 놓친다. */
+.mcone {
+  margin: 0; min-height: 1.25em; font-size: var(--t-body); color: var(--ink-2);
+}
+.mcone b {
+  font-family: var(--mono); font-weight: 600; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.mcalc .warn { color: var(--warn); }
+
+/* 표. 서른 줄이 세로로 서므로 **줄 높이와 자릿수 정렬**이 전부다.
+   ★금액은 오른쪽, 긁을 금액만 왼쪽 — 눈이 왼쪽에서 답을 찾고 오른쪽에서 견준다. */
+.mtab {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--mono); font-size: var(--t-cap);
+  font-variant-numeric: tabular-nums;
+}
+.mtab th, .mtab td { padding: 6px 0; text-align: right; white-space: nowrap; }
+.mtab thead th {
+  font-family: var(--sans); font-size: var(--t-micro); font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3);
+  padding-bottom: 7px; border-bottom: 1px solid var(--line);
+}
+.mtab thead th:first-child, .mtab tbody th { text-align: left; }
+.mtab tbody th { font-weight: 600; color: var(--ink); }
+.mtab tbody td { color: var(--ink-2); }
+/* 포인트에만 단위를 붙인다 — 청구(원)와 나란히 서면 같은 종류의 수로 읽힌다.
+   숫자보다 흐리게 둬서 자릿수 정렬을 흐트러뜨리지 않는다. */
+.mtab tbody td em { font-style: normal; color: var(--ink-3); }
+.mtab tbody tr + tr > * { border-top: 1px solid var(--rail); }
+
 /* ── 동행자 ───────────────────────────────────────────────────────────── */
 .crew { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .crewrow {
