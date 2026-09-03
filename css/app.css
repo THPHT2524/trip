@@ -684,6 +684,8 @@ a { color: var(--route); text-underline-offset: 2px; }
    비용 탭에는 찾아갈 수 있게 링크 한 줄만 둔다(.colink). */
 .mcbody { padding: 4px 0 14px; display: flex; flex-direction: column; gap: 10px; }
 .mcbody .hint { margin: 0; }
+/* 환율 출처는 두 줄이다 — 신한과 비자는 다른 곳에서 온 다른 값이라 갈라 적는다. */
+#mc-src { display: flex; flex-direction: column; gap: 2px; }
 .colink { margin: 18px var(--pad) 4px; font-size: var(--t-body); }
 .colink a { color: var(--route); font-weight: 500; }
 /* '비워도 됩니다' — 라벨 옆의 곁말. 라벨만큼 진하면 둘 다 라벨로 읽힌다. */

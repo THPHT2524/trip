@@ -29,6 +29,39 @@
      ★기본값은 달러. 비자가 바꿀 것이 없어(환율 1) 언제나 정확하다. */
   const CURS = ['USD', 'JPY', 'HKD', 'THB', 'TWD', 'CNY', 'EUR', 'SGD', 'MOP', 'IDR'];
 
+  /* 통화 앞에 붙일 국기. **U.guessCountry 를 안 쓴다** — 저쪽은 새 여행 폼에서
+     나라를 미리 골라 주는 것이라 USD·EUR 을 일부러 비워 둔다(여러 나라니까).
+     여기서는 그저 그 돈을 가리키는 표지라 달러는 미국, 유로는 EU 깃발이 맞다. */
+  const CUR_CC = { USD: 'US', JPY: 'JP', HKD: 'HK', THB: 'TH', TWD: 'TW',
+                   CNY: 'CN', EUR: 'EU', SGD: 'SG', MOP: 'MO', IDR: 'ID' };
+  /* 지역표시문자 두 글자가 곳 국기다. U.flag 는 나라 목록을 보는데 EU 는 거기
+     없으므로(나라가 아니다) 여기서만 코드포인트로 만든다. */
+  const flagOf = cc => String.fromCodePoint(...[...cc].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
+
+  /* ★★국기를 **그림으로** 그리는 기계인가. 윈도우는 안 그리고 'US' 두 글자로
+     떨어뜨리는데, 그러면 고르개가 'US USD' 로 읽힌다. 그럴 때는 안 붙인다.
+     ★폭으로는 못 가른다 — 대체 글자가 진짜 국기보다 좁게 나오기도 한다
+       (2026-09-02 측정: 국기 19.8 vs 'JP' 24.2 — 판정이 뒤집혔다).
+       **색으로 가른다.** 검게 찍어 보고 색이 남아 있으면 그림이다.
+     ★app.js 에도 같은 판별기가 있다. 합치지 않고 둔다 — 저쪽은 여권·카드 바탕을
+       재는 데까지 얽혀 있어서, 고르개 하나 때문에 건드릴 자리가 아니다. */
+  function drawsFlags() {
+    try {
+      const c = document.createElement('canvas');
+      c.width = c.height = 28;
+      const x = c.getContext('2d', { willReadFrequently: true });
+      x.fillStyle = '#fff'; x.fillRect(0, 0, 28, 28);
+      x.fillStyle = '#000'; x.textBaseline = 'top';
+      x.font = '22px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+      x.fillText('🇯🇵', 0, 0);
+      const d = x.getImageData(0, 0, 28, 28).data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]) > 30) return true;
+      }
+    } catch (e) { /* 캔버스를 못 쓰면 안전한 쪽(글자)으로 */ }
+    return false;
+  }
+
   /* 표를 몇 줄까지 세울 것인가. 눈금은 5,999원부터 천 원 단위라 열여섯 줄이면
      20,999원까지다 — 밥값·기념품·택시가 다 그 안에 들어온다. 서른 줄을 세우면
      화면이 세 배로 길어지는데 아래쪽 절반은 이득률이 5% 밑이라 볼 일이 없다. */
@@ -170,16 +203,20 @@
       </table>` : '';
 
     /* ★어느 환율로 셌는지 반드시 적는다. 이 계산기는 환율이 틀리면 통째로 틀린다. */
+    /* 두 줄로 갈라 적는다 — 신한과 비자는 **다른 곳에서 온 다른 값**이라
+       한 줄에 이어 붙이면 어디서 끊어 읽어야 하는지가 안 보인다. */
     const moved = rate.on !== day;      // 주말·공휴일이면 직전 영업일로 물러난다
-    $('mc-src').innerHTML =
-      `신한 USD/KRW <b>${rate.tt.toLocaleString('ko-KR')}</b> · ${rate.round}회차 `
-      + `${esc(rate.on)} ${esc(rate.at || '')}`
-      + (moved ? ` <span class="warn">(${esc(day)} 은 고시가 없어 직전 영업일)</span>` : '')
-      + (isUsd ? '' : ` · 비자 ${esc(cur)} ${v.toPrecision(8)}`)
-      + (how === 'fall'
-          ? ' <span class="warn">— 비자에 못 닿아 신한 대미환산율로 갈음하고 안전 여유 '
-            + `${MORE.SAFETY}% 를 얹었습니다. 999 를 넘지는 않지만 포인트를 조금 손해 봅니다.</span>`
-          : '');
+    const l1 = `신한 USD/KRW <b>${rate.tt.toLocaleString('ko-KR')}</b> · ${rate.round}회차 `
+             + `${esc(rate.on)} ${esc(rate.at || '')}`
+             + (moved ? ` <span class="warn">(${esc(day)} 은 고시가 없어 직전 영업일)</span>` : '');
+    const l2 = isUsd
+      ? '비자 — 달러는 바꿀 것이 없습니다'
+      : `비자 ${esc(cur)}/USD <b>${v.toPrecision(8)}</b>`
+        + (how === 'fall'
+            ? ' <span class="warn">— 비자에 못 닿아 신한 대미환산율로 갈음하고 안전 여유 '
+              + `${MORE.SAFETY}% 를 얹었습니다. 999 를 넘지는 않지만 포인트를 조금 손해 봅니다.</span>`
+            : '');
+    $('mc-src').innerHTML = `<span>${l1}</span><span>${l2}</span>`;
   }
 
   // ── 부르기 ────────────────────────────────────────────────────────────
@@ -227,7 +264,9 @@
   }
 
   // ── 시작 ──────────────────────────────────────────────────────────────
-  $('mc-cur').innerHTML = CURS.map(c => `<option>${esc(c)}</option>`).join('');
+  const withFlag = drawsFlags();
+  $('mc-cur').innerHTML = CURS.map(c =>
+    `<option value="${esc(c)}">${withFlag ? flagOf(CUR_CC[c]) + ' ' : ''}${esc(c)}</option>`).join('');
   $('mc-cur').value = 'USD';
   const now = MORE.kstNow();
   $('mc-when').value = now;
