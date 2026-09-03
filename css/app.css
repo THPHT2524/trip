@@ -14,33 +14,46 @@
      **숫자와 라벨만 IBM Plex Mono** 를 직접 호스팅한다 — 시각·거리·금액이 자리를 맞춰
      세로로 읽히는 것이 이 화면에서 중요하다. 시간표가 그렇게 생겼다.
 
-   ★★**서브셋에 없는 글자를 unicode-range 가 있다고 적어 두고 있었다**(2026-09-03 실측).
+   ★★**서브셋에 없는 글자를 unicode-range 가 있다고 적어 두고 있었다**(2026-09-03 발견).
      ₩(U+20A9)와 →(U+2192)가 그랬다 — 파일의 229자 중 나머지는 전부 600/1000 등폭인데
-     이 둘만 대체 글꼴로 떨어진다(28px 에서 ₩ 14.84 vs 숫자 16.25). 선언이 거짓말을 하면
-     '왜 여기만 격자가 어긋나지' 를 글꼴 밖에서 찾게 된다. 범위를 **파일에 실제로 있는
-     것**으로 좁혔다. 그린 결과는 그대로다 — 브라우저는 이미 대체하고 있었다.
-   ★그래서 **₩ 는 등폭이 아니다.** 돈을 크게 쓰는 자리에서 음수 자간을 주면 ₩ 가 뒤
-     숫자에 붙는다(아래 .ctotal .big 을 보라). ฿ ₫ ₱ 도 애초에 범위 밖이라 같은 처지다.
-     제대로 고치려면 원본 IBM Plex Mono 로 서브셋을 다시 떠야 한다.
+     이 둘만 대체 글꼴로 떨어졌다(28px 에서 ₩ 14.84 vs 숫자 16.25). 선언이 거짓말을 하면
+     '왜 여기만 격자가 어긋나지' 를 글꼴 밖에서 찾게 된다.
+   ★고쳤다: 원본 IBM Plex Mono 로 다시 떠서 ₩ → ฿ ₫ ₱ 를 넣었다(229 → 234자,
+     다섯 다 600/1000 등폭). **tools/subset-font.py 가 그 일을 한다** — 통화를 더 받게
+     되면 거기 ADD 에 기호를 넣고 다시 돌린다.
+   ★아래 범위는 **손으로 적지 않는다.** 그 스크립트가 파일에서 뽑아 찍어 주는 것을
+     그대로 붙인다. 손으로 적었기 때문에 처음에 어긋났다.
    ────────────────────────────────────────────────────────────────────────── */
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=179') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
-  unicode-range: U+0000-00FF, U+2000-206F, U+2212, U+20AC;
+  unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
+    U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
+    U+0323, U+0E3F, U+2013-2014, U+2018-201A, U+201C-201E, U+2022, U+2026,
+    U+2032-2033, U+2039-203A, U+2044, U+20A9, U+20AB-20AC, U+20B1, U+2122,
+    U+2191-2193, U+2212, U+2215;
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=179') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
-  unicode-range: U+0000-00FF, U+2000-206F, U+2212, U+20AC;
+  unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
+    U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
+    U+0323, U+0E3F, U+2013-2014, U+2018-201A, U+201C-201E, U+2022, U+2026,
+    U+2032-2033, U+2039-203A, U+2044, U+20A9, U+20AB-20AC, U+20B1, U+2122,
+    U+2191-2193, U+2212, U+2215;
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=179') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
-  unicode-range: U+0000-00FF, U+2000-206F, U+2212, U+20AC;
+  unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
+    U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
+    U+0323, U+0E3F, U+2013-2014, U+2018-201A, U+201C-201E, U+2022, U+2026,
+    U+2032-2033, U+2039-203A, U+2044, U+20A9, U+20AB-20AC, U+20B1, U+2122,
+    U+2191-2193, U+2212, U+2215;
 }
 
 /* ── 토큰 ─────────────────────────────────────────────────────────────── */

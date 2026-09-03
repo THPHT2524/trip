@@ -15,3 +15,6 @@ supabase/.temp/
 
 # 디자인 점검용 스텁 (로컬 전용)
 _stub*
+
+# 서브셋 원본 (tools/subset-font.py 가 받아 둔다 — 배포와 무관)
+tools/.font-cache/
