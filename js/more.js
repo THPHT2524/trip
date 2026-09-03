@@ -126,7 +126,25 @@ const MORE = (function () {
   const SAFETY = 0.5;
   const hedge = v => (v > 0 ? v * (1 + SAFETY / 100) : v);
 
-  return { bill, solve, targets, digits, kstDay, hedge, SAFETY, MIN };
+  /* 지금(한국시간)을 datetime-local 이 먹는 모양으로. 화면의 '거래 일시' 기본값이다. */
+  function kstNow(t) {
+    const k = new Date((t == null ? Date.now() : +t) + 9 * 3600e3);
+    const p = n => String(n).padStart(2, '0');
+    return `${kstDay(t)}T${p(k.getUTCHours())}:${p(k.getUTCMinutes())}`;
+  }
+
+  /* ★★그 시각에 **적용되는 고시**가 며칟날 것인가.
+     신한 1회차는 아침 8시 20분쯤 나온다. 그러니 한국시간 9시 전에 긁은 건은 그날 고시가
+     아직 없어서 **전날** 것이 적용된다 — themore 도 같은 선을 긋는다.
+     ★하와이·미국에서는 한국시간 새벽에도 가게가 열려 있어서 실제로 걸리는 경우다. */
+  function fxDay(text) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2})/.exec(String(text || ''));
+    if (!m) return null;
+    if (+m[4] >= 9) return `${m[1]}-${m[2]}-${m[3]}`;
+    return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]) - 864e5).toISOString().slice(0, 10);
+  }
+
+  return { bill, solve, targets, digits, kstDay, kstNow, fxDay, hedge, SAFETY, MIN };
 })();
 
 if (typeof module !== 'undefined') module.exports = MORE;   // tools/test-pure.js 용

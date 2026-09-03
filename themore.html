@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <title>더모아 계산기</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><circle cx='16' cy='16' r='7.5' fill='none' stroke='%232E7D5B' stroke-width='2.5'/><path d='M16 8.5v15' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/></svg>">
-<link rel="stylesheet" href="/css/app.css?v=137">
+<link rel="stylesheet" href="/css/app.css?v=138">
 </head>
 <body>
 
@@ -23,31 +23,19 @@
 
     <div class="mcbody">
       <form class="form inline" id="mc-form" onsubmit="return false">
-        <div class="row tight">
-          <div class="field"><label for="mc-cur">통화</label>
+        <div class="row">
+          <div class="field kind"><label for="mc-cur">통화</label>
             <select id="mc-cur"></select></div>
-          <div class="field"><label for="mc-pad">환율 보정 %</label>
-            <input id="mc-pad" type="number" inputmode="decimal"
-                   step="0.5" min="0" max="10" placeholder="0"></div>
+          <div class="field"><label for="mc-amt">이만큼 긁으면</label>
+            <input id="mc-amt" type="number" inputmode="decimal" step="any" min="0"></div>
         </div>
-        <p class="hint"><b>보정</b>은 매입일까지 환율이 오를 만큼 미리 얹어 두는 값입니다.
-          감이 없으면 3 — 사나흘 사이에 3% 넘게 오르는 일은 드뭅니다.</p>
+        <p class="mcone" id="mc-one"></p>
 
-        <!-- 비자 환율만 우리가 못 가져온다(비자 공식 API 는 사람 확인을 요구한다).
-             비우면 신한 대미환산율로 갈음하고 안전 여유를 얹는다 — js/more.js 의 SAFETY. -->
-        <div class="field" id="mc-visabox">
-          <label for="mc-visa">비자 환율 <span class="opt">비워도 됩니다</span></label>
-          <input id="mc-visa" type="number" inputmode="decimal" step="any" min="0">
-        </div>
-        <p class="hint" id="mc-visahint"></p>
-
-        <!-- ★윗줄 안내가 '감이 없으면 3' 으로 끝나는데 이 칸이 바로 아래 붙어 있어서,
-             보정에 넣을 3 을 여기 적는 일이 실제로 있었다(2026-09-03). 선으로 끊고
-             라벨을 '얼마 찍히나' 까지 늘려 두 칸이 다른 질문임을 분명히 한다. -->
-        <div class="field mctry">
-          <label for="mc-amt">이만큼 긁으면 얼마 찍히나</label>
-          <input id="mc-amt" type="number" inputmode="decimal" step="any" min="0">
-          <p class="mcone" id="mc-one"></p>
+        <!-- 기본값은 한국시간 지금. 신한 1회차가 한국 아침에 나오므로 기준이 서울이다.
+             ★비자가 약 1년치만 주므로 그 앞은 아예 못 고르게 min 을 건다. -->
+        <div class="field">
+          <label for="mc-when">거래 일시 <span class="opt">한국시간</span></label>
+          <input id="mc-when" type="datetime-local">
         </div>
       </form>
 
@@ -56,8 +44,8 @@
     </div>
   </section>
 
-<script src="/js/util.js?v=137"></script>
-<script src="/js/more.js?v=137"></script>
-<script src="/js/themore.js?v=137"></script>
+<script src="/js/util.js?v=138"></script>
+<script src="/js/more.js?v=138"></script>
+<script src="/js/themore.js?v=138"></script>
 </body>
 </html>

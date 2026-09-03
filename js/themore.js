@@ -1,117 +1,123 @@
 /* themore.js — /themore 한 장짜리 화면. **여행에 딸리지 않은 도구**라 제 주소에 산다.
    ─────────────────────────────────────────────────────────────────────────
    셈은 js/more.js 한 곳에서만 한다(money.js 와 같은 규칙). 여기는 화면뿐이다.
-   환율은 api/more.js 가 신한은행 고시표에서 1회차를 받아 온다.
 
-   ★★**로그인이 없다.** 앱의 다른 화면과 다른 점이다 — 여기서 오가는 것은 공개 고시환율
-     뿐이라 지킬 개인 정보가 없다. 그래서 supabase 번들도 db.js 도 안 싣고, /api/more 를
-     그냥 부른다. 주소만 알면 폰에서 바로 열린다.
+   ★★환율이 두 군데서 온다. 서로 닿는 쪽이 다르기 때문이다:
+       신한 1회차 → **서버**(api/more.js). 브라우저에서는 CORS 가 막는다.
+       비자 고시  → **브라우저**(여기). 서버에서 부르면 비자 앞단이 챌린지를 띄우는데,
+                    CORS 는 열려 있어서 사람 브라우저는 그냥 읽힌다.
+     2026-09-03에 17통화 전부 themore.app 이 보여주는 값과 소수점까지 같았다.
 
-   ★★비자 환율은 **브라우저가 비자에서 직접** 받아 온다. 우리 서버는 못 받는다 —
-     비자 앞단이 데이터센터를 막고 챌린지를 띄운다. 그런데 CORS 는 열려 있어서
-     사람 브라우저는 그냥 읽힌다(2026-09-03에 17통화 전부 themore 값과 일치 확인).
-     그래서 서버는 신한만, 비자는 클라이언트가 — 둘로 나뉘어 있다.
+   ★★첫 방문에 **오늘 것을 통째로 받아 둔다** — 신한 하나와 통화 열 개의 비자 환율.
+     그 뒤로는 통화를 갈아 끼워도 네트워크를 안 타고, 비행기 모드에서도 그날은 돈다.
+     받아 둔 것은 localStorage 에 남기되 **오늘 칸만** 둔다(어제 환율로 오늘 답을 내면
+     조용히 틀린다). 지난 날짜를 조회한 것은 이 세션에만 두고 저장하지 않는다.
 
-   ★환율을 고르는 차례: **① 사람이 넣은 값 ② 비자 API ③ 신한 대미환산율 + 안전 여유.**
-     trip 이 일정 줄의 `fx` 칸에 쓰는 규칙과 같다 — 적으면 그게 이기고, 비면 자동.
-     ③은 비자가 안 잡힐 때(비행기 안, 비자 점검)만 쓰는 그물이다.
+   ★비자에 못 닿으면 신한 **대미환산율**로 갈음하고 안전 여유를 얹는다(MORE.SAFETY).
+     999 를 넘지는 않되 포인트를 조금 손해 본다. 화면이 지금 어느 쪽을 쓰는지 늘 적는다 —
+     이 계산기는 환율이 틀리면 통째로 틀린다.
 
-   ★고른 통화와 보정값은 기억한다. 비자 환율도 기억하되 **고시일자와 함께** 두고,
-     날이 바뀌면 버린다 — 어제 환율로 오늘 답을 내면 조용히 틀린다. */
+   ★환율 보정 칸이 없다. 쓰는 사람의 카드에 **승인시점 환율**이 걸려 있어 긁는 순간
+     환율로 확정되기 때문이다. 매입 시점 환율이 적용되는 카드라면 보정이 필요한데,
+     셈 자체(MORE.solve 의 pad)는 남아 있으니 그때 칸만 되살리면 된다. */
 (function () {
   const $ = id => document.getElementById(id);
   const esc = U.esc;
 
-  const KEY = 'trip.more.v1';
+  /* 여행 기록에 실제로 쓴 통화만 세운다(2026-09-03에 DB 에서 뽑았다).
+     ★원화는 뺐다 — 국내 결제는 적립이 1배라 셈이 다르고 비자 환율도 없다.
+     ★기본값은 달러. 비자가 바꿀 것이 없어(환율 1) 언제나 정확하다. */
+  const CURS = ['USD', 'JPY', 'HKD', 'THB', 'TWD', 'CNY', 'EUR', 'SGD', 'MOP', 'IDR'];
+
+  /* 비자는 **약 1년치**만 준다(2026-09-03 실측: 270일 전은 되고 365일 전은 거부).
+     그보다 오래된 날짜는 갈음밖에 못 하므로 아예 고르지 못하게 한다. */
+  const BACK_DAYS = 365;
+
+  const KEY = 'trip.more.v2';
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
   const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} };
 
-  let rate = null;                       // { on, at, round, tt, mid, usd }  — 신한
-  let visaApi = null;                    // 비자에서 직접 받은 값 { cur, day, v }
+  const sh = new Map();                  // 고시일자 → 신한 응답
+  const visa = new Map();                // '통화|고시일자' → 비자 환율
+  const TODAY = MORE.fxDay(MORE.kstNow());
+  let day = TODAY;                       // 지금 보고 있는 고시일자
 
-  const VISA = 'https://usa.visa.com/cmsapi/fx/rates';
-  /* 비자 고시환율. 하루에 한 번 바뀌므로 (통화·날짜)로 붙들어 둔다 — 한 번 받으면
-     비행기 모드에서도 그날은 계속 쓴다.
-     ★★amount=1 로 물으면 IDR 처럼 단위가 작은 통화는 환산액이 0으로 반올림돼
+  /* 지난 방문에 받아 둔 오늘 것을 먼저 깐다 — 네트워크가 없어도 화면이 선다. */
+  if (saved.day === TODAY) {
+    if (saved.sh) sh.set(TODAY, saved.sh);
+    Object.entries(saved.v || {}).forEach(([c, v]) => { if (v > 0) visa.set(`${c}|${saved.on}`, v); });
+  } else {
+    saved = {};                          // 날이 바뀌었으면 통째로 버린다
+  }
+
+  // ── 환율 받아 오기 ────────────────────────────────────────────────────
+  async function askSh(d) {
+    if (sh.has(d)) return sh.get(d);
+    const r = await fetch(`/api/more?at=${encodeURIComponent(d)}`);
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(b.error || `환율을 가져오지 못했습니다 (${r.status})`);
+    sh.set(d, b);
+    if (d === TODAY) { saved.day = TODAY; saved.on = b.on; saved.sh = b; keep(); }
+    return b;
+  }
+
+  /* 비자 고시환율.
+     ★★amount=1 로 물으면 IDR 처럼 단위가 작은 통화는 환산액이 0 으로 반올림돼
        {"status":"success"} 만 온다. 100 을 넣으면 나온다(환율은 금액과 무관하다).
      ★★fromCurr·toCurr 이름이 뒤집혀 있다. '1엔이 몇 달러인가' 를 얻으려면
        fromCurr=USD&toCurr=JPY 로 물어야 한다 — 응답의 originalValues 가 그렇게 답한다. */
-  async function askVisa(cur, day) {
-    const key = cur + '|' + day;
-    const box = (saved.api = saved.api || {});
-    if (box[key] > 0) return box[key];
-    const d = `${day.slice(5, 7)}%2F${day.slice(8, 10)}%2F${day.slice(0, 4)}`;
-    const u = `${VISA}?amount=100&fee=0&utcConvertedDate=${d}&exchangedate=${d}`
+  async function askVisa(cur, on) {
+    const k = `${cur}|${on}`;
+    if (visa.has(k)) return visa.get(k);
+    const md = `${on.slice(5, 7)}%2F${on.slice(8, 10)}%2F${on.slice(0, 4)}`;
+    const u = 'https://usa.visa.com/cmsapi/fx/rates'
+            + `?amount=100&fee=0&utcConvertedDate=${md}&exchangedate=${md}`
             + `&fromCurr=USD&toCurr=${encodeURIComponent(cur)}`;
     const j = await (await fetch(u)).json();
     const v = parseFloat(j && j.originalValues && j.originalValues.fxRateVisa);
-    if (!(v > 0)) throw new Error('비자가 ' + cur + ' 환율을 주지 않았습니다');
-    /* 어제 것까지 이고 다니지 않는다 — 오늘 칸만 남긴다 */
-    saved.api = { [key]: v };
-    keep();
+    if (!(v > 0)) throw new Error('비자가 그 날짜의 환율을 주지 않았습니다');
+    visa.set(k, v);
+    if (saved.day === TODAY && saved.on === on) {
+      saved.v = saved.v || {}; saved.v[cur] = v; keep();
+    }
     return v;
   }
 
-  /* 지금 고른 통화의 비자 환율을 받아 온다. 실패해도 화면은 그대로 돈다(③으로 떨어진다). */
-  async function pullVisa() {
-    const cur = $('mc-cur').value;
-    if (!rate || cur === 'USD') { visaApi = null; return; }
-    if (visaApi && visaApi.cur === cur && visaApi.day === rate.on) return;
-    visaApi = null;
-    /* ★한 번은 더 물어본다. 통화를 빠르게 갈아 끼우면 비자가 간간이 빈손으로 답한다
-       (2026-09-03에 18개를 연달아 부르다 하나가 그랬다). 그물로 떨어지면 답이
-       조용히 보수적으로 바뀌므로, 그 전에 한 번만 다시 두드린다. */
-    for (let i = 0; i < 2 && !visaApi; i += 1) {
+  /* ★한 번은 더 물어본다. 통화를 빠르게 갈아 끼우면 비자가 간간이 빈손으로 답한다
+     (2026-09-03에 18개를 연달아 부르다 하나가 그랬다). 갈음으로 떨어지면 답이 조용히
+     보수적으로 바뀌므로, 그 전에 한 번만 다시 두드린다. */
+  async function pullVisa(cur, on) {
+    for (let i = 0; i < 2; i += 1) {
       if (i) await new Promise(r => setTimeout(r, 600));
-      try { visaApi = { cur, day: rate.on, v: await askVisa(cur, rate.on) }; }
-      catch (e) { visaApi = null; }
-      if ($('mc-cur').value !== cur) return;      // 그 사이 통화를 또 바꿨으면 그만둔다
+      try { return await askVisa(cur, on); } catch (e) { /* 갈음으로 간다 */ }
     }
-    draw();
+    return null;
   }
 
-  /* 신한이 고시하는 통화 중 **실제로 카드로 긁을 만한 것**만 고른다.
-     마흔넷을 다 세우면 고르는 일이 일이 된다. 없는 통화가 필요해지면 여기 한 줄 늘린다. */
-  const CURS = ['JPY', 'USD', 'EUR', 'CNY', 'TWD', 'HKD', 'THB', 'VND', 'SGD',
-                'MYR', 'IDR', 'PHP', 'AED', 'GBP', 'AUD', 'CAD', 'CHF', 'NZD'];
-
+  // ── 그리기 ────────────────────────────────────────────────────────────
   function draw() {
-    if (!rate) return;
     const cur = $('mc-cur').value;
-    const pad = +$('mc-pad').value || 0;
-    saved.cur = cur; saved.pad = $('mc-pad').value; keep();
+    const rate = sh.get(day);
+    if (!rate) return;
 
-    /* 달러는 바꿀 것이 없다 — 비자 환율이 1 이라 늘 정확하다. 칸을 아예 감춘다. */
     const isUsd = cur === 'USD';
-    $('mc-visabox').hidden = isUsd;
-    const typed = isUsd ? null : parseFloat($('mc-visa').value);
-    const api = (visaApi && visaApi.cur === cur && visaApi.day === rate.on) ? visaApi.v : null;
+    const api = isUsd ? 1 : visa.get(`${cur}|${rate.on}`);
     const fall = rate.usd[cur];                       // 신한 대미환산율(그물)
+    const how = isUsd ? 'usd' : (api > 0 ? 'api' : (fall > 0 ? 'fall' : 'none'));
+    const v = how === 'fall' ? MORE.hedge(fall) : api;
 
-    let visa, how;
-    if (isUsd) { visa = 1; how = 'usd'; }
-    else if (typed > 0) { visa = typed; how = 'typed'; }
-    else if (api > 0) { visa = api; how = 'api'; }
-    else if (fall > 0) { visa = MORE.hedge(fall); how = 'fall'; }
-    else { visa = null; how = 'none'; }
-
-    $('mc-visahint').innerHTML =
-        how === 'usd'   ? '달러는 비자가 바꿀 것이 없어 <b>언제나 정확합니다</b>.'
-      : how === 'typed' ? '넣어 주신 값으로 셉니다 — <b>안전 여유 없이 딱 맞습니다</b>.'
-      : how === 'api'   ? `비자 고시 <b>${api.toPrecision(8)}</b> 를 받아 왔습니다 — `
-                          + '비워 두셔도 <b>정확합니다</b>.'
-      : how === 'fall'  ? `비자에 못 닿아 신한 대미환산율 <b>${fall.toPrecision(8)}</b> 로 `
-                          + `갈음하고 안전 여유 ${MORE.SAFETY}% 를 얹었습니다. `
-                          + '999 를 넘지는 않지만 포인트를 조금 손해 봅니다.'
-      : `${esc(cur)} 환율을 못 구했습니다. 직접 넣어 주세요.`;
-
-    if (!(visa > 0)) { $('mc-tab').innerHTML = ''; $('mc-one').textContent = ''; return; }
+    if (!(v > 0)) {
+      $('mc-tab').innerHTML = '';
+      $('mc-one').textContent = '';
+      $('mc-src').textContent = `${cur} 환율을 구하지 못했습니다.`;
+      return;
+    }
     $('mc-amt').placeholder = cur;
 
-    /* 정방향 — '이만큼 긁으면 얼마 찍히나'. 보정은 여기에도 먹인다(같은 최악의 경우). */
+    /* 정방향 — '이만큼 긁으면 얼마 찍히나' */
     const amt = parseFloat($('mc-amt').value);
-    const one = amt > 0 ? MORE.bill(amt, visa, rate.tt * (1 + pad / 100), rate.mid) : null;
+    const one = amt > 0 ? MORE.bill(amt, v, rate.tt, rate.mid) : null;
     $('mc-one').innerHTML = one
       ? `<b>${esc(U.money(one.krw, U.SETTLE))}</b> 청구 · `
         + (one.point ? `${one.point.toLocaleString('ko-KR')}P 적립 · `
@@ -121,9 +127,9 @@
 
     /* 역방향 — 목표 청구금액마다 '얼마를 부르면 되나'. 여기가 계산기의 본체다. */
     const list = MORE.targets().map(t => {
-      const s = MORE.solve(t, visa, rate.tt, cur, pad);
+      const s = MORE.solve(t, v, rate.tt, cur, 0);
       if (!s) return null;
-      const b = MORE.bill(s.foreign, visa, s.rate, rate.mid);
+      const b = MORE.bill(s.foreign, v, rate.tt, rate.mid);
       return b ? { f: s.foreign, b } : null;
     }).filter(Boolean);
 
@@ -132,7 +138,7 @@
        ★그리고 U.money 는 센트가 0 이면 '.00' 을 떼는데($5, ฿306.7), 여기서는 서른 줄이
          세로로 서므로 자릿수가 들쭉날쭉해진다. 통화는 머리칸이 말하고 칸은 수만 적는다. */
     const d = MORE.digits(cur);
-    const fmt = v => v.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d });
+    const fmt = x => x.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d });
 
     $('mc-tab').innerHTML = list.length ? `
       <table class="mtab">
@@ -146,58 +152,75 @@
           </tr>`).join('')}</tbody>
       </table>` : '';
 
-    /* ★어느 환율로 셌는지 반드시 적는다. 이 계산기는 환율이 틀리면 통째로 틀린다.
-       ★오늘 고시가 아니면(주말·공휴일, 또는 아침 고시 전) 그렇게 말한다. */
-    const stale = rate.on !== MORE.kstDay();
+    /* ★어느 환율로 셌는지 반드시 적는다. 이 계산기는 환율이 틀리면 통째로 틀린다. */
+    const moved = rate.on !== day;      // 주말·공휴일이면 직전 영업일로 물러난다
     $('mc-src').innerHTML =
       `신한 USD/KRW <b>${rate.tt.toLocaleString('ko-KR')}</b> · ${rate.round}회차 `
       + `${esc(rate.on)} ${esc(rate.at || '')}`
-      + (stale ? ' <span class="warn">— 오늘 고시가 아닙니다</span>' : '')
-      + (isUsd ? '' : ` · 비자 ${esc(cur)} ${visa.toPrecision(8)}`
-                     + (how === 'fall' ? ' <span class="warn">(갈음)</span>' : ''))
-      + (pad ? ` · 보정 ${pad}% — <b>표의 청구금액은 최악의 경우</b>입니다. 환율이 안 오르면 그보다 적게 찍힙니다.` : '');
+      + (moved ? ` <span class="warn">(${esc(day)} 은 고시가 없어 직전 영업일)</span>` : '')
+      + (isUsd ? '' : ` · 비자 ${esc(cur)} ${v.toPrecision(8)}`)
+      + (how === 'fall'
+          ? ' <span class="warn">— 비자에 못 닿아 신한 대미환산율로 갈음하고 안전 여유 '
+            + `${MORE.SAFETY}% 를 얹었습니다. 999 를 넘지는 않지만 포인트를 조금 손해 봅니다.</span>`
+          : '');
   }
 
+  // ── 부르기 ────────────────────────────────────────────────────────────
+  let busy = 0;
   async function load() {
-    $('mc-src').textContent = '환율을 가져오는 중…';
-    try {
-      const day = MORE.kstDay();
-      const r = await fetch(`/api/more?at=${encodeURIComponent(day)}`);
-      const body = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(body.error || `환율을 가져오지 못했습니다 (${r.status})`);
-      rate = body;
-    } catch (e) {
-      rate = null;
-      $('mc-src').textContent = e.message;
-      return;
+    const cur = $('mc-cur').value;
+    const me = ++busy;
+    day = MORE.fxDay($('mc-when').value) || TODAY;
+
+    if (!sh.has(day)) {
+      $('mc-src').textContent = '환율을 가져오는 중…';
+      try { await askSh(day); } catch (e) {
+        if (me !== busy) return;
+        $('mc-tab').innerHTML = ''; $('mc-one').textContent = '';
+        $('mc-src').textContent = e.message;
+        return;
+      }
+      if (me !== busy) return;
     }
-    /* 어제 넣어 둔 비자 환율은 버린다 — 고시가 바뀌었으면 그 값은 이제 남의 날 값이다. */
-    if (saved.visaOn !== rate.on) { saved.visaOn = rate.on; saved.visa = {}; saved.api = {}; keep(); }
-    $('mc-visa').value = (saved.visa && saved.visa[$('mc-cur').value]) || '';
-    draw();
-    pullVisa();
-  }
+    draw();                                   // 신한만으로 먼저 그린다(그물 값이라도 보인다)
 
-  function start() {
-    $('mc-cur').innerHTML = CURS.map(c => `<option>${esc(c)}</option>`).join('');
-    $('mc-cur').value = CURS.includes(saved.cur) ? saved.cur : 'JPY';
-    $('mc-pad').value = saved.pad || '';
-
-    $('mc-form').addEventListener('input', e => {
-      if (e.target.id === 'mc-cur') {
-        $('mc-amt').value = '';
-        $('mc-visa').value = (saved.visa && saved.visa[$('mc-cur').value]) || '';
-        pullVisa();
-      }
-      if (e.target.id === 'mc-visa') {
-        saved.visa = saved.visa || {};
-        saved.visa[$('mc-cur').value] = $('mc-visa').value;
-        keep();
-      }
+    const on = sh.get(day).on;
+    if (cur !== 'USD' && !visa.has(`${cur}|${on}`)) {
+      await pullVisa(cur, on);
+      if (me !== busy) return;
       draw();
-    });
-    load();
+    }
+    if (day === TODAY) warmUp(on);
   }
 
-  start();
+  /* 첫 방문에 오늘 것을 통째로 받아 둔다 — 그 뒤로는 통화를 갈아 끼워도 네트워크가 없다.
+     ★한 번에 몰지 않고 한 통화씩 띄엄띄엄 부른다. 연달아 던지면 비자가 빈손으로 답한다.
+     ★실패해도 아무 말 안 한다 — 그 통화를 실제로 고를 때 다시 부르고, 그때도 안 되면
+       갈음으로 떨어지면서 화면이 그렇게 적는다. */
+  let warmed = false;
+  async function warmUp(on) {
+    if (warmed) return;
+    warmed = true;
+    for (const c of CURS) {
+      if (c === 'USD' || visa.has(`${c}|${on}`)) continue;
+      await new Promise(r => setTimeout(r, 400));
+      try { await askVisa(c, on); } catch (e) { /* 다음에 */ }
+      if ($('mc-cur').value === c) draw();
+    }
+  }
+
+  // ── 시작 ──────────────────────────────────────────────────────────────
+  $('mc-cur').innerHTML = CURS.map(c => `<option>${esc(c)}</option>`).join('');
+  $('mc-cur').value = 'USD';
+  const now = MORE.kstNow();
+  $('mc-when').value = now;
+  $('mc-when').max = now;
+  $('mc-when').min = MORE.kstDay(Date.now() - BACK_DAYS * 864e5) + 'T00:00';
+
+  $('mc-form').addEventListener('input', e => {
+    if (e.target.id === 'mc-amt') { draw(); return; }   // 금액만 바뀌면 다시 안 부른다
+    if (e.target.id === 'mc-cur') $('mc-amt').value = '';
+    load();
+  });
+  load();
 })();
