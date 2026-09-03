@@ -728,7 +728,18 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding-bottom: 7px; border-bottom: 1px solid var(--line);
 }
 .mtab thead th:first-child, .mtab tbody th { text-align: left; }
-.mtab tbody th { font-weight: 600; color: var(--ink); }
+.mtab tbody th { font-weight: 600; color: var(--ink); padding: 0; }
+/* 금액을 누르면 위 칸이 그 값이 된다. 칸 여백까지 덮어 손가락이 닿을 자리를 만든다 —
+   글자만 누르게 두면 18px 짜리 과녁이 된다. */
+.mtab tbody th button {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font: inherit; color: inherit; text-align: left;
+  width: 100%; padding: 6px; margin: 0 -6px;   /* td 의 6px 과 같은 높이라야 줄이 안 어긋난다 */
+}
+.mtab tbody th button:active { opacity: .55; }
+/* 지금 위 칸에 올라와 있는 줄 */
+.mtab tbody tr.on > * { background: var(--sunk); }
+.mtab tbody tr.on th button { color: var(--route); }
 .mtab tbody td { color: var(--ink-2); }
 /* 포인트에만 단위를 붙인다 — 청구(원)와 나란히 서면 같은 종류의 수로 읽힌다.
    숫자보다 흐리게 둬서 자릿수 정렬을 흐트러뜨리지 않는다. */

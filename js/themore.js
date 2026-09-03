@@ -138,7 +138,10 @@
     /* 정방향 — '이만큼 긁으면 얼마 찍히나'. 화면 맨 위 큰 칸 셋이 이 답이다. */
     const amt = parseFloat($('mc-amt').value);
     const one = amt > 0 ? MORE.bill(amt, v, rate.tt, rate.mid) : null;
-    $('mc-krw').textContent = one ? U.money(one.krw, U.SETTLE) : '—';
+    /* ★★₩ 를 안 붙인다. Plex Mono 에 ₩ 가 없어서 대체 글꼴로 떨어지는데(폭 12.10 vs
+       숫자 13.20), 거기에 음수 자간이 겹쳐 **숫자를 파고든다**(2026-09-03 아이폰).
+       아래 표에서 쓰는 방식과 같게 — 단위는 머리칸(청구 · 원)이 말하고 칸은 수만 적는다. */
+    $('mc-krw').textContent = one ? one.krw.toLocaleString('ko-KR') : '—';
     /* ★5,000원 미만이면 한 푼도 안 쌓인다. 0P 라고 적으면 '적립이 되긴 하는데 0' 으로
        읽히므로, 안 되는 이유를 그 자리에 적는다. */
     $('mc-pt').textContent = !one ? '—'
@@ -158,8 +161,8 @@
       <table class="mtab">
         <thead><tr><th>긁을 금액 · ${esc(cur)}</th><th>청구</th><th>적립</th><th>이득</th></tr></thead>
         <tbody>${list.map(x => `
-          <tr>
-            <th scope="row">${esc(fmt(x.f))}</th>
+          <tr${x.f === amt ? ' class="on"' : ''}>
+            <th scope="row"><button type="button" data-f="${x.f}">${esc(fmt(x.f))}</button></th>
             <td>${x.b.krw.toLocaleString('ko-KR')}</td>
             <td>${x.b.point.toLocaleString('ko-KR')}<em>P</em></td>
             <td class="${x.b.gain < 0 ? 'warn' : ''}">${x.b.gain.toFixed(1)}%</td>
@@ -230,6 +233,16 @@
   $('mc-when').value = now;
   $('mc-when').max = now;
   $('mc-when').min = MORE.kstDay(Date.now() - BACK_DAYS * 864e5) + 'T00:00';
+
+  /* 표의 금액을 누르면 위 칸이 그 값으로 바뀐다 — 줄을 눈으로 고르고 손으로 옮겨
+     적는 일이 없게. 고른 줄은 표에서 짚어 준다(.on). */
+  $('mc-tab').addEventListener('click', e => {
+    const b = e.target.closest('button[data-f]');
+    if (!b) return;
+    $('mc-amt').value = b.dataset.f;
+    autoAmt = false;
+    draw();
+  });
 
   $('mc-form').addEventListener('input', e => {
     if (e.target.id === 'mc-amt') { autoAmt = false; draw(); return; }  // 금액만 바뀌면 다시 안 부른다
