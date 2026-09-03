@@ -73,12 +73,19 @@
       return b ? { f: s.foreign, b } : null;
     }).filter(Boolean);
 
+    /* ★★금액에 기호를 안 붙인다. 통화를 갈아 끼우며 보는 화면이라 **위안이 ¥ 로 찍히면
+       엔으로 읽힌다**(U.money 는 CNY 도 ¥ 다 — 여행 하나에 통화 하나일 때는 문제가 없었다).
+       ★그리고 U.money 는 센트가 0 이면 '.00' 을 떼는데($5, ฿306.7), 여기서는 서른 줄이
+         세로로 서므로 자릿수가 들쭉날쭉해진다. 통화는 머리칸이 말하고 칸은 수만 적는다. */
+    const d = MORE.digits(cur);
+    const fmt = v => v.toLocaleString('ko-KR', { minimumFractionDigits: d, maximumFractionDigits: d });
+
     $('mc-tab').innerHTML = list.length ? `
       <table class="mtab">
-        <thead><tr><th>긁을 금액</th><th>청구</th><th>적립</th><th>이득</th></tr></thead>
+        <thead><tr><th>긁을 금액 · ${esc(cur)}</th><th>청구</th><th>적립</th><th>이득</th></tr></thead>
         <tbody>${list.map(x => `
           <tr>
-            <th scope="row">${esc(U.money(x.f, cur))}</th>
+            <th scope="row">${esc(fmt(x.f))}</th>
             <td>${x.b.krw.toLocaleString('ko-KR')}</td>
             <td>${x.b.point.toLocaleString('ko-KR')}<em>P</em></td>
             <td class="${x.b.gain < 0 ? 'warn' : ''}">${x.b.gain.toFixed(1)}%</td>
