@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=179') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=180') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=179') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=180') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=179') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=180') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1001,7 +1001,7 @@ input.code {
   display: flex; align-items: center; gap: 12px;
   padding: 20px var(--pad-box) 0;
 }
-.pname { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pname { flex: 0 0 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .pname b {
   font-size: var(--t-read); font-weight: 700; letter-spacing: .1em; color: var(--ink);
 }
@@ -1015,12 +1015,29 @@ input.code {
 .pico { width: 15px; height: 13px; flex: 0 0 auto; fill: none;
   stroke: currentColor; stroke-width: 1.3; }
 .pico .f { fill: currentColor; stroke: none; }
-/* 앱 표식 — 아이콘 그대로(세로 레일에 점 둘). 새로 그리지 않는다. */
-.pmark { width: 30px; height: 30px; flex: 0 0 auto; }
-.pmark .bg { fill: var(--sunk); }
-.pmark .rail { stroke: var(--rail); stroke-width: 2.4; stroke-linecap: round; }
-.pmark .d1 { fill: var(--k-see); }
-.pmark .d2 { fill: var(--route); }
+/* ★지나온 것의 띠 — 구분마다 제 수만큼. 여행 카드의 미니 레일과 **같은 어법**이라
+   따로 배울 것이 없다: 레일이 지나가고 그 위에 색이 선다.
+   ★레일은 양끝으로 삐져나온다(마디를 안쪽으로 3px 물린다) — 여행이 이 카드에서
+     끝나지 않는다는 뜻이고, .mrail 도 그렇게 생겼다. */
+.prail {
+  position: relative; flex: 1 1 0; min-width: 84px;
+  display: flex; align-items: center; gap: 3px;
+  height: 14px; padding: 0 3px;
+}
+.prail::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 2px; margin-top: -1px; border-radius: 1px;
+  background: var(--rail);
+}
+/* flex-grow 가 그 구분의 일정 수다 — 폭을 셈해서 넣지 않는다.
+   ★min-width 로 바닥을 깐다. 쇼핑이 두 줄뿐이면 0.9px 이 되어 없는 것처럼 보인다 —
+     있었던 일을 안 보이게 두지 않는다. */
+.prail i {
+  position: relative; flex-basis: 0; min-width: 5px;
+  height: 5px; border-radius: var(--r-pill);
+  background: var(--k, var(--k-etc));
+  box-shadow: 0 0 0 1.5px var(--card);    /* 레일이 마디를 관통하지 않게 */
+}
 
 .pgrid {
   margin: 0; padding: 18px var(--pad-box) 16px;

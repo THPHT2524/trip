@@ -170,25 +170,36 @@
          + `</section>`;
   }
 
-  /* 여권의 머리 — 이름 한 줄, 종류 한 줄, 그리고 오른쪽에 이 앱의 표식.
+  /* 여권의 머리 — 이름 한 줄, 종류 한 줄, 그리고 오른쪽에 지나온 것의 띠.
      ★진짜 여권의 인적사항면이 그렇게 생겼다: 발급기관 이름과 문서 종류가 위에,
        사진(또는 표식)이 옆에. 아래 격자·MRZ 와 합쳐 한 장이 된다.
-     ★표식은 앱 아이콘 그대로다(세로 레일에 점 둘) — 새로 그리지 않는다.
-     ★글자가 아닌 것은 읽어 줄 필요가 없다(aria-hidden). 'MY TRIPLOG' 만 읽힌다. */
-  const PHEAD = `<div class="phead">
+   ★★오른쪽의 앱 표식(세로 레일에 점 둘)을 **가로로 눕히고 일정으로 채웠다**
+     (2026-09-04). 표식은 앱 아이콘을 되풀이할 뿐 아무것도 말하지 않았는데, 그 자리는
+     여권에서 유일하게 비어 있던 자리였다. 이제 **다녀온 것이 무엇으로 이뤄졌는지**를
+     말한다 — 카드의 미니 레일과 같은 어법이라 배울 것이 없다.
+   ★한 줄에 점 하나씩 찍지 않는다. 장소 줄이 151개인데 폭은 200px 남짓이라 점 하나가
+     1.3px 이 되어 점이 아니라 줄무늬가 된다. 대신 **구분마다 제 수만큼 길이를 가진다** —
+     그린 그림은 같고 마디가 읽힌다.
+   ★사이를 벌려 레일이 비쳐 보이게 둔다. 레일은 양끝으로도 삐져나온다 — 여행은
+     이 카드에서 끝나지 않는다는 뜻이고, 카드의 미니 레일도 그렇게 생겼다. */
+  function pheadHtml(rows) {
+    const n = new Map();
+    /* 결제 줄은 안 센다 — 부모의 구분을 물려받아서, 돈을 적은 줄만 두 번 세어진다 */
+    rows.filter(r => !r.parent_id).forEach(r => n.set(r.kind, (n.get(r.kind) || 0) + 1));
+    const bars = U.KINDS.filter(k => n.get(k))
+      .map(k => `<i style="flex-grow:${n.get(k)};--k:var(--${U.kvar(k)})"></i>`).join('');
+    const label = U.KINDS.filter(k => n.get(k)).map(k => `${k} ${n.get(k)}`).join(', ');
+    return `<div class="phead">
     <div class="pname">
-      <b>MY TRIPLOG</b>
+      <b>TRIPLOG</b>
       <span class="ptype" aria-hidden="true"><svg viewBox="0 0 14 12" class="pico">
         <rect x=".8" y=".8" width="12.4" height="10.4" rx="2.2"/>
         <circle cx="4.9" cy="6" r="1.7" class="f"/>
         <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg> <i>·</i> PASSPORT</span>
     </div>
-    <svg viewBox="0 0 32 32" class="pmark" aria-hidden="true">
-      <rect width="32" height="32" rx="7" class="bg"/>
-      <path d="M11 6v20" class="rail"/>
-      <circle cx="11" cy="11" r="3.6" class="d1"/>
-      <circle cx="11" cy="22" r="3.6" class="d2"/></svg>
+    ${bars ? `<div class="prail" role="img" aria-label="일정 ${esc(label)}">${bars}</div>` : ''}
   </div>`;
+  }
 
   /* ── 여권 위의 세계지도 ──────────────────────────────────────────────────
      **다녀온 공항을 점으로 찍는다.** 여권 격자가 '얼마나' 를 말한다면 지도는 '어디를'
@@ -456,7 +467,7 @@
       ${worldHtml(air, legs)}
       ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
         flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
-      ${PHEAD}
+      ${pheadHtml(shape)}
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
