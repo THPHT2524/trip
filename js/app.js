@@ -177,18 +177,16 @@
      (2026-09-04). 표식은 앱 아이콘을 되풀이할 뿐 아무것도 말하지 않았는데, 그 자리는
      여권에서 유일하게 비어 있던 자리였다. 이제 **다녀온 것이 무엇으로 이뤄졌는지**를
      말한다 — 카드의 미니 레일과 같은 어법이라 배울 것이 없다.
-   ★한 줄에 점 하나씩 찍지 않는다. 장소 줄이 151개인데 폭은 200px 남짓이라 점 하나가
-     1.3px 이 되어 점이 아니라 줄무늬가 된다. 대신 **구분마다 제 수만큼 길이를 가진다** —
-     그린 그림은 같고 마디가 읽힌다.
-   ★사이를 벌려 레일이 비쳐 보이게 둔다. 레일은 양끝으로도 삐져나온다 — 여행은
-     이 카드에서 끝나지 않는다는 뜻이고, 카드의 미니 레일도 그렇게 생겼다. */
-  function pheadHtml(rows) {
-    const n = new Map();
-    /* 결제 줄은 안 센다 — 부모의 구분을 물려받아서, 돈을 적은 줄만 두 번 세어진다 */
-    rows.filter(r => !r.parent_id).forEach(r => n.set(r.kind, (n.get(r.kind) || 0) + 1));
-    const bars = U.KINDS.filter(k => n.get(k))
-      .map(k => `<i style="flex-grow:${n.get(k)};--k:var(--${U.kvar(k)})"></i>`).join('');
-    const label = U.KINDS.filter(k => n.get(k)).map(k => `${k} ${n.get(k)}`).join(', ');
+   ★점은 **구분마다 하나씩, 여섯 개 전부**다. 수만큼 길이를 주는 막대로 먼저 그려
+     봤는데(2026-09-04), 그건 이 카드가 이미 하는 일이 아니다 — 무엇을 얼마나 했는지는
+     비용 탭의 '무엇에' 가 센다. 여기 있어야 하는 것은 **이 앱이 색으로 무엇을 말하는지**,
+     곧 범례다. 그래서 없었던 구분도 뺀 자리 없이 선다.
+   ★레일은 양끝으로 삐져나온다 — 여행이 이 카드에서 끝나지 않는다는 뜻이고,
+     카드의 미니 레일도 그렇게 생겼다. */
+  function pheadHtml() {
+    const dots = U.KINDS.map(k =>
+      `<i style="--k:var(--${U.kvar(k)})"></i>`).join('');
+    const label = U.KINDS.join(', ');
     return `<div class="phead">
     <div class="pname">
       <b>TRIPLOG</b>
@@ -197,7 +195,7 @@
         <circle cx="4.9" cy="6" r="1.7" class="f"/>
         <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg> <i>·</i> PASSPORT</span>
     </div>
-    ${bars ? `<div class="prail" role="img" aria-label="일정 ${esc(label)}">${bars}</div>` : ''}
+    <div class="prail" role="img" aria-label="일정 구분 ${esc(label)}">${dots}</div>
   </div>`;
   }
 
@@ -467,7 +465,7 @@
       ${worldHtml(air, legs)}
       ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
         flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
-      ${pheadHtml(shape)}
+      ${pheadHtml()}
       <dl class="pgrid">${cells.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
