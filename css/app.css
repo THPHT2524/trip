@@ -67,6 +67,23 @@
   --k-buy:   #86641B;
   --k-etc:   #5E6C6A;
 
+
+  /* ── 글자 크기 ────────────────────────────────────────────────────────
+     ★★열아홉 가지가 쓰이고 있었다(2026-09-03 셈). 10~17px 사이에만 여덟 단인데,
+       12px 옆에 12.5px 이 있었고 14px 과 15px 이 같은 일을 하고 있었다 —
+       그건 눈금이 아니라 표류다. **다섯 단으로 줄이고 자리마다 역할로 고른다.**
+     ★숫자로 가까운 쪽이 아니라 **하는 일이 같은 쪽**에 붙였다. 14px 이던 넷도
+       사람 이름은 --t-read 로, 여닫는 단추는 --t-body 로 갈라졌다.
+     ★큰 글자(17·18·19·20·22·26·28·44·58·92)는 저마다 한 자리씩만 쓰는 표제라
+       눈금에 안 넣는다 — 한 곳에서만 쓰는 값에 이름을 붙이면 이름만 는다. */
+  --t-micro: 10px;   /* 지도 핀 · 배지 · 축 이름 */
+  --t-meta:  11px;   /* 곁말 — 구분 · 날짜꼬리 · 탭 이름 · MRZ */
+  --t-cap:   12px;   /* 라벨과 값 — 시각 · 금액 · 입력칸 라벨 · 안내문 */
+  --t-body:  13px;   /* 손으로 누르는 것 — 단추 · 알약 · 그리고 오류 */
+  --t-read:  15px;   /* 읽는 글 — 본문 · 장소 이름 · 사람 이름 */
+
+  --r-pill: 999px;   /* 알약 — 날짜 탭 · 나라 조각 · 뜬 단추 */
+
   --mono: 'Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Pretendard',
           'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
@@ -143,7 +160,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: var(--t-read);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   /* 하단 탭바 + 홈 인디케이터만큼 비운다 */
@@ -189,7 +206,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .top .span {
-  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
   letter-spacing: .02em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
@@ -223,13 +240,13 @@ a { color: var(--route); text-underline-offset: 2px; }
 #days::before { bottom: 22px; }
 .dayband::before { bottom: 0; }
 .daytag {
-  font-size: 11px; font-weight: 600; letter-spacing: .14em;
+  font-size: var(--t-meta); font-weight: 600; letter-spacing: .14em;
   color: var(--ink-3); text-transform: uppercase;
   padding-left: var(--gutter);
 }
-.dayband .date { font-size: 13px; color: var(--ink-2); font-weight: 500; }
+.dayband .date { font-size: var(--t-body); color: var(--ink-2); font-weight: 500; }
 .dayband .sum {
-  margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  margin-left: auto; font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
 }
 
 /* ── 레일 위의 정거장 ─────────────────────────────────────────────────── */
@@ -249,7 +266,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--card);
   border: 2.5px solid var(--k, var(--k-etc));
   font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 10px; font-weight: 600; color: var(--ink); line-height: 1;
+  font-size: var(--t-micro); font-weight: 600; color: var(--ink); line-height: 1;
   z-index: 1;
 }
 .stop > .pin:empty {
@@ -283,12 +300,12 @@ a { color: var(--route); text-underline-offset: 2px; }
 .item:active { background: var(--sunk); }
 .item .row1 { display: flex; align-items: baseline; gap: 8px; }
 .item .time {
-  font-size: 12px; font-weight: 600; color: var(--ink-2);
+  font-size: var(--t-cap); font-weight: 600; color: var(--ink-2);
   min-width: 38px;
 }
 .item .time.none { color: var(--ink-3); font-weight: 400; }
 .item .name {
-  flex: 1; min-width: 0; font-size: 15px; font-weight: 600; letter-spacing: -.01em;
+  flex: 1; min-width: 0; font-size: var(--t-read); font-weight: 600; letter-spacing: -.01em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .item.is-done .name { color: var(--ink-3); text-decoration: line-through; }
@@ -303,19 +320,19 @@ a { color: var(--route); text-underline-offset: 2px; }
      누가 냈는지가 사라진다. 접히면 그 줄만 19px 씩 는다 — 열 줄이면 190px 로,
      상시 결제 줄을 걷어 아낀 2,222px 에 견주면 싼 값이다. */
   flex-wrap: wrap; row-gap: 2px;
-  font-size: 12px; color: var(--ink-3);
+  font-size: var(--t-cap); color: var(--ink-3);
 }
 /* 구분과 금액은 이 줄의 뼈대라 줄이지 않는다 — 접힐 것은 배지 쪽이다 */
 .item .row2 > .kind, .item .row2 > .money { flex: 0 0 auto; }
 .kind {
-  font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  font-size: var(--t-meta); font-weight: 600; letter-spacing: .02em;
   color: var(--k, var(--k-etc));
   white-space: nowrap;          /* 좁은 칸에서 '이동' 이 두 글자로 쪼개지지 않게 */
 }
-.money { font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+.money { font-size: var(--t-cap); color: var(--ink-2); white-space: nowrap; }
 .money.none { color: var(--ink-3); }
 .badge {
-  font-family: var(--mono); font-size: 10px; letter-spacing: .04em;
+  font-family: var(--mono); font-size: var(--t-micro); letter-spacing: .04em;
   border: 1px solid var(--line); border-radius: var(--r-xs);
   padding: 1px 4px; color: var(--ink-3);
   white-space: nowrap;          /* 좁은 칸에서 '메모' 가 두 글자로 쪼개지지 않게 */
@@ -341,14 +358,14 @@ a { color: var(--route); text-underline-offset: 2px; }
      길 위에서 누르는 것이라 몇 px 이 아쉽다. 카드까지 침범하지 않게 30px 에서 멈춘다. */
   min-height: 30px;
   display: inline-flex; align-items: center; gap: 5px;
-  font-family: var(--mono); font-size: 11px; letter-spacing: .01em;
+  font-family: var(--mono); font-size: var(--t-meta); letter-spacing: .01em;
   color: var(--ink-3); text-decoration: none;
   background: var(--paper); padding: 2px 7px 2px 0;
 }
 .seg a .km { color: var(--ink-2); font-weight: 500; }
 .seg a:hover .km, .seg a:focus-visible .km { color: var(--route); }
 .seg a::after {
-  content: '길찾기'; font-family: var(--sans); font-size: 10px;
+  content: '길찾기'; font-family: var(--sans); font-size: var(--t-micro);
   color: var(--route); opacity: 0; transition: opacity .12s ease;
 }
 .seg a:hover::after, .seg a:focus-visible::after { opacity: 1; }
@@ -382,7 +399,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: none; border: 0; white-space: nowrap;
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 44px; min-height: 34px; padding: 0 6px;
-  font: inherit; font-size: 11px; font-weight: 600;
+  font: inherit; font-size: var(--t-meta); font-weight: 600;
   color: var(--ink-3); text-decoration: none; border-radius: var(--r-sm);
 }
 .act:hover, .act:focus-visible { color: var(--route); }
@@ -408,7 +425,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   border: 1px solid var(--line); border-radius: var(--r);
   background: var(--card); color: var(--ink);
   padding: var(--pad-row); max-width: min(300px, calc(100vw - 24px));
-  font-size: 13px; line-height: 1.6;
+  font-size: var(--t-body); line-height: 1.6;
   white-space: pre-wrap; word-break: break-word;   /* 사람이 줄 바꿔 적은 대로 */
   box-shadow: var(--sh-pop);
   cursor: pointer;                                  /* 눌러서 닫는다 */
@@ -429,23 +446,28 @@ a { color: var(--route); text-underline-offset: 2px; }
   appearance: none; cursor: pointer; text-align: left;
   background: none; border: 0; border-top: 1px dashed var(--line);
   padding: 7px 2px;
-  font: inherit; font-size: 12px; color: var(--ink-2);
+  font: inherit; font-size: var(--t-cap); color: var(--ink-2);
 }
 .payrow .pn { flex: 1; min-width: 0; font-weight: 600;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .payrow .badge { flex: 0 0 auto; }
 /* 금액은 줄 맨 끝에서 오른쪽으로 맞춘다 — 결제 줄 여럿이 세로로 자릿수가 맞아야 한다 */
 .payrow .pm { flex: 0 0 auto; margin-left: auto; text-align: right;
-  font-family: var(--mono); font-size: 12px; color: var(--ink); white-space: nowrap; }
+  font-family: var(--mono); font-size: var(--t-cap); color: var(--ink); white-space: nowrap; }
 .payrow:active, .payadd:active { background: var(--sunk); }
 /* 글자를 오른쪽 끝으로 — 금액이 서는 자리와 같은 쪽이라 결제 줄 아래에 자연히 붙는다 */
 .payadd { color: var(--ink-3); font-weight: 600; justify-content: flex-end; }
+/* ★★결제가 **없는** 자리에서는 점선을 걷는다. 점선의 일은 '이 줄은 위 장소에
+   딸렸다' 고 말하는 것인데, 묶을 결제가 없으면 말할 것이 없다 — 그런데도 예순여섯
+   자리마다 그어져서, 하나로 이어져야 할 레일이 예순여섯 토막으로 잘려 보였다
+   (2026-09-03). 결제가 붙은 자리에서는 그대로 남는다 — 거기서는 할 말이 있다. */
+.stopcard + .payadd { border-top: 0; }
 .payadd:hover, .payadd:focus-visible { color: var(--route); }
 
 /* 비어 있는 날 — 감추지 않는다. 3일차가 비었다는 사실 자체가 정보다. */
 .blank {
   margin: 0; padding: 10px 0 10px var(--gutter);
-  font-size: 13px; color: var(--ink-3);
+  font-size: var(--t-body); color: var(--ink-3);
 }
 
 
@@ -491,8 +513,8 @@ a { color: var(--route); text-underline-offset: 2px; }
   appearance: none; cursor: pointer;
   /* 45×24 였다 — 지도를 보며 한 손으로 누르는 것들이다 */
   display: inline-flex; align-items: center; justify-content: center;
-  min-height: 36px; font-family: inherit; font-size: 12px; font-weight: 600;
-  padding: 0 14px; border-radius: 999px;
+  min-height: 36px; font-family: inherit; font-size: var(--t-cap); font-weight: 600;
+  padding: 0 14px; border-radius: var(--r-pill);
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
 }
 .basepick button[aria-selected="true"] {
@@ -504,7 +526,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: flex; align-items: center; justify-content: center;
   width: 22px; height: 22px; border-radius: 50%;
   background: var(--card); border: 3px solid var(--k, var(--k-etc));
-  color: var(--ink); font-family: var(--mono); font-size: 10px; font-weight: 600;
+  color: var(--ink); font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
   box-shadow: var(--sh-map);
 }
 /* 못 간 곳은 지도에서도 색을 뺀다 — 동선에는 남기되 앞에 서지 않는다 */
@@ -534,7 +556,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 .maplibregl-ctrl-attrib.maplibregl-compact {
   background: color-mix(in srgb, var(--card) 82%, transparent);
   color: var(--ink-3);
-  font-family: var(--sans); font-size: 10px; line-height: 1.6;
+  font-family: var(--sans); font-size: var(--t-micro); line-height: 1.6;
   margin: 6px; border-radius: var(--r);
 }
 .maplibregl-ctrl-attrib a { color: var(--ink-3); text-decoration: none; }
@@ -554,7 +576,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 .mk .mlbl {
   background: color-mix(in srgb, var(--ink) 86%, transparent);
   color: var(--paper); border-radius: var(--r-sm);
-  font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: -.01em;
+  font-family: var(--sans); font-size: var(--t-meta); font-weight: 600; letter-spacing: -.01em;
   padding: 2px 6px;
   max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
@@ -567,7 +589,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: flex; align-items: center; justify-content: center; gap: 12px;
   padding: 8px var(--pad);
   background: var(--route-w); border-top: 1px solid var(--route);
-  font-size: 12px; font-weight: 600; color: var(--ink);
+  font-size: var(--t-cap); font-weight: 600; color: var(--ink);
 }
 .obox .act { color: var(--route); }
 
@@ -575,7 +597,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 .item.is-pending { border-style: dashed; }
 .item.is-pending .name::after {
   content: '보내는 중'; margin-left: 6px;
-  font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--ink-3);
+  font-family: var(--mono); font-size: var(--t-micro); font-weight: 500; color: var(--ink-3);
 }
 
 /* ── 비용 ─────────────────────────────────────────────────────────────── */
@@ -587,30 +609,30 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-family: var(--mono); font-size: 28px; font-weight: 600; letter-spacing: -.02em;
   font-variant-numeric: tabular-nums;
 }
-.ctotal .sub { font-size: 12px; color: var(--ink-3); }
+.ctotal .sub { font-size: var(--t-cap); color: var(--ink-3); }
 
 .cblock { padding: 14px var(--pad) 4px; }
 /* 판의 마지막 요소가 탭바에 잘리지 않게 — body 여백만으로는 모자랐다(동행자 탭의 저장 단추) */
 .pane { padding-bottom: 24px; }
 .chd {
-  margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  margin: 0 0 8px; font-size: var(--t-cap); font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; color: var(--ink-3);
 }
 .clist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
 .clist li {
   display: grid; grid-template-columns: minmax(4.5em, auto) 1fr auto; align-items: center;
-  gap: 4px 10px; font-size: 13px;
+  gap: 4px 10px; font-size: var(--t-body);
 }
 .clist .ck { color: var(--ink); font-weight: 500; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   display: flex; align-items: baseline; gap: 5px; }
 /* 건수는 제 줄을 갖지 않는다 — 작은 수 하나 때문에 줄이 하나 더 생기면 목록이 두 배로 길어진다 */
 .clist .ck em {
-  font-style: normal; font-family: var(--mono); font-size: 10px; color: var(--ink-3);
+  font-style: normal; font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
 .clist .cv { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
-.clist .cn { grid-column: 2 / -1; font-size: 11px; color: var(--ink-3); }
+.clist .cn { grid-column: 2 / -1; font-size: var(--t-meta); color: var(--ink-3); }
 /* 막대는 크기를 눈으로 견주게 해 준다 — 숫자만으로는 '많다' 가 안 읽힌다 */
 .cbar { display: block; height: 6px; background: var(--sunk); border-radius: var(--r-xs); overflow: hidden; }
 /* ★기본값이 **정의되지 않은 토큰**이라 '누가 냈나' 막대가 통째로 안 보였다(2026-09-01).
@@ -639,12 +661,14 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* 안 쓴 날은 바닥에 가는 선만 — 미니 레일에서 빈 날을 그리는 방식과 같다 */
 .dbar .col em { display: block; margin-top: auto; width: 100%; height: 2px; background: var(--rail); }
 .dbar .lb {
-  font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--ink-3);
+  font-family: var(--mono); font-size: var(--t-micro); font-weight: 600; color: var(--ink-3);
   letter-spacing: .04em;
 }
 /* ★빈 칸도 자리를 지킨다. 금액이 있는 칸만 키가 커지면 기둥들이 바닥에 정렬되면서
    **라벨 높이가 칸마다 달라진다**(2026-09-01: D1 라벨만 위에 떠 있었다). */
 .dbar .amt {
+  /* ★눈금(--t-micro 10px) 밖이다. 12일 여행이면 기둥 칸이 24px 이라 10px 로는
+     '₩620,741' 이 통째로 잘린다 — 여기서만 한 단 더 내린다. */
   font-family: var(--mono); font-size: 9px; color: var(--ink-3);
   font-variant-numeric: tabular-nums; line-height: 1; min-height: 10px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
@@ -659,9 +683,9 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding: var(--pad-row);
 }
 .crewrow .who2 { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.crewrow .nm { font-size: 14px; font-weight: 600; }
+.crewrow .nm { font-size: var(--t-read); font-weight: 600; }
 .crewrow .em {
-  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .tagrow { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
@@ -688,7 +712,7 @@ input.code {
   flex: 1; appearance: none; border: 0; background: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   min-height: 48px; padding: 0 4px;
-  font-family: inherit; font-size: 11px; font-weight: 600; letter-spacing: -.01em;
+  font-family: inherit; font-size: var(--t-meta); font-weight: 600; letter-spacing: -.01em;
   color: var(--ink-3);
   border-top: 2px solid transparent; margin-top: -1px;
 }
@@ -716,9 +740,9 @@ input.code {
      솔리드 검정이라 '고름' 을 말하는 어법이 두 벌이었다(2026-09-02). 하나로 맞춘다. */
 .daytabs button {
   appearance: none; cursor: pointer; flex: 0 0 auto;
-  font-family: inherit; font-size: 12.5px; font-weight: 600; letter-spacing: -.01em;
+  font-family: inherit; font-size: var(--t-body); font-weight: 600; letter-spacing: -.01em;
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 44px; min-height: 35px; padding: 0 14px; border-radius: 999px;
+  min-width: 44px; min-height: 35px; padding: 0 14px; border-radius: var(--r-pill);
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
 }
 .daytabs button[aria-selected="true"] {
@@ -775,7 +799,7 @@ input.code {
 .pflags b { display: block; margin: 0 -.13em; font-weight: inherit; }
 /* 국기가 안 그려지는 곳(윈도우) — 두 글자 코드가 되므로 겹치지 않고 띄워서 세운다.
    부채처럼 겹치는 것은 그림일 때만 읽힌다. 넘치면 잘린다(줄은 하나로 둔다). */
-.pflags.ascii { gap: 8px; font-size: 15px; letter-spacing: .04em; }
+.pflags.ascii { gap: 8px; font-size: var(--t-read); letter-spacing: .04em; }
 .pflags.ascii b { margin: 0; }
 /* 한 줄에 다 못 담을 때 — 끝을 흐려 '잘린 것' 이 아니라 '더 있다' 로 읽히게 */
 .pflags.cut {
@@ -792,7 +816,7 @@ input.code {
 }
 .pgrid > div { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .pgrid dt {
-  font-size: 10px; font-weight: 600; letter-spacing: .06em;
+  font-size: var(--t-micro); font-weight: 600; letter-spacing: .06em;
   color: var(--ink-3);
 }
 .pgrid dd {
@@ -803,7 +827,7 @@ input.code {
 .pmrz {
   margin: 0; padding: 10px var(--pad-box);
   border-top: 1px solid var(--line); background: var(--sunk);
-  font-family: var(--mono); font-size: 11px; line-height: 1.5;
+  font-family: var(--mono); font-size: var(--t-meta); line-height: 1.5;
   letter-spacing: .06em; color: var(--ink-3);
   white-space: nowrap; overflow: hidden;
 }
@@ -863,12 +887,12 @@ input.code {
 
 /* 떠날 때까지 며칠 — 예정된 여행에서 제일 먼저 찾는 숫자다 */
 .trip .dday {
-  flex: 0 0 auto; font-family: var(--mono); font-size: 12px; font-weight: 600;
+  flex: 0 0 auto; font-family: var(--mono); font-size: var(--t-cap); font-weight: 600;
   color: var(--ink-3); letter-spacing: .02em; font-variant-numeric: tabular-nums;
 }
 .trip .dday.hot { color: var(--route); }
 .trip .meta {
-  font-family: var(--mono); font-size: 11px; color: var(--ink-3); letter-spacing: .02em;
+  font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3); letter-spacing: .02em;
 }
 .trip.is-now { border-color: var(--route); box-shadow: var(--sh-ring); }
 
@@ -909,14 +933,14 @@ input.code {
      제일 잦은 몸짓이다. '지금·예정' 은 눈금이 아니라 이름이라 작게 둔다. */
 .grouphd {
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-  font-size: 11px; font-weight: 700; letter-spacing: .1em;
+  font-size: var(--t-meta); font-weight: 700; letter-spacing: .1em;
   color: var(--ink-3); text-transform: uppercase;
   margin: 16px 2px -2px;
 }
 .grouphd:first-child { margin-top: 2px; }
 .grouphd .gn {
   flex: 0 0 auto; font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 11px; font-weight: 500; letter-spacing: .01em; text-transform: none;
+  font-size: var(--t-meta); font-weight: 500; letter-spacing: .01em; text-transform: none;
 }
 /* 해가 바뀌는 자리에는 실선을 하나 긋는다 — 구획이 눈에 잡혀야 건너뛸 수 있다.
    ★★그리고 **붙여 둔다.** 열 해가 쌓이자 목록이 5,697px 이 됐고(2026-09-03,
@@ -947,7 +971,7 @@ details {
 }
 summary {
   cursor: pointer; list-style: none;
-  padding: 12px 14px; font-size: 14px; font-weight: 600; color: var(--ink-2);
+  padding: 12px 14px; font-size: var(--t-body); font-weight: 600; color: var(--ink-2);
 }
 summary::-webkit-details-marker { display: none; }
 /* ★자손이 아니라 **직계 자식**이어야 한다. details 안에 details 를 넣는 순간
@@ -966,7 +990,7 @@ details[open] > summary::after { content: '−'; }
   background: none; overflow: visible;
 }
 .form details.more > summary {
-  padding: 10px 0 0; font-size: 13px; color: var(--ink-3);
+  padding: 10px 0 0; font-size: var(--t-body); color: var(--ink-3);
 }
 .form details.more[open] > summary { border-bottom: 0; }
 .form details.more .morebody {
@@ -1011,14 +1035,14 @@ details[open] > summary::after { content: '−'; }
 .pick {
   appearance: none; cursor: pointer;
   display: inline-flex; align-items: center; gap: 6px;
-  min-height: 34px; padding: 0 8px 0 10px; border-radius: 999px;
+  min-height: 34px; padding: 0 8px 0 10px; border-radius: var(--r-pill);
   border: 1px solid var(--line); background: var(--sunk); color: var(--ink);
-  font: inherit; font-size: 12.5px; font-weight: 600;
+  font: inherit; font-size: var(--t-body); font-weight: 600;
 }
 /* 윈도우에서 국기가 'JP' 두 글자로 떨어져도 조각 안에서 코드처럼 읽힌다 */
-.pick .pf { font-size: 15px; line-height: 1;
+.pick .pf { font-size: var(--t-read); line-height: 1;
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans); }
-.pick .px { color: var(--ink-3); font-size: 11px; }
+.pick .px { color: var(--ink-3); font-size: var(--t-meta); }
 .pick:hover .px, .pick:focus-visible .px { color: var(--warn); }
 .pick[disabled] { opacity: .5; cursor: default; }
 
@@ -1035,7 +1059,7 @@ details[open] > summary::after { content: '−'; }
 #if-cur-wrap { width: 80px; }
 #if-fx-wrap, #if-krw-wrap { width: 84px; }
 .form .row.tight select { padding-right: 24px; background-position: right 11px center, right 6px center; }
-.hint { margin: -4px 0 0; font-size: 12px; color: var(--ink-3); word-break: keep-all; }
+.hint { margin: -4px 0 0; font-size: var(--t-cap); color: var(--ink-3); word-break: keep-all; }
 .hint.ok { color: var(--route); }
 .form .row.btns { gap: 10px; align-items: center; }
 /* 지우기 ↔ 저장을 양 끝으로. 가운데를 비워 두는 것이 곧 안전거리다 */
@@ -1046,9 +1070,9 @@ details[open] > summary::after { content: '−'; }
 .form .row.btns.split > .btn:only-child { margin-left: auto; }
 .form .row.btns .btn { flex: 0 0 auto; }
 textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
-.err { margin: 0; font-size: 13px; color: var(--warn); }
+.err { margin: 0; font-size: var(--t-body); color: var(--warn); }
 .err:empty { display: none; }
-.btn.sm { padding: 6px 11px; font-size: 13px; border-radius: var(--r-sm); }
+.btn.sm { padding: 6px 11px; font-size: var(--t-body); border-radius: var(--r-sm); }
 .btn[disabled] { opacity: .5; cursor: default; }
 
 /* ── 게이트 · 빈 화면 ─────────────────────────────────────────────────── */
@@ -1058,8 +1082,8 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
   text-align: center;
 }
 .gate h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
-.gate p { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 26em; }
-.gate .err { color: var(--warn); font-size: 13px; }
+.gate p { margin: 0; color: var(--ink-2); font-size: var(--t-read); max-width: 26em; }
+.gate .err { color: var(--warn); font-size: var(--t-body); }
 
 .btn {
   appearance: none; cursor: pointer; font: inherit; font-weight: 600;
@@ -1075,25 +1099,25 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 
 .empty {
   padding: 40px var(--pad); text-align: center;
-  color: var(--ink-3); font-size: 14px;
+  color: var(--ink-3); font-size: var(--t-read);
 }
 .empty strong { display: block; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
 
 /* 좌표 없는 일정이 지도에서 빠졌다는 사실을 조용히 넘기지 않는다 */
 .note {
-  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
   padding: 8px var(--pad) 0; text-align: center;
 }
 
 /* ── 폼 ───────────────────────────────────────────────────────────────── */
 .field { display: flex; flex-direction: column; gap: 5px; }
-.field label, .field .lbl { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.field label, .field .lbl { font-size: var(--t-cap); font-weight: 600; color: var(--ink-2); }
 /* 결제 방식 셋 — 카드 / 현금 / 환전·출금. 라디오지만 눈에는 한 덩어리로 보여야 한다 */
 .seg3 { display: flex; gap: 0; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
 .seg3 button {
   flex: 1 1 0; appearance: none; cursor: pointer; border: 0; min-height: 42px;
   background: var(--card); color: var(--ink-2);
-  font: inherit; font-size: 13px; font-weight: 600;
+  font: inherit; font-size: var(--t-body); font-weight: 600;
   border-left: 1px solid var(--line);
 }
 .seg3 button:first-child { border-left: 0; }
@@ -1106,11 +1130,11 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
   padding: var(--pad-row); margin: 0 var(--pad) 4px;
   border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
 }
-.wallet .wv { font-family: var(--mono); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.wallet .wl { font-size: 12px; color: var(--ink-3); }
-.wallet .wr { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.wallet .wv { font-family: var(--mono); font-size: var(--t-read); font-weight: 600; font-variant-numeric: tabular-nums; }
+.wallet .wl { font-size: var(--t-cap); color: var(--ink-3); }
+.wallet .wr { margin-left: auto; font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3); }
 input, select, textarea {
-  font-family: inherit; font-size: 15px; color: var(--ink);
+  font-family: inherit; font-size: var(--t-read); color: var(--ink);
   background: var(--card); border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: 9px 11px;
   width: 100%;
@@ -1213,7 +1237,7 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
   padding: 14px 14px 10px;
   border-bottom: 1px solid var(--line);
 }
-.sheethd h2 { flex: 1; margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.sheethd h2 { flex: 1; margin: 0; font-size: var(--t-read); font-weight: 700; letter-spacing: -.01em; }
 .sheetx {
   appearance: none; border: 0; background: none; cursor: pointer;
   font-size: 16px; line-height: 1; color: var(--ink-3);
@@ -1236,8 +1260,8 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
 }
 .hbtn {
   appearance: none; cursor: pointer; font: inherit;
-  font-size: 13px; font-weight: 600; letter-spacing: -.01em;
-  padding: 11px 16px; border-radius: 999px;
+  font-size: var(--t-body); font-weight: 600; letter-spacing: -.01em;
+  padding: 11px 16px; border-radius: var(--r-pill);
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
   box-shadow: var(--sh-lift);
 }

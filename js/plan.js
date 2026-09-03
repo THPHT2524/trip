@@ -210,7 +210,10 @@ const Plan = (function () {
     const cost = money.some(r => r.cost != null)
       /* ★숫자만 붉게 둔다. 이 띠는 sticky 라 하루치 40줄을 넘기는 내내 화면에 남는데,
          문장 전체가 붉으면 스크롤하는 동안 계속 소리친다. 셀 것은 건수다. */
-      ? U.money(sum, U.SETTLE) + (miss ? ` <span class="warn">+${miss}건</span> 환율 없음` : '')
+      /* ★가운뎃점으로 가른다. 이 앱은 곁말을 늘 '·' 로 잇는데(3일 · 66곳 · ₩789,480,
+         비용 탭의 '20건 합산 · 원화 기준 · 6건 환율 없음') 이 띠만 안 그래서
+         '₩223,074 +4건 환율 없음' 이 한 덩이로 읽혔다. */
+      ? U.money(sum, U.SETTLE) + (miss ? ` · <span class="warn">+${miss}건</span> 환율 없음` : '')
       : '';
 
     const band = `<div class="dayband">
