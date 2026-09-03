@@ -148,6 +148,29 @@
          + `</section>`;
   }
 
+  /* ── 여권 위의 세계지도 ──────────────────────────────────────────────────
+     **다녀온 공항을 점으로 찍는다.** 여권 격자가 '얼마나' 를 말한다면 지도는 '어디를'
+     말한다 — 같은 사실을 두 번 적는 것이 아니라 서로 다른 것을 센다.
+     ★항로 선은 안 긋는다. 일정에 적는 해외 공항은 **도착·출발 두 점**뿐이라 인천 쪽이
+       없다. 있는 점끼리 이으면 타지도 않은 노선이 그려진다 — 모르는 것을 그리지 않는다.
+     ★공항은 **이름으로** 가려낸다(끝이 '공항'). '간사이공항점' 같은 가게가 딸려 오므로
+       포함이 아니라 **끝나는지**를 본다(2026-09-03에 식당 셋이 딸려 왔다).
+     ★같은 공항을 여러 번 갔어도 점은 하나다. 몇 번 갔는지는 여권 격자와 카드가 말한다. */
+  function worldHtml() {
+    const seen = new Map();
+    shape.forEach(r => {
+      if (!/공항$/.test(String(r.name || ''))) return;
+      const p = WORLD.at(r.lat, r.lng);      // 좌표가 없거나 이상하면 null 을 준다
+      if (p) seen.set(p.x.toFixed(1) + ',' + p.y.toFixed(1), p);
+    });
+    if (seen.size < 2) return '';            // 점 하나짜리 지도는 지도가 아니다
+    const dots = [...seen.values()].map(p =>
+      `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7"/>`).join('');
+    return `<svg class="wmap" viewBox="${WORLD.vb}" role="img"`
+         + ` aria-label="다녀온 공항 ${seen.size}곳"><path class="wland" d="${WORLD.d}"/>`
+         + `<g class="wdot">${dots}</g></svg>`;
+  }
+
   /* ── 여권 ────────────────────────────────────────────────────────────────
      **지나온 것의 총량.** 목록 위에 한 줄로 선다.
      ★여기 세는 것은 전부 이미 갖고 있는 사실이다 — 지어내지 않는다:
@@ -305,6 +328,7 @@
     if (!cells.length) return '';
 
     return `<section class="pass">
+      ${worldHtml()}
       ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
         flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
       <dl class="pgrid">${cells.map(([k, v]) =>

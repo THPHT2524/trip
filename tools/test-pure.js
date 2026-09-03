@@ -11,6 +11,7 @@ const API = require('../api/gmaps.js');   // canonical() 만 쓴다
 const U   = require('../js/util.js');
 const MORE = require('../js/more.js');
 const MORE_API = require('../api/more.js');
+const WORLD = require('../js/worldmap.js');
 
 let pass = 0, fail = 0;
 const eq = (got, want, msg) => {
@@ -469,6 +470,35 @@ MPAIR.forEach(([c, auto, real]) => MORE.targets().forEach(t => {
   if (s2 && MORE.bill(s2.foreign, real, TT, MID).krw > t) bare += 1;
 }));
 eq(bare > 0, true, '★여유를 빼면 목표를 넘는 줄이 실제로 생긴다 (여유가 일을 하고 있다)');
+
+/* ── 여권 위의 세계지도 ────────────────────────────────────────────────
+   그려 둔 길(js/worldmap.js 의 d)과 점을 찍는 투영(at)은 **같은 눈금으로** 만든
+   것이어야 한다. 둘이 어긋나면 공항이 바다 한가운데 찍히는데, 화면은 멀쩡해 보이고
+   잘못된 것도 모른다. 보여 주는 창(viewBox)과 투영을 맞대 본다. */
+{
+  const [, vy, vw, vh] = WORLD.vb.split(' ').map(Number);
+  eq(vw, 1000, '지도 폭은 1000');
+  near(WORLD.at(74, 0).y, vy, 0.6, '★창 위변은 북위 74도다 (투영과 창이 맞다)');
+  near(WORLD.at(-56, 0).y, vy + vh, 0.6, '★창 아랫변은 남위 56도다');
+  eq(WORLD.at(0, -180).x, 0, '서경 180도가 왼쪽 끝');
+  eq(WORLD.at(0, 180).x, 1000, '동경 180도가 오른쪽 끝');
+  eq(WORLD.at(0, 0).x, 500, '본초자오선이 한가운데');
+  /* 위도가 높을수록 위에 있어야 한다 — 부호를 뒤집으면 지도가 뒤집힌다 */
+  eq(WORLD.at(40, 0).y < WORLD.at(10, 0).y, true, '북쪽이 위에 그려진다');
+  /* ★+null 은 0 이라 Number.isFinite 를 통과한다 — 안 적은 좌표가 기니 만(0,0)에
+     찍히는 길이다. 빈 값은 점을 안 낸다. */
+  eq(WORLD.at(null, 1), null, '★좌표가 없으면 null — 기니 만에 찍지 않는다');
+  eq(WORLD.at('', 1), null, '빈 문자도 null');
+  eq(WORLD.at(37.46, 126.44) !== null, true, '인천공항은 점이 나온다');
+  /* 다녀온 공항이 전부 창 안에 드는가 — 밖으로 나가면 안 보이기만 한다 */
+  const far = [[21.32, -157.92], [38.78, -9.14], [-8.75, 115.17], [4.19, 73.53], [36.08, -115.15]];
+  const out = far.filter(([la, ln]) => {
+    const p = WORLD.at(la, ln);
+    return p.y < vy || p.y > vy + vh || p.x < 0 || p.x > vw;
+  });
+  eq(out, [], '★호놀룰루·리스본·발리·몰디브·라스베가스가 모두 창 안에 든다');
+  eq(WORLD.d.length > 4000 && WORLD.d.startsWith('M'), true, '지도 길이 비어 있지 않다');
+}
 
 // ── ───────────────────────────────────────────────────────────────────
 console.log(fail

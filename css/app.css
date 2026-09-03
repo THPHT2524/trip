@@ -50,6 +50,7 @@
   --ink-2:   #3C4F49;
   --ink-3:   #5C6D68;
   --line:    #DCE4E0;   /* 실선 구획 */
+  --wland:   #C9D6D0;   /* 여권 지도의 육지 — 바탕보다 한 겹만 진하게 */
   --rail:    #C4D0CB;   /* 레일 — 지나온 구간 */
   --route:   #2B4ACB;   /* 구조색: 활성 레일 · 링크 · 초점 */
   --route-w: #E3E8FB;   /* 코발트의 옅은 바탕 */
@@ -137,6 +138,7 @@
     --ink-2:   #ABBDB7;
     --ink-3:   #829691;
     --line:    #25352F;
+    --wland:   #2B4239;
     --rail:    #2E4139;
     --route:   #8AA0FF;
     --route-w: #1B2440;
@@ -873,6 +875,22 @@ input.code {
   background: var(--card);
   overflow: hidden;            /* MRZ 가 모서리 밖으로 새지 않게 */
 }
+/* ── 여권 위의 세계지도 ────────────────────────────────────────────────────
+   여권 격자가 '얼마나' 를 말하면 지도는 '어디를' 말한다. 플라이티 여권에서 구조만
+   가져왔다 — 지도 · 국기 · 격자 · MRZ 순서. 색은 우리 것을 쓴다.
+   ★타일이 아니라 선 하나(js/worldmap.js)라 끊긴 곳에서도 그려진다.
+   ★카드 맨 위라 위쪽 모서리를 여권과 함께 둥글린다(.pass 의 overflow:hidden 이 맡는다). */
+.wmap {
+  display: block; width: 100%; height: auto;
+  background: var(--sunk);
+  border-bottom: 1px solid var(--line);
+}
+/* 육지는 **바탕보다 한 겹만** 진하다. 지도가 주인공이 아니라 점이 주인공이다. */
+.wland { fill: var(--wland); }
+/* 다녀온 공항. 구조색으로 찍고 카드색 테를 둘러 서로 붙어도 갈리게 한다 —
+   간사이·나리타·하네다처럼 몰려 있는 곳이 한 덩어리로 뭉치지 않게. */
+.wdot circle { fill: var(--route); stroke: var(--sunk); stroke-width: 2.5; }
+
 /* ★여행마다 한 장씩, **겹쳐 쌓아** 담는다. 한 줄에 안 들어가면 두 줄이 된다
    (몇 줄로 나눌지도, 겹치는 폭도 js/app.js 의 fitFlags 가 재서 정한다 —
    줄을 여기서 미리 나누지 않는다).

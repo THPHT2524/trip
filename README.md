@@ -383,6 +383,7 @@ v1 은 "나중에 도착한 쓰기가 이긴다", 지운 것은 되살리지 않
 | `css/maplibre-gl-5.24.0.css` | MapLibre 스타일. 자체 호스팅이라 CDN 을 타지 않는다 |
 | `js/supabase-config.js` | 접속 URL · 공개 키 |
 | `js/util.js` | 이스케이프·날짜·금액 서식 — 화면 여러 곳이 같이 쓴다 |
+| `js/worldmap.js` | 여권 위의 세계지도 외곽선 + 위경도→화면 투영 (`tools/worldmap.js` 가 만든다) |
 | `js/db.js` | 인증 + trips·items·members CRUD |
 | `js/gmaps.js` | 구글맵 링크 파싱 (전체 URL 은 여기서 끝난다) |
 | `js/geo.js` | 직선거리(하버사인) · 구글맵 길찾기 URL |
@@ -399,6 +400,7 @@ v1 은 "나중에 도착한 쓰기가 이긴다", 지운 것은 되살리지 않
 | `supabase/*.sql` | 표·RLS·함수 (멱등) · `SETUP.md` 설치 런북 |
 | `supabase/crew.sql` | 같은 여행 멤버끼리만 서로를 보게 하는 `security definer` 함수 |
 | `tools/test-pure.js` | `geo`·`gmaps`·`util`·`more` 회귀 — `node tools/test-pure.js` |
+| `tools/worldmap.js` | 세계지도 길 생성기 — Natural Earth 110m → 밀러 도법 → 정수·상대좌표. 빌드 때 한 번 |
 | `tools/bump.py` | 캐시버스팅 — `?v` 를 네 곳(index·themore·sw·SHELL)에서 한 번에 올린다 |
 | `vercel.json` | 보안 헤더 · 캐시 정책 · `/t/(.*)`·`/themore` 리라이트 (`connect-src` 에 비자 포함) |
 
