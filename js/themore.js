@@ -7,9 +7,14 @@
      뿐이라 지킬 개인 정보가 없다. 그래서 supabase 번들도 db.js 도 안 싣고, /api/more 를
      그냥 부른다. 주소만 알면 폰에서 바로 열린다.
 
-   ★비자 환율만 우리가 못 가져온다. 비우면 신한 **대미환산율**로 갈음하고 안전 여유를
-     얹는다(MORE.SAFETY). 직접 넣으면 그 값이 이기고 여유도 안 쓴다 —
-     trip 이 일정 줄의 `fx` 칸에 쓰는 규칙과 같다: **적으면 그게 이기고, 비면 자동.**
+   ★★비자 환율은 **브라우저가 비자에서 직접** 받아 온다. 우리 서버는 못 받는다 —
+     비자 앞단이 데이터센터를 막고 챌린지를 띄운다. 그런데 CORS 는 열려 있어서
+     사람 브라우저는 그냥 읽힌다(2026-09-03에 17통화 전부 themore 값과 일치 확인).
+     그래서 서버는 신한만, 비자는 클라이언트가 — 둘로 나뉘어 있다.
+
+   ★환율을 고르는 차례: **① 사람이 넣은 값 ② 비자 API ③ 신한 대미환산율 + 안전 여유.**
+     trip 이 일정 줄의 `fx` 칸에 쓰는 규칙과 같다 — 적으면 그게 이기고, 비면 자동.
+     ③은 비자가 안 잡힐 때(비행기 안, 비자 점검)만 쓰는 그물이다.
 
    ★고른 통화와 보정값은 기억한다. 비자 환율도 기억하되 **고시일자와 함께** 두고,
      날이 바뀌면 버린다 — 어제 환율로 오늘 답을 내면 조용히 틀린다. */
@@ -22,7 +27,42 @@
   try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
   const keep = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} };
 
-  let rate = null;                       // { on, at, round, tt, mid, usd }
+  let rate = null;                       // { on, at, round, tt, mid, usd }  — 신한
+  let visaApi = null;                    // 비자에서 직접 받은 값 { cur, day, v }
+
+  const VISA = 'https://usa.visa.com/cmsapi/fx/rates';
+  /* 비자 고시환율. 하루에 한 번 바뀌므로 (통화·날짜)로 붙들어 둔다 — 한 번 받으면
+     비행기 모드에서도 그날은 계속 쓴다.
+     ★★amount=1 로 물으면 IDR 처럼 단위가 작은 통화는 환산액이 0으로 반올림돼
+       {"status":"success"} 만 온다. 100 을 넣으면 나온다(환율은 금액과 무관하다).
+     ★★fromCurr·toCurr 이름이 뒤집혀 있다. '1엔이 몇 달러인가' 를 얻으려면
+       fromCurr=USD&toCurr=JPY 로 물어야 한다 — 응답의 originalValues 가 그렇게 답한다. */
+  async function askVisa(cur, day) {
+    const key = cur + '|' + day;
+    const box = (saved.api = saved.api || {});
+    if (box[key] > 0) return box[key];
+    const d = `${day.slice(5, 7)}%2F${day.slice(8, 10)}%2F${day.slice(0, 4)}`;
+    const u = `${VISA}?amount=100&fee=0&utcConvertedDate=${d}&exchangedate=${d}`
+            + `&fromCurr=USD&toCurr=${encodeURIComponent(cur)}`;
+    const j = await (await fetch(u)).json();
+    const v = parseFloat(j && j.originalValues && j.originalValues.fxRateVisa);
+    if (!(v > 0)) throw new Error('비자가 ' + cur + ' 환율을 주지 않았습니다');
+    /* 어제 것까지 이고 다니지 않는다 — 오늘 칸만 남긴다 */
+    saved.api = { [key]: v };
+    keep();
+    return v;
+  }
+
+  /* 지금 고른 통화의 비자 환율을 받아 온다. 실패해도 화면은 그대로 돈다(③으로 떨어진다). */
+  async function pullVisa() {
+    const cur = $('mc-cur').value;
+    if (!rate || cur === 'USD') { visaApi = null; return; }
+    if (visaApi && visaApi.cur === cur && visaApi.day === rate.on) return;
+    visaApi = null;
+    try { visaApi = { cur, day: rate.on, v: await askVisa(cur, rate.on) }; }
+    catch (e) { visaApi = null; }
+    draw();
+  }
 
   /* 신한이 고시하는 통화 중 **실제로 카드로 긁을 만한 것**만 고른다.
      마흔넷을 다 세우면 고르는 일이 일이 된다. 없는 통화가 필요해지면 여기 한 줄 늘린다. */
@@ -38,19 +78,26 @@
     /* 달러는 바꿀 것이 없다 — 비자 환율이 1 이라 늘 정확하다. 칸을 아예 감춘다. */
     const isUsd = cur === 'USD';
     $('mc-visabox').hidden = isUsd;
-    const auto = isUsd ? 1 : rate.usd[cur];
     const typed = isUsd ? null : parseFloat($('mc-visa').value);
-    const exact = isUsd || (typed > 0);
-    const visa = exact ? (isUsd ? 1 : typed) : MORE.hedge(auto);
+    const api = (visaApi && visaApi.cur === cur && visaApi.day === rate.on) ? visaApi.v : null;
+    const fall = rate.usd[cur];                       // 신한 대미환산율(그물)
 
-    $('mc-visahint').innerHTML = isUsd
-      ? '달러는 비자가 바꿀 것이 없어 <b>언제나 정확합니다</b>.'
-      : exact
-        ? '넣어 주신 값으로 셉니다 — <b>안전 여유 없이 딱 맞습니다</b>.'
-        : (auto > 0
-            ? `비우면 신한 대미환산율 <b>${auto.toPrecision(8)}</b> 로 갈음하고 `
-              + `안전 여유 ${MORE.SAFETY}% 를 얹습니다. 비자 환율을 넣으면 여유 없이 맞습니다.`
-            : `${esc(cur)} 는 신한 고시에 없어 비자 환율을 직접 넣어야 합니다.`);
+    let visa, how;
+    if (isUsd) { visa = 1; how = 'usd'; }
+    else if (typed > 0) { visa = typed; how = 'typed'; }
+    else if (api > 0) { visa = api; how = 'api'; }
+    else if (fall > 0) { visa = MORE.hedge(fall); how = 'fall'; }
+    else { visa = null; how = 'none'; }
+
+    $('mc-visahint').innerHTML =
+        how === 'usd'   ? '달러는 비자가 바꿀 것이 없어 <b>언제나 정확합니다</b>.'
+      : how === 'typed' ? '넣어 주신 값으로 셉니다 — <b>안전 여유 없이 딱 맞습니다</b>.'
+      : how === 'api'   ? `비자 고시 <b>${api.toPrecision(8)}</b> 를 받아 왔습니다 — `
+                          + '비워 두셔도 <b>정확합니다</b>.'
+      : how === 'fall'  ? `비자에 못 닿아 신한 대미환산율 <b>${fall.toPrecision(8)}</b> 로 `
+                          + `갈음하고 안전 여유 ${MORE.SAFETY}% 를 얹었습니다. `
+                          + '999 를 넘지는 않지만 포인트를 조금 손해 봅니다.'
+      : `${esc(cur)} 환율을 못 구했습니다. 직접 넣어 주세요.`;
 
     if (!(visa > 0)) { $('mc-tab').innerHTML = ''; $('mc-one').textContent = ''; return; }
     $('mc-amt').placeholder = cur;
@@ -99,7 +146,8 @@
       `신한 USD/KRW <b>${rate.tt.toLocaleString('ko-KR')}</b> · ${rate.round}회차 `
       + `${esc(rate.on)} ${esc(rate.at || '')}`
       + (stale ? ' <span class="warn">— 오늘 고시가 아닙니다</span>' : '')
-      + (isUsd ? '' : ` · 비자 ${esc(cur)} ${visa.toPrecision(8)}${exact ? '' : ' (갈음)'}`)
+      + (isUsd ? '' : ` · 비자 ${esc(cur)} ${visa.toPrecision(8)}`
+                     + (how === 'fall' ? ' <span class="warn">(갈음)</span>' : ''))
       + (pad ? ` · 보정 ${pad}% — <b>표의 청구금액은 최악의 경우</b>입니다. 환율이 안 오르면 그보다 적게 찍힙니다.` : '');
   }
 
@@ -117,9 +165,10 @@
       return;
     }
     /* 어제 넣어 둔 비자 환율은 버린다 — 고시가 바뀌었으면 그 값은 이제 남의 날 값이다. */
-    if (saved.visaOn !== rate.on) { saved.visaOn = rate.on; saved.visa = {}; keep(); }
+    if (saved.visaOn !== rate.on) { saved.visaOn = rate.on; saved.visa = {}; saved.api = {}; keep(); }
     $('mc-visa').value = (saved.visa && saved.visa[$('mc-cur').value]) || '';
     draw();
+    pullVisa();
   }
 
   function start() {
@@ -131,6 +180,7 @@
       if (e.target.id === 'mc-cur') {
         $('mc-amt').value = '';
         $('mc-visa').value = (saved.visa && saved.visa[$('mc-cur').value]) || '';
+        pullVisa();
       }
       if (e.target.id === 'mc-visa') {
         saved.visa = saved.visa || {};
