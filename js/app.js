@@ -134,14 +134,19 @@
 
   /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
      연도만 적으면 눈금일 뿐이지만, 옆에 '여행 7 · 41일' 이 붙으면 그 해의 크기가 읽힌다. */
+  /* ★한 해를 **한 상자**로 묶는다. 머리띠가 sticky 인데 상자가 없으면 형제끼리
+     같은 자리(top: --h-top)에 겹쳐 붙는다 — 2026 과 2025 가 한 줄에 포개졌다
+     (2026-09-03). 상자가 있으면 제 구간이 지나갈 때 다음 해가 밀어낸다. */
   function section(title, list, ph, bare) {
     const days = list.reduce((a, t) => a + U.tripDays(t), 0);
     const bits = [`여행 ${list.length}`];
     if (days) bits.push(`${days}일`);
-    return `<h2 class="grouphd${bare ? ' year' : ''}">`
+    return `<section class="ygroup">`
+         + `<h2 class="grouphd${bare ? ' year' : ''}">`
          + `<span class="gt">${esc(title)}</span>`
          + `<span class="gn">${esc(bits.join(' · '))}</span></h2>`
-         + list.map(t => card(t, ph, bare)).join('');
+         + list.map(t => card(t, ph, bare)).join('')
+         + `</section>`;
   }
 
   /* ── 여권 ────────────────────────────────────────────────────────────────
@@ -254,8 +259,14 @@
     if (!trips.length) return '';
     /* ★국기는 **여행마다 하나씩** 세운다(같은 나라를 몇 번 갔는지가 보인다).
        겹쳐 쌓아 담는다 — 겹치는 폭도, 한 줄로 둘지 두 줄로 나눌지도 그려진 뒤에
-       재서 정한다(fitFlags). 그래서 여기서는 **한 줄로만** 내보낸다. */
-    const flags = trips.flatMap(t => U.flags(t.country));
+       재서 정한다(fitFlags). 그래서 여기서는 **한 줄로만** 내보낸다.
+       ★★그림으로 안 그려지는 곳(윈도우)에서는 **가짓수만** 세운다. 여행 38개의
+         국기 43장이 'JP CN ID US MO KR US JP JP…' 두 줄이 되면 그건 그림도 목록도
+         아닌 글자 무더기다(2026-09-03). 부채로 겹쳐야 '몇 번' 이 읽히는데 글자는
+         겹칠 수가 없다 — 글자로 옮길 수 있는 사실은 '어느 나라' 까지다.
+         '몇 번' 은 바로 아래 격자의 '여행 N' 과 해마다의 머리띠가 이미 말한다. */
+    const every = trips.flatMap(t => U.flags(t.country));
+    const flags = canDrawFlags() ? every : [...new Set(every)];
     /* '나라 N' 은 가짓수다 — 이건 겹치는 것을 걷는다 */
     const countries = new Set(trips.flatMap(t => U.codeList(t.country)).filter(c => U.flag(c)));
     /* 도시는 **적힌 대로** 센다. 여러 여행에서 같은 도시를 적었으면 한 번만 센다. */
@@ -301,6 +312,18 @@
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
     </section>`;
+  }
+
+  /* 카드 바탕에 깔리는 국기.
+     ★★장수에 따라 **크기를 줄인다.** 92px 고정이었더니 한 장은 카드의 24% 인데
+       세 장은 **71%** 였다(343px 카드에 244px — 2026-09-03 측정). 나라를 여럿 걸친
+       여행일수록 이름도 길어서, 하필 제일 긴 이름 뒤에 제일 큰 바탕이 깔렸다.
+       바탕은 바탕으로 남아야 한다 — 폭이 대충 같아지게 크기를 낮춘다. */
+  function bgflag(country) {
+    const f = U.flags(country);
+    if (!f.length) return '';
+    const n = Math.min(f.length, 3);
+    return `<span class="bgflag n${n}" aria-hidden="true">${f.join('')}</span>`;
   }
 
   /* ── 여행 카드 ──────────────────────────────────────────────────────────
@@ -358,7 +381,7 @@
     const right = bare ? U.range(t.start_on, t.end_on, true) : mark;
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      ${U.flags(t.country).length ? `<span class="bgflag" aria-hidden="true">${U.flags(t.country).join('')}</span>` : ''}
+      ${bgflag(t.country)}
       <span class="top2">
         <span class="nm">${esc(t.name)}</span>
         ${right ? `<span class="dday${(!bare && phase === 'now') ? ' hot' : ''}${bare ? ' when' : ''}">${esc(right)}</span>` : ''}
@@ -564,6 +587,10 @@
   function drawObox(n, justOnline) {
     const el = $('obox');
     el.hidden = !n;
+    /* ★★띠가 뜨면 떠다니는 ＋ 를 그만큼 올린다. css 에 규칙은 있었는데 **아무도 이
+       클래스를 켜지 않아서** 못 보낸 것이 있을 때 ＋ 가 띠 위에 얹혔다(2026-09-03).
+       하필 끊긴 곳에서만 겹치는 자리라 여기서 걸리지 않았다. */
+    document.body.classList.toggle('has-obox', !!n);
     if (!n) return;
     el.innerHTML = `<span>못 보낸 변경 ${n}건</span>`
       + `<button class="act" type="button" id="obox-send">${navigator.onLine ? '지금 보내기' : '연결되면 보냅니다'}</button>`;

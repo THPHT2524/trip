@@ -839,6 +839,8 @@ input.code {
   padding-bottom: calc(var(--pad) + 96px + env(safe-area-inset-bottom));
   display: flex; flex-direction: column; gap: 10px;
 }
+/* 한 해가 한 상자다 — 머리띠가 제 구간에서만 붙어 있게 하는 울타리다(js 의 section) */
+.ygroup { display: flex; flex-direction: column; gap: 10px; }
 .trip {
   display: flex; flex-direction: column; gap: 9px;
   width: 100%; text-align: left;
@@ -857,6 +859,7 @@ input.code {
 .trip .bgflag {
   position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
   font-size: 92px; line-height: 1; letter-spacing: -.04em;
+  white-space: nowrap;
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--sans);
   font-weight: 800;
   opacity: .13; filter: saturate(.7);
@@ -866,6 +869,11 @@ input.code {
   :root:not([data-theme="light"]) .trip .bgflag { opacity: .17; }
 }
 :root[data-theme="dark"] .trip .bgflag { opacity: .17; }
+/* ★나라를 여럿 걸친 여행. 크기를 그대로 두면 폭이 장수만큼 늘어난다 —
+   한 장 84px(카드의 24%)인데 세 장이 244px(71%) 이었다(2026-09-03 측정).
+   바탕이 카드를 다 덮으면 그건 바탕이 아니다. 폭이 대충 같아지게 낮춘다. */
+.trip .bgflag.n2 { font-size: 58px; }
+.trip .bgflag.n3 { font-size: 44px; }
 /* 카드의 글자는 바탕 위에 서야 한다 */
 .trip > .top2, .trip > .mrail, .trip > .meta { position: relative; }
 .trip .top2 { display: flex; align-items: baseline; gap: 10px; }
@@ -934,9 +942,17 @@ input.code {
   flex: 0 0 auto; font-family: var(--mono); font-variant-numeric: tabular-nums;
   font-size: 11px; font-weight: 500; letter-spacing: .01em; text-transform: none;
 }
-/* 해가 바뀌는 자리에는 실선을 하나 긋는다 — 구획이 눈에 잡혀야 건너뛸 수 있다 */
+/* 해가 바뀌는 자리에는 실선을 하나 긋는다 — 구획이 눈에 잡혀야 건너뛸 수 있다.
+   ★★그리고 **붙여 둔다.** 열 해가 쌓이자 목록이 5,697px 이 됐고(2026-09-03,
+     여행 38개, 375px 화면), 가운데쯤에서는 지금 보고 있는 것이 2025년인지
+     2024년인지 알 방법이 없었다 — 알려면 위로 되감아야 했다.
+   ★새 자리를 만들지 않는다. 이미 흐름에 있던 줄을 머리말 밑에 붙일 뿐이라
+     상시로 내주는 화면이 없다. 옆의 '여행 7 · 41일' 도 같이 따라다닌다. */
 .grouphd.year {
-  margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line);
+  position: sticky; top: var(--h-top); z-index: 20;
+  margin: 22px 0 -2px; padding: 14px 2px 8px;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
 }
 .grouphd.year .gt {
   font-family: var(--mono); font-variant-numeric: tabular-nums;
@@ -949,7 +965,6 @@ input.code {
 /* 접어서 목록 **아래**에 둔다. 위에 펴 두면 폰에서 여행 한 줄을 보려고 폼을 넘겨야 한다. */
 /* 아래쪽 여백은 탭바(58px)와 홈 인디케이터를 넘어야 한다 —
    안 그러면 폼의 마지막 단추가 탭바에 잘린다(2026-09-01 폰에서 확인). */
-.forms { padding: 6px var(--pad) 28px; display: flex; flex-direction: column; gap: 8px; }
 details {
   border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
   overflow: hidden;
@@ -1175,7 +1190,10 @@ input.mono { font-family: var(--mono); }
 .fab:active { transform: translateY(1px); }
 .fab:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 /* 못 보낸 것이 있으면 그 띠가 같은 자리에 뜬다 — 단추를 그만큼 올린다 */
-body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 52px); }
+/* 아웃박스 띠가 뜨면 ＋ 를 그 위로 올린다(js/app.js 의 drawObox 가 켠다).
+   띠는 51px(12px 글자 + 44px 단추) 이라 52 면 딱 1px 스친다 — 동그란 단추라
+   그 1px 은 눈에 붙어 보인다. 10px 을 더 준다. */
+body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
 
 /* ── 입력 시트 ─────────────────────────────────────────────────────────
    폰에서는 **아래에서 올라오는 시트**다. 화면 가운데 뜬 상자보다 엄지에 가깝고,

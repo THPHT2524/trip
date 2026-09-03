@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=118">
+<link rel="stylesheet" href="/css/app.css?v=122">
 </head>
 <body>
 
@@ -132,10 +132,16 @@
       <section class="cblock">
         <h3 class="chd">동행자 <span class="cn" id="crew-count"></span></h3>
         <ul class="crew" id="crew-list"></ul>
+        <!-- ★칸에 **보이는 이름**을 붙인다. 초대 블록을 동행자 아래로 합치면서 '초대'
+             라는 머리말이 사라졌고, 그러자 열두 자리 코드가 아무 설명 없이 목록 바로
+             밑에 놓였다 — 읽는 사람에게는 뜻 모를 문자열이다(2026-09-03). -->
         <div class="form inline">
-          <div class="row">
-            <input id="crew-link" type="text" class="mono code" readonly aria-label="초대 코드">
-            <button class="btn" id="crew-copy" type="button">링크 복사</button>
+          <div class="field">
+            <label for="crew-link">초대 코드</label>
+            <div class="row">
+              <input id="crew-link" type="text" class="mono code" readonly>
+              <button class="btn" id="crew-copy" type="button">링크 복사</button>
+            </div>
           </div>
           <p class="hint">코드를 불러 주거나 링크를 보내세요. 받은 사람은 이 여행에 참여합니다 —
             참여하면 <strong>서로의 이메일이 보입니다.</strong></p>
@@ -359,21 +365,21 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=118"></script>
-<script src="/js/map-config.js?v=118"></script>
-<script src="/js/money.js?v=118"></script>
-<script src="/js/util.js?v=118"></script>
-<script src="/js/geo.js?v=118"></script>
-<script src="/js/gmaps.js?v=118"></script>
-<script src="/js/db.js?v=118"></script>
-<script src="/js/fx.js?v=118"></script>
-<script src="/js/outbox.js?v=118"></script>
+<script src="/js/supabase-config.js?v=122"></script>
+<script src="/js/map-config.js?v=122"></script>
+<script src="/js/money.js?v=122"></script>
+<script src="/js/util.js?v=122"></script>
+<script src="/js/geo.js?v=122"></script>
+<script src="/js/gmaps.js?v=122"></script>
+<script src="/js/db.js?v=122"></script>
+<script src="/js/fx.js?v=122"></script>
+<script src="/js/outbox.js?v=122"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=118"></script>
-<script src="/js/plan.js?v=118"></script>
-<script src="/js/map.js?v=118"></script>
-<script src="/js/cost.js?v=118"></script>
-<script src="/js/app.js?v=118"></script>
+<script src="/js/crew.js?v=122"></script>
+<script src="/js/plan.js?v=122"></script>
+<script src="/js/map.js?v=122"></script>
+<script src="/js/cost.js?v=122"></script>
+<script src="/js/app.js?v=122"></script>
 
 </body>
 </html>
