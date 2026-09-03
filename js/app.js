@@ -332,14 +332,20 @@
     const content = box.scrollWidth - padX;
     const over = content - (box.clientWidth - padX);
     if (drawsFlags) {
-      /* ★★**늘 5분의 1씩 겹친다.** 넘칠 때만 겹치게 했더니 나라마다 한 장으로 줄고
-         나서는 열여섯 장이 그냥 들어가 버려서, 부채가 아니라 국기를 늘어놓은 줄이
-         됐다(2026-09-03). 겹쳐야 여권에 도장이 포개진 것처럼 읽힌다.
-         ★비율은 반 → 5분의 2 → 3분의 1 → 4분의 1 → 5분의 1 로 네 번 내렸다. 겹칠수록 부채처럼
-           보이지만 어느 선을 넘으면 국기가 색 띠로 뭉쳐 무엇인지 알 수 없다.
+      /* ★★겹침을 '얼마나 가리나' 가 아니라 **'얼마나 보이나'** 로 센다.
+         겹침이 두 군데서 왔기 때문이다: `--lap` 말고도 `.pflags b` 의 음수 여백이
+         양옆에서 0.26em 을 이미 당기고 있다(이모지 제 여백을 걷으려고 넣은 것인데
+         실제 글리프에서는 그보다 더 먹는다). 둘을 따로 두니 5분의 1로 적어 놓고
+         화면에서는 5분의 2가 겹쳤다(2026-09-03 아이폰).
+         ★이제 **한 장이 SHOW 만큼 보이게** 총합으로 맞춘다 — b 가 당긴 몫을 빼고
+           남는 만큼만 --lap 에 준다. 이미 충분히 겹쳐 있으면 0 이 된다.
          ★넘쳐도 더 겹치지 않는다. 대신 fitFlags 가 줄을 하나 더 쓴다 —
            뭉개진 한 줄보다 두 줄이 낫다. */
-      box.style.setProperty('--lap', (content / n / 5).toFixed(2) + 'px');
+      const SHOW = 0.8;                                  // 한 장이 5분의 4는 보인다
+      const w = content / n;                             // 지금 한 장이 차지하는 폭
+      const bleed = 0.26 * parseFloat(cs.fontSize);      // b 가 양옆에서 당겨 둔 양
+      box.style.setProperty('--lap',
+        Math.max(0, w - (w + bleed) * SHOW).toFixed(2) + 'px');
     }
     return box.scrollWidth - box.clientWidth;   // 겹치고도 남은 것
   }
