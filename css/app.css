@@ -753,8 +753,14 @@ a { color: var(--route); text-underline-offset: 2px; }
    열여섯 번 그으면 표가 격자처럼 무거워진다. */
 .mtab tbody tr + tr > * { border-top: 1px solid var(--line); }
 
-/* ★꼬리. 청구액의 끝 세 자리가 곧 돌려받는 돈이다(×2). */
-#mc-krw b, .mtab .krw b { color: var(--route); font-weight: 700; }
+/* ★꼬리. 청구액의 끝 세 자리가 곧 돌려받는 돈이다(×2).
+   ★★대담함은 **한 곳에만** 쓴다. 처음엔 표의 열여섯 줄까지 구조색으로 밝혔는데,
+     다 강조하면 아무것도 강조가 아니고 화면이 파랑으로 시끄러워졌다.
+     구조색은 **답(머리 칸)** 에만 남기고, 표에서는 색 대신 **명암**으로 가른다 —
+     앞자리(내는 돈)를 흐리게, 꼬리(받는 돈)를 진하게. 눈이 꼬리만 따라 내려간다. */
+#mc-krw b { color: var(--route); font-weight: 700; }
+.mtab .krw { color: var(--ink-3); }
+.mtab .krw b { color: var(--ink); font-weight: 600; }
 
 /* 금액을 누르면 위 칸이 그 값이 된다. 칸 여백까지 덮어 손가락이 닿을 자리를 만든다 —
    글자만 누르게 두면 18px 짜리 과녁이 된다. */
