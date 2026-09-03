@@ -59,8 +59,15 @@
     if (!rate || cur === 'USD') { visaApi = null; return; }
     if (visaApi && visaApi.cur === cur && visaApi.day === rate.on) return;
     visaApi = null;
-    try { visaApi = { cur, day: rate.on, v: await askVisa(cur, rate.on) }; }
-    catch (e) { visaApi = null; }
+    /* ★한 번은 더 물어본다. 통화를 빠르게 갈아 끼우면 비자가 간간이 빈손으로 답한다
+       (2026-09-03에 18개를 연달아 부르다 하나가 그랬다). 그물로 떨어지면 답이
+       조용히 보수적으로 바뀌므로, 그 전에 한 번만 다시 두드린다. */
+    for (let i = 0; i < 2 && !visaApi; i += 1) {
+      if (i) await new Promise(r => setTimeout(r, 600));
+      try { visaApi = { cur, day: rate.on, v: await askVisa(cur, rate.on) }; }
+      catch (e) { visaApi = null; }
+      if ($('mc-cur').value !== cur) return;      // 그 사이 통화를 또 바꿨으면 그만둔다
+    }
     draw();
   }
 
