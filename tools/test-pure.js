@@ -423,10 +423,13 @@ eq(MORE.kstNow(Date.UTC(2026, 8, 2, 15, 5)), '2026-09-03T00:05', 'kstNow 는 한
      그래도 못 내는 금액을 알려 주는 것보다 낫다. */
 const MDIG = { KRW:0, JPY:0, VND:0, TWD:0, IDR:0,
   USD:2, EUR:2, CNY:2, HKD:2, THB:2, SGD:2, MYR:2, PHP:2, AED:2,
-  GBP:2, AUD:2, CAD:2, CHF:2, NZD:2, MOP:2, MVR:2 };
+  GBP:2, AUD:2, CAD:2, CHF:2, NZD:2, MOP:2, MVR:2, INR:2 };
 let dbad = [];
 Object.entries(MDIG).forEach(([c, d]) => { if (MORE.digits(c) !== d) dbad.push(c); });
-eq(dbad, [], '★통화 21개의 소수점 자릿수가 정해 둔 대로다');
+eq(dbad, [], '★통화 22개의 소수점 자릿수가 정해 둔 대로다');
+/* ₹1 이 14.58원이라 정수로 끊으면 999 에 최대 14원 못 미친다. 인도 영수증은
+   파이사까지 찍히므로 두 자리를 그대로 둔다 — TWD·IDR 과 다른 판단이다. */
+eq(MORE.digits('INR'), 2, '인도 루피는 두 자리');
 eq([MORE.digits('TWD'), MORE.digits('IDR')], [0, 0],
    '★TWD·IDR 은 themore(2자리)와 **일부러 다르다** — 단말이 소수를 못 받는다');
 eq(MORE.digits('ZZZ'), 2, '모르는 통화는 두 자리로 — 대부분이 그렇다');

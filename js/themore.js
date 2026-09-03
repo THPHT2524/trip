@@ -24,16 +24,18 @@
   const $ = id => document.getElementById(id);
   const esc = U.esc;
 
-  /* 여행 기록에 실제로 쓴 통화만 세운다(2026-09-03에 DB 에서 뽑았다).
+  /* 여행 기록에 쓴 통화 + 앞으로 쓸 것(2026-09-03에 DB 에서 뽑고 INR 을 더했다).
+     ★늘릴 때는 신한 고시와 비자 **둘 다**에 있는지 먼저 확인한다 — 하나라도
+       없으면 갈음으로 밀리거나 아예 못 센다.
      ★원화는 뺐다 — 국내 결제는 적립이 1배라 셈이 다르고 비자 환율도 없다.
      ★기본값은 달러. 비자가 바꿀 것이 없어(환율 1) 언제나 정확하다. */
-  const CURS = ['USD', 'JPY', 'HKD', 'THB', 'TWD', 'CNY', 'EUR', 'SGD', 'MOP', 'IDR'];
+  const CURS = ['USD', 'JPY', 'HKD', 'THB', 'TWD', 'CNY', 'EUR', 'SGD', 'MOP', 'IDR', 'INR'];
 
   /* 통화 앞에 붙일 국기. **U.guessCountry 를 안 쓴다** — 저쪽은 새 여행 폼에서
      나라를 미리 골라 주는 것이라 USD·EUR 을 일부러 비워 둔다(여러 나라니까).
      여기서는 그저 그 돈을 가리키는 표지라 달러는 미국, 유로는 EU 깃발이 맞다. */
   const CUR_CC = { USD: 'US', JPY: 'JP', HKD: 'HK', THB: 'TH', TWD: 'TW',
-                   CNY: 'CN', EUR: 'EU', SGD: 'SG', MOP: 'MO', IDR: 'ID' };
+                   CNY: 'CN', EUR: 'EU', SGD: 'SG', MOP: 'MO', IDR: 'ID', INR: 'IN' };
   /* 지역표시문자 두 글자가 곳 국기다. U.flag 는 나라 목록을 보는데 EU 는 거기
      없으므로(나라가 아니다) 여기서만 코드포인트로 만든다. */
   const flagOf = cc => String.fromCodePoint(...[...cc].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
