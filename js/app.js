@@ -544,7 +544,7 @@
    ★칸 수는 스물둘. 폭은 flex 가 나눠 가지므로 화면이 넓어져도 딱 맞아떨어진다.
      날짜 11(08.29-08.31) · 나라 3(ES,PT,QA 가 최대) · 며칠 3 · 몇 곳 3, 사이 둘은 빈칸. */
   /* 날짜 11(08.29-08.31) + 나라 3 = 열넷이 왼쪽 묶음. 이름줄은 스물다섯으로 끝까지 간다. */
-  const COLS = 11, NAME_COLS = 21;
+  const DATE_COLS = 11, FLAG_COLS = 3, CC_COLS = 3, NAME_COLS = 20;
 
   /* 스물두 칸을 만들고 자리를 정해 글자를 꽂는다. 안 꽂힌 칸은 빈 채로 남는다.
      자리가 음수면 오른쪽 끝에서 센다. */
@@ -577,6 +577,13 @@
     /* ★한 나라가 **한 칸**이다. 예전엔 이어 붙인 문자열을 넘겼는데, 국기를 못 그리는
        기계에서는 'KR' 이 K·R 두 칸으로 쪼개졌다(2026-09-04). 배열로 넘겨 칸을 못 박는다. */
     return codes.slice(0, 3).map(c => (draw ? U.flag(c) : c));
+  }
+
+  /* 국가코드 뱃지 — 국기와 **따로** 선다. 국기는 이름 앞에서 그림으로 알려 주고,
+     이 두 글자는 날짜 옆에서 편명처럼 읽힌다. 안내판의 항공사 코드 자리다.
+     한 나라가 한 칸이므로 배열로 넘긴다(위와 같은 이유). */
+  function codeChars(country) {
+    return U.codeList(country).slice(0, 3);
   }
 
 
@@ -633,9 +640,9 @@
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
       <span class="ttop">
-        <span class="tleft">${row([
-          [0, t.start_on ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt'],
-        ], 11)}</span>
+        <span class="tg">${row([[0, t.start_on
+          ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt']], DATE_COLS)}</span>
+        <span class="tg tcc">${row([[0, codeChars(t.country), 'cc']], CC_COLS)}</span>
         ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
         <span class="tnum">${row([['r', nDays || '', 'dy']], 2)}<em>days</em></span>
         <span class="tnum">${row([['r', stops.length || '', 'st']], 3)}<em>places</em></span>
@@ -645,7 +652,10 @@
            '어디' 가 한 줄에서 붙어 버렸는데, 이름 앞에 오면 국기가 이름의 표지가 된다. */
         const fl = flagChars(t.country);
         const cls = 'fl' + (canDrawFlags() ? '' : ' ab');
-        return row([[0, fl, cls], [fl.length, t.name, 'nm']], NAME_COLS);
+        /* 국기판과 이름판을 따로 건다 — 사이의 틈이 둘을 갈라 준다.
+           국기판이 늘 세 칸이라 이름줄은 나라가 몇이든 같은 데서 시작하고 끝난다. */
+        return '<span class="tg">' + row([[0, fl, cls]], FLAG_COLS) + '</span>'
+             + '<span class="tg">' + row([[0, t.name, 'nm']], NAME_COLS - FLAG_COLS) + '</span>';
       })()}</span>
       ${rail}
     </button>`;

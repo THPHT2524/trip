@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=231') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=237') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=231') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=237') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=231') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=237') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1278,14 +1278,20 @@ input.code {
 /* ★★쪽자를 **두 크기**로 쓴다(2026-09-04). 진짜 안내판이 그렇다: 편명·시각은 작은 판,
      행선지는 큰 판. 한 크기로 맞췄더니 격자는 곱게 이어졌지만 무엇이 중한지가 안 보였다.
    ★윗줄(언제·며칠·몇 곳)은 작게, 이름줄(어디)은 크게 — 이름이 이 판의 행선지다. */
-.trip .ttop { display: flex; align-items: center; gap: 5px; }
-.trip .tleft { display: flex; gap: 1.5px; flex: 0 0 auto; }
-.trip .tnm { display: flex; gap: 2px; }
+/* ★묶음 사이는 **틈**이다 — 빈 쪽자를 끼우면 판이 하나로 이어져 버린다(2026-09-04).
+   진짜 안내판은 날짜판·항공사판·행선지판이 따로 걸리고 그 사이로 바탕이 보인다. */
+/* 틈은 10px — 6px 로는 칸 사이(1.5~2px)와 구별이 안 가서 판이 이어져 보였다(실측). */
+.trip .ttop { display: flex; align-items: center; gap: 10px; }
+.trip .tnm { display: flex; align-items: center; gap: 10px; }
+.trip .tg { display: flex; flex: 0 0 auto; }
+.trip .ttop .tg { gap: 1.5px; }
+.trip .tnm .tg { gap: 2px; }
+.trip .tg:empty { display: none; }
 .trip .ttop i { flex: 0 0 9.5px; width: 9.5px; height: 15px; font-size: 10px; }
 .trip .tnm i { flex: 0 0 13px; width: 13px; height: 26px; }
 /* 며칠·몇 곳 — 숫자는 칸에, 이름은 바로 옆에 작게. 자리는 두 자리·세 자리로 잡는다. */
 .trip .tnum { display: flex; align-items: center; gap: 1.5px; flex: 0 0 auto; }
-.trip .tleft + .tnum, .trip .tsx + .tnum { margin-left: auto; }
+.trip .tcc + .tnum, .trip .tsx + .tnum { margin-left: auto; }
 .trip .tnum em {
   font-style: normal; margin-left: 2px;
   font-family: var(--mono); font-size: 7px; font-weight: 600;
@@ -1294,6 +1300,14 @@ input.code {
 
 
 .trip .ttop i.dt { color: var(--route); }
+/* ★국가코드 뱃지 — 판에서 유일하게 **칠해진 칸**이다(2026-09-04). 안내판이 항공사
+   코드를 그렇게 낸다: 판때기 하나만 색이 뒤집혀 있어서 줄마다 눈이 거기서 한 번 걸린다.
+   국기(이름 앞)와 겹치는 정보지만 하는 일이 다르다 — 저건 그림이고 이건 글자다. */
+.trip .ttop i.cc {
+  background: var(--route); color: var(--paper);
+  font-size: 8px; font-weight: 700; letter-spacing: -.05em;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .22);
+}
 .trip .ttop i.dy, .trip .ttop i.st { color: var(--ink-2); }
 /* 상태 — 안내판의 '지연 · 결항 · 도착' 자리. 지난 여행은 빈칸이다. */
 /* 떠날 때까지 며칠 · 며칠차 — 날짜 밑에 붙는다. 지난 여행에는 없다. */
