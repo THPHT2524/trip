@@ -156,9 +156,42 @@
        되풀이된다. 영문만 쓴다 — 아래 값만 보면 무슨 칸인지 알고, 한글을 얹으면 두 줄이 된다.
      ⚠ .tboard 에 overflow:hidden 을 걸지 말 것. 스크롤 상자가 되어 연도 띠의
        position:sticky 가 화면이 아니라 이 상자에 붙는다(= 안 붙는다). */
-    el.innerHTML = '<div class="tboard"><div class="tbhd" aria-hidden="true">'
-                 + '<span>Date</span><span>Trip</span><span>Days</span></div>'
+    /* ★★판이 제가 무슨 판인지 **선언한다**(2026-09-04). 칸 이름만 있으면 표로 시작하는데,
+       안내판은 늘 머리에 이름과 시계를 단다. 위 여권 카드가 TRIPLOG · PASSPORT 라
+       둘이 **여권과 출발 안내판 한 쌍**이 된다.
+     ★시계는 장식이 아니라 사실이다 — 지금 시각. 그래서 진짜로 간다(아래 tickClock). */
+    el.innerHTML = '<div class="tboard">'
+                 + '<div class="tbtop"><span class="pl" aria-hidden="true">✈</span>'
+                 + '<b>TRIPLOG</b><em>DEPARTURES</em>'
+                 + `<time class="clk" id="tbclock">${clockNow()}</time></div>`
+                 + '<div class="tbhd" aria-hidden="true">'
+                 + '<span>Date</span><span>Trip</span><span>Days</span><span>Status</span></div>'
                  + html + '</div>';
+    flipOnce(el);
+  }
+
+  /* 시계 — 안내판의 그 시계다. 분이 바뀌는 것만 보면 되므로 20초에 한 번 본다. */
+  const clockNow = () => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  };
+  setInterval(() => { const c = $('tbclock'); if (c) c.textContent = clockNow(); }, 20000);
+
+  /* ★★쪽자가 넘어가듯 줄이 위에서부터 뒤집히며 선다.
+     ★**한 세션에 한 번만.** 홈은 하루에 몇 번씩 여는 화면이라 매번 돌면 금세 질린다 —
+       앱 안에서 여행에 들어갔다 돌아올 때는 안 돈다.
+     ★보이는 열넷에만 박자를 준다. 그 아래는 어차피 화면 밖이라 기다릴 이유가 없다.
+     ★끝나면 클래스를 뗀다 — perspective 를 남겨 두지 않는다.
+     ★움직임을 줄여 달라는 설정이면 css 의 전역 규칙이 통째로 끈다. */
+  function flipOnce(el) {
+    try { if (sessionStorage.getItem('flip1')) return; sessionStorage.setItem('flip1', '1'); }
+    catch (e) { /* 시크릿 모드 등에서 막히면 그냥 한 번 돈다 */ }
+    const board = el.querySelector('.tboard');
+    if (!board) return;
+    [...el.querySelectorAll('.trip')].slice(0, 14)
+      .forEach((r, i) => r.style.setProperty('--i', i));
+    board.classList.add('flip');
+    setTimeout(() => board.classList.remove('flip'), 1200);
   }
 
   /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
@@ -546,21 +579,23 @@
         : '<span class="md is-empty"></span>';
     }).join('')}</span>` : '';
 
-    /* 날짜 밑에 붙는 한 줄 — 안내판의 '변경시각' 자리다. 떠날 때까지 며칠, 또는 며칠차.
-       지난 여행은 비워 둔다: 끝난 것에 날짜를 세지 않는다. */
-    let under = '';
+    /* ★상태 칸 — 안내판의 '지연 · 결항 · 도착' 자리다. 우리 것은 '여행 중' 과 D-day.
+       ★지난 여행은 **비워 둔다.** 서른여덟 중 서른다섯이 빈칸이 되는데, 진짜 판도
+         빈칸이 많다 — 그 여백이 곧 '아무 일 없음' 이다. 끝난 것에 날짜를 세지 않는다. */
+    let st = '', stOn = '';
     if (phase === 'soon' && t.start_on) {
       const n = Math.ceil((Date.parse(t.start_on) - Date.parse(U.todayISO())) / DAYMS);
-      under = n > 0 ? `D-${n}` : 'D-DAY';
+      st = n > 0 ? `D-${n}` : 'D-DAY';
     } else if (phase === 'now' && t.start_on) {
-      under = `${Math.floor((Date.parse(U.todayISO()) - Date.parse(t.start_on)) / DAYMS) + 1}일차`;
+      st = `${Math.floor((Date.parse(U.todayISO()) - Date.parse(t.start_on)) / DAYMS) + 1}일차`;
+      stOn = ' on';
     }
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      <span class="tdt"><b>${esc(t.start_on ? U.md(t.start_on) : '--.--')}</b>${
-        under ? `<em>${esc(under)}</em>` : ''}</span>
+      <span class="tdt">${esc(t.start_on ? U.md(t.start_on) : '--.--')}</span>
       <span class="tnm">${flagCell(t.country)}<b>${esc(t.name)}</b></span>
       <span class="tdy">${nDays ? `<b>${nDays}</b><u>일</u>` : ''}</span>
+      <span class="tsx${stOn}">${esc(st)}</span>
       ${rail}
       ${stops.length ? `<span class="tst">${stops.length}곳</span>` : ''}
     </button>`;
