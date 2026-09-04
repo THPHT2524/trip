@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=260') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=262') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=260') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=262') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=260') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=262') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1398,44 +1398,16 @@ input.code {
 .tboard.reveal .trip .ttop i, .tboard.reveal .trip .tnm i { perspective: 90px; }
 .tboard.reveal .trip:not(.on) .ttop i::after,
 .tboard.reveal .trip:not(.on) .tnm i::after { visibility: hidden; }
-.tboard.reveal .trip.on .ttop i::after,
-.tboard.reveal .trip.on .tnm i::after {
+/* 멈추는 순간에만 한 번 짧게 — 훑는 동안은 js 가 글자를 갈아 끼우는 것으로 충분하다.
+   .set 은 js 가 그 칸이 제 글자에 앉을 때 붙인다. */
+.tboard.reveal .trip .ttop i.set::after,
+.tboard.reveal .trip .tnm i.set::after {
   transform-origin: center top;
-  /* ⚠ both 가 아니라 **backwards** 다. both 면 끝난 뒤에도 마지막 프레임의
-     transform 이 칸에 남아, perspective 조상 아래에서 칸이 계속 투영된다 —
-     줄 한가운데에 가로줄 자국이 그래서 생겼다(2026-09-04 아이폰 실물).
-     backwards 면 기다리는 동안만 첫 프레임을 쓰고 끝나면 아무것도 안 남긴다. */
-  animation: cflip .19s cubic-bezier(.3, .9, .4, 1) backwards;
+  /* ⚠ fill 을 주지 않는다. both 로 뒀더니 끝난 뒤에도 마지막 프레임의 transform 이
+     남아, perspective 조상 아래에서 칸이 계속 투영됐다 — 줄 한가운데 가로줄 자국이
+     그래서 생겼다(2026-09-04 아이폰 실물). 안 주면 끝나고 아무것도 안 남는다. */
+  animation: cflip .11s cubic-bezier(.3, .9, .4, 1);
 }
-/* 왼쪽부터 차례로. 윗줄이 먼저 떨어지고 이름줄이 뒤따른다 — 이름이 마지막에
-   서야 '어디였는지' 가 맨 나중에 확정되는 안내판의 순서가 된다. */
-.tboard.reveal .trip.on .ttop i:nth-child(1)::after { animation-delay: 0ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(2)::after { animation-delay: 16ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(3)::after { animation-delay: 32ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(4)::after { animation-delay: 48ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(5)::after { animation-delay: 64ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(6)::after { animation-delay: 80ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(7)::after { animation-delay: 96ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(8)::after { animation-delay: 112ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(9)::after { animation-delay: 128ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(10)::after { animation-delay: 144ms; }
-.tboard.reveal .trip.on .ttop i:nth-child(11)::after { animation-delay: 160ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(1)::after { animation-delay: 70ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(2)::after { animation-delay: 94ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(3)::after { animation-delay: 118ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(4)::after { animation-delay: 142ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(5)::after { animation-delay: 166ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(6)::after { animation-delay: 190ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(7)::after { animation-delay: 214ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(8)::after { animation-delay: 238ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(9)::after { animation-delay: 262ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(10)::after { animation-delay: 286ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(11)::after { animation-delay: 310ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(12)::after { animation-delay: 334ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(13)::after { animation-delay: 358ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(14)::after { animation-delay: 382ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(15)::after { animation-delay: 406ms; }
-.tboard.reveal .trip.on .tnm i:nth-child(16)::after { animation-delay: 430ms; }
 @keyframes cflip {
   from { transform: rotateX(-90deg); }
   70%  { transform: rotateX(9deg); }

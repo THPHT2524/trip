@@ -186,12 +186,80 @@
      못 보고 내보내느니 재서 확인되는 것을 쓴다. 서른여덟 줄에 rAF 로 묶은 판정
      한 번이라 값도 안 든다. 다 켜지면 스스로 귀를 뗀다.
    ★움직임을 줄여 달라는 설정이면 css 가 시작 자세까지 풀어 준다. */
+  /* ── 쪽자가 넘어간다 ────────────────────────────────────────────────────
+     ★★기차역·공항 판이 하는 그 동작이다: 쪽자 한 장이 **아무 글자나 여러 장을 훑고
+       지나가다** 제 글자에서 탁 멈춘다. 한 번 접혔다 펴지는 것과는 다르다 — 판이
+       살아 있다는 느낌은 '넘어간 장수' 에서 온다(2026-09-04, 앞의 두 번이 그래서 틀렸다).
+     ★칸마다 시작이 셋에 한 칸씩 어긋나 왼쪽부터 타다다닥 훑는다. 한 줄이 250ms 쯤에
+       다 선다 — 접었다 펴는 것보다 오히려 빠르다.
+     ★훑는 글자는 **판에 실제로 오르는 것들**로만 고른다. 진짜 판도 쪽자 묶음이
+       정해져 있고, 거기 없는 글자는 지나가지 않는다.
+     ⚠ setInterval 하나가 켜진 칸 전부를 몬다. 칸마다 타이머를 걸면 서른여덟 줄에
+       천오백 개가 된다. 다 서면 스스로 멈춘다. */
+  const TICK = 28, SPINS = 4;
+  const POOL_D = [...'0123456789'];
+  const POOL_A = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+  let POOL_K = [...'서울도쿄오사카교토'];
+
+  function setKoPool(list) {
+    const set = new Set();
+    list.forEach(t => [...(t.name || '')].forEach(c => { if (/[가-힣]/.test(c)) set.add(c); }));
+    if (set.size >= 4) POOL_K = [...set];
+  }
+  const poolOf = c => /[0-9]/.test(c) ? POOL_D
+                    : /[A-Z]/.test(c) ? POOL_A
+                    : /[가-힣]/.test(c) ? POOL_K : null;
+
+  let spinTimer = null, spinning = [];
+  function stopSpin() { if (spinTimer) { clearInterval(spinTimer); spinTimer = null; } }
+  function land(el) { el.dataset.c = el.dataset.f; el.classList.add('set'); }
+
+  function spinRow(row, batch) {
+    let i = 0;
+    row.querySelectorAll('.ttop i[data-c], .tnm i[data-c]').forEach(function (el) {
+      /* ★★제 글자는 **칸 자신에**(data-f) 둔다. 도는 목록에만 들고 있었더니, 목록이
+         비워지는 순간 그 글자를 아무도 모르게 되어 칸이 영영 빈 채로 남았다 —
+         서른여덟 중 열 줄이 그랬다(2026-09-04 실측). 화면에 뜨는 것은 data-c,
+         진짜는 data-f 다. 무슨 일이 있어도 data-f 만 있으면 되돌릴 수 있다. */
+      el.dataset.f = el.dataset.c;
+      el.dataset.c = '';                       // 판때기만 남기고 글자를 비운다
+      spinning.push({ el: el, pool: poolOf(el.dataset.f), at: ((i++ / 3) | 0) + batch * 3, n: 0 });
+    });
+    /* 안전줄 — 도는 목록이 어떻게 되든 이 줄은 1.2초 뒤에 반드시 제 글자로 선다 */
+    setTimeout(function () { landRow(row); }, 1200);
+    if (!spinTimer) spinTimer = setInterval(step, TICK);
+  }
+
+  /* 한 줄을 통째로 제 글자에 앉힌다 — 안전줄이자, 다시 그리기 전 정리 */
+  function landRow(row) {
+    row.querySelectorAll('.ttop i[data-f], .tnm i[data-f]').forEach(function (el) {
+      if (!el.classList.contains('set')) land(el);
+    });
+    spinning = spinning.filter(s => !row.contains(s.el));
+    if (!spinning.length) stopSpin();
+  }
+
+  function step() {
+    spinning = spinning.filter(function (s) {
+      if (s.at > 0) { s.at -= 1; return true; }                 // 아직 제 차례가 아니다
+      if (!s.pool || s.n >= SPINS) { land(s.el); return false; } // 훑을 게 없거나 다 훑었다
+      s.el.dataset.c = s.pool[(Math.random() * s.pool.length) | 0];
+      s.n += 1;
+      return true;
+    });
+    if (!spinning.length) stopSpin();
+  }
+
   let revealStop = null;
   function revealRows(el) {
     if (revealStop) revealStop();
+    /* 다시 그리면 앞 판의 칸은 이미 문서에서 빠졌다 — 여기서만 도는 목록을 비운다 */
+    spinning = [];
+    stopSpin();
     const board = el.querySelector('.tboard');
     if (!board) return;
     board.classList.add('reveal');
+    setKoPool(trips);
     let rest = [...board.querySelectorAll('.trip')];
 
     function check() {
@@ -204,8 +272,8 @@
         if (!end && r.getBoundingClientRect().top > line) return true;
         /* 한 번에 여럿이 넘어오면(첫 화면·빠른 스크롤) 박자를 준다. 천천히 내리면
            대개 하나씩이라 박자가 0 이고, 그게 맞다 — 넘어가는 것은 지금 그 줄이다. */
-        r.style.setProperty('--i', i++);
         r.classList.add('on');
+        spinRow(r, i++);
         return false;
       });
       if (!rest.length) revealStop();
@@ -213,6 +281,9 @@
     /* ⚠ rAF 로 묶지 않는다. 스크롤 핸들러를 rAF 로 미루는 것이 보통이지만, 이 판정은
        아직 안 켜진 줄만 훑고 그 수가 계속 줄어 마지막엔 0 이 된다 — 묶어서 아낄 것이
        없다. 그리고 rAF 는 탭이 가려져 있으면 아예 안 돈다. */
+    /* ⚠ 여기서 도는 쪽자를 **건드리지 않는다.** 마지막 줄이 켜지는 순간 이 함수가
+       불리는데, 그때 도는 목록을 비웠더니 아직 훑는 중이던 열 줄이 빈 칸으로 굳었다
+       (2026-09-04). 이 함수가 하는 일은 스크롤에서 귀를 떼는 것뿐이다. */
     revealStop = function () {
       removeEventListener('scroll', check);
       removeEventListener('resize', check);
