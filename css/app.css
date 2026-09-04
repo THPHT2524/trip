@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=215') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=218') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=215') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=218') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=215') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=218') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -82,12 +82,12 @@
      서른여덟 줄에 실선을 그으면 판이 격자가 된다. */
   --stripe:  rgba(22, 48, 43, .022);
   --onnow:   rgba(43, 74, 203, .07);
-  /* 쪽자 한 장. 위는 밝고 아래는 어둡고 가운데를 이음매가 지난다 — 판때기의 문법이다. */
-  --flap-a:  #EDF1EF;
-  --flap-b:  #DCE3DF;
-  --flap-hi: rgba(255, 255, 255, .8);
-  --flap-lo: rgba(22, 48, 43, .10);
-  --seam:    rgba(22, 48, 43, .22);
+  /* ★칸은 **음각**이다 — 판에 파인 자리에 글자가 앉는다. 그래서 판보다 어둡고,
+     그림자가 위에·하이라이트가 아래에 온다(볼록한 것과 반대). */
+  --flap-a:  #E2E9E5;
+  --flap-b:  #EBF0ED;
+  --flap-hi: rgba(22, 48, 43, .16);
+  --flap-lo: rgba(255, 255, 255, .9);
   --route:   #2B4ACB;   /* 구조색: 활성 레일 · 링크 · 초점 */
   --route-w: #E3E8FB;   /* 코발트의 옅은 바탕 */
   --warn:    #A6392C;
@@ -183,13 +183,11 @@
     --rail:    #2E4139;
     --stripe:  rgba(255, 255, 255, .024);
     --onnow:   rgba(138, 160, 255, .11);
-    /* ★판때기는 판 바탕보다 **확실히 밝아야** 한다. 처음엔 아랫면이 #18241F 라
-       바탕 #16241F 과 거의 같아서 칸이 사라졌다(2026-09-04). 한 단 올린다. */
-    --flap-a:  #2B3B34;
-    --flap-b:  #1F2E28;
-    --flap-hi: rgba(255, 255, 255, .09);
-    --flap-lo: rgba(0, 0, 0, .5);
-    --seam:    rgba(0, 0, 0, .66);
+    /* 음각 — 판(#16241F)보다 파여서 어둡다 */
+    --flap-a:  #0F1B17;
+    --flap-b:  #16231E;
+    --flap-hi: rgba(0, 0, 0, .55);
+    --flap-lo: rgba(255, 255, 255, .07);
     --route:   #8AA0FF;
     --route-w: #1B2440;
     --warn:    #E9877A;
@@ -1254,12 +1252,11 @@ input.code {
   background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
   box-shadow: inset 0 1px 0 var(--flap-hi), inset 0 -1px 0 var(--flap-lo);
 }
-.trip i::after {
-  content: ''; position: absolute; left: 0; right: 0; top: 50%;
-  height: 1px; background: var(--seam);
-}
-.trip .ttop { display: flex; align-items: center; gap: 6px; }
-.trip .tdt, .trip .tdy, .trip .tfl, .trip .tnm { display: flex; gap: 1px; }
+/* ★가운데 이음매를 뺐다(2026-09-04). 라틴 글자는 선이 지나가도 읽히는데 **한글은
+   음절 한가운데를 가로줄이 관통하면 글자가 깨져 보인다** — 제 주 · 도 쿄 가 특히 그랬다.
+   판때기의 위·아래 명암만으로도 칸은 충분히 칸으로 읽힌다. */
+.trip .ttop { display: flex; align-items: center; gap: 5px; }
+.trip .tdt, .trip .tdy, .trip .tfl, .trip .tst, .trip .tnm { display: flex; gap: 1px; }
 .trip .tdy { align-items: center; }
 .trip .tdy u { text-decoration: none; font-family: var(--mono); font-size: var(--t-micro);
   color: var(--ink-3); margin-left: 3px; }
@@ -1297,11 +1294,9 @@ input.code {
 .trip .tdy { justify-content: flex-end; }
 .trip .tdy i { color: var(--ink); }
 /* '몇 곳' 은 레일과 같은 줄, 기간 밑에 선다 — 레일이 그 곳들을 찍은 그림이라 나란하다 */
-/* 몇 곳 — 윗줄 오른쪽 끝. 레일은 아랫줄을 통째로 쓰게 비켜 준다. */
-.trip .tst {
-  margin-left: auto; flex: 0 0 auto; align-self: center; text-align: right;
-  font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3);
-}
+/* 몇 곳 — 윗줄 오른쪽 끝. 칸 수를 미리 잡아 두므로 빈 칸이 남는다. */
+.trip .tst { margin-left: auto; }
+.trip .tst i { color: var(--ink-3); }
 
 /* ★★쪽자가 넘어가듯 줄이 위에서부터 뒤집히며 선다. 한 세션에 한 번만 돈다 —
    홈은 하루에 몇 번씩 여는 화면이라 매번 돌면 금세 질린다(js/app.js 의 flipOnce).
@@ -1396,8 +1391,7 @@ input.code {
   background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
   box-shadow: inset 0 1px 0 var(--flap-hi), inset 0 -1px 0 var(--flap-lo);
 }
-.grouphd.year .gt i::after { content: ''; position: absolute; left: 0; right: 0;
-  top: 50%; height: 1px; background: var(--seam); }
+
 .grouphd.year .gn { font-size: var(--t-micro); }
 
 

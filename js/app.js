@@ -524,7 +524,20 @@
   /* ★★**글자 하나에 칸 하나.** 이게 쪽자판이다 — 배경에 격자를 깔아 두는 것으로는
      안 된다(그건 글자 뒤 벽지지 칸이 아니다. 2026-09-04에 그렇게 만들었다가 되돌렸다).
      한글은 음절이 정사각형이라 라틴 숫자와 같은 칸에 그대로 앉는다. */
-  const cells = str => [...String(str)].map(ch => `<i>${esc(ch)}</i>`).join('');
+  /* ★★칸 수를 **미리 잡는다.** 글자가 없는 자리에도 빈 칸이 남는다 — 진짜 판이
+     그렇게 생겼고(빈 칸이 격자로 보이는 것), 그래야 줄마다 칸이 같은 자리에 선다.
+     넘치면 거기서 끝난다: 판은 늘어나지 않는다. */
+  const cells = (str, n) => {
+    const ch = [...String(str)];
+    const len = n || ch.length;
+    let out = '';
+    for (let i = 0; i < len; i++) out += `<i>${i < ch.length ? esc(ch[i]) : ''}</i>`;
+    return out;
+  };
+  /* 판의 칸 수 — 한 줄이 늘 같은 모양이 되도록 여기서 못 박는다.
+     날짜 11(08.29-08.31) · 나라 3(ES,PT,QA 가 최대) · 며칠 3(12일) · 몇 곳 3(66곳)
+     이름 13(바르셀로나·포르투·리스본이 최대) */
+  const N = { date: 11, flag: 3, days: 3, stop: 3, name: 13 };
 
   /* 안내판의 **항공사 로고 자리**가 국기 자리다. 나라를 여럿 걸친 여행이면 여러 장을
      겹쳐 세운다(실제로 넷 있다 — ES,PT,QA 처럼).
@@ -532,12 +545,14 @@
        안내판에서는 그 두 글자가 오히려 편명처럼 읽혀서 제 일을 한다. */
   function flagCell(country) {
     const codes = U.codeList(country).filter(c => U.flag(c));
-    if (!codes.length) return '<span class="tfl"></span>';
     const draw = canDrawFlags();
     /* 국기도 칸에 앉는다 — 판에서는 그것도 쪽자 한 장이다.
        글자로 떨어지는 기계에서는 두 글자가 한 칸에 들어가므로 칸을 넓혀 준다(.ab). */
-    return `<span class="tfl${draw ? '' : ' ab'}" aria-hidden="true">${
-      codes.map(c => `<i>${draw ? U.flag(c) : esc(c)}</i>`).join('')}</span>`;
+    let out = '';
+    for (let i = 0; i < N.flag; i++) {
+      out += `<i>${i < codes.length ? (draw ? U.flag(codes[i]) : esc(codes[i])) : ''}</i>`;
+    }
+    return `<span class="tfl${draw ? '' : ' ab'}" aria-hidden="true">${out}</span>`;
   }
 
 
@@ -596,13 +611,13 @@
       <span class="ttop">
         <span class="tdt">${cells(t.start_on
           ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '')
-          : '--.--')}</span>
+          : '', N.date)}</span>
         ${flagCell(t.country)}
-        <span class="tdy">${nDays ? cells(nDays + '일') : ''}</span>
+        <span class="tdy">${cells(nDays ? nDays + '일' : '', N.days)}</span>
+        <span class="tst">${cells(stops.length ? stops.length + '곳' : '', N.stop)}</span>
         ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
-        ${stops.length ? `<span class="tst">${stops.length}곳</span>` : ''}
       </span>
-      <span class="tnm">${cells(t.name)}</span>
+      <span class="tnm">${cells(t.name, N.name)}</span>
       ${rail}
     </button>`;
   }
