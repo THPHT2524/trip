@@ -216,8 +216,10 @@ const Plan = (function () {
       ? U.money(sum, U.SETTLE) + (miss ? ` · <span class="warn">+${miss}건</span> 환율 없음` : '')
       : '';
 
+    /* ★날 수도 쪽자에 앉는다 — 홈의 연도 띠(2026 · 4 TIMES 24 DAYS)와 같은 어법이다.
+       두 화면이 같은 판때기를 쓰면 한 물건으로 읽힌다(2026-09-04). */
     const band = `<div class="dayband">
-        <span class="daytag">Day ${n}</span>
+        <span class="daytag">Day${String(n).split('').map(x => `<i>${x}</i>`).join('')}</span>
         <span class="date">${esc(U.md(d))} ${esc(U.dowOf(d))}</span>
         <span class="sum">${cost}</span>
       </div>`;
