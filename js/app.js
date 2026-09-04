@@ -166,12 +166,11 @@
                  + '<div class="tbtop"><span class="pl" aria-hidden="true">✈</span>'
                  + '<b>TRIPLIST</b><em>DEPARTURES</em>'
                  + `<span class="cnt">${cells(trips.length)}<em>times</em></span></div>`
-                 /* ★라벨은 **머리줄에 한 번**. 줄마다 '일 · 곳' 을 붙이면 서른여덟 번
-                    되풀이되고 그만큼 칸을 빼앗긴다 — 안내판이 라벨을 위에 두는 이유다.
-                    flex 비율이 아래 칸 자리(11·5·3·3 = 22)와 같아서 세로로 맞아떨어진다. */
+                 /* ★days·places 는 **숫자 바로 옆**에 붙인다(2026-09-04). 머리줄로 올렸더니
+                    스물두 칸 건너에 있어서 무슨 수인지 눈으로 이어야 했다 — 붙어 있어야 읽힌다.
+                    머리줄에는 왼쪽 묶음의 이름만 남긴다. */
                  + '<div class="tbhd" aria-hidden="true">'
-                 + '<span style="flex:11">Date</span><span style="flex:5">To</span>'
-                 + '<span style="flex:3">Days</span><span style="flex:3">Places</span></div>'
+                 + '<span>Date</span><span>To</span><span class="r">Trip</span></div>'
                  + html + '</div>';
     flipOnce(el);
   }
@@ -544,17 +543,22 @@
      글자가 없는 자리에도 칸이 있고, 그 빈 칸들이 판을 판으로 보이게 한다.
    ★칸 수는 스물둘. 폭은 flex 가 나눠 가지므로 화면이 넓어져도 딱 맞아떨어진다.
      날짜 11(08.29-08.31) · 나라 3(ES,PT,QA 가 최대) · 며칠 3 · 몇 곳 3, 사이 둘은 빈칸. */
-  const COLS = 22;
+  /* 날짜 11(08.29-08.31) + 나라 3 = 열넷이 왼쪽 묶음. 이름줄은 스물다섯으로 끝까지 간다. */
+  const COLS = 11, NAME_COLS = 21;
 
   /* 스물두 칸을 만들고 자리를 정해 글자를 꽂는다. 안 꽂힌 칸은 빈 채로 남는다.
      자리가 음수면 오른쪽 끝에서 센다. */
-  function row(parts) {
-    const slot = new Array(COLS).fill(null);
+  function row(parts, n) {
+    const cols = n || COLS;
+    const slot = new Array(cols).fill(null);
     parts.forEach(function (part) {
       var at = part[0], str = part[1], cls = part[2] || '';
-      var ch = [].concat(Array.from(str == null ? '' : String(str)));
-      var from = at < 0 ? COLS + at : at;
-      ch.forEach(function (c, i) { if (from + i < COLS) slot[from + i] = [c, cls]; });
+      /* 배열로 주면 한 원소가 한 칸이다 — 'JP' 두 글자를 한 칸에 넣을 때 쓴다. */
+      var ch = Array.isArray(str) ? str : Array.from(str == null ? '' : String(str));
+      /* 자리가 'r' 이면 오른쪽 끝에 붙인다 — 수는 자릿수가 맞아야 읽힌다(6 과 10 의 일의 자리가
+         같은 줄에 서야 한다). 음수면 끝에서 센다. */
+      var from = at === 'r' ? cols - ch.length : (at < 0 ? cols + at : at);
+      ch.forEach(function (c, i) { if (from + i < cols) slot[from + i] = [c, cls]; });
     });
     return slot.map(function (v) {
       return v ? '<i class="' + v[1] + '">' + esc(v[0]) + '</i>' : '<i></i>';
@@ -570,7 +574,9 @@
   function flagChars(country) {
     const codes = U.codeList(country).filter(c => U.flag(c));
     const draw = canDrawFlags();
-    return codes.slice(0, 3).map(c => (draw ? U.flag(c) : c)).join('');
+    /* ★한 나라가 **한 칸**이다. 예전엔 이어 붙인 문자열을 넘겼는데, 국기를 못 그리는
+       기계에서는 'KR' 이 K·R 두 칸으로 쪼개졌다(2026-09-04). 배열로 넘겨 칸을 못 박는다. */
+    return codes.slice(0, 3).map(c => (draw ? U.flag(c) : c));
   }
 
 
@@ -626,14 +632,21 @@
     }
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      <span class="ttop">${row([
-        [0, t.start_on ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt'],
-        [11, flagChars(t.country), 'fl'],
-        [16, nDays || '', 'dy'],
-        [19, stops.length || '', 'st'],
-      ])}</span>
-      ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
-      <span class="tnm">${row([[0, t.name, 'nm']])}</span>
+      <span class="ttop">
+        <span class="tleft">${row([
+          [0, t.start_on ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt'],
+        ], 11)}</span>
+        ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
+        <span class="tnum">${row([['r', nDays || '', 'dy']], 2)}<em>days</em></span>
+        <span class="tnum">${row([['r', stops.length || '', 'st']], 3)}<em>places</em></span>
+      </span>
+      <span class="tnm">${(() => {
+        /* ★국기를 **이름 앞**에 붙인다(2026-09-04). 윗줄 날짜 뒤에 뒀더니 '언제' 와
+           '어디' 가 한 줄에서 붙어 버렸는데, 이름 앞에 오면 국기가 이름의 표지가 된다. */
+        const fl = flagChars(t.country);
+        const cls = 'fl' + (canDrawFlags() ? '' : ' ab');
+        return row([[0, fl, cls], [fl.length, t.name, 'nm']], NAME_COLS);
+      })()}</span>
       ${rail}
     </button>`;
   }

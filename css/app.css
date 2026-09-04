@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=225') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=231') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=225') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=231') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=225') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=231') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1222,14 +1222,14 @@ input.code {
 
 /* 칸 이름 — 영문 한 줄, 아주 작게. 사진 속 판이 그렇게 생겼다. */
 .tbhd {
-  display: flex; gap: 2px;
+  display: flex; gap: 6px;
   padding: 7px 12px 5px;
   background: var(--paper); border-bottom: 1px solid var(--line);
   font-family: var(--mono); font-size: 8px; font-weight: 600;
   letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
 }
-.tbhd span { min-width: 0; }
-.tbhd span:nth-child(3), .tbhd span:nth-child(4) { text-align: right; }
+.tbhd span:first-child { flex: 0 0 120px; }
+.tbhd .r { margin-left: auto; }
 
 /* 줄 — 선을 긋지 않는다. 한 칸 걸러 살짝 밝게만(안내판이 그렇다). */
 .trip {
@@ -1261,8 +1261,8 @@ input.code {
 .trip .ttop i, .trip .tnm i {
   font-style: normal;
   display: inline-flex; align-items: center; justify-content: center;
-  width: 13px; height: 18px; position: relative;
-  font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+  position: relative;
+  font-family: var(--mono); font-weight: 600;
   background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
   box-shadow: inset 0 1px 0 var(--flap-hi), inset 0 -1px 0 var(--flap-lo);
 }
@@ -1272,9 +1272,25 @@ input.code {
 /* ★두 줄 다 **스물두 칸이 폭을 나눠 갖는다** — flex 라 화면이 넓어져도 딱 맞는다.
    자리가 정해져 있으므로 줄마다 칸이 같은 세로줄에 선다. */
 /* ★칸 사이를 **벌린다.** 1px 이면 붙어서 한 띠로 보인다 — 사진 속 판은 칸마다
-   판 바탕이 비쳐서 낱개로 읽힌다. 그 틈이 곧 칸을 칸으로 만든다(2026-09-04). */
-.trip .ttop, .trip .tnm { display: flex; gap: 2px; }
-.trip .ttop i, .trip .tnm i { flex: 1 1 0; width: auto; }
+   판 바탕이 비쳐서 낱개로 읽힌다. 그 틈이 곧 칸을 칸으로 만든다(2026-09-04).
+   ★칸 폭을 **못 박는다**(11.5px). flex 로 나눠 갖게 두면 윗줄 열넷과 이름줄 스물셋이
+     서로 다른 폭이 되어 세로줄이 어긋난다 — 판은 격자가 맞아야 판이다. */
+/* ★★쪽자를 **두 크기**로 쓴다(2026-09-04). 진짜 안내판이 그렇다: 편명·시각은 작은 판,
+     행선지는 큰 판. 한 크기로 맞췄더니 격자는 곱게 이어졌지만 무엇이 중한지가 안 보였다.
+   ★윗줄(언제·며칠·몇 곳)은 작게, 이름줄(어디)은 크게 — 이름이 이 판의 행선지다. */
+.trip .ttop { display: flex; align-items: center; gap: 5px; }
+.trip .tleft { display: flex; gap: 1.5px; flex: 0 0 auto; }
+.trip .tnm { display: flex; gap: 2px; }
+.trip .ttop i { flex: 0 0 9.5px; width: 9.5px; height: 15px; font-size: 10px; }
+.trip .tnm i { flex: 0 0 13px; width: 13px; height: 26px; }
+/* 며칠·몇 곳 — 숫자는 칸에, 이름은 바로 옆에 작게. 자리는 두 자리·세 자리로 잡는다. */
+.trip .tnum { display: flex; align-items: center; gap: 1.5px; flex: 0 0 auto; }
+.trip .tleft + .tnum, .trip .tsx + .tnum { margin-left: auto; }
+.trip .tnum em {
+  font-style: normal; margin-left: 2px;
+  font-family: var(--mono); font-size: 7px; font-weight: 600;
+  letter-spacing: .08em; color: var(--ink-3); text-transform: uppercase;
+}
 
 
 .trip .ttop i.dt { color: var(--route); }
@@ -1290,17 +1306,18 @@ input.code {
 .trip .tsx.on { color: var(--paper); background: var(--route);
   border-radius: var(--r-xs); padding: 1px 4px; flex: 0 0 auto; }
 
-/* 나라 = 항공사 로고 자리. 판에서는 그것도 쪽자 한 장이다.
+/* 나라 = 항공사 로고 자리. 이름 앞에 서서 그 여행의 표지가 된다.
    국기를 못 그리는 기계에서는 두 글자가 한 칸에 들어가므로 글자를 줄인다. */
-.trip .ttop i.fl { font-size: 12px; font-weight: 700; color: var(--ink-2); letter-spacing: -.06em; }
+.trip .tnm i.fl { font-size: 13px; font-weight: 700; color: var(--ink-2); }
+/* 국기를 못 그리는 기계 — 두 글자 코드가 한 칸에 들어가므로 좁은 글자로 눌러 담는다 */
+.trip .tnm i.fl.ab { font-family: var(--mono); font-size: 8px; letter-spacing: -.04em; }
 
 /* 이름은 아랫줄을 통째로 쓴다 — 스물두 칸이라 열세 음절이 넉넉히 앉는다.
    한글은 Plex Mono 에 없으므로 글꼴만 고딕으로 바꾼다(칸 자리는 판의 문법 그대로).
    ★칸은 윗줄과 **같은 세로줄**에 서고 키만 높다 — 그래야 격자가 이어지면서도
      이름이 판에서 제일 큰 글자가 된다. */
 .trip .tnm i {
-  height: 25px;
-  font-family: var(--sans); font-size: 14.5px; font-weight: 700;
+  font-family: var(--sans); font-size: 15px; font-weight: 700;
   letter-spacing: -.02em; color: var(--ink);
 }
 
