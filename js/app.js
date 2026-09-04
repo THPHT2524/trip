@@ -597,8 +597,12 @@
       var from = at === 'r' ? Math.max(0, cols - ch.length) : (at < 0 ? cols + at : at);
       ch.forEach(function (c, i) { if (from + i < cols) slot[from + i] = [c, cls]; });
     });
+    /* ★글자는 **칸 안이 아니라 data-c 에** 담는다(2026-09-04). 칸(까만 판때기)은
+       처음부터 끝까지 그대로 서 있고, 넘어가는 것은 그 안의 글자뿐이다 —
+       css 가 i::after 로 꺼내 그것만 돌린다. 글자를 칸의 내용으로 두면 칸째
+       사라졌다 나타나서, 판이 비었다가 생기는 꼴이 된다. */
     return slot.map(function (v) {
-      return v ? '<i class="' + v[1] + '">' + esc(v[0]) + '</i>' : '<i></i>';
+      return v ? '<i class="' + v[1] + '" data-c="' + esc(v[0]) + '"></i>' : '<i></i>';
     }).join('');
   }
 

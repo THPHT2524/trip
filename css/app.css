@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=257') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=260') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=257') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=260') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=257') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=260') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1261,6 +1261,12 @@ input.code {
      글꼴만 고딕으로 바꾼다(.ko) — 칸 크기는 그대로다. */
 /* ⚠ 레일의 점도 <i> 다 — .trip i 로 잡으면 점이 칸이 된다(2026-09-04에 그랬다).
    칸 규칙은 윗줄과 이름줄에만 건다. */
+/* ★row() 는 글자를 data-c 에 담는다. 칸은 판때기고 글자는 그 위에 놓인 것이라,
+   둘을 따로 두어야 판을 세워 둔 채 글자만 넘길 수 있다.
+   ⚠ row() 를 쓰는 자리는 셋이다 — 윗줄 · 이름줄 · 연도 띠의 수. 하나라도 빠뜨리면
+     그 자리 글자가 통째로 사라진다. */
+.trip .ttop i::after, .trip .tnm i::after, .grouphd .gn i::after { content: attr(data-c); }
+
 .trip .ttop i, .trip .tnm i {
   font-style: normal;
   display: inline-flex; align-items: center; justify-content: center;
@@ -1376,27 +1382,64 @@ input.code {
 
 
 
-/* ★★쪽자는 **스크롤을 따라** 넘어간다. 자리는 처음부터 까맣게 비어 있고, 줄이 화면
-   아래 3분의 1 선을 넘어오면 그때 넘어가며 선다(js 의 revealRows).
+/* ★★쪽자는 **한 칸 한 칸** 넘어간다. 줄이 화면 아래 3분의 1 선을 넘어오면 그때부터
+   왼쪽부터 타타타탁 떨어진다(js 의 revealRows 가 줄에 .on 을 붙인다).
+   ★처음엔 줄 통째로 rotateX 를 걸었는데 두 가지가 틀렸다: 판이 아니라 **줄**이
+     넘어가니 안내판이 아니라 카드 뒤집기였고, 접히는 동안 줄이 납작해져서
+     **가로줄 자국**이 남았다(2026-09-04). 넘어가는 것은 쪽자 한 장이다.
+   ★★넘어가는 것은 **칸이 아니라 글자**다. 까만 판때기는 처음부터 끝까지 그대로
+     서 있고 그 위에서 글자만 떨어진다 — 칸째 돌리면 판이 비었다가 생기는 꼴이라
+     안내판이 아니다(js 의 row() 가 글자를 data-c 에 담고 여기서 ::after 로 꺼낸다).
+   ★안 켜진 글자는 visibility 로 숨긴다. transform 으로 숨기면 아직 안 켜진 글자
+     칠백 장이 전부 3D 변형을 걸고 서 있게 된다 — 숨기는 데 층을 쓰지 않는다.
    ★.reveal 은 **js 가 붙인다.** js 가 안 돌면 안 붙으므로 아무것도 감추지 않는다 —
      감춰 놓고 못 켜면 목록이 통째로 사라진다.
-   ★움직임을 줄여 달라는 설정이면 아래 전역 블록이 시작 자세까지 풀어 준다.
-     전역 규칙은 animation 만 끄므로, 여기서 감춘 것은 여기서 풀어 줘야 한다. */
-.tboard.reveal { perspective: 700px; }
-/* ⚠ 감출 때 **transform 을 쓰지 않는다.** rotateX 를 걸어 두면 줄의 실제 박스가
-   70px → 2.6px 로 접히고, IntersectionObserver 는 그 접힌 박스로 판정하므로 선을
-   넘었는지가 어긋난다 — 한 줄도 안 켜졌다(2026-09-04 실측). 감추는 것은 opacity
-   하나로 하고, 넘어가는 자세는 애니메이션의 첫 프레임이 맡는다(fill-mode: both). */
-.tboard.reveal .trip { --i: 0; opacity: 0; transform-origin: top center; }
-.tboard.reveal .trip.on {
-  animation: tflip .3s cubic-bezier(.2, .75, .3, 1) both;
-  animation-delay: calc(var(--i) * 45ms);
+   ⚠ 레일의 점도 <i> 다. 칸에만 걸리도록 .ttop · .tnm 안으로 좁힌다. */
+.tboard.reveal .trip .ttop i, .tboard.reveal .trip .tnm i { perspective: 90px; }
+.tboard.reveal .trip:not(.on) .ttop i::after,
+.tboard.reveal .trip:not(.on) .tnm i::after { visibility: hidden; }
+.tboard.reveal .trip.on .ttop i::after,
+.tboard.reveal .trip.on .tnm i::after {
+  transform-origin: center top;
+  /* ⚠ both 가 아니라 **backwards** 다. both 면 끝난 뒤에도 마지막 프레임의
+     transform 이 칸에 남아, perspective 조상 아래에서 칸이 계속 투영된다 —
+     줄 한가운데에 가로줄 자국이 그래서 생겼다(2026-09-04 아이폰 실물).
+     backwards 면 기다리는 동안만 첫 프레임을 쓰고 끝나면 아무것도 안 남긴다. */
+  animation: cflip .19s cubic-bezier(.3, .9, .4, 1) backwards;
 }
-@keyframes tflip {
-  from { transform: rotateX(-88deg); opacity: 0; }
-  to   { transform: rotateX(0); opacity: 1; }
-}
-  to   { transform: rotateX(0); opacity: 1; }
+/* 왼쪽부터 차례로. 윗줄이 먼저 떨어지고 이름줄이 뒤따른다 — 이름이 마지막에
+   서야 '어디였는지' 가 맨 나중에 확정되는 안내판의 순서가 된다. */
+.tboard.reveal .trip.on .ttop i:nth-child(1)::after { animation-delay: 0ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(2)::after { animation-delay: 16ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(3)::after { animation-delay: 32ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(4)::after { animation-delay: 48ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(5)::after { animation-delay: 64ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(6)::after { animation-delay: 80ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(7)::after { animation-delay: 96ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(8)::after { animation-delay: 112ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(9)::after { animation-delay: 128ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(10)::after { animation-delay: 144ms; }
+.tboard.reveal .trip.on .ttop i:nth-child(11)::after { animation-delay: 160ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(1)::after { animation-delay: 70ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(2)::after { animation-delay: 94ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(3)::after { animation-delay: 118ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(4)::after { animation-delay: 142ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(5)::after { animation-delay: 166ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(6)::after { animation-delay: 190ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(7)::after { animation-delay: 214ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(8)::after { animation-delay: 238ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(9)::after { animation-delay: 262ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(10)::after { animation-delay: 286ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(11)::after { animation-delay: 310ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(12)::after { animation-delay: 334ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(13)::after { animation-delay: 358ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(14)::after { animation-delay: 382ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(15)::after { animation-delay: 406ms; }
+.tboard.reveal .trip.on .tnm i:nth-child(16)::after { animation-delay: 430ms; }
+@keyframes cflip {
+  from { transform: rotateX(-90deg); }
+  70%  { transform: rotateX(9deg); }
+  to   { transform: rotateX(0); }
 }
 
 /* 미니 레일 — 일정 탭의 세로 레일을 **눕힌 것**이다. 선 하나가 카드를 가로지르고
@@ -1728,9 +1771,10 @@ input.mono { font-family: var(--mono); }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
-  /* ★넘어가기를 끄면 **시작 자세도 풀어야 한다.** 위 규칙은 animation 만 끄는데,
+  /* ★넘어가기를 끄면 **감춘 것도 풀어야 한다.** 위 규칙은 animation 만 끄는데,
      쪽자는 감춰 둔 채로 애니메이션이 켜 주는 구조라 안 풀면 목록이 안 보인다. */
-  .tboard.reveal .trip { opacity: 1 !important; transform: none !important; }
+  .tboard.reveal .trip .ttop i::after,
+  .tboard.reveal .trip .tnm i::after { visibility: visible !important; transform: none !important; }
 }
 
 /* ── 떠다니는 추가 단추 ────────────────────────────────────────────────
