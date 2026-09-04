@@ -182,14 +182,21 @@
      ★끝나면 클래스를 뗀다 — perspective 를 남겨 두지 않는다.
      ★움직임을 줄여 달라는 설정이면 css 의 전역 규칙이 통째로 끈다. */
   function flipOnce(el) {
-    try { if (sessionStorage.getItem('flip1')) return; sessionStorage.setItem('flip1', '1'); }
-    catch (e) { /* 시크릿 모드 등에서 막히면 그냥 한 번 돈다 */ }
+    try { if (sessionStorage.getItem('flip1')) return; }
+    catch (e) { /* 시크릿 모드 등에서 막히면 그냥 돈다 */ }
     const board = el.querySelector('.tboard');
     if (!board) return;
     [...el.querySelectorAll('.trip')].slice(0, 14)
       .forEach((r, i) => r.style.setProperty('--i', i));
     board.classList.add('flip');
-    setTimeout(() => board.classList.remove('flip'), 1200);
+    setTimeout(() => {
+      board.classList.remove('flip');
+      /* ★★표는 **끝나고** 쓴다(2026-09-04). 앞에서 썼더니 판이 한 번도 안 넘어갔다 —
+         부팅 때 목록이 **두 번** 그려지기 때문이다(DB.onAuth 와 boot 가 각각 load 를
+         부른다). 첫 판이 표를 가져가고, 둘째 판은 표가 이미 있으니 그냥 서고, 첫 판의
+         DOM 은 그때 이미 사라진 뒤였다. 끝나고 쓰면 늦게 그려진 판이 대신 넘어간다. */
+      try { sessionStorage.setItem('flip1', '1'); } catch (e) {}
+    }, 1200);
   }
 
   /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
@@ -521,14 +528,6 @@
     </section>`;
   }
 
-  /* 카드 바탕에 깔리는 국기.
-     ★★**크기는 건드리지 않는다.** 장수만큼 폭이 늘어 세 장이 카드의 71% 를 덮길래
-       한때 92 → 58 → 44px 로 줄였는데, 그러자 여러 나라 카드만 혼자 힘이 없어졌다 —
-       서른여덟 장 중 서른다섯이 92px 모노그램인데 셋만 작아서 더 어색했다.
-       폭은 **겹쳐서** 줄인다. 크기를 지키면 카드들이 같은 무게로 선다.
-     ★글자로 떨어지는 곳(윈도우)에서는 **첫 나라만** 깐다. 'ESPTQA' 는 모노그램이
-       아니라 벽이고, 그걸 겹치면 글자 뭉치가 된다 — 여권 국기 줄에서 내린 것과
-       같은 판단이다(겹쳐서 읽히는 것은 그림일 때뿐이다). */
   /* ★★**글자 하나에 칸 하나.** 이게 쪽자판이다 — 배경에 격자를 깔아 두는 것으로는
      안 된다(그건 글자 뒤 벽지지 칸이 아니다. 2026-09-04에 그렇게 만들었다가 되돌렸다).
      한글은 음절이 정사각형이라 라틴 숫자와 같은 칸에 그대로 앉는다. */
@@ -542,12 +541,11 @@
     for (let i = 0; i < len; i++) out += `<i>${i < ch.length ? esc(ch[i]) : ''}</i>`;
     return out;
   };
-  /* ★★한 줄을 **끝에서 끝까지** 칸으로 채운다(2026-09-04). 묶음마다 칸을 세고 사이를
-     벌려 놨더니 격자가 도막도막 끊겼는데, 진짜 판은 판 끝에서 끝까지 한 격자다 —
-     글자가 없는 자리에도 칸이 있고, 그 빈 칸들이 판을 판으로 보이게 한다.
-   ★칸 수는 스물둘. 폭은 flex 가 나눠 가지므로 화면이 넓어져도 딱 맞아떨어진다.
-     날짜 11(08.29-08.31) · 나라 3(ES,PT,QA 가 최대) · 며칠 3 · 몇 곳 3, 사이 둘은 빈칸. */
-  /* 날짜 11(08.29-08.31) + 나라 3 = 열넷이 왼쪽 묶음. 이름줄은 스물다섯으로 끝까지 간다. */
+  /* ★★한 줄을 **끝에서 끝까지** 칸으로 채운다. 글자가 없는 자리에도 칸이 남고,
+     그 빈 칸들이 판을 판으로 보이게 한다 — 진짜 판이 그렇게 생겼다.
+   ★칸은 묶음마다 센다. 묶음 사이는 빈 칸이 아니라 **틈**이라, 한 줄이 하나의
+     격자가 아니라 따로 걸린 판 여럿이다(css 의 .tg 참고).
+     윗줄: 날짜 11(08.29-08.31) · 국가코드 3(ES,PT,QA 가 최대) · 며칠 2 · 몇 곳 3 */
   const DATE_COLS = 11, CC_COLS = 3;
   /* ★국기판은 **늘 두 장**(자리 고정), 이름은 늘 열여섯 칸(칸 폭은 css 가 화면에 맞춰 나눈다).
      자리를 고정하는 것은 줄마다 이름이 같은 데서 시작하게 하려는 것이니 못 박되,
@@ -556,10 +554,11 @@
        국기는 그림이고 뱃지는 글자라, 몇 나라였는지는 어차피 뱃지가 말한다. */
   const FLAG_COLS = 2, NAME_COLS = 16;
 
-  /* 스물두 칸을 만들고 자리를 정해 글자를 꽂는다. 안 꽂힌 칸은 빈 채로 남는다.
-     자리가 음수면 오른쪽 끝에서 센다. */
-  function row(parts, n) {
-    const cols = n || COLS;
+  /* 칸을 cols 개 만들고 자리를 정해 글자를 꽂는다. 안 꽂힌 칸은 빈 채로 남는다.
+     자리가 음수면 오른쪽 끝에서 센다.
+     ⚠ cols 는 **필수**다. 예전엔 `n || COLS` 였는데 COLS 를 묶음별 상수로 쪼개면서
+       그 이름이 사라졌다 — 인자를 빠뜨리면 조용히 비는 게 아니라 던진다. */
+  function row(parts, cols) {
     const slot = new Array(cols).fill(null);
     parts.forEach(function (part) {
       var at = part[0], str = part[1], cls = part[2] || '';
@@ -575,25 +574,23 @@
     }).join('');
   }
 
-  /* 안내판의 **항공사 로고 자리**가 국기 자리다. 나라를 여럿 걸친 여행이면 여러 장을
-     겹쳐 세운다(실제로 넷 있다 — ES,PT,QA 처럼).
-     ★윈도우는 국기를 안 그리고 'JP' 두 글자로 떨어뜨린다. 그때는 코드 칩으로 낸다 —
-       안내판에서는 그 두 글자가 오히려 편명처럼 읽혀서 제 일을 한다. */
   /* 나라 — 판에서는 국기도 쪽자 한 장이다. 못 그리는 기계에서는 두 글자 코드가
-     한 칸에 들어간다(칸이 좁으므로 css 가 글자를 줄인다). */
+     한 칸에 들어간다(칸이 좁으므로 css 가 글자를 줄인다).
+     ★한 나라가 **한 칸**이다. 예전엔 이어 붙인 문자열을 넘겼는데, 국기를 못 그리는
+       기계에서는 'KR' 이 K·R 두 칸으로 쪼개졌다(2026-09-04). 배열로 넘겨 칸을 못 박는다.
+     ⚠ 자르는 수는 FLAG_COLS 에서 받는다. 3 으로 박아 뒀더니 판은 두 칸인데 셋째
+       나라를 만들어 넘기고 row() 가 조용히 버렸다 — 어긋날 자리를 없앤다. */
   function flagChars(country) {
     const codes = U.codeList(country).filter(c => U.flag(c));
     const draw = canDrawFlags();
-    /* ★한 나라가 **한 칸**이다. 예전엔 이어 붙인 문자열을 넘겼는데, 국기를 못 그리는
-       기계에서는 'KR' 이 K·R 두 칸으로 쪼개졌다(2026-09-04). 배열로 넘겨 칸을 못 박는다. */
-    return codes.slice(0, 3).map(c => (draw ? U.flag(c) : c));
+    return codes.slice(0, FLAG_COLS).map(c => (draw ? U.flag(c) : c));
   }
 
   /* 국가코드 뱃지 — 국기와 **따로** 선다. 국기는 이름 앞에서 그림으로 알려 주고,
      이 두 글자는 날짜 옆에서 편명처럼 읽힌다. 안내판의 항공사 코드 자리다.
      한 나라가 한 칸이므로 배열로 넘긴다(위와 같은 이유). */
   function codeChars(country) {
-    return U.codeList(country).slice(0, 3);
+    return U.codeList(country).slice(0, CC_COLS);
   }
 
 
@@ -628,7 +625,7 @@
     const maxDots = days.length > 12 ? 1 : days.length > 7 ? 2 : 4;
     /* 일정이 하나도 없으면 레일을 세우지 않는다 — 빈 칸만 늘어선 회색 선이 스무 줄
        서면 고장 난 것처럼 보인다. 레일이 뜬다는 것 자체가 '계획이 있다' 는 뜻이 된다. */
-    const rail = (days.length && stops.length) ? `<span class="mrail">${days.map(d => {
+    const rail = (days.length && stops.length) ? `<span class="mrail" aria-hidden="true">${days.map(d => {
       const on = stops.filter(r => r.on_date === d);
       return on.length
         ? `<span class="md">${on.slice(0, maxDots).map(r =>
@@ -648,8 +645,15 @@
       stOn = ' on';
     }
 
-    return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      <span class="ttop">
+    /* ★단추의 **이름을 따로 준다**. 안 주면 낭독기가 칸 마흔 개를 이어 붙여
+       '02.14-02.21US8days2places US하와이' 로 읽는다 — 판은 눈으로 보는 물건이고,
+       귀로 듣는 사람에게는 한 문장이어야 한다. 칸들은 통째로 감춘다(aria-hidden). */
+    const say = [esc(t.name), t.start_on ? U.md(t.start_on) + (t.end_on ? ' ~ ' + U.md(t.end_on) : '') : '',
+                 nDays ? nDays + '일' : '', stops.length ? stops.length + '곳' : '', st]
+                .filter(Boolean).join(', ');
+    return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button"
+      data-id="${esc(t.id)}" aria-label="${esc(say)}">
+      <span class="ttop" aria-hidden="true">
         <span class="tg">${row([[0, t.start_on
           ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt']], DATE_COLS)}</span>
         <span class="tg tcc">${row([[0, codeChars(t.country), 'cc']], CC_COLS)}</span>
@@ -657,13 +661,13 @@
         <span class="tnum">${row([['r', nDays || '', 'dy']], 2)}<em>days</em></span>
         <span class="tnum">${row([['r', stops.length || '', 'st']], 3)}<em>places</em></span>
       </span>
-      <span class="tnm">${(() => {
+      <span class="tnm" aria-hidden="true">${(() => {
         /* ★국기를 **이름 앞**에 붙인다(2026-09-04). 윗줄 날짜 뒤에 뒀더니 '언제' 와
            '어디' 가 한 줄에서 붙어 버렸는데, 이름 앞에 오면 국기가 이름의 표지가 된다. */
         const fl = flagChars(t.country);
         const cls = 'fl' + (canDrawFlags() ? '' : ' ab');
         /* 국기판과 이름판을 따로 건다 — 사이의 틈이 둘을 갈라 준다.
-           국기판이 늘 세 장이라 이름은 나라가 몇이든 같은 데서 시작하고 끝난다. */
+           국기판이 늘 두 장이라 이름은 나라가 몇이든 같은 데서 시작한다. */
         return '<span class="tg tfl">' + row([[0, fl, cls]], FLAG_COLS) + '</span>'
              + '<span class="tg">' + row([[0, t.name, 'nm']], NAME_COLS) + '</span>';
       })()}</span>

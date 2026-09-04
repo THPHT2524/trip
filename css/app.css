@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=249') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=251') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=249') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=251') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=249') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=251') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1247,6 +1247,9 @@ input.code {
   line-height: 1.2;
 }
 .trip:nth-of-type(even) { background-color: var(--stripe); }
+/* ★손끝 반응. 70px 짜리 단추인데 눌러도 아무 일이 없었다 — 지금 가 있는 여행에 쓰는
+   것과 같은 물감을 잠깐 얹는다(새 토큰을 만들지 않는다). */
+.trip:active { background-color: var(--onnow); }
 /* 지금 가 있는 여행 — 공항 판이 '출발 중' 을 그렇게 짚어 준다 */
 .trip.is-now { background-color: var(--onnow); box-shadow: inset 3px 0 0 var(--route); }
 
@@ -1326,7 +1329,6 @@ input.code {
 .trip .ttop i.dy, .trip .ttop i.st { color: var(--ink-2); }
 /* 상태 — 안내판의 '지연 · 결항 · 도착' 자리. 지난 여행은 빈칸이다. */
 /* 떠날 때까지 며칠 · 며칠차 — 날짜 밑에 붙는다. 지난 여행에는 없다. */
-.trip .tdt { flex-wrap: wrap; }
 .trip .tsx {
   flex: 0 0 100%; font-style: normal; margin-top: 2px;
   font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
@@ -1372,11 +1374,6 @@ input.code {
   letter-spacing: 0; color: var(--ink);
 }
 
-/* 기간 — 안내판의 탑승구 자리. 며칠·몇 곳을 **한 줄**로 둔다.
-   두 줄로 쌓았더니 줄 높이가 그것 하나 때문에 정해졌다(2026-09-04). */
-.trip .tdy { justify-content: flex-end; }
-.trip .tdy i { color: var(--ink); }
-/* '몇 곳' 은 레일과 같은 줄, 기간 밑에 선다 — 레일이 그 곳들을 찍은 그림이라 나란하다 */
 
 
 /* ★★쪽자가 넘어가듯 줄이 위에서부터 뒤집히며 선다. 한 세션에 한 번만 돈다 —
