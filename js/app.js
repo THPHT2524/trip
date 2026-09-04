@@ -172,34 +172,62 @@
                  + '<div class="tbhd" aria-hidden="true">'
                  + '<span>Date</span><span>To</span><span class="r">Trip</span></div>'
                  + html + '</div>';
-    flipOnce(el);
+    revealRows(el);
   }
 
-  /* ★★쪽자가 넘어가듯 줄이 위에서부터 뒤집히며 선다.
-     ★**한 세션에 한 번만.** 홈은 하루에 몇 번씩 여는 화면이라 매번 돌면 금세 질린다 —
-       앱 안에서 여행에 들어갔다 돌아올 때는 안 돈다.
-     ★보이는 열넷에만 박자를 준다. 그 아래는 어차피 화면 밖이라 기다릴 이유가 없다.
-     ★끝나면 클래스를 뗀다 — perspective 를 남겨 두지 않는다.
-     ★움직임을 줄여 달라는 설정이면 css 의 전역 규칙이 통째로 끈다. */
-  function flipOnce(el) {
-    try { if (sessionStorage.getItem('flip1')) return; }
-    catch (e) { /* 시크릿 모드 등에서 막히면 그냥 돈다 */ }
+  /* ★★쪽자는 **스크롤을 따라** 넘어간다(2026-09-04). 자리는 처음부터 까맣게 비어 있고,
+     줄이 화면 아래 3분의 1 선을 넘어오면 그때 넘어가며 선다 — 진짜 안내판이 그렇다.
+     한 번에 다 넘기지 않는다: 판이 살아 있다는 느낌은 '지금 저 줄이 바뀐다' 에서 온다.
+   ★예전엔 첫 화면 열넷만, 그것도 **한 세션에 한 번**만 돌렸다. 그런데 sessionStorage
+     는 새로고침으로 안 지워져서, 탭을 처음 연 그 순간 한 번 쓰고 나면 그 탭에서는
+     영영 안 돌았다 — 그래서 아무도 못 봤다. 표를 통째로 걷는다.
+   ★IntersectionObserver 가 아니라 **스크롤을 직접 듣는다.** 그쪽이 제 도구이긴 한데
+     preview 브라우저에서 콜백이 아예 안 와서(빈 div 로도 확인) 여기서 검증이 안 된다 —
+     못 보고 내보내느니 재서 확인되는 것을 쓴다. 서른여덟 줄에 rAF 로 묶은 판정
+     한 번이라 값도 안 든다. 다 켜지면 스스로 귀를 뗀다.
+   ★움직임을 줄여 달라는 설정이면 css 가 시작 자세까지 풀어 준다. */
+  let revealStop = null;
+  function revealRows(el) {
+    if (revealStop) revealStop();
     const board = el.querySelector('.tboard');
     if (!board) return;
-    [...el.querySelectorAll('.trip')].slice(0, 14)
-      .forEach((r, i) => r.style.setProperty('--i', i));
-    board.classList.add('flip');
-    setTimeout(() => {
-      board.classList.remove('flip');
-      /* ★★표는 **끝나고** 쓴다(2026-09-04). 앞에서 썼더니 판이 한 번도 안 넘어갔다 —
-         부팅 때 목록이 **두 번** 그려지기 때문이다(DB.onAuth 와 boot 가 각각 load 를
-         부른다). 첫 판이 표를 가져가고, 둘째 판은 표가 이미 있으니 그냥 서고, 첫 판의
-         DOM 은 그때 이미 사라진 뒤였다. 끝나고 쓰면 늦게 그려진 판이 대신 넘어간다. */
-      try { sessionStorage.setItem('flip1', '1'); } catch (e) {}
-    }, 1200);
-  }
+    board.classList.add('reveal');
+    let rest = [...board.querySelectorAll('.trip')];
 
-  /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
+    function check() {
+      const line = innerHeight * 0.67;   // 아래에서 3분의 1
+      /* ★바닥에 닿으면 남은 줄을 다 켠다. 맨 끝 줄들은 더 내릴 데가 없어 선을 못 넘고
+         영영 까맣게 남는다 — 서른여덟 중 서른일곱만 켜졌다(2026-09-04 실측). */
+      const end = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
+      let i = 0;
+      rest = rest.filter(function (r) {
+        if (!end && r.getBoundingClientRect().top > line) return true;
+        /* 한 번에 여럿이 넘어오면(첫 화면·빠른 스크롤) 박자를 준다. 천천히 내리면
+           대개 하나씩이라 박자가 0 이고, 그게 맞다 — 넘어가는 것은 지금 그 줄이다. */
+        r.style.setProperty('--i', i++);
+        r.classList.add('on');
+        return false;
+      });
+      if (!rest.length) revealStop();
+    }
+    /* ⚠ rAF 로 묶지 않는다. 스크롤 핸들러를 rAF 로 미루는 것이 보통이지만, 이 판정은
+       아직 안 켜진 줄만 훑고 그 수가 계속 줄어 마지막엔 0 이 된다 — 묶어서 아낄 것이
+       없다. 그리고 rAF 는 탭이 가려져 있으면 아예 안 돈다. */
+    revealStop = function () {
+      removeEventListener('scroll', check);
+      removeEventListener('resize', check);
+      removeEventListener('pageshow', check);
+      document.removeEventListener('visibilitychange', check);
+      revealStop = null;
+    };
+    addEventListener('scroll', check, { passive: true });
+    addEventListener('resize', check, { passive: true });
+    /* 뒤로 가기로 돌아오거나(bfcache) 가려졌던 탭이 다시 뜨면 한 번 더 본다 —
+       그 사이 스크롤이 옮겨져 있으면 선을 넘은 줄이 까맣게 남는다. */
+    addEventListener('pageshow', check);
+    document.addEventListener('visibilitychange', check);
+    check();
+  }  /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
      연도만 적으면 눈금일 뿐이지만, 옆에 '7 times 41 days' 가 붙으면 그 해의 크기가 읽힌다. */
   /* ★한 해를 **한 상자**로 묶는다. 머리띠가 sticky 인데 상자가 없으면 형제끼리
      같은 자리(top: --h-top)에 겹쳐 붙는다 — 2026 과 2025 가 한 줄에 포개졌다
@@ -706,7 +734,17 @@
   }
 
   // ── 여행 불러오기 ─────────────────────────────────────────────────────
+  /* ★★**한 번에 하나만 돈다.** refresh 를 두 군데서 부른다 — boot 가 마지막에 부르고,
+     DB.onAuth 도 부른다. 평소에는 인증 상태가 안 바뀌어 onAuth 가 조용하지만,
+     로그인하고 돌아온 길에서는 둘 다 울려서 목록을 두 번 받고 두 번 그렸다
+     (판이 노드 2,300 개라 그냥 넘길 낭비가 아니고, 두 번째가 첫 번째의 DOM 을
+      덮어써서 넘어가던 쪽자가 사라지기도 했다).
+   ★가드는 load 에 건다 — 받아 오고 그리는 일이 여기 다 모여 있고, 다른 길
+     (trip:changed 등)은 load 를 거치지 않으므로 막히지 않는다. */
+  let loading = false;
   async function load(openBest) {
+    if (loading) return;
+    loading = true;
     try {
       /* 둘을 나란히 부른다 — 카드가 '여행의 모양' 을 그리려면 둘 다 있어야 하고,
          차례로 부르면 첫 화면이 두 번 왕복만큼 늦어진다. */
@@ -720,7 +758,7 @@
       trips = [];
       $('trips').innerHTML = `<p class="empty"><strong>불러오지 못했습니다</strong>${esc(e.message)}</p>`;
       return;
-    }
+    } finally { loading = false; }
     /* 주소에 여행이 적혀 있으면 그것이 이긴다. 아무것도 안 적혀 있을 때만
        진행 중인 여행으로 바로 들어간다 — 목록을 보러 온 사람을 끌고 가지 않는다. */
     if (openBest && !tripId) {

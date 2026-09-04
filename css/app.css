@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=251') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=257') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=251') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=257') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=251') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=257') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1376,19 +1376,26 @@ input.code {
 
 
 
-/* ★★쪽자가 넘어가듯 줄이 위에서부터 뒤집히며 선다. 한 세션에 한 번만 돈다 —
-   홈은 하루에 몇 번씩 여는 화면이라 매번 돌면 금세 질린다(js/app.js 의 flipOnce).
-   ★끝나면 js 가 클래스를 뗀다 — perspective 를 남겨 두지 않는다.
-   ★움직임을 줄여 달라는 설정이면 아래쪽 전역 규칙이 통째로 끈다. */
-.tboard.flip { perspective: 700px; }
-.tboard.flip .trip {
-  --i: 0;
-  transform-origin: top center;
-  animation: tflip .24s cubic-bezier(.2, .75, .3, 1) both;
-  animation-delay: calc(var(--i) * 26ms);
+/* ★★쪽자는 **스크롤을 따라** 넘어간다. 자리는 처음부터 까맣게 비어 있고, 줄이 화면
+   아래 3분의 1 선을 넘어오면 그때 넘어가며 선다(js 의 revealRows).
+   ★.reveal 은 **js 가 붙인다.** js 가 안 돌면 안 붙으므로 아무것도 감추지 않는다 —
+     감춰 놓고 못 켜면 목록이 통째로 사라진다.
+   ★움직임을 줄여 달라는 설정이면 아래 전역 블록이 시작 자세까지 풀어 준다.
+     전역 규칙은 animation 만 끄므로, 여기서 감춘 것은 여기서 풀어 줘야 한다. */
+.tboard.reveal { perspective: 700px; }
+/* ⚠ 감출 때 **transform 을 쓰지 않는다.** rotateX 를 걸어 두면 줄의 실제 박스가
+   70px → 2.6px 로 접히고, IntersectionObserver 는 그 접힌 박스로 판정하므로 선을
+   넘었는지가 어긋난다 — 한 줄도 안 켜졌다(2026-09-04 실측). 감추는 것은 opacity
+   하나로 하고, 넘어가는 자세는 애니메이션의 첫 프레임이 맡는다(fill-mode: both). */
+.tboard.reveal .trip { --i: 0; opacity: 0; transform-origin: top center; }
+.tboard.reveal .trip.on {
+  animation: tflip .3s cubic-bezier(.2, .75, .3, 1) both;
+  animation-delay: calc(var(--i) * 45ms);
 }
 @keyframes tflip {
   from { transform: rotateX(-88deg); opacity: 0; }
+  to   { transform: rotateX(0); opacity: 1; }
+}
   to   { transform: rotateX(0); opacity: 1; }
 }
 
@@ -1721,6 +1728,9 @@ input.mono { font-family: var(--mono); }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
+  /* ★넘어가기를 끄면 **시작 자세도 풀어야 한다.** 위 규칙은 animation 만 끄는데,
+     쪽자는 감춰 둔 채로 애니메이션이 켜 주는 구조라 안 풀면 목록이 안 보인다. */
+  .tboard.reveal .trip { opacity: 1 !important; transform: none !important; }
 }
 
 /* ── 떠다니는 추가 단추 ────────────────────────────────────────────────
