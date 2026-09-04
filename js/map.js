@@ -60,21 +60,32 @@ const Maps = (function () {
         · 배열(식)이 name 을 참조하면 통째로 치환한다
      ★{ref}·{number} 는 건드리지 않는다 — 국도 방패와 번지수다. */
   const LANG = ['coalesce', ['get', 'name:ko'], ['get', 'name:en'], ['get', 'name']];
+  /* ★★**지명은 사전 순서가 다르다**(2026-09-04). 위 순서는 오사카 골목을 위한 것인데,
+     그걸 지명에도 쓰면 **한국이 로마자로 뜬다** — 한국 지명은 name:ko 를 안 달아 두는
+     곳이 많고(구미·영천·경산) name:en 에는 'Gumi-si' 같은 음차가 들어 있어서, 한글
+     name 을 두고 그 음차가 뽑힌다. 정작 일본은 name:ko 가 있어서 한글로 나온다.
+   ★그래서 **지명·물·산에서만 name 을 영어보다 앞에 둔다.** 여기서 name 은 그 땅에
+     적힌 이름이라, 한국에서는 한글이고 일본에서는 name:ko 가 이미 이겨서 안 쓰인다
+     (위 주석의 실측: 도시 줌에서 name:ko 는 거의 100%).
+   ★가게 이름(poi)은 그대로 둔다 — 거기서 name 을 앞세우면 오사카 골목이 통째로
+     일본어가 된다. 그게 이 순서를 처음 정한 이유다. */
+  const LANG_PLACE = ['coalesce', ['get', 'name:ko'], ['get', 'name'], ['get', 'name:en']];
+  const PLACE_LAYERS = new Set(['place', 'water_name', 'mountain_peak']);
   const NAME_TOKEN = /\{name(?::[\w-]+)?\}/;
   const original = new window.Map();          // layerId → 원래 text-field
 
-  function localized(tf) {
+  function localized(tf, lang) {
     if (typeof tf === 'string') {
       if (!NAME_TOKEN.test(tf)) return null;
-      if (new RegExp('^' + NAME_TOKEN.source + '$').test(tf)) return LANG;
+      if (new RegExp('^' + NAME_TOKEN.source + '$').test(tf)) return lang;
       const parts = tf.split(new RegExp(NAME_TOKEN.source, 'g'));
       const out = ['concat'];
-      parts.forEach((p, i) => { out.push(p); if (i < parts.length - 1) out.push(LANG); });
+      parts.forEach((p, i) => { out.push(p); if (i < parts.length - 1) out.push(lang); });
       return out;
     }
     if (Array.isArray(tf)) {
       const s = JSON.stringify(tf);
-      return (s.includes('"name"') || s.includes('"name:')) ? LANG : null;
+      return (s.includes('"name"') || s.includes('"name:')) ? lang : null;
     }
     return null;
   }
@@ -87,7 +98,8 @@ const Maps = (function () {
       let tf;
       if (original.has(l.id)) tf = original.get(l.id);
       else { tf = map.getLayoutProperty(l.id, 'text-field'); original.set(l.id, tf); }
-      const next = tf == null ? null : localized(tf);
+      const lang = PLACE_LAYERS.has(l['source-layer']) ? LANG_PLACE : LANG;
+      const next = tf == null ? null : localized(tf, lang);
       if (next) map.setLayoutProperty(l.id, 'text-field', next);
     });
   }
