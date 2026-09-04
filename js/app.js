@@ -548,7 +548,11 @@
    ★칸 수는 스물둘. 폭은 flex 가 나눠 가지므로 화면이 넓어져도 딱 맞아떨어진다.
      날짜 11(08.29-08.31) · 나라 3(ES,PT,QA 가 최대) · 며칠 3 · 몇 곳 3, 사이 둘은 빈칸. */
   /* 날짜 11(08.29-08.31) + 나라 3 = 열넷이 왼쪽 묶음. 이름줄은 스물다섯으로 끝까지 간다. */
-  const DATE_COLS = 11, FLAG_COLS = 3, CC_COLS = 3, NAME_COLS = 14;
+  const DATE_COLS = 11, CC_COLS = 3;
+  /* 이름 칸 수는 **국기가 몇 장이냐에 달렸다.** 국기 가로판이 28px 이라 한 장 늘 때마다
+     30px 이 이름에서 빠진다 — 줄의 오른쪽 끝은 늘 같은 자리다(375px 에서 310px 안쪽).
+     제일 긴 이름이 13자('바르셀로나·포르투·리스본', 나라 셋)라 셋일 때가 딱 맞는다. */
+  const NAME_BY_FLAGS = [16, 16, 15, 13];
 
   /* 스물두 칸을 만들고 자리를 정해 글자를 꽂는다. 안 꽂힌 칸은 빈 채로 남는다.
      자리가 음수면 오른쪽 끝에서 센다. */
@@ -657,9 +661,12 @@
         const fl = flagChars(t.country);
         const cls = 'fl' + (canDrawFlags() ? '' : ' ab');
         /* 국기판과 이름판을 따로 건다 — 사이의 틈이 둘을 갈라 준다.
-           국기판이 늘 세 칸이라 이름줄은 나라가 몇이든 같은 데서 시작하고 끝난다. */
-        return '<span class="tg tfl">' + row([[0, fl, cls]], FLAG_COLS) + '</span>'
-             + '<span class="tg">' + row([[0, t.name, 'nm']], NAME_COLS) + '</span>';
+           ★국기판은 **나라 수만큼만** 건다(2026-09-04). 늘 세 장을 잡아 뒀더니 서른여덟
+             중 서른여섯이 한 나라라, 빈 가로판 두 장이 줄마다 60px 을 먹고 이름을
+             오른쪽으로 밀어냈다 — 판을 채우려던 규칙이 판을 비워 놓고 있었다. */
+        const n = Math.max(1, fl.length);
+        return '<span class="tg tfl">' + row([[0, fl, cls]], n) + '</span>'
+             + '<span class="tg">' + row([[0, t.name, 'nm']], NAME_BY_FLAGS[n]) + '</span>';
       })()}</span>
       ${rail}
     </button>`;
