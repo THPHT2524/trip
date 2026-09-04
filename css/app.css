@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=239') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=240') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=239') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=240') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=239') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=240') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1322,9 +1322,20 @@ input.code {
 
 /* 나라 = 항공사 로고 자리. 이름 앞에 서서 그 여행의 표지가 된다.
    국기를 못 그리는 기계에서는 두 글자가 한 칸에 들어가므로 글자를 줄인다. */
-.trip .tnm i.fl { font-size: 13px; font-weight: 700; color: var(--ink-2); }
-/* 국기를 못 그리는 기계 — 두 글자 코드가 한 칸에 들어가므로 좁은 글자로 눌러 담는다 */
-.trip .tnm i.fl.ab { font-family: var(--mono); font-size: 8px; letter-spacing: -.04em; }
+/* ★★국기 쪽자만 **가로판**이다(2026-09-04). 국기 이모지는 가로로 긴 그림(대략 1.4:1)이라
+     13×26 세로 칸에 넣으면 폭을 채울 때 높이가 절반만 찬다. 판을 그림 모양에 맞추면
+     그림이 판을 채운다 — 진짜 안내판의 항공사 로고 쪽자도 가로판이다.
+   ★빈 국기 자리도 같은 폭이라야 한다. 그래서 묶음(.tfl)에 걸지 낱칸(.fl)에 걸지 않는다:
+     나라가 하나인 여행은 뒤의 두 칸이 글자 없는 가로판으로 남는다.
+   ★글자 크기로 채운다 — 이모지는 글자라 자체 여백이 붙어 오므로 칸보다 크게 잡고
+     넘치는 만큼 잘라낸다(overflow). 기계마다 여백이 달라 딱 맞추는 수는 없다. */
+.trip .tnm .tfl i { flex: 0 0 28px; width: 28px; overflow: hidden; }
+.trip .tnm i.fl { font-size: 30px; line-height: 1; letter-spacing: 0; }
+/* 국기를 못 그리는 기계 — 두 글자 코드가 들어온다. 가로판이라 자리는 넉넉하다. */
+.trip .tnm i.fl.ab {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: .02em; color: var(--ink-2);
+}
 
 /* 이름은 아랫줄을 통째로 쓴다 — 스물두 칸이라 열세 음절이 넉넉히 앉는다.
    한글은 Plex Mono 에 없으므로 글꼴만 고딕으로 바꾼다(칸 자리는 판의 문법 그대로).
