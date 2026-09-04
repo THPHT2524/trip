@@ -150,7 +150,15 @@
     [...byYear.keys()].sort().reverse().forEach(y => {
       html += section(y, byYear.get(y), 'past', y !== '언젠가');
     });
-    el.innerHTML = html;
+    /* ★판은 **하나**다. 해마다 상자를 따로 두면 안내판 여러 개가 쌓인 것처럼 보인다 —
+       연도 띠는 그 한 판 안의 구역 머리다.
+     ★칸 이름도 맨 위에 한 번만. 연도 띠가 sticky 라 그 밑에 또 두면 스크롤할 때마다
+       되풀이된다. 영문만 쓴다 — 아래 값만 보면 무슨 칸인지 알고, 한글을 얹으면 두 줄이 된다.
+     ⚠ .tboard 에 overflow:hidden 을 걸지 말 것. 스크롤 상자가 되어 연도 띠의
+       position:sticky 가 화면이 아니라 이 상자에 붙는다(= 안 붙는다). */
+    el.innerHTML = '<div class="tboard"><div class="tbhd" aria-hidden="true">'
+                 + '<span>Date</span><span>To</span><span>Trip</span><span>Days</span></div>'
+                 + html + '</div>';
   }
 
   /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
@@ -166,7 +174,7 @@
          + `<h2 class="grouphd${bare ? ' year' : ''}">`
          + `<span class="gt">${esc(title)}</span>`
          + `<span class="gn">${esc(bits.join(' · '))}</span></h2>`
-         + list.map(t => card(t, ph, bare)).join('')
+         + list.map(t => card(t, ph)).join('')
          + `</section>`;
   }
 
@@ -486,88 +494,58 @@
      ★글자로 떨어지는 곳(윈도우)에서는 **첫 나라만** 깐다. 'ESPTQA' 는 모노그램이
        아니라 벽이고, 그걸 겹치면 글자 뭉치가 된다 — 여권 국기 줄에서 내린 것과
        같은 판단이다(겹쳐서 읽히는 것은 그림일 때뿐이다). */
-  function bgflag(country) {
-    const f = U.flags(country);
-    if (!f.length) return '';
-    const list = canDrawFlags() ? f : f.slice(0, 1);
-    return `<span class="bgflag${list.length > 1 ? ' lap' : ''}" aria-hidden="true">${
-      list.map(x => `<b>${x}</b>`).join('')}</span>`;
+  /* 안내판의 **항공사 로고 자리**가 국기 자리다. 나라를 여럿 걸친 여행이면 여러 장을
+     겹쳐 세운다(실제로 넷 있다 — ES,PT,QA 처럼).
+     ★윈도우는 국기를 안 그리고 'JP' 두 글자로 떨어뜨린다. 그때는 코드 칩으로 낸다 —
+       안내판에서는 그 두 글자가 오히려 편명처럼 읽혀서 제 일을 한다. */
+  function flagCell(country) {
+    const codes = U.codeList(country).filter(c => U.flag(c));
+    if (!codes.length) return '<span class="tfl"></span>';
+    const draw = canDrawFlags();
+    return `<span class="tfl${draw ? ' n' + codes.length : ' ab'}" aria-hidden="true">${
+      codes.map(c => `<b>${draw ? U.flag(c) : esc(c)}</b>`).join('')}</span>`;
   }
 
-  /* ── 여행 카드 ──────────────────────────────────────────────────────────
-     **여행 하나가 경로 하나라면, 카드는 그 경로의 축소판이어야 한다.**
-     날짜 칸이 늘어서고 그 안에 장소구분 색 점이 찍힌다 — 며칠짜리인지, 어느 날이 비었는지,
-     무슨 여행인지(식사 위주냐 관광 위주냐)가 카드만 보고 읽힌다.
-     ★장식이 아니라 정보다. 일정 탭의 레일과 같은 색·같은 어법을 쓴다. */
-  function card(t, phase, bare) {
+
+  /* ── 여행 목록 = 출발 안내판 ────────────────────────────────────────────
+     **목적지와 날짜가 줄줄이 선 목록**이라 애초에 공항 출발 안내판과 같은 물건이다.
+     칸이 고정되면 눈이 세로로 훑는다 — 카드마다 이름·날짜·레일이 제 자리를 잡고 있을
+     때는 '작년 몇 월에 어디' 를 찾으려면 카드를 하나씩 읽어야 했다.
+     Date · To · Trip · Days 넷. 돌아온 날짜는 안 적는다 — 출발일과 기간이 있으면
+     그 날이 나오고, 같은 사실을 두 칸에 적지 않는다.
+   ★★미니 레일을 뺐다(2026-09-04). 카드가 90px 이던 시절 빈자리를 채우던 것인데,
+     줄이 41px 이 되면서 들어갈 자리가 없다. 그 일은 이제 '기간' 과 '기록' 이 맡는다.
+   ★바탕의 큰 국기도 뺐다. 국기가 제 칸을 얻었으니 바탕에 또 깔면 같은 말을 두 번 한다. */
+  function card(t, phase) {
     const mine = shape.filter(r => r.trip_id === t.id);
-    /* 미니 레일과 '일정 N' 은 **장소 줄만** 센다. 결제 줄(parent_id)은 부모 날짜를
-       물려받으므로 같이 세면 점이 두 번 찍히고 개수가 부푼다 — 일정 탭과 같은 규칙이다.
+    /* 장소 줄만 센다 — 결제 줄(parent_id)은 부모 날짜를 물려받아 두 번 세어진다.
        (합계는 mine 전체로 낸다 — 결제 줄에도 돈이 붙어 있다) */
     const stops = mine.filter(r => !r.parent_id);
-    const days = dayList(t, stops);
-    /* ★칸이 좁아지면 점을 줄인다. 21일 여행이면 칸이 13px 인데 점 넷은 26px 라 넘친다 —
-       그때는 '무엇이 있나' 대신 '있나 없나' 까지만 말한다. 넘쳐서 깨지느니 덜 말한다. */
-    const maxDots = days.length > 12 ? 1 : days.length > 7 ? 2 : 4;
-    /* ★일정이 하나도 없으면 레일을 세우지 않는다. 이 레일이 말하는 것은 '여행의 모양'
-       인데, 장소가 없으면 모양이랄 것이 없다 — 빈 칸만 늘어선 회색 선이 스무 장 서면
-       고장 난 것처럼 보인다(2026-09-02, 비행 기록에서 여행 19개를 넣고 나서).
-       ★레일이 뜬다는 것 자체가 '이 여행은 계획이 있다' 는 뜻이 된다. */
-    const rail = (days.length && stops.length) ? `<span class="mrail">${days.map(d => {
-      const on = stops.filter(r => r.on_date === d);
-      return on.length
-        ? `<span class="md">${on.slice(0, maxDots).map(r =>
-            `<i style="--k: var(--${U.kvar(r.kind)})"></i>`).join('')}</span>`
-        : '<span class="md is-empty"></span>';
-    }).join('')}</span>` : '';
+    const sum = MONEY.total(mine, FXS.rateOf).sum;
+    const nDays = U.tripDays(t);
 
-    /* 떠날 때까지 며칠 — 예정된 여행에서 제일 먼저 보고 싶은 숫자다.
-       진행 중이면 '며칠차', 지난 여행은 굳이 세지 않는다(끝난 것에 날짜를 세지 않는다). */
-    let mark = '';
+    /* 날짜 밑에 붙는 한 줄 — 안내판의 '변경시각' 자리다. 떠날 때까지 며칠, 또는 며칠차.
+       지난 여행은 비워 둔다: 끝난 것에 날짜를 세지 않는다. */
+    let under = '';
     if (phase === 'soon' && t.start_on) {
       const n = Math.ceil((Date.parse(t.start_on) - Date.parse(U.todayISO())) / DAYMS);
-      mark = n > 0 ? `D-${n}` : 'D-DAY';
+      under = n > 0 ? `D-${n}` : 'D-DAY';
     } else if (phase === 'now' && t.start_on) {
-      mark = `${Math.floor((Date.parse(U.todayISO()) - Date.parse(t.start_on)) / DAYMS) + 1}일차`;
+      under = `${Math.floor((Date.parse(U.todayISO()) - Date.parse(t.start_on)) / DAYMS) + 1}일차`;
     }
 
-    /* 합계는 js/money.js 한 곳에서 낸다 — 비용 탭·일정 탭과 같은 함수다.
-       (전에는 여기서 따로 셌고, 현금 지갑이 생기면서 곧 갈릴 자리였다) */
-    const sum = MONEY.total(mine, FXS.rateOf).sum;
-
-    /* ★날짜는 **오른쪽 열**로 뺀다. 카드마다 오른쪽 끝에서 줄이 맞으므로 스물넷을
-       훑을 때 눈이 한 세로줄만 따라가면 된다(전에는 곁말 맨 앞에 묻혀 있었다).
-       '지금·예정' 여행은 그 자리를 D-day 가 쓰므로 곁말에 남긴다.
-       ★통화 코드를 채워 넣지 않는다. 전에는 쓴 돈이 없으면 'CNY' 를 적었는데,
-       그건 이 여행에 대해 아무것도 말해 주지 않는 자리 메우기였다. */
-    const nDays = U.tripDays(t);
-    const bits = [];
-    if (!bare) bits.push(fmtSpan(t.start_on, t.end_on, false));
-    else if (nDays) bits.push(`${nDays}일`);
-    if (stops.length) bits.push(`${stops.length}곳`);
-    if (sum) bits.push(U.money(sum, U.SETTLE));
-    const right = bare ? U.range(t.start_on, t.end_on, true) : mark;
-
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      ${bgflag(t.country)}
-      <span class="top2">
-        <span class="nm">${esc(t.name)}</span>
-        ${right ? `<span class="dday${(!bare && phase === 'now') ? ' hot' : ''}${bare ? ' when' : ''}">${esc(right)}</span>` : ''}
-      </span>
-      ${rail}
-      <span class="meta">${esc(bits.join(' · '))}</span>
+      <span class="tdt"><b>${esc(t.start_on ? U.md(t.start_on) : '--.--')}</b>${
+        under ? `<em>${esc(under)}</em>` : ''}</span>
+      ${flagCell(t.country)}
+      <span class="tnm"><b>${esc(t.name)}</b>${
+        sum ? `<em>${esc(U.money(sum, U.SETTLE))}</em>` : ''}</span>
+      <span class="tdy">${nDays ? `<b>${nDays}</b><u>일</u>` : ''}${
+        stops.length ? `<em>${stops.length}곳</em>` : ''}</span>
     </button>`;
   }
 
-  /* 카드에 세울 날짜. 기간이 있으면 **빈 날도 센다** — 비었다는 것도 여행의 모양이다.
-     기간이 없으면 일정이 적힌 날만(없는 날을 지어낼 근거가 없다). 너무 길면 접는다. */
-  function dayList(t, mine) {
-    const has = [...new Set(mine.map(r => r.on_date))].sort();
-    if (!t.start_on || !t.end_on) return has.slice(0, 21);
-    const out = [];
-    for (let d = t.start_on; d <= t.end_on && out.length < 21; d = U.addDays(d, 1)) out.push(d);
-    return out;
-  }
+
 
   /* ★★못 받은 셈을 **다시 묻는다.** 지우지 않는 것만으로는 모자랐다 — 첫 화면에서
      흘려지면 지킬 것도 없어서 여권과 카드의 숫자가 통째로 빠진 채 굳는다.
