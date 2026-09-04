@@ -279,13 +279,19 @@
     const pts = [...seen.values()];
     const c = (p, r) => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r.toFixed(1)}"/>`;
     /* 후광을 **먼저** 다 깔고 점을 얹는다 — 섞어 그리면 옆 점의 후광이 앞 점을 덮는다.
-       ★★반짝임은 **어긋난 박자**로. 스물여섯이 한 박자로 뛰면 지도가 숨쉬는 게 아니라
-         깜빡이는 경고등이 된다. 시작점을 음수로 흩어 저마다 다른 데서 시작하게 한다.
-         자리에서 뽑으므로 다시 그려도 같은 박자다 — 새로 고칠 때마다 튀지 않는다.
+       ★★반짝임은 **박자도 저마다 다르게**. 시작점만 흩고 주기를 5초로 통일했더니
+         스물여섯이 같은 속도로 흐르는 물결이 되어 **반짝이는 것으로 안 보였다**
+         (2026-09-04). 별은 저마다 제 속도로 깜빡인다 — 주기를 2.6~5.8초로 흩는다.
+       ★자리에서 뽑는다. 그래서 다시 그려도 같은 박자고, 새로 고칠 때마다 튀지 않는다.
+         좌표를 섞은 값이라 규칙이 눈에 안 잡힌다(순번으로 뽑으면 줄줄이 늘어선다).
        ★움직임을 줄여 달라는 설정이면 css 의 전역 규칙이 통째로 끈다. */
-    const glow = pts.map((p, i) =>
-      `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(rOf(p.n) * 2).toFixed(1)}"`
-      + ` style="animation-delay:-${((i * 1.37) % 5).toFixed(2)}s"/>`).join('');
+    const glow = pts.map((p) => {
+      const seed = p.x * 7.13 + p.y * 3.71;
+      const dur = 2.6 + (seed % 3.2);
+      const delay = seed % dur;
+      return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(rOf(p.n) * 2).toFixed(1)}"`
+        + ` style="animation-duration:${dur.toFixed(2)}s;animation-delay:-${delay.toFixed(2)}s"/>`;
+    }).join('');
     const dots = pts.map(p => c(p, rOf(p.n))).join('');
     /* 집은 **속이 빈 점**. 다녀온 곳이 아니라 떠나온 곳이라 다르게 그린다. */
     const home = WORLD.at(HOME.lat, HOME.lng);
