@@ -320,11 +320,13 @@ const Maps = (function () {
 
     /* 좌표가 없어 지도에서 빠진 일정을 **반드시 적는다.**
        조용히 빠지면 동선이 틀렸다는 것을 알 방법이 없다. */
+    /* ★★안내문을 **줄였다**(2026-09-05). 폭을 다 쓰는 띠가 늘 떠 있어서 지도를 가렸다.
+       ★'선은 직선입니다' 를 아예 뺐다 — 늘 켜져 있는 말이었고, 점선 자체가 이미 그
+         뜻이다. 상시로 자리를 차지하면서 새로 알려 주는 것이 없는 말이 제일 비싸다.
+       ★좌표 없는 일정은 남긴다. 조용히 빠지면 동선이 틀렸다는 걸 알 방법이 없다 —
+         다만 짧은 조각으로 줄여 왼쪽 아래에만 앉힌다. */
     const note = $('map-note');
-    const parts = [];
-    if (missing) parts.push(`좌표 없는 일정 ${missing} — 지도에 없습니다`);
-    if (lines.length) parts.push('선은 직선입니다 (실제 이동 경로가 아닙니다)');
-    note.textContent = parts.join(' · ');
+    note.textContent = missing ? `좌표 없음 ${missing}` : '';
 
     if (pts.length) {
       const b = new maplibregl.LngLatBounds();

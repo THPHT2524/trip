@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=270') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=272') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=270') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=272') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=270') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=272') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -631,11 +631,14 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--ink); color: var(--paper);
 }
 /* ★안내문도 지도 위로. 좌표 없는 일정이 있을 때만 뜨는 줄이라 늘 자리를 비워 둘 것이 없다. */
-/* 카드 띠가 떠 있으면 안내문은 그 위로 올라간다 */
-.mapwrap:has(#mstrip:not([hidden])) .note { bottom: 96px; }
+/* ★안내문은 **조각**이다. 폭을 다 쓰는 띠였을 때는 늘 떠서 지도를 가렸다 —
+   지도 위에 뜨는 것은 지도만큼 중요할 때만 그럴 자격이 있다.
+   카드 띠가 있으면 그 위, 없으면 바닥에 앉는다. */
+.mapwrap:has(#mstrip:not([hidden])) .note { bottom: 92px; }
 .mapwrap .note {
-  position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 2;
-  margin: 0; padding: 8px 12px;
+  position: absolute; left: 10px; max-width: calc(100% - 20px); bottom: 10px; z-index: 2;
+  margin: 0; padding: 5px 9px;
+  font-size: var(--t-meta); color: var(--ink-3);
   border-radius: var(--r-sm); background: var(--card);
   border: 1px solid var(--line); box-shadow: var(--sh-map);
 }
@@ -650,15 +653,21 @@ a { color: var(--route); text-underline-offset: 2px; }
 .mstrip {
   position: absolute; left: 0; right: 0; bottom: 10px; z-index: 2;
   display: flex; gap: 8px;
-  padding: 0 10px;
+  /* ★양옆 28px 은 **첫 카드와 마지막 카드가 가운데로 올 자리**다. 10px 이었을 때는
+     첫 카드가 왼쪽에 붙어서 열자마자 어긋나 보였다 — 스냅은 스크롤할 곳이 있어야 한다.
+     카드 폭을 안쪽 폭 100% 로 두면 28 + 카드 + 28 이 화면 폭과 같아져 정확히 가운데다. */
+  padding: 0 28px;
   overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory; scroll-padding-inline: 10px;
+  scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .mstrip::-webkit-scrollbar { display: none; }
 .mcard {
-  flex: 0 0 calc(100% - 56px); scroll-snap-align: center;
+  /* ⚠ min-width:0 이 없으면 flex 항목의 기본값(auto)이 **내용 크기**라, 긴 이름 하나가
+     카드를 화면 밖으로 밀어낸다 — 'KOKO HOTEL Osaka Namba Sennichimae' 에서 실제로
+     그랬다(2026-09-05 아이폰). flex-basis 를 줬다고 폭이 지켜지는 게 아니다. */
+  flex: 0 0 100%; min-width: 0; scroll-snap-align: center;
   display: flex; align-items: center; gap: 10px;
   padding: 9px 10px 9px 11px;
   border-radius: var(--r); border: 1px solid var(--line);
@@ -692,10 +701,15 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* 고른 정거장 — 지도에서 한 뼘 크게 서고 남들 앞으로 나온다 */
 .mk.is-on { z-index: 3; }
 .mk.is-on .mpin {
-  transform: scale(1.28);
+  /* ⚠ **아래를 축으로 키운다.** 가운데를 축으로 키웠더니 위로도 자라서 제 이름표를
+     밀고 올라가 글자를 가렸다(2026-09-05 아이폰). 아래끝이 좌표이므로 그 점은
+     그대로 두고 위·옆으로만 벌어지는데, 그 위쪽 3px 은 아래 gap 이 받아 준다. */
+  transform: scale(1.28); transform-origin: bottom center;
   box-shadow: var(--sh-map), 0 0 0 3px var(--paper), 0 0 0 5px var(--route);
 }
-.mk.is-on .mlbl { background: var(--route); color: var(--paper); border-color: var(--route); }
+/* 커진 핀이 이름표에 닿지 않게 한 칸 띄운다 */
+.mk.is-on { gap: 8px; }
+.mk.is-on .mlbl { background: var(--route); color: var(--paper); }
 
 /* 마커 — 레일의 정거장과 같은 어법. 번호는 그날의 순서다. */
 .mpin {
