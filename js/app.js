@@ -172,7 +172,6 @@
                  + '<div class="tbhd" aria-hidden="true">'
                  + '<span>Date</span><span>To</span><span class="r">Trip</span></div>'
                  + html + '</div>';
-    revealRows(el);
   }
 
   /* ★★쪽자는 **스크롤을 따라** 넘어간다(2026-09-04). 자리는 처음부터 까맣게 비어 있고,
@@ -186,119 +185,16 @@
      못 보고 내보내느니 재서 확인되는 것을 쓴다. 서른여덟 줄에 rAF 로 묶은 판정
      한 번이라 값도 안 든다. 다 켜지면 스스로 귀를 뗀다.
    ★움직임을 줄여 달라는 설정이면 css 가 시작 자세까지 풀어 준다. */
-  /* ── 쪽자가 넘어간다 ────────────────────────────────────────────────────
-     ★★기차역·공항 판이 하는 그 동작이다: 쪽자 한 장이 **아무 글자나 여러 장을 훑고
-       지나가다** 제 글자에서 탁 멈춘다. 한 번 접혔다 펴지는 것과는 다르다 — 판이
-       살아 있다는 느낌은 '넘어간 장수' 에서 온다(2026-09-04, 앞의 두 번이 그래서 틀렸다).
-     ★칸마다 시작이 셋에 한 칸씩 어긋나 왼쪽부터 타다다닥 훑는다. 한 줄이 250ms 쯤에
-       다 선다 — 접었다 펴는 것보다 오히려 빠르다.
-     ★훑는 글자는 **판에 실제로 오르는 것들**로만 고른다. 진짜 판도 쪽자 묶음이
-       정해져 있고, 거기 없는 글자는 지나가지 않는다.
-     ⚠ setInterval 하나가 켜진 칸 전부를 몬다. 칸마다 타이머를 걸면 서른여덟 줄에
-       천오백 개가 된다. 다 서면 스스로 멈춘다. */
-  const TICK = 28, SPINS = 4;
-  const POOL_D = [...'0123456789'];
-  const POOL_A = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
-  let POOL_K = [...'서울도쿄오사카교토'];
-
-  function setKoPool(list) {
-    const set = new Set();
-    list.forEach(t => [...(t.name || '')].forEach(c => { if (/[가-힣]/.test(c)) set.add(c); }));
-    if (set.size >= 4) POOL_K = [...set];
-  }
-  const poolOf = c => /[0-9]/.test(c) ? POOL_D
-                    : /[A-Z]/.test(c) ? POOL_A
-                    : /[가-힣]/.test(c) ? POOL_K : null;
-
-  let spinTimer = null, spinning = [];
-  function stopSpin() { if (spinTimer) { clearInterval(spinTimer); spinTimer = null; } }
-  function land(el) { el.dataset.c = el.dataset.f; el.classList.add('set'); }
-
-  function spinRow(row, batch) {
-    let i = 0;
-    row.querySelectorAll('.ttop i[data-c], .tnm i[data-c]').forEach(function (el) {
-      /* ★★제 글자는 **칸 자신에**(data-f) 둔다. 도는 목록에만 들고 있었더니, 목록이
-         비워지는 순간 그 글자를 아무도 모르게 되어 칸이 영영 빈 채로 남았다 —
-         서른여덟 중 열 줄이 그랬다(2026-09-04 실측). 화면에 뜨는 것은 data-c,
-         진짜는 data-f 다. 무슨 일이 있어도 data-f 만 있으면 되돌릴 수 있다. */
-      el.dataset.f = el.dataset.c;
-      el.dataset.c = '';                       // 판때기만 남기고 글자를 비운다
-      spinning.push({ el: el, pool: poolOf(el.dataset.f), at: ((i++ / 3) | 0) + batch * 3, n: 0 });
-    });
-    /* 안전줄 — 도는 목록이 어떻게 되든 이 줄은 1.2초 뒤에 반드시 제 글자로 선다 */
-    setTimeout(function () { landRow(row); }, 1200);
-    if (!spinTimer) spinTimer = setInterval(step, TICK);
-  }
-
-  /* 한 줄을 통째로 제 글자에 앉힌다 — 안전줄이자, 다시 그리기 전 정리 */
-  function landRow(row) {
-    row.querySelectorAll('.ttop i[data-f], .tnm i[data-f]').forEach(function (el) {
-      if (!el.classList.contains('set')) land(el);
-    });
-    spinning = spinning.filter(s => !row.contains(s.el));
-    if (!spinning.length) stopSpin();
-  }
-
-  function step() {
-    spinning = spinning.filter(function (s) {
-      if (s.at > 0) { s.at -= 1; return true; }                 // 아직 제 차례가 아니다
-      if (!s.pool || s.n >= SPINS) { land(s.el); return false; } // 훑을 게 없거나 다 훑었다
-      s.el.dataset.c = s.pool[(Math.random() * s.pool.length) | 0];
-      s.n += 1;
-      return true;
-    });
-    if (!spinning.length) stopSpin();
-  }
-
-  let revealStop = null;
-  function revealRows(el) {
-    if (revealStop) revealStop();
-    /* 다시 그리면 앞 판의 칸은 이미 문서에서 빠졌다 — 여기서만 도는 목록을 비운다 */
-    spinning = [];
-    stopSpin();
-    const board = el.querySelector('.tboard');
-    if (!board) return;
-    board.classList.add('reveal');
-    setKoPool(trips);
-    let rest = [...board.querySelectorAll('.trip')];
-
-    function check() {
-      const line = innerHeight * 0.67;   // 아래에서 3분의 1
-      /* ★바닥에 닿으면 남은 줄을 다 켠다. 맨 끝 줄들은 더 내릴 데가 없어 선을 못 넘고
-         영영 까맣게 남는다 — 서른여덟 중 서른일곱만 켜졌다(2026-09-04 실측). */
-      const end = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
-      let i = 0;
-      rest = rest.filter(function (r) {
-        if (!end && r.getBoundingClientRect().top > line) return true;
-        /* 한 번에 여럿이 넘어오면(첫 화면·빠른 스크롤) 박자를 준다. 천천히 내리면
-           대개 하나씩이라 박자가 0 이고, 그게 맞다 — 넘어가는 것은 지금 그 줄이다. */
-        r.classList.add('on');
-        spinRow(r, i++);
-        return false;
-      });
-      if (!rest.length) revealStop();
-    }
-    /* ⚠ rAF 로 묶지 않는다. 스크롤 핸들러를 rAF 로 미루는 것이 보통이지만, 이 판정은
-       아직 안 켜진 줄만 훑고 그 수가 계속 줄어 마지막엔 0 이 된다 — 묶어서 아낄 것이
-       없다. 그리고 rAF 는 탭이 가려져 있으면 아예 안 돈다. */
-    /* ⚠ 여기서 도는 쪽자를 **건드리지 않는다.** 마지막 줄이 켜지는 순간 이 함수가
-       불리는데, 그때 도는 목록을 비웠더니 아직 훑는 중이던 열 줄이 빈 칸으로 굳었다
-       (2026-09-04). 이 함수가 하는 일은 스크롤에서 귀를 떼는 것뿐이다. */
-    revealStop = function () {
-      removeEventListener('scroll', check);
-      removeEventListener('resize', check);
-      removeEventListener('pageshow', check);
-      document.removeEventListener('visibilitychange', check);
-      revealStop = null;
-    };
-    addEventListener('scroll', check, { passive: true });
-    addEventListener('resize', check, { passive: true });
-    /* 뒤로 가기로 돌아오거나(bfcache) 가려졌던 탭이 다시 뜨면 한 번 더 본다 —
-       그 사이 스크롤이 옮겨져 있으면 선을 넘은 줄이 까맣게 남는다. */
-    addEventListener('pageshow', check);
-    document.addEventListener('visibilitychange', check);
-    check();
-  }  /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
+  /* ★★넘어가기(스플릿 플랩)를 **걷었다**(2026-09-04). 세 번 만들어 세 번 다 화면을
+     나쁘게 했다 — 마지막 것은 동작 자체는 맞았는데 값이 너무 컸다:
+       · content: attr(data-c) 를 칸마다 다섯 번씩 갈아 끼우니 그때마다 그 칸의
+         레이아웃이 다시 계산됐다. 빠르게 훑으면 한 번에 수백 칸이 그 짓을 한다.
+       · 스크롤 한 번에 getBoundingClientRect() 를 서른여덟 번 돌았다.
+       · 한꺼번에 열 줄이 켜지면 마지막 줄은 756ms 뒤에나 시작해서, 그 전에 1.2초
+         안전줄이 먼저 걸려 **애니메이션 없이 툭** 나타났다.
+     다시 넣는다면 (1) 칸마다 글쓰기 한 번, (2) 스크롤 판정은 IntersectionObserver,
+     (3) 실기기에서 확인 — 셋을 다 갖추고 넣는다. 지금은 판이 바로 서는 것이 낫다. */
+ /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
      연도만 적으면 눈금일 뿐이지만, 옆에 '7 times 41 days' 가 붙으면 그 해의 크기가 읽힌다. */
   /* ★한 해를 **한 상자**로 묶는다. 머리띠가 sticky 인데 상자가 없으면 형제끼리
      같은 자리(top: --h-top)에 겹쳐 붙는다 — 2026 과 2025 가 한 줄에 포개졌다
@@ -668,12 +564,8 @@
       var from = at === 'r' ? Math.max(0, cols - ch.length) : (at < 0 ? cols + at : at);
       ch.forEach(function (c, i) { if (from + i < cols) slot[from + i] = [c, cls]; });
     });
-    /* ★글자는 **칸 안이 아니라 data-c 에** 담는다(2026-09-04). 칸(까만 판때기)은
-       처음부터 끝까지 그대로 서 있고, 넘어가는 것은 그 안의 글자뿐이다 —
-       css 가 i::after 로 꺼내 그것만 돌린다. 글자를 칸의 내용으로 두면 칸째
-       사라졌다 나타나서, 판이 비었다가 생기는 꼴이 된다. */
     return slot.map(function (v) {
-      return v ? '<i class="' + v[1] + '" data-c="' + esc(v[0]) + '"></i>' : '<i></i>';
+      return v ? '<i class="' + v[1] + '">' + esc(v[0]) + '</i>' : '<i></i>';
     }).join('');
   }
 
