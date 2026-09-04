@@ -166,8 +166,12 @@
                  + '<div class="tbtop"><span class="pl" aria-hidden="true">✈</span>'
                  + '<b>TRIPLIST</b><em>DEPARTURES</em>'
                  + `<span class="cnt">${cells(trips.length)}<em>times</em></span></div>`
+                 /* ★라벨은 **머리줄에 한 번**. 줄마다 '일 · 곳' 을 붙이면 서른여덟 번
+                    되풀이되고 그만큼 칸을 빼앗긴다 — 안내판이 라벨을 위에 두는 이유다.
+                    flex 비율이 아래 칸 자리(11·5·3·3 = 22)와 같아서 세로로 맞아떨어진다. */
                  + '<div class="tbhd" aria-hidden="true">'
-                 + '<span>Date</span><span>Trip</span><span>Days</span></div>'
+                 + '<span style="flex:11">Date</span><span style="flex:5">To</span>'
+                 + '<span style="flex:3">Days</span><span style="flex:3">Places</span></div>'
                  + html + '</div>';
     flipOnce(el);
   }
@@ -535,25 +539,38 @@
     for (let i = 0; i < len; i++) out += `<i>${i < ch.length ? esc(ch[i]) : ''}</i>`;
     return out;
   };
-  /* 판의 칸 수 — 한 줄이 늘 같은 모양이 되도록 여기서 못 박는다.
-     날짜 11(08.29-08.31) · 나라 3(ES,PT,QA 가 최대) · 며칠 3(12일) · 몇 곳 3(66곳)
-     이름 13(바르셀로나·포르투·리스본이 최대) */
-  const N = { date: 11, flag: 3, days: 3, stop: 3, name: 13 };
+  /* ★★한 줄을 **끝에서 끝까지** 칸으로 채운다(2026-09-04). 묶음마다 칸을 세고 사이를
+     벌려 놨더니 격자가 도막도막 끊겼는데, 진짜 판은 판 끝에서 끝까지 한 격자다 —
+     글자가 없는 자리에도 칸이 있고, 그 빈 칸들이 판을 판으로 보이게 한다.
+   ★칸 수는 스물둘. 폭은 flex 가 나눠 가지므로 화면이 넓어져도 딱 맞아떨어진다.
+     날짜 11(08.29-08.31) · 나라 3(ES,PT,QA 가 최대) · 며칠 3 · 몇 곳 3, 사이 둘은 빈칸. */
+  const COLS = 22;
+
+  /* 스물두 칸을 만들고 자리를 정해 글자를 꽂는다. 안 꽂힌 칸은 빈 채로 남는다.
+     자리가 음수면 오른쪽 끝에서 센다. */
+  function row(parts) {
+    const slot = new Array(COLS).fill(null);
+    parts.forEach(function (part) {
+      var at = part[0], str = part[1], cls = part[2] || '';
+      var ch = [].concat(Array.from(str == null ? '' : String(str)));
+      var from = at < 0 ? COLS + at : at;
+      ch.forEach(function (c, i) { if (from + i < COLS) slot[from + i] = [c, cls]; });
+    });
+    return slot.map(function (v) {
+      return v ? '<i class="' + v[1] + '">' + esc(v[0]) + '</i>' : '<i></i>';
+    }).join('');
+  }
 
   /* 안내판의 **항공사 로고 자리**가 국기 자리다. 나라를 여럿 걸친 여행이면 여러 장을
      겹쳐 세운다(실제로 넷 있다 — ES,PT,QA 처럼).
      ★윈도우는 국기를 안 그리고 'JP' 두 글자로 떨어뜨린다. 그때는 코드 칩으로 낸다 —
        안내판에서는 그 두 글자가 오히려 편명처럼 읽혀서 제 일을 한다. */
-  function flagCell(country) {
+  /* 나라 — 판에서는 국기도 쪽자 한 장이다. 못 그리는 기계에서는 두 글자 코드가
+     한 칸에 들어간다(칸이 좁으므로 css 가 글자를 줄인다). */
+  function flagChars(country) {
     const codes = U.codeList(country).filter(c => U.flag(c));
     const draw = canDrawFlags();
-    /* 국기도 칸에 앉는다 — 판에서는 그것도 쪽자 한 장이다.
-       글자로 떨어지는 기계에서는 두 글자가 한 칸에 들어가므로 칸을 넓혀 준다(.ab). */
-    let out = '';
-    for (let i = 0; i < N.flag; i++) {
-      out += `<i>${i < codes.length ? (draw ? U.flag(codes[i]) : esc(codes[i])) : ''}</i>`;
-    }
-    return `<span class="tfl${draw ? '' : ' ab'}" aria-hidden="true">${out}</span>`;
+    return codes.slice(0, 3).map(c => (draw ? U.flag(c) : c)).join('');
   }
 
 
@@ -609,16 +626,14 @@
     }
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      <span class="ttop">
-        <span class="tdt">${cells(t.start_on
-          ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '')
-          : '', N.date)}</span>
-        ${flagCell(t.country)}
-        <span class="tdy">${cells(nDays ? nDays + '일' : '', N.days)}</span>
-        <span class="tst">${cells(stops.length ? stops.length + '곳' : '', N.stop)}</span>
-        ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
-      </span>
-      <span class="tnm">${cells(t.name, N.name)}</span>
+      <span class="ttop">${row([
+        [0, t.start_on ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt'],
+        [11, flagChars(t.country), 'fl'],
+        [16, nDays || '', 'dy'],
+        [19, stops.length || '', 'st'],
+      ])}</span>
+      ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
+      <span class="tnm">${row([[0, t.name, 'nm']])}</span>
       ${rail}
     </button>`;
   }

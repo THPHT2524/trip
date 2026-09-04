@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=220') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=225') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=220') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=225') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=220') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=225') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -84,8 +84,8 @@
   --onnow:   rgba(43, 74, 203, .07);
   /* ★칸은 **음각**이다 — 판에 파인 자리에 글자가 앉는다. 그래서 판보다 어둡고,
      그림자가 위에·하이라이트가 아래에 온다(볼록한 것과 반대). */
-  --flap-a:  #E2E9E5;
-  --flap-b:  #EBF0ED;
+  --flap-a:  #DFE7E3;
+  --flap-b:  #E7EDEA;
   --flap-hi: rgba(22, 48, 43, .16);
   --flap-lo: rgba(255, 255, 255, .9);
   --route:   #2B4ACB;   /* 구조색: 활성 레일 · 링크 · 초점 */
@@ -183,9 +183,11 @@
     --rail:    #2E4139;
     --stripe:  rgba(255, 255, 255, .024);
     --onnow:   rgba(138, 160, 255, .11);
-    /* 음각 — 판(#16241F)보다 파여서 어둡다 */
-    --flap-a:  #0F1B17;
-    --flap-b:  #16231E;
+    /* 음각 — 판(#16241F)보다 파여서 어둡다.
+       ★아랫면이 #16231E 였을 때는 판 바탕과 같아서 칸 아래쪽 틈이 사라졌다 —
+         칸은 위아래 **전부** 판보다 어두워야 사이가 갈린다(2026-09-04). */
+    --flap-a:  #0D1815;
+    --flap-b:  #111C18;
     --flap-hi: rgba(0, 0, 0, .55);
     --flap-lo: rgba(255, 255, 255, .07);
     --route:   #8AA0FF;
@@ -1204,7 +1206,7 @@ input.code {
 /* ★오른쪽 끝은 안내판의 시계 자리다. 여기엔 **몇 번 다녀왔는지**를 놓는다 —
    시계는 폰이 이미 위에 달고 있고, 이 목록에서 궁금한 것은 시각이 아니라 여행 수다.
    ★그 수도 쪽자에 앉는다. 판 위에서 숫자는 다 그렇게 선다. */
-.tbtop .cnt { margin-left: auto; display: flex; align-items: center; gap: 1px; }
+.tbtop .cnt { margin-left: auto; display: flex; align-items: center; gap: 2px; }
 .tbtop .cnt i {
   font-style: normal; display: inline-flex; align-items: center; justify-content: center;
   width: 14px; height: 19px;
@@ -1220,20 +1222,21 @@ input.code {
 
 /* 칸 이름 — 영문 한 줄, 아주 작게. 사진 속 판이 그렇게 생겼다. */
 .tbhd {
-  display: flex; gap: 8px;
+  display: flex; gap: 2px;
   padding: 7px 12px 5px;
   background: var(--paper); border-bottom: 1px solid var(--line);
   font-family: var(--mono); font-size: 8px; font-weight: 600;
   letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
 }
-.tbhd span:last-child { margin-left: auto; }
+.tbhd span { min-width: 0; }
+.tbhd span:nth-child(3), .tbhd span:nth-child(4) { text-align: right; }
 
 /* 줄 — 선을 긋지 않는다. 한 칸 걸러 살짝 밝게만(안내판이 그렇다). */
 .trip {
   /* ★★**두 층으로 짠다**(2026-09-04). 날짜·국기·기간이 윗줄에 작은 칸으로 서고,
      여행 이름은 **아랫줄을 통째로** 써서 큰 칸에 앉는다 — 한 줄에 다 넣으면 이름 칸이
      열 칸도 안 남아 긴 이름이 잘린다(바르셀로나·포르투·리스본은 열세 음절이다). */
-  display: flex; flex-direction: column; gap: 2px;
+  display: flex; flex-direction: column; gap: 3px;
   width: 100%; text-align: left;
   appearance: none; cursor: pointer; color: inherit; font: inherit;
   /* ★줄 사이 틈(10px)을 없애고 나니 이번엔 빽빽했다 — 그 숨통을 **줄 안으로** 옮긴다.
@@ -1253,8 +1256,10 @@ input.code {
      쪽자판의 그 판때기다. 배경에 격자를 까는 것과는 다르다: 칸이 글자를 따라간다.
    ★한글은 음절이 정사각형이라 숫자와 같은 칸을 쓴다. 다만 Plex Mono 에 한글이 없어
      글꼴만 고딕으로 바꾼다(.ko) — 칸 크기는 그대로다. */
-.trip i {
-  font-style: normal; flex: 0 0 auto;
+/* ⚠ 레일의 점도 <i> 다 — .trip i 로 잡으면 점이 칸이 된다(2026-09-04에 그랬다).
+   칸 규칙은 윗줄과 이름줄에만 건다. */
+.trip .ttop i, .trip .tnm i {
+  font-style: normal;
   display: inline-flex; align-items: center; justify-content: center;
   width: 13px; height: 18px; position: relative;
   font-family: var(--mono); font-size: 11.5px; font-weight: 600;
@@ -1264,15 +1269,16 @@ input.code {
 /* ★가운데 이음매를 뺐다(2026-09-04). 라틴 글자는 선이 지나가도 읽히는데 **한글은
    음절 한가운데를 가로줄이 관통하면 글자가 깨져 보인다** — 제 주 · 도 쿄 가 특히 그랬다.
    판때기의 위·아래 명암만으로도 칸은 충분히 칸으로 읽힌다. */
-.trip .ttop { display: flex; align-items: center; gap: 5px; }
-.trip .tdt, .trip .tdy, .trip .tfl, .trip .tst, .trip .tnm { display: flex; gap: 1px; }
-/* 며칠·몇 곳은 한 덩이로 **맨 오른쪽**. 날짜·국기와 사이를 벌려 둘로 읽히게 한다. */
-.trip .tdy { margin-left: auto; align-items: center; }
-.trip .tdy u { text-decoration: none; font-family: var(--mono); font-size: var(--t-micro);
-  color: var(--ink-3); margin-left: 3px; }
+/* ★두 줄 다 **스물두 칸이 폭을 나눠 갖는다** — flex 라 화면이 넓어져도 딱 맞는다.
+   자리가 정해져 있으므로 줄마다 칸이 같은 세로줄에 선다. */
+/* ★칸 사이를 **벌린다.** 1px 이면 붙어서 한 띠로 보인다 — 사진 속 판은 칸마다
+   판 바탕이 비쳐서 낱개로 읽힌다. 그 틈이 곧 칸을 칸으로 만든다(2026-09-04). */
+.trip .ttop, .trip .tnm { display: flex; gap: 2px; }
+.trip .ttop i, .trip .tnm i { flex: 1 1 0; width: auto; }
 
 
-.trip .tdt i { color: var(--route); }
+.trip .ttop i.dt { color: var(--route); }
+.trip .ttop i.dy, .trip .ttop i.st { color: var(--ink-2); }
 /* 상태 — 안내판의 '지연 · 결항 · 도착' 자리. 지난 여행은 빈칸이다. */
 /* 떠날 때까지 며칠 · 며칠차 — 날짜 밑에 붙는다. 지난 여행에는 없다. */
 .trip .tdt { flex-wrap: wrap; }
@@ -1284,18 +1290,17 @@ input.code {
 .trip .tsx.on { color: var(--paper); background: var(--route);
   border-radius: var(--r-xs); padding: 1px 4px; flex: 0 0 auto; }
 
-/* 나라 = 항공사 로고 자리. 판에서는 그것도 쪽자 한 장이다. */
-.trip .tfl { flex: 0 0 auto; }
-.trip .tfl i { font-size: 13px; font-weight: 400; }
-/* 국기를 못 그리는 기계 — 두 글자가 한 칸에 들어가므로 칸을 넓힌다 */
-.trip .tfl.ab i { width: 21px; font-size: 9px; font-weight: 700; color: var(--ink-2); }
+/* 나라 = 항공사 로고 자리. 판에서는 그것도 쪽자 한 장이다.
+   국기를 못 그리는 기계에서는 두 글자가 한 칸에 들어가므로 글자를 줄인다. */
+.trip .ttop i.fl { font-size: 12px; font-weight: 700; color: var(--ink-2); letter-spacing: -.06em; }
 
-/* 이름은 아랫줄을 통째로 쓴다 — 큰 칸이라 열세 음절도 앉는다.
-   한글은 Plex Mono 에 없으므로 글꼴만 고딕으로 바꾼다(칸 크기는 판의 문법 그대로). */
-.trip .tnm { min-width: 0; overflow: hidden; }
+/* 이름은 아랫줄을 통째로 쓴다 — 스물두 칸이라 열세 음절이 넉넉히 앉는다.
+   한글은 Plex Mono 에 없으므로 글꼴만 고딕으로 바꾼다(칸 자리는 판의 문법 그대로).
+   ★칸은 윗줄과 **같은 세로줄**에 서고 키만 높다 — 그래야 격자가 이어지면서도
+     이름이 판에서 제일 큰 글자가 된다. */
 .trip .tnm i {
-  width: 19px; height: 24px;
-  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  height: 25px;
+  font-family: var(--sans); font-size: 14.5px; font-weight: 700;
   letter-spacing: -.02em; color: var(--ink);
 }
 
@@ -1304,9 +1309,7 @@ input.code {
 .trip .tdy { justify-content: flex-end; }
 .trip .tdy i { color: var(--ink); }
 /* '몇 곳' 은 레일과 같은 줄, 기간 밑에 선다 — 레일이 그 곳들을 찍은 그림이라 나란하다 */
-/* 몇 곳 — 며칠 바로 뒤. 칸 수를 미리 잡아 두므로 빈 칸이 남는다. */
-.trip .tst { flex: 0 0 auto; }
-.trip .tst i { color: var(--ink-3); }
+
 
 /* ★★쪽자가 넘어가듯 줄이 위에서부터 뒤집히며 선다. 한 세션에 한 번만 돈다 —
    홈은 하루에 몇 번씩 여는 화면이라 매번 돌면 금세 질린다(js/app.js 의 flipOnce).
@@ -1392,7 +1395,7 @@ input.code {
 }
 /* 연도는 칩이다 — 안내판의 구역 표시가 늘 상자 안에 들어 있다 */
 /* 연도도 칸에 앉는다 — 같은 판의 문법이다 */
-.grouphd.year .gt { display: flex; gap: 1px; text-transform: none; }
+.grouphd.year .gt { display: flex; gap: 2px; text-transform: none; }
 .grouphd.year .gt i {
   font-style: normal; display: inline-flex; align-items: center; justify-content: center;
   width: 15px; height: 20px; position: relative;
