@@ -21,6 +21,10 @@ const Maps = (function () {
   let map = null, markers = [], route = { type: 'FeatureCollection', features: [] };
   let trip = null, rows = [], days = [], pick = null;
   let spots = [], cur = -1, quiet = false;   // 카드 띠 — quiet 은 되먹임 막기
+  /* ★고른 곳을 **id 로** 기억한다. 일정 탭에 갔다 오면 지도 탭이 통째로 다시 그려지는데,
+     그때 첫 카드로 되돌아가 버렸다(2026-09-05). 자리(번호)가 아니라 그 곳 자체를
+     기억해야 날이 바뀌었는지 돌아온 것인지를 가릴 수 있다. */
+  let lastId = null;
   let onPick = () => {};
 
   /* ── 밑그림 ────────────────────────────────────────────────────────────
@@ -244,6 +248,7 @@ const Maps = (function () {
   /* 고른 표시만 옮긴다 — 지도는 안 건드린다 */
   function mark(i) {
     cur = i;
+    lastId = spots[i] ? spots[i].r.id : null;
     markers.forEach((m, j) => m.getElement().classList.toggle('is-on', j === i));
     [...$('mstrip').children].forEach((c, j) => c.classList.toggle('is-on', j === i));
   }
@@ -257,10 +262,14 @@ const Maps = (function () {
        자리가 1일차에 그대로 남아, 엉뚱한 카드가 가운데 서 있다.
        ★다만 지도는 안 옮긴다 — 날을 막 열었을 때는 그날 전체가 보여야 하고(fitBounds),
          한 곳으로 파고드는 것은 고른 다음의 일이다. */
+    /* 돌아온 것이면 보던 카드로, 날이 바뀐 것이면 첫 카드로 */
+    const back = lastId ? spots.findIndex(x => x.r.id === lastId) : -1;
+    const i = back >= 0 ? back : 0;
     quiet = true;
-    el.scrollLeft = 0;
+    el.scrollLeft = i ? el.children[i].offsetLeft - (el.clientWidth - el.children[i].offsetWidth) / 2 : 0;
     setTimeout(() => { quiet = false; }, 120);
-    mark(0);
+    mark(i);
+    return back >= 0;
   }
 
   /* 가운데에 온 카드를 고른 것으로 본다 */
@@ -326,7 +335,7 @@ const Maps = (function () {
 
     route = { type: 'FeatureCollection', features: lines };
     addRoute();
-    drawStrip();
+    const restored = drawStrip();
 
     /* 좌표가 없어 지도에서 빠진 일정을 **반드시 적는다.**
        조용히 빠지면 동선이 틀렸다는 것을 알 방법이 없다. */
@@ -340,7 +349,11 @@ const Maps = (function () {
     const note = $('map-note');
     note.textContent = '';
 
-    if (pts.length) {
+    if (restored) {
+      /* 보던 곳으로 돌아왔으면 그 곳을 다시 잡는다 — 그날 전체로 물러서지 않는다.
+         크기를 알려 준 뒤에 옮겨야 가운데가 맞다(아래 resize 와 같은 틱). */
+      setTimeout(() => select(cur, false), 0);
+    } else if (pts.length) {
       const b = new maplibregl.LngLatBounds();
       pts.forEach(p => b.extend(p));
       map.fitBounds(b, { padding: 36, maxZoom: 16, animate: false });
