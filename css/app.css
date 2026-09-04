@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=240') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=242') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=240') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=242') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=240') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=242') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1303,9 +1303,13 @@ input.code {
 /* ★국가코드 뱃지 — 판에서 유일하게 **칠해진 칸**이다(2026-09-04). 안내판이 항공사
    코드를 그렇게 낸다: 판때기 하나만 색이 뒤집혀 있어서 줄마다 눈이 거기서 한 번 걸린다.
    국기(이름 앞)와 겹치는 정보지만 하는 일이 다르다 — 저건 그림이고 이건 글자다. */
+/* 뱃지 칸만 넓힌다(9.5 → 15px). 두 글자가 9.5px 안에서 벽에 닿아 있었다 —
+   칠해진 칸이라 그 답답함이 더 보였다. 빈 자리도 같이 넓어야 격자가 맞으므로
+   폭은 낱칸(.cc)이 아니라 묶음(.tcc)에 건다. */
+.trip .ttop .tcc i { flex: 0 0 15px; width: 15px; }
 .trip .ttop i.cc {
   background: var(--route); color: var(--paper);
-  font-size: 8px; font-weight: 700; letter-spacing: -.05em;
+  font-size: 9px; font-weight: 700; letter-spacing: -.01em;
   box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .22);
 }
 .trip .ttop i.dy, .trip .ttop i.st { color: var(--ink-2); }
@@ -1330,7 +1334,12 @@ input.code {
    ★글자 크기로 채운다 — 이모지는 글자라 자체 여백이 붙어 오므로 칸보다 크게 잡고
      넘치는 만큼 잘라낸다(overflow). 기계마다 여백이 달라 딱 맞추는 수는 없다. */
 .trip .tnm .tfl i { flex: 0 0 28px; width: 28px; overflow: hidden; }
-.trip .tnm i.fl { font-size: 30px; line-height: 1; letter-spacing: 0; }
+/* ★34px — 칸(28×26)보다 **일부러 크게** 잡고 넘치는 만큼 잘라낸다. 이모지 국기는
+   글자라 그림 둘레에 여백이 붙어 오는데(그림 높이가 글자 크기의 3/4쯤), 칸에 맞춰
+   잡으면 그 여백까지 칸에 들어와 그림이 판 가운데 조그맣게 뜬다. 키워서 여백을
+   칸 밖으로 밀어내면 그림만 남아 판을 채운다. 좌우로 3할쯤 잘리지만 국기는 대개
+   가로 줄무늬나 단색 바탕이라 가운데만 봐도 읽힌다. */
+.trip .tnm i.fl { font-size: 34px; line-height: 1; letter-spacing: 0; }
 /* 국기를 못 그리는 기계 — 두 글자 코드가 들어온다. 가로판이라 자리는 넉넉하다. */
 .trip .tnm i.fl.ab {
   font-family: var(--mono); font-size: 11px; font-weight: 700;
