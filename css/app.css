@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=267') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=268') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=267') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=268') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=267') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=268') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -474,6 +474,14 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ★손가락 크기. 글자는 11px 그대로 두고 **여백만** 키운다 —
      절대 위치라 카드가 커지지 않는다. 27×22 였고(2026-09-02 측정) 걸으면서
      4px 간격으로 둘을 구별해 눌러야 했다. 한쪽('못 감')은 데이터를 바꾼다. */
+/* ★★**보이는 크기는 그대로, 누르는 자리만 넓힌다**(2026-09-04).
+   .act 는 이 앱에서 제일 자주 누르는 것이고(일정 한 화면에 135개: 메모·지도·못 감·
+   되돌리기·계산기·로그아웃·내보내기) 34px 이었다 — 손가락 권장은 44px 이다.
+   높이를 올리면 정거장 카드가 통째로 커지므로, 안 보이는 겹을 위아래로 5px 씩 덧대
+   44px 로 만든다. 세로 이웃과 98px 떨어져 있어 남의 자리를 뺏지 않는다(실측).
+   ⚠ 가로 이웃과는 2px 밖에 안 떨어져 있다 — 가로는 1px 만 넓힌다. */
+.act { position: relative; }
+.act::after { content: ''; position: absolute; inset: -5px -1px; }
 .act {
   appearance: none; cursor: pointer;
   background: none; border: 0; white-space: nowrap;
@@ -991,7 +999,10 @@ input.code {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 44px; min-height: 35px; padding: 0 14px; border-radius: var(--r-pill);
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
+  position: relative;
 }
+/* 알약을 키우면 띠가 두꺼워진다 — 누르는 자리만 5px 씩 덧댄다(35 → 45px) */
+.daytabs button::after { content: ''; position: absolute; inset: -5px 0; }
 .daytabs button[aria-selected="true"] {
   background: var(--route); border-color: var(--route); color: var(--paper);
 }
@@ -1839,7 +1850,10 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
   padding: 11px 16px; border-radius: var(--r-pill);
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
   box-shadow: var(--sh-lift);
+  position: relative;
 }
+/* 38 → 44px. 이 단추는 떠 있는 것이라 위아래로 걸릴 것이 없다 */
+.hbtn::after { content: ''; position: absolute; inset: -3px 0; }
 /* ★곁 동작은 한 단 작게. 나란히 서면 크기가 같을 때 둘 다 주역처럼 보인다 —
    여는 빈도가 다른 둘이라 무게도 달라야 한다(초대 코드는 초대받은 날 한 번 쓴다). */
 .hbtn:not(.primary) { padding: 9px 13px; font-size: var(--t-meta); color: var(--ink-3); }
