@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=196') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=201') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=196') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=201') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=196') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=201') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1162,13 +1162,14 @@ input.code {
    줄 높이 90px → 41px. 서른여덟 개가 스크롤 절반에 들어온다.
    ⚠ .tboard 에 overflow:hidden 을 걸지 말 것 — 연도 띠의 sticky 가 죽는다. */
 .tboard {
-  margin: 0 var(--pad);
+  /* ★가로 여백을 여기서 주지 않는다. #trips 가 이미 16px 을 주고 있어서 겹치면
+     32px 이 되어 위 여권 카드보다 좁아진다(2026-09-04 실측 311 vs 343). */
   border: 1px solid var(--line); border-radius: var(--r);
   background: var(--card);
 }
 /* 칸 이름 — 영문 한 줄, 아주 작게. 사진 속 판이 그렇게 생겼다. */
 .tbhd {
-  display: grid; grid-template-columns: 48px 62px 1fr 42px; gap: 8px;
+  display: grid; grid-template-columns: 46px 1fr 58px; gap: 8px;
   padding: 7px 12px 5px;
   background: var(--paper); border-bottom: 1px solid var(--line);
   border-radius: var(--r) var(--r) 0 0;
@@ -1179,10 +1180,12 @@ input.code {
 
 /* 줄 — 선을 긋지 않는다. 한 칸 걸러 살짝 밝게만(안내판이 그렇다). */
 .trip {
-  display: grid; grid-template-columns: 48px 62px 1fr 42px; gap: 8px;
+  /* ★가로 사이만 벌린다. gap 하나로 두면 **세로에도 8px** 이 먹어서 레일이 그만큼
+     내려앉고 줄이 51px 이 된다 — 레일과의 간격은 제 margin 이 맡는다(2026-09-04). */
+  display: grid; grid-template-columns: 46px 1fr 58px; gap: 0 8px;
   align-items: center; width: 100%; text-align: left;
   appearance: none; cursor: pointer; color: inherit; font: inherit;
-  background: none; border: 0; padding: 7px 12px;
+  background: none; border: 0; padding: 5px 12px 6px;
   /* ★행간을 조인다. body 의 1.55 가 그대로 내려오면 두 줄짜리 칸이 41px 이 되어
      줄 하나가 57px 이 된다 — 안내판은 촘촘해야 훑힌다(2026-09-04 실측). */
   line-height: 1.2;
@@ -1203,8 +1206,8 @@ input.code {
 }
 .trip.is-now .tdt em { color: var(--route); font-weight: 600; }
 
-/* 나라 = 항공사 로고 자리 */
-.trip .tfl { display: flex; align-items: center; font-size: 15px; line-height: 1; }
+/* 나라 = 항공사 로고 자리. 여행 이름과 한 칸을 쓰므로 제 폭만 차지한다. */
+.trip .tfl { flex: 0 0 auto; display: flex; align-items: center; font-size: 15px; line-height: 1; }
 .trip .tfl b { font-weight: 400; display: inline-block; }
 .trip .tfl.n2 b + b, .trip .tfl.n3 b + b { margin-left: -5px; }
 .trip .tfl.n3 { font-size: 13px; }
@@ -1216,27 +1219,56 @@ input.code {
   border: 1px solid var(--line); border-radius: var(--r-xs); padding: 1px 3px;
 }
 
-.trip .tnm { min-width: 0; }
-.trip .tnm b {
-  display: block; font-size: var(--t-read); font-weight: 700; letter-spacing: -.02em;
+.trip .tnm { min-width: 0; display: flex; align-items: center; gap: 7px; }
+.trip .tnm > b {
+  flex: 0 1 auto; min-width: 0;
+  font-size: var(--t-read); font-weight: 700; letter-spacing: -.02em;
   line-height: 1.25; color: var(--ink);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.trip .tnm em {
-  display: block; font-style: normal; font-family: var(--mono);
-  font-size: var(--t-micro); color: var(--ink-3); margin-top: 1px;
-}
 
-/* 기간 — 숫자 밑에 '몇 곳' 을 작게. 안내판의 탑승구 자리다. */
+/* 기간 — 안내판의 탑승구 자리. 며칠·몇 곳을 **한 줄**로 둔다.
+   두 줄로 쌓았더니 줄 높이가 그것 하나 때문에 정해졌다(2026-09-04). */
 .trip .tdy { text-align: right; font-family: var(--mono); white-space: nowrap; }
 .trip .tdy b { font-size: var(--t-body); font-weight: 600; color: var(--ink); }
 .trip .tdy u {
   text-decoration: none; font-size: var(--t-micro); font-weight: 400;
   color: var(--ink-3); margin-left: 1px;
 }
-.trip .tdy em {
-  display: block; font-style: normal; font-size: var(--t-micro);
-  color: var(--ink-3); margin-top: 1px;
+.trip .tdy em { font-style: normal; font-size: var(--t-micro); color: var(--ink-3); }
+
+/* 미니 레일 — 일정 탭의 세로 레일을 **눕힌 것**이다. 선 하나가 카드를 가로지르고
+   그 위에 정거장이 얹힌다. 날의 경계는 눈금으로 끊는다.
+   ★전에는 날마다 회색 슬래브를 깔았는데, 카드 셋이 나란히 서면 **로딩 스켈레톤처럼**
+     보였다(2026-09-01). 레일은 배경이 아니라 선이다 — 슬래브를 걷고 선을 긋는다. */
+/* ★안내판 줄 **밑을 통째로** 가로지른다. 칸 옆에 끼우면 이름과 자리를 다투는데,
+   아래로 내리면 폭을 다 쓰므로 카드 시절보다 오히려 길다(2026-09-04). */
+.mrail {
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex; align-items: center;
+  height: 10px; margin-top: 3px;
+}
+.mrail::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 2px; margin-top: -1px; border-radius: 1px;
+  background: var(--rail);
+}
+.mrail .md {
+  position: relative; flex: 1 1 0; min-width: 6px; height: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+}
+/* 날의 경계 — 눈금 하나. 며칠짜리인지가 여기서 읽힌다 */
+.mrail .md + .md::before {
+  content: ''; position: absolute; left: 0; top: 3px; bottom: 3px;
+  width: 1px; background: var(--line);
+}
+/* 비어 있는 날은 **레일만 지나간다.** 따로 그리지 않는 것이 곧 '비어 있음' 이다 */
+.mrail i {
+  position: relative;                     /* 레일 위에 온다 */
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--k, var(--k-etc));
+  box-shadow: 0 0 0 1.5px var(--card);    /* 레일이 점을 관통하지 않게 — 노선도의 정거장 */
 }
 
 /* ── 묶음 머리띠 ─────────────────────────────────────────────────────────

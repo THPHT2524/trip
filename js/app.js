@@ -157,7 +157,7 @@
      ⚠ .tboard 에 overflow:hidden 을 걸지 말 것. 스크롤 상자가 되어 연도 띠의
        position:sticky 가 화면이 아니라 이 상자에 붙는다(= 안 붙는다). */
     el.innerHTML = '<div class="tboard"><div class="tbhd" aria-hidden="true">'
-                 + '<span>Date</span><span>To</span><span>Trip</span><span>Days</span></div>'
+                 + '<span>Date</span><span>Trip</span><span>Days</span></div>'
                  + html + '</div>';
   }
 
@@ -511,8 +511,12 @@
      **목적지와 날짜가 줄줄이 선 목록**이라 애초에 공항 출발 안내판과 같은 물건이다.
      칸이 고정되면 눈이 세로로 훑는다 — 카드마다 이름·날짜·레일이 제 자리를 잡고 있을
      때는 '작년 몇 월에 어디' 를 찾으려면 카드를 하나씩 읽어야 했다.
-     Date · To · Trip · Days 넷. 돌아온 날짜는 안 적는다 — 출발일과 기간이 있으면
-     그 날이 나오고, 같은 사실을 두 칸에 적지 않는다.
+     Date · Trip · Days 셋. 돌아온 날짜는 안 적는다 — 출발일과 기간이 있으면 그 날이
+     나오고, 같은 사실을 두 칸에 적지 않는다.
+   ★★국기를 **여행 이름과 한 칸에** 넣는다. 제 칸을 주면 나라가 하나뿐인 여행에서
+     국기 뒤가 40px 넘게 비는데, 그건 여백이 아니라 빈칸이다 — 이름 바로 앞에 붙이면
+     '어디로' 와 '무슨 여행' 이 한 덩이로 읽히기도 한다(2026-09-04).
+   ★금액은 뺐다. 목록에서 고르는 데 쓰는 값이 아니다 — 비용 탭이 그 일을 한다.
    ★★미니 레일을 뺐다(2026-09-04). 카드가 90px 이던 시절 빈자리를 채우던 것인데,
      줄이 41px 이 되면서 들어갈 자리가 없다. 그 일은 이제 '기간' 과 '기록' 이 맡는다.
    ★바탕의 큰 국기도 뺐다. 국기가 제 칸을 얻었으니 바탕에 또 깔면 같은 말을 두 번 한다. */
@@ -521,8 +525,24 @@
     /* 장소 줄만 센다 — 결제 줄(parent_id)은 부모 날짜를 물려받아 두 번 세어진다.
        (합계는 mine 전체로 낸다 — 결제 줄에도 돈이 붙어 있다) */
     const stops = mine.filter(r => !r.parent_id);
-    const sum = MONEY.total(mine, FXS.rateOf).sum;
     const nDays = U.tripDays(t);
+
+    /* ★★미니 레일을 되살렸다(2026-09-04). 안내판으로 바꾸면서 뺐다가, 줄 **밑에
+       한 줄로 길게** 까니 자리를 다투지 않고 들어간다 — 항공편 스트립처럼 읽힌다.
+       칸 셋 아래를 통째로 가로지르므로 카드 시절보다 오히려 길다. */
+    const days = dayList(t, stops);
+    /* 칸이 좁아지면 점을 줄인다. 21일 여행이면 칸이 13px 인데 점 넷은 26px 라 넘친다 —
+       그때는 '무엇이 있나' 대신 '있나 없나' 까지만 말한다. */
+    const maxDots = days.length > 12 ? 1 : days.length > 7 ? 2 : 4;
+    /* 일정이 하나도 없으면 레일을 세우지 않는다 — 빈 칸만 늘어선 회색 선이 스무 줄
+       서면 고장 난 것처럼 보인다. 레일이 뜬다는 것 자체가 '계획이 있다' 는 뜻이 된다. */
+    const rail = (days.length && stops.length) ? `<span class="mrail">${days.map(d => {
+      const on = stops.filter(r => r.on_date === d);
+      return on.length
+        ? `<span class="md">${on.slice(0, maxDots).map(r =>
+            `<i style="--k: var(--${U.kvar(r.kind)})"></i>`).join('')}</span>`
+        : '<span class="md is-empty"></span>';
+    }).join('')}</span>` : '';
 
     /* 날짜 밑에 붙는 한 줄 — 안내판의 '변경시각' 자리다. 떠날 때까지 며칠, 또는 며칠차.
        지난 여행은 비워 둔다: 끝난 것에 날짜를 세지 않는다. */
@@ -537,16 +557,24 @@
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
       <span class="tdt"><b>${esc(t.start_on ? U.md(t.start_on) : '--.--')}</b>${
         under ? `<em>${esc(under)}</em>` : ''}</span>
-      ${flagCell(t.country)}
-      <span class="tnm"><b>${esc(t.name)}</b>${
-        sum ? `<em>${esc(U.money(sum, U.SETTLE))}</em>` : ''}</span>
+      <span class="tnm">${flagCell(t.country)}<b>${esc(t.name)}</b></span>
       <span class="tdy">${nDays ? `<b>${nDays}</b><u>일</u>` : ''}${
-        stops.length ? `<em>${stops.length}곳</em>` : ''}</span>
+        stops.length ? ` <em>${stops.length}곳</em>` : ''}</span>
+      ${rail}
     </button>`;
   }
 
 
 
+  /* 카드에 세울 날짜. 기간이 있으면 **빈 날도 센다** — 비었다는 것도 여행의 모양이다.
+     기간이 없으면 일정이 적힌 날만(없는 날을 지어낼 근거가 없다). 너무 길면 접는다. */
+  function dayList(t, mine) {
+    const has = [...new Set(mine.map(r => r.on_date))].sort();
+    if (!t.start_on || !t.end_on) return has.slice(0, 21);
+    const out = [];
+    for (let d = t.start_on; d <= t.end_on && out.length < 21; d = U.addDays(d, 1)) out.push(d);
+    return out;
+  }
   /* ★★못 받은 셈을 **다시 묻는다.** 지우지 않는 것만으로는 모자랐다 — 첫 화면에서
      흘려지면 지킬 것도 없어서 여권과 카드의 숫자가 통째로 빠진 채 굳는다.
      LTE 에서 두 요청을 나란히 보내면 하나가 흘려지는 일이 있다(2026-09-02 폰에서
@@ -560,7 +588,6 @@
       const again = await DB.trips.shape().catch(() => null);
       if (again && again.length) {
         shape = again; shapeTries = 0; render();
-        FXS.ensure(shape).then(got => { if (got) render(); }).catch(() => {});
       } else if (!again) {
         retryShape();
       }
@@ -589,9 +616,10 @@
       const now = trips.find(t => phase(t) === 'now');
       if (now) { go(now.id, 'plan', true); return; }
     }
+    /* ★환율을 여기서 미리 받지 않는다. 목록에서 금액을 빼고 나니(2026-09-04) 이 화면에
+       돈을 쓰는 데가 없어서, 홈을 열 때마다 아무도 안 읽는 왕복을 하고 있었다.
+       비용·일정 탭은 저마다 FXS.ensure 를 부른다 — 필요한 데서 받으면 된다. */
     render();
-    /* 환율은 기다리지 않는다 — 먼저 그리고, 받아 오면 카드의 합계만 다시 낸다 */
-    FXS.ensure(shape).then(got => { if (got) render(); }).catch(() => {});
   }
 
   // ── 폼 ────────────────────────────────────────────────────────────────
