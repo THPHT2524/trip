@@ -15,7 +15,12 @@ const Plan = (function () {
   let trip = null;      // 지금 여행
   let rows = [];        // 이 여행의 일정 전부
   let days = [];        // 화면에 세울 날짜들
-  let pick = null;      // 고른 날 (null = 전체)
+  /* ★★날짜 탭을 걷었다(2026-09-05). DAY 띠가 sticky 라 내려가는 내내 '지금 몇째 날'
+     을 붙들어 주는데, 탭도 같은 일을 하고 있었다 — 한 화면에서 같은 물음에 두 물건이
+     답하고 있었고, 그중 하나는 44px 을 늘 차지했다.
+     그리고 하루씩 끊어 보면 **날과 날 사이가 안 보인다.** 이 화면의 서명은 정거장
+     사이의 빈 곳(.seg)인데, 마지막 정거장과 다음 날 첫 정거장 사이가 그 값을 가장
+     많이 갖는다. 지도는 하루씩 보는 물건이고 일정은 죽 이어 보는 물건이다. */
   let editing = null;   // 수정 중인 항목 id (null = 새로 추가)
   let loaded = false;   // 이 여행의 일정을 한 번이라도 받았나
   let offline = false;  // 마지막 읽기가 로컬 사본이었나
@@ -168,20 +173,10 @@ const Plan = (function () {
   // ── 그리기 ────────────────────────────────────────────────────────────
   function render() {
     days = buildDays();
-    if (pick && !days.includes(pick)) pick = null;
-    drawDayTabs();
     drawDays();
   }
 
-  function drawDayTabs() {
-    const el = $('daytabs');
-    if (!days.length) { el.innerHTML = ''; el.hidden = true; return; }
-    el.hidden = false;
-    el.innerHTML = days.map((d, i) =>
-      `<button type="button" role="tab" data-day="${esc(d)}" aria-selected="${String(pick === d)}">Day ${i + 1}</button>`
-    ).join('') +
-      `<button type="button" role="tab" data-day="" aria-selected="${String(pick === null)}">전체</button>`;
-  }
+
 
   function drawDays() {
     const el = $('days');
@@ -192,10 +187,9 @@ const Plan = (function () {
       return;
     }
     M = MONEY.total(rows, FXS.rateOf);        // 이번 그리기에서 쓸 셈 한 벌
-    const show = pick ? [pick] : days;
     const nid = nextId();
     el.innerHTML = (offline ? '<p class="note">연결이 없어 마지막으로 받아 둔 일정을 보여줍니다</p>' : '')
-                 + show.map(d => dayHtml(d, days.indexOf(d) + 1, nid)).join('');
+                 + days.map((d, i) => dayHtml(d, i + 1, nid)).join('');
   }
 
   function dayHtml(d, n, nid) {
@@ -371,7 +365,8 @@ const Plan = (function () {
     const today = U.todayISO();
     const inTrip = trip && trip.start_on && trip.end_on
                 && today >= trip.start_on && today <= trip.end_on;
-    $('if-date').value = (r && r.on_date) || pick || (inTrip ? today : '')
+    /* 날짜 탭이 없어졌으므로 '고른 날' 도 없다 — 여행 중이면 오늘, 아니면 첫날 */
+    $('if-date').value = (r && r.on_date) || (inTrip ? today : '')
                       || (trip && trip.start_on) || today;
     $('if-time').value = (r && r.at_time) ? r.at_time.slice(0, 5) : '';
     $('if-kind').value = (r && r.kind) || '기타';
@@ -549,13 +544,6 @@ const Plan = (function () {
   }
 
   // ── 붙이기 ────────────────────────────────────────────────────────────
-  $('daytabs').addEventListener('click', e => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    pick = b.dataset.day || null;
-    drawDayTabs(); drawDays();
-  });
-
   $('days').addEventListener('click', async e => {
     const done = e.target.closest('[data-done]');
     if (done) {
@@ -638,7 +626,7 @@ const Plan = (function () {
       const same = trip && trip.id === t.id;
       trip = t;
       if (same && loaded) { render(); return; }
-      rows = []; pick = null; editing = null; loaded = false;
+      rows = []; editing = null; loaded = false;
       fillForm(null);
       $('days').innerHTML = '<p class="empty">불러오는 중…</p>';
       /* 동행자 목록을 미리 받아 '누가 냈나' 를 채운다.

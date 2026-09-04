@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=282') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=283') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=282') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=283') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=282') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=283') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -146,7 +146,6 @@
      상수 하나로는 맞출 수 없는 값이라 **js/app.js 의 measureShell 이 재서 덮어쓴다.**
      여기 적힌 값은 첫 페인트용 어림값이다 — 잴 것이 아직 없을 때만 쓰인다. */
   --h-top:  64px;       /* 여행 이름 머리말 — 실제 값은 재서 넣는다 */
-  --h-tabs: 44px;       /* 날짜 탭 — 실제 값은 재서 넣는다 */
 
   --rail-x: 15px;       /* 레일의 가로 위치 */
   --gutter: 46px;       /* 레일이 차지하는 왼쪽 폭 */
@@ -285,16 +284,15 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* ── Day 머리띠 ───────────────────────────────────────────────────────── */
 /* 레일이 이 띠를 **뚫고 지나간다**. 여행 하나가 경로 하나라서 끊지 않는다. */
-/* ★sticky 가 셋 겹친다: .top → .daytabs → .dayband.
-   같은 top 을 주면 스크롤할 때 서로를 덮는다 — 쌓인 높이만큼 내려 앉힌다.
-   값은 --h-top·--h-tabs 에서 온다(직접 적지 않는다 — 그래서 어긋났었다). */
+/* ★sticky 가 둘이다: .top → .dayband. 날짜 탭이 사이에 있던 때는 그 높이만큼
+   내려 앉혔는데(--h-tabs), 탭을 걷었으므로 머리말 바로 밑이다. */
 /* ★★홈의 **연도 띠와 같은 띠**로 만든다(2026-09-04). 하는 일이 똑같다: 긴 목록을
    내려가는 동안 '지금 몇째 날을 보고 있나' 를 붙들어 준다. 홈에서 그 문제를 그렇게
    풀었으면 여기서도 같은 물건이어야 두 화면이 한 앱으로 읽힌다.
    바탕은 종이색이 아니라 --sunk, 위아래를 실선으로 끊고, 여백을 조여 구역 표시가
    내용보다 무거워지지 않게 한다(홈에서 47px → 26px 로 낮춘 것과 같은 판단). */
 .dayband {
-  position: sticky; top: calc(var(--h-top) + var(--h-tabs)); z-index: 20;
+  position: sticky; top: var(--h-top); z-index: 20;
   background: var(--sunk);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -569,7 +567,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ★★**가장자리까지 채운다.** 전에는 좌우 16px 여백에 테두리와 둥근 모서리를 두르고
    높이도 620px 로 묶어 뒀는데, 지도는 넓을수록 쓸모가 커지는 화면이다 — 카드처럼
    담아 둘 이유가 없었다(2026-09-04). 날짜 탭 아래부터 탭바 위까지 그대로 찬다.
-   ★높이를 잰 값(--h-top·--h-tabs)으로 짠다 — 손으로 적은 값이 어긋난 적이 두 번이다. */
+   ★높이를 잰 값(--h-top)으로 짠다 — 손으로 적은 값이 어긋난 적이 두 번이다. */
 .mapwrap { position: relative; }
 /* ★★날짜 탭이 지도 위로 올라갔으므로 그 높이를 **안 뺀다**(2026-09-05).
    탭이 지도 밖 한 줄을 차지하던 때는 그만큼 지도가 낮았다 — 밑그림 고르기를
@@ -1078,10 +1076,10 @@ input.code {
 
 /* Day 탭 — 일정 화면에서만. 트리플처럼 날짜를 빠르게 옮긴다 */
 .daytabs {
-  position: sticky; top: var(--h-top); z-index: 25;
+  position: relative; z-index: 25;
   display: flex; gap: 6px; overflow-x: auto;
-  /* ★띠 높이(--h-tabs)는 그대로 두고 **단추만** 키운다 — 바깥 여백을 안쪽으로 옮긴 것뿐이다.
-     36×27 이었다(2026-09-02 측정). sticky 라 한 픽셀도 늘리면 세션 내내 낸다. */
+  /* 바깥 여백을 안쪽으로 옮겨 단추만 키웠다 — 36×27 이었다(2026-09-02 측정).
+     ※ 이제 이 규칙을 쓰는 곳은 지도 탭의 .onmap 하나뿐이다(일정의 날짜 탭은 걷었다). */
   padding: 4px var(--pad);
   background: var(--paper);
   border-bottom: 1px solid var(--line);

@@ -76,7 +76,6 @@
   };
   function measureShell() {
     shellSet('--h-top', document.querySelector('.wrap:not([hidden]) .top'));
-    shellSet('--h-tabs', document.querySelector('.daytabs:not([hidden])'));
   }
   /* 글꼴이 늦게 와도(font-display: swap) 높이가 바뀐다 — 그때 다시 잰다. */
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureShell);
