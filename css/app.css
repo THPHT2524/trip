@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=264') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=265') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=264') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=265') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=264') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=265') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -80,7 +80,7 @@
   --rail:    #C4D0CB;   /* 레일 — 지나온 구간 */
   /* 안내판 줄무늬와 '지금 가 있는 여행'. 선을 긋는 대신 바탕을 한 겹 얹는다 —
      서른여덟 줄에 실선을 그으면 판이 격자가 된다. */
-  --stripe:  rgba(22, 48, 43, .022);
+  --stripe:  rgba(22, 48, 43, .034);
   --onnow:   rgba(43, 74, 203, .07);
   /* ★칸은 **음각**이다 — 판에 파인 자리에 글자가 앉는다. 그래서 판보다 어둡고,
      그림자가 위에·하이라이트가 아래에 온다(볼록한 것과 반대). */
@@ -88,6 +88,8 @@
   --flap-b:  #E7EDEA;
   --flap-hi: rgba(22, 48, 43, .16);
   --flap-lo: rgba(255, 255, 255, .9);
+  /* 글자가 안 걸린 장 — 한 겹 낮춘 판때기. 칸은 그대로 있고 무게만 덜어 낸다 */
+  --flap-off: #D7E0DB;
   --route:   #2B4ACB;   /* 구조색: 활성 레일 · 링크 · 초점 */
   --route-w: #E3E8FB;   /* 코발트의 옅은 바탕 */
   --warn:    #A6392C;
@@ -181,7 +183,7 @@
     --wsea:    #0F1D1A;
     --wland:   #375A50;
     --rail:    #2E4139;
-    --stripe:  rgba(255, 255, 255, .024);
+    --stripe:  rgba(255, 255, 255, .05);
     --onnow:   rgba(138, 160, 255, .11);
     /* 음각 — 판(#16241F)보다 파여서 어둡다.
        ★아랫면이 #16231E 였을 때는 판 바탕과 같아서 칸 아래쪽 틈이 사라졌다 —
@@ -190,6 +192,7 @@
     --flap-b:  #111C18;
     --flap-hi: rgba(0, 0, 0, .55);
     --flap-lo: rgba(255, 255, 255, .07);
+    --flap-off: #0A1310;
     --route:   #8AA0FF;
     --route-w: #1B2440;
     --warn:    #E9877A;
@@ -1222,16 +1225,18 @@ input.code {
 
 /* 칸 이름 — 영문 한 줄, 아주 작게. 사진 속 판이 그렇게 생겼다. */
 .tbhd {
-  display: flex; gap: 6px;
+  /* 틈을 줄과 같은 10px 로 — 6px 이면 'To' 가 국가코드 뱃지보다 4px 앞에 선다(실측) */
+  display: flex; gap: 10px;
   padding: 7px 12px 5px;
   background: var(--paper); border-bottom: 1px solid var(--line);
   font-family: var(--mono); font-size: 8px; font-weight: 600;
   letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
 }
 .tbhd span:first-child { flex: 0 0 120px; }
-.tbhd .r { margin-left: auto; }
 
-/* 줄 — 선을 긋지 않는다. 한 칸 걸러 살짝 밝게만(안내판이 그렇다). */
+/* 줄 — 선을 긋지 않는다. 한 칸 걸러 살짝 밝게만(안내판이 그렇다).
+   ★2.4% 로 뒀더니 쪽자가 줄의 대부분을 덮어서 그 물감이 보일 자리가 틈밖에 없었다 —
+     있으나 마나였다. 보일 만큼만 올린다(어두운 화면 5% · 밝은 화면 3.4%). */
 .trip {
   /* ★★**두 층으로 짠다**(2026-09-04). 날짜·국기·기간이 윗줄에 작은 칸으로 서고,
      여행 이름은 **아랫줄을 통째로** 써서 큰 칸에 앉는다 — 한 줄에 다 넣으면 이름 칸이
@@ -1261,6 +1266,15 @@ input.code {
      글꼴만 고딕으로 바꾼다(.ko) — 칸 크기는 그대로다. */
 /* ⚠ 레일의 점도 <i> 다 — .trip i 로 잡으면 점이 칸이 된다(2026-09-04에 그랬다).
    칸 규칙은 윗줄과 이름줄에만 건다. */
+/* ★★**빈 쪽자는 물러선다**(2026-09-04). 글자가 없는 칸까지 똑같이 도드라지니
+   '발 리' 두 자가 빈 판 열세 장과 같은 무게로 서서, 판이 아니라 격자만 보였다.
+   진짜 판에서도 글자가 걸린 장과 비어 있는 장은 눈에 들어오는 정도가 다르다 —
+   빈 장은 바탕을 한 겹 낮추고 윗면 하이라이트를 뺀다. 칸은 그대로 있고 무게만 준다. */
+.trip .ttop i:empty, .trip .tnm i:empty {
+  background: var(--flap-off);
+  box-shadow: inset 0 -1px 0 var(--flap-lo);
+}
+
 .trip .ttop i, .trip .tnm i {
   font-style: normal;
   display: inline-flex; align-items: center; justify-content: center;

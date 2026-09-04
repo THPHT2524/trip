@@ -168,9 +168,12 @@
                  + `<span class="cnt">${cells(trips.length)}<em>times</em></span></div>`
                  /* ★days·places 는 **숫자 바로 옆**에 붙인다(2026-09-04). 머리줄로 올렸더니
                     스물두 칸 건너에 있어서 무슨 수인지 눈으로 이어야 했다 — 붙어 있어야 읽힌다.
-                    머리줄에는 왼쪽 묶음의 이름만 남긴다. */
+                  ★그래서 머리줄에는 **Date · To 만** 남는다. 'Trip' 을 오른쪽 끝에 뒀었는데
+                    거기 선 것은 여행 이름이 아니라 PLACES 였다(321~346px, 실측) — 머리줄이
+                    가리키는 곳에 그 물건이 없으면 머리줄이 거짓말을 한다. 이름은 아랫줄을
+                    통째로 쓰므로 그 위에 붙일 칸 이름이 애초에 없다. */
                  + '<div class="tbhd" aria-hidden="true">'
-                 + '<span>Date</span><span>To</span><span class="r">Trip</span></div>'
+                 + '<span>Date</span><span>To</span></div>'
                  + html + '</div>';
   }
 
