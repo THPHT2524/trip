@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=201') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=202') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=201') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=202') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=201') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=202') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1169,7 +1169,7 @@ input.code {
 }
 /* 칸 이름 — 영문 한 줄, 아주 작게. 사진 속 판이 그렇게 생겼다. */
 .tbhd {
-  display: grid; grid-template-columns: 46px 1fr 58px; gap: 8px;
+  display: grid; grid-template-columns: 46px 1fr 40px; gap: 8px;
   padding: 7px 12px 5px;
   background: var(--paper); border-bottom: 1px solid var(--line);
   border-radius: var(--r) var(--r) 0 0;
@@ -1182,7 +1182,7 @@ input.code {
 .trip {
   /* ★가로 사이만 벌린다. gap 하나로 두면 **세로에도 8px** 이 먹어서 레일이 그만큼
      내려앉고 줄이 51px 이 된다 — 레일과의 간격은 제 margin 이 맡는다(2026-09-04). */
-  display: grid; grid-template-columns: 46px 1fr 58px; gap: 0 8px;
+  display: grid; grid-template-columns: 46px 1fr 40px; gap: 0 8px;
   align-items: center; width: 100%; text-align: left;
   appearance: none; cursor: pointer; color: inherit; font: inherit;
   background: none; border: 0; padding: 5px 12px 6px;
@@ -1235,7 +1235,11 @@ input.code {
   text-decoration: none; font-size: var(--t-micro); font-weight: 400;
   color: var(--ink-3); margin-left: 1px;
 }
-.trip .tdy em { font-style: normal; font-size: var(--t-micro); color: var(--ink-3); }
+/* '몇 곳' 은 레일과 같은 줄, 기간 밑에 선다 — 레일이 그 곳들을 찍은 그림이라 나란하다 */
+.trip .tst {
+  grid-column: 3; align-self: center; text-align: right;
+  font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3);
+}
 
 /* 미니 레일 — 일정 탭의 세로 레일을 **눕힌 것**이다. 선 하나가 카드를 가로지르고
    그 위에 정거장이 얹힌다. 날의 경계는 눈금으로 끊는다.
@@ -1244,7 +1248,7 @@ input.code {
 /* ★안내판 줄 **밑을 통째로** 가로지른다. 칸 옆에 끼우면 이름과 자리를 다투는데,
    아래로 내리면 폭을 다 쓰므로 카드 시절보다 오히려 길다(2026-09-04). */
 .mrail {
-  grid-column: 1 / -1;
+  grid-column: 1 / 3;
   position: relative;
   display: flex; align-items: center;
   height: 10px; margin-top: 3px;

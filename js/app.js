@@ -517,6 +517,8 @@
      국기 뒤가 40px 넘게 비는데, 그건 여백이 아니라 빈칸이다 — 이름 바로 앞에 붙이면
      '어디로' 와 '무슨 여행' 이 한 덩이로 읽히기도 한다(2026-09-04).
    ★금액은 뺐다. 목록에서 고르는 데 쓰는 값이 아니다 — 비용 탭이 그 일을 한다.
+   ★'몇 곳' 은 **레일 옆**에 둔다. 레일이 곧 그 곳들을 찍은 그림이라 수와 그림이
+     나란히 서고, 위 줄은 날짜·이름·기간 셋으로 조용해진다(2026-09-04).
    ★★미니 레일을 뺐다(2026-09-04). 카드가 90px 이던 시절 빈자리를 채우던 것인데,
      줄이 41px 이 되면서 들어갈 자리가 없다. 그 일은 이제 '기간' 과 '기록' 이 맡는다.
    ★바탕의 큰 국기도 뺐다. 국기가 제 칸을 얻었으니 바탕에 또 깔면 같은 말을 두 번 한다. */
@@ -558,9 +560,9 @@
       <span class="tdt"><b>${esc(t.start_on ? U.md(t.start_on) : '--.--')}</b>${
         under ? `<em>${esc(under)}</em>` : ''}</span>
       <span class="tnm">${flagCell(t.country)}<b>${esc(t.name)}</b></span>
-      <span class="tdy">${nDays ? `<b>${nDays}</b><u>일</u>` : ''}${
-        stops.length ? ` <em>${stops.length}곳</em>` : ''}</span>
+      <span class="tdy">${nDays ? `<b>${nDays}</b><u>일</u>` : ''}</span>
       ${rail}
+      ${stops.length ? `<span class="tst">${stops.length}곳</span>` : ''}
     </button>`;
   }
 
