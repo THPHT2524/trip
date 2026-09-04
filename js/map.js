@@ -241,12 +241,26 @@ const Maps = (function () {
     </article>`;
   }
 
+  /* 고른 표시만 옮긴다 — 지도는 안 건드린다 */
+  function mark(i) {
+    cur = i;
+    markers.forEach((m, j) => m.getElement().classList.toggle('is-on', j === i));
+    [...$('mstrip').children].forEach((c, j) => c.classList.toggle('is-on', j === i));
+  }
+
   function drawStrip() {
     const el = $('mstrip');
-    if (!spots.length) { el.hidden = true; el.innerHTML = ''; return; }
+    if (!spots.length) { el.hidden = true; el.innerHTML = ''; cur = -1; return; }
     el.hidden = false;
     el.innerHTML = spots.map(cardHtml).join('');
-    cur = -1;
+    /* ★날을 바꾸면 **첫 카드로 되돌린다**(2026-09-05). 안 되돌리면 3일차에서 보던
+       자리가 1일차에 그대로 남아, 엉뚱한 카드가 가운데 서 있다.
+       ★다만 지도는 안 옮긴다 — 날을 막 열었을 때는 그날 전체가 보여야 하고(fitBounds),
+         한 곳으로 파고드는 것은 고른 다음의 일이다. */
+    quiet = true;
+    el.scrollLeft = 0;
+    setTimeout(() => { quiet = false; }, 120);
+    mark(0);
   }
 
   /* 가운데에 온 카드를 고른 것으로 본다 */
@@ -263,10 +277,8 @@ const Maps = (function () {
 
   function select(i, scroll) {
     if (i < 0 || i >= spots.length) return;
-    cur = i;
-    markers.forEach((m, j) => m.getElement().classList.toggle('is-on', j === i));
+    mark(i);
     const el = $('mstrip');
-    [...el.children].forEach((c, j) => c.classList.toggle('is-on', j === i));
     if (scroll) {
       /* ⚠ behavior:'smooth' 를 쓰지 않는다. 부드러운 스크롤은 애니메이션 루프가 돌 때만
          움직이는데, 안 돌면 **아무 데도 안 간다** — 조용히 실패한다. 핀을 눌렀는데 띠가
@@ -290,12 +302,10 @@ const Maps = (function () {
 
     const show = pick ? [pick] : days;   // pick 은 open() 이 늘 채운다
     const lines = [], pts = [];
-    let missing = 0;
 
     show.forEach(d => {
       const list = rows.filter(r => r.on_date === d);
       const geo = withGeo(list);
-      missing += list.length - geo.length;
       if (!geo.length) return;
 
       // 하루치 동선 — 이 날 안에서만 잇는다
@@ -320,13 +330,15 @@ const Maps = (function () {
 
     /* 좌표가 없어 지도에서 빠진 일정을 **반드시 적는다.**
        조용히 빠지면 동선이 틀렸다는 것을 알 방법이 없다. */
-    /* ★★안내문을 **줄였다**(2026-09-05). 폭을 다 쓰는 띠가 늘 떠 있어서 지도를 가렸다.
-       ★'선은 직선입니다' 를 아예 뺐다 — 늘 켜져 있는 말이었고, 점선 자체가 이미 그
-         뜻이다. 상시로 자리를 차지하면서 새로 알려 주는 것이 없는 말이 제일 비싸다.
-       ★좌표 없는 일정은 남긴다. 조용히 빠지면 동선이 틀렸다는 걸 알 방법이 없다 —
-         다만 짧은 조각으로 줄여 왼쪽 아래에만 앉힌다. */
+    /* ★★안내문을 **아예 걷었다**(2026-09-05). 남는 것은 진짜 고장났을 때뿐이다
+       (타일이 안 오거나, 이 여행에 좌표가 하나도 없거나 — 아래 두 자리).
+       ★'선은 직선입니다' — 늘 켜져 있는 말이고 점선 자체가 이미 그 뜻이다.
+       ★'좌표 없는 일정 N' — 정상인 화면에서 매번 뜨는 경고는 곧 안 읽히고, 안 읽히는
+         경고는 진짜 문제도 못 알린다. 좌표 없는 장소는 일정 탭에서 지도 단추가 없는
+         것으로 이미 드러난다.
+       ⚠ 이 말들이 자리를 비운 덕에 날짜 탭이 지도 위로 내려올 수 있었다. */
     const note = $('map-note');
-    note.textContent = missing ? `좌표 없음 ${missing}` : '';
+    note.textContent = '';
 
     if (pts.length) {
       const b = new maplibregl.LngLatBounds();

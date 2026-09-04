@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=272') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=278') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=272') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=278') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=272') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=278') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -571,12 +571,15 @@ a { color: var(--route); text-underline-offset: 2px; }
    담아 둘 이유가 없었다(2026-09-04). 날짜 탭 아래부터 탭바 위까지 그대로 찬다.
    ★높이를 잰 값(--h-top·--h-tabs)으로 짠다 — 손으로 적은 값이 어긋난 적이 두 번이다. */
 .mapwrap { position: relative; }
+/* ★★날짜 탭이 지도 위로 올라갔으므로 그 높이를 **안 뺀다**(2026-09-05).
+   탭이 지도 밖 한 줄을 차지하던 때는 그만큼 지도가 낮았다 — 밑그림 고르기를
+   지도 위로 올린 것과 같은 판단이고, 이번엔 44px 을 통째로 돌려받는다. */
 #map {
   /* ★탭바가 **실제로 가리는 것은 48px** 인데 셸은 58px 을 비워 둔다(그 10px 은 어느
      화면에서나 두는 숨통이다). 지도만은 그 10px 까지 쓴다 — 안 그러면 지도와 탭바
      사이에 배경 띠가 남아 '풀화면' 이 아니게 된다. 판의 아래 여백을 그만큼 당겨
      스크롤이 생기지 않게 맞춘다(아래 .pane[data-tab="map"]). */
-  height: calc(100dvh - var(--h-top) - var(--h-tabs) - 48px - env(safe-area-inset-bottom));
+  height: calc(100dvh - var(--h-top) - 48px - env(safe-area-inset-bottom));
   margin: 0;
   background: var(--sunk);
   z-index: 0;                       /* sticky 머리띠·탭바 아래에 둔다 */
@@ -634,7 +637,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ★안내문은 **조각**이다. 폭을 다 쓰는 띠였을 때는 늘 떠서 지도를 가렸다 —
    지도 위에 뜨는 것은 지도만큼 중요할 때만 그럴 자격이 있다.
    카드 띠가 있으면 그 위, 없으면 바닥에 앉는다. */
-.mapwrap:has(#mstrip:not([hidden])) .note { bottom: 92px; }
+.mapwrap:has(#mstrip:not([hidden])) .note { bottom: 121px; }
 .mapwrap .note {
   position: absolute; left: 10px; max-width: calc(100% - 20px); bottom: 10px; z-index: 2;
   margin: 0; padding: 5px 9px;
@@ -643,6 +646,31 @@ a { color: var(--route); text-underline-offset: 2px; }
   border: 1px solid var(--line); box-shadow: var(--sh-map);
 }
 .mapwrap .note:empty { display: none; }
+
+/* ★지도 위에 뜨는 날짜 탭 — 카드 띠 바로 위. 띠가 아니라 **알약만** 떠 있으므로
+   바탕도 밑줄도 없다(알약 하나하나가 이미 제 배경을 갖고 있다).
+   ★크기를 줄인다: 지도 위에 얹는 것은 지도를 가리는 만큼만 자격이 있다.
+     35 → 29px, 글자도 한 단 내린다. 누르는 자리는 겹으로 44px 을 지킨다. */
+.daytabs.onmap {
+  /* ⚠ z-index 3 — 안내문(2)보다 위다. 같은 층에 두면 안내문이 DOM 뒤에 있어서
+     탭 단추의 **누르는 겹 위쪽 8px 을 가져간다**(2026-09-05 실측: 29px 그대로였다).
+     안내문은 누르는 물건이 아니므로 그 가장자리를 내줘도 잃는 것이 없다. */
+  position: absolute; left: 0; right: 0; bottom: 76px; z-index: 3;
+  /* ⚠ 위아래 8px 은 **누르는 겹이 앉을 자리**다. .daytabs 는 overflow-x:auto 라
+     상자 밖으로 나간 것을 잘라 낸다 — 안쪽에 자리를 안 만들어 주면 단추의 ::after
+     겹이 통째로 잘려서 29px 그대로였다(2026-09-05 실측). 여백은 투명하므로
+     눈에 보이는 자리는 안 변한다. */
+  top: auto; padding: 8px var(--pad);
+  background: none; border-bottom: 0;
+  justify-content: center;
+  justify-content: safe center;
+}
+.daytabs.onmap button {
+  min-width: 0; min-height: 29px; padding: 0 11px;
+  font-size: var(--t-cap);
+  box-shadow: var(--sh-map);
+}
+.daytabs.onmap button::after { inset: -8px 0; }
 
 /* ── 정거장 카드 띠 ────────────────────────────────────────────────────
    ★★지도에 핀만 있으면 '이게 뭐였지' 가 생기고, 그걸 풀려고 일정 탭으로 돌아가게 된다.
