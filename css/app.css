@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=202') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=204') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=202') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=204') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=202') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=204') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1155,7 +1155,10 @@ input.code {
   display: flex; flex-direction: column; gap: 10px;
 }
 /* 한 해가 한 상자다 — 머리띠가 제 구간에서만 붙어 있게 하는 울타리다(js 의 section) */
-.ygroup { display: flex; flex-direction: column; gap: 10px; }
+/* ★★줄 사이를 **붙인다.** 카드 시절의 10px 틈이 그대로 남아 있었는데, 안내판에서는
+   그 틈이 칠해지지 않아 **줄무늬만 좁아 보였다** — 어두운 줄은 위아래 틈까지 이어져
+   63px 로 읽히고 밝은 줄은 43px 만 칠해진다(2026-09-04 실측). 판은 붙어 있어야 판이다. */
+.ygroup { display: flex; flex-direction: column; }
 /* ★★목록을 **출발 안내판**으로 짰다(2026-09-04). 목적지와 날짜가 줄줄이 선 목록이라
    애초에 공항 안내판과 같은 물건이다. 칸이 고정되니 눈이 세로로 훑는다 —
    카드 시절에는 '작년 몇 월에 어디' 를 찾으려면 카드를 하나씩 읽어야 했다.
@@ -1297,10 +1300,13 @@ input.code {
    ★새 자리를 만들지 않는다. 이미 흐름에 있던 줄을 머리말 밑에 붙일 뿐이라
      상시로 내주는 화면이 없다. 옆의 '여행 7 · 41일' 도 같이 따라다닌다. */
 /* ★판 안의 **구역 머리**다(사진 속 판의 D·E 자리). 판 밖에 있던 띠를 안으로 들이면서
-   가로 여백을 줄에 맞추고, 위아래를 실선으로 끊어 구역임을 분명히 한다. */
+   가로 여백을 줄에 맞추고, 위아래를 실선으로 끊어 구역임을 분명히 한다.
+   ★★**띠가 여행 줄보다 컸다** — 47px 대 43px, 열 개면 470px 로 판의 19% 였다
+     (2026-09-04 실측). 구역 표시가 내용보다 무거우면 목록이 아니라 목차가 된다.
+     여백과 칩을 줄여 26px 로 낮췄다. 이제 한눈에 '이건 표지, 저건 내용' 으로 갈린다. */
 .grouphd.year {
   position: sticky; top: var(--h-top); z-index: 20;
-  margin: 0; padding: 9px 12px 8px;
+  margin: 0; padding: 4px 12px;
   background: var(--sunk);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
@@ -1308,10 +1314,11 @@ input.code {
 /* 연도는 칩이다 — 안내판의 구역 표시가 늘 상자 안에 들어 있다 */
 .grouphd.year .gt {
   font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: var(--t-read); font-weight: 600; letter-spacing: .04em;
+  font-size: var(--t-body); font-weight: 600; letter-spacing: .04em;
   color: var(--paper); background: var(--route);
-  padding: 2px 8px; border-radius: var(--r-xs); text-transform: none;
+  padding: 1px 7px; border-radius: var(--r-xs); text-transform: none;
 }
+.grouphd.year .gn { font-size: var(--t-micro); }
 
 
 /* ── 만들기 · 참여하기 ────────────────────────────────────────────────── */
