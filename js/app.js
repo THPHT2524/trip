@@ -159,12 +159,13 @@
     /* ★★판이 제가 무슨 판인지 **선언한다**(2026-09-04). 칸 이름만 있으면 표로 시작하는데,
        안내판은 늘 머리에 이름과 시계를 단다. 위 여권 카드가 TRIPLOG · PASSPORT 라
        둘이 **여권과 출발 안내판 한 쌍**이 된다.
-     ★오른쪽 끝은 시계 자리인데, 이 판에는 **몇 편이 서 있는지**를 놓는다. 시계는 폰이
-       이미 위에 달고 있고, 이 목록에서 궁금한 것은 시각이 아니라 여행이 몇 번인지다. */
+     ★오른쪽 끝은 시계 자리인데, 이 판에는 **몇 번 다녀왔는지**를 놓는다. 시계는 폰이
+       이미 위에 달고 있고, 이 목록에서 궁금한 것은 시각이 아니라 여행 수다.
+     ★그 수도 쪽자에 앉는다 — 판 위에서 숫자는 다 그렇게 선다. */
     el.innerHTML = '<div class="tboard">'
                  + '<div class="tbtop"><span class="pl" aria-hidden="true">✈</span>'
                  + '<b>TRIPLIST</b><em>DEPARTURES</em>'
-                 + `<span class="cnt">${trips.length}편</span></div>`
+                 + `<span class="cnt">${cells(trips.length)}<em>times</em></span></div>`
                  + '<div class="tbhd" aria-hidden="true">'
                  + '<span>Date</span><span>Trip</span><span>Days</span></div>'
                  + html + '</div>';

@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=218') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=220') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=218') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=220') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=218') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=220') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1201,12 +1201,21 @@ input.code {
   font-style: normal; font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: .2em; color: var(--ink-3);
 }
-/* ★오른쪽 끝은 안내판의 시계 자리다. 여기엔 **몇 편이 서 있는지**를 놓는다 —
-   시계는 폰이 이미 위에 달고 있고, 이 목록에서 궁금한 것은 시각이 아니라 여행 수다. */
-.tbtop .cnt {
-  margin-left: auto; font-family: var(--mono); font-size: var(--t-read);
-  font-weight: 600; letter-spacing: .04em; color: var(--route);
-  font-variant-numeric: tabular-nums;
+/* ★오른쪽 끝은 안내판의 시계 자리다. 여기엔 **몇 번 다녀왔는지**를 놓는다 —
+   시계는 폰이 이미 위에 달고 있고, 이 목록에서 궁금한 것은 시각이 아니라 여행 수다.
+   ★그 수도 쪽자에 앉는다. 판 위에서 숫자는 다 그렇게 선다. */
+.tbtop .cnt { margin-left: auto; display: flex; align-items: center; gap: 1px; }
+.tbtop .cnt i {
+  font-style: normal; display: inline-flex; align-items: center; justify-content: center;
+  width: 14px; height: 19px;
+  font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--route);
+  background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
+  box-shadow: inset 0 1px 0 var(--flap-hi), inset 0 -1px 0 var(--flap-lo);
+}
+.tbtop .cnt em {
+  font-style: normal; margin-left: 5px;
+  font-family: var(--mono); font-size: var(--t-micro);
+  letter-spacing: .16em; color: var(--ink-3);
 }
 
 /* 칸 이름 — 영문 한 줄, 아주 작게. 사진 속 판이 그렇게 생겼다. */
@@ -1257,7 +1266,8 @@ input.code {
    판때기의 위·아래 명암만으로도 칸은 충분히 칸으로 읽힌다. */
 .trip .ttop { display: flex; align-items: center; gap: 5px; }
 .trip .tdt, .trip .tdy, .trip .tfl, .trip .tst, .trip .tnm { display: flex; gap: 1px; }
-.trip .tdy { align-items: center; }
+/* 며칠·몇 곳은 한 덩이로 **맨 오른쪽**. 날짜·국기와 사이를 벌려 둘로 읽히게 한다. */
+.trip .tdy { margin-left: auto; align-items: center; }
 .trip .tdy u { text-decoration: none; font-family: var(--mono); font-size: var(--t-micro);
   color: var(--ink-3); margin-left: 3px; }
 
@@ -1294,8 +1304,8 @@ input.code {
 .trip .tdy { justify-content: flex-end; }
 .trip .tdy i { color: var(--ink); }
 /* '몇 곳' 은 레일과 같은 줄, 기간 밑에 선다 — 레일이 그 곳들을 찍은 그림이라 나란하다 */
-/* 몇 곳 — 윗줄 오른쪽 끝. 칸 수를 미리 잡아 두므로 빈 칸이 남는다. */
-.trip .tst { margin-left: auto; }
+/* 몇 곳 — 며칠 바로 뒤. 칸 수를 미리 잡아 두므로 빈 칸이 남는다. */
+.trip .tst { flex: 0 0 auto; }
 .trip .tst i { color: var(--ink-3); }
 
 /* ★★쪽자가 넘어가듯 줄이 위에서부터 뒤집히며 선다. 한 세션에 한 번만 돈다 —
