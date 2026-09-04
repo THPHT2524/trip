@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=247') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=249') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=247') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=249') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=247') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=249') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1292,6 +1292,14 @@ input.code {
    음절이 칸보다 커서 좌우 벽에 닿다 못해 넘쳤다 — 칸이 글자를 담는 것으로 안 보였다.
    14.5px 칸에 13px 글자면 양쪽에 0.75px 씩 남는다. */
 .trip .tnm i { flex: 0 0 14.5px; width: 14.5px; height: 26px; }
+/* ★이름 칸만 **폭을 나눠 갖는다**(2026-09-04). 14.5px 로 못 박았더니 375px 에 맞춘
+   수라 그보다 넓은 폰(393px)에서는 줄 오른쪽에 두 칸만큼 남았다 — 판이 화면 끝까지
+   안 가면 판으로 안 보인다. 열여섯 칸이 남은 폭을 나눠 갖게 하면 어느 폰에서나
+   끝까지 찬다(375 에서 14.4px · 393 에서 15.6px).
+   ★위·아래 줄은 애초에 칸 폭이 다르므로(9.5 vs 14.5) 세로줄을 맞출 것이 없다.
+   ⚠ max-width 는 태블릿 대비 — 안 걸면 칸이 40px 로 벌어진다. */
+.trip .tnm .tg:last-child { flex: 1 1 auto; min-width: 0; }
+.trip .tnm .tg:last-child i { flex: 1 1 0; width: auto; min-width: 0; max-width: 17px; }
 /* 며칠·몇 곳 — 숫자는 칸에, 이름은 바로 옆에 작게. 자리는 두 자리·세 자리로 잡는다. */
 .trip .tnum { display: flex; align-items: center; gap: 1.5px; flex: 0 0 auto; }
 .trip .tcc + .tnum, .trip .tsx + .tnum { margin-left: auto; }
