@@ -193,18 +193,22 @@
   }
 
   /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
-     연도만 적으면 눈금일 뿐이지만, 옆에 '여행 7 · 41일' 이 붙으면 그 해의 크기가 읽힌다. */
+     연도만 적으면 눈금일 뿐이지만, 옆에 '7 times 41 days' 가 붙으면 그 해의 크기가 읽힌다. */
   /* ★한 해를 **한 상자**로 묶는다. 머리띠가 sticky 인데 상자가 없으면 형제끼리
      같은 자리(top: --h-top)에 겹쳐 붙는다 — 2026 과 2025 가 한 줄에 포개졌다
      (2026-09-03). 상자가 있으면 제 구간이 지나갈 때 다음 해가 밀어낸다. */
   function section(title, list, ph, bare) {
     const days = list.reduce((a, t) => a + U.tripDays(t), 0);
-    const bits = [`여행 ${list.length}`];
-    if (days) bits.push(`${days}일`);
+    /* ★그 해가 얼마였는지도 **쪽자로 센다**(2026-09-04). '여행 4 · 24일' 은 글이었고,
+       판 위에서 혼자 글이면 거기만 딴 물건으로 보인다. 수는 칸에, 이름은 옆에 작게 —
+       판 머리의 '38 times' 와 같은 어법이다. 자리는 둘 다 두 자리.
+     ⚠ 한 해에 100일 넘게 다니면 두 칸에 안 들어간다 — 판은 늘어나지 않으므로 잘린다. */
+    const gn = row([['r', list.length, '']], 2) + '<em>times</em>'
+             + (days ? row([['r', days, '']], 2) + '<em>days</em>' : '');
     return `<section class="ygroup">`
          + `<h2 class="grouphd${bare ? ' year' : ''}">`
          + `<span class="gt">${bare ? cells(title) : esc(title)}</span>`
-         + `<span class="gn">${esc(bits.join(' · '))}</span></h2>`
+         + `<span class="gn">${gn}</span></h2>`
          + list.map(t => card(t, ph)).join('')
          + `</section>`;
   }
@@ -557,7 +561,7 @@
       var ch = Array.isArray(str) ? str : Array.from(str == null ? '' : String(str));
       /* 자리가 'r' 이면 오른쪽 끝에 붙인다 — 수는 자릿수가 맞아야 읽힌다(6 과 10 의 일의 자리가
          같은 줄에 서야 한다). 음수면 끝에서 센다. */
-      var from = at === 'r' ? cols - ch.length : (at < 0 ? cols + at : at);
+      var from = at === 'r' ? Math.max(0, cols - ch.length) : (at < 0 ? cols + at : at);
       ch.forEach(function (c, i) { if (from + i < cols) slot[from + i] = [c, cls]; });
     });
     return slot.map(function (v) {

@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=237') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=239') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=237') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=239') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=237') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=239') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1402,10 +1402,21 @@ input.code {
   margin: 16px 2px -2px;
 }
 .grouphd:first-child { margin-top: 2px; }
-.grouphd .gn {
-  flex: 0 0 auto; font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: var(--t-meta); font-weight: 500; letter-spacing: .01em; text-transform: none;
+/* 그 해가 얼마였는지 — 수는 쪽자에, 이름은 옆에 작게. 판 머리의 '38 times' 와 같다. */
+.grouphd .gn { flex: 0 0 auto; display: flex; align-items: center; gap: 1.5px; }
+.grouphd .gn i {
+  font-style: normal; display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 9.5px; width: 9.5px; height: 15px;
+  font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--ink-2);
+  background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
+  box-shadow: inset 0 1px 0 var(--flap-hi), inset 0 -1px 0 var(--flap-lo);
 }
+.grouphd .gn em {
+  font-style: normal; margin: 0 9px 0 3px;
+  font-family: var(--mono); font-size: 7px; font-weight: 600;
+  letter-spacing: .08em; color: var(--ink-3); text-transform: uppercase;
+}
+.grouphd .gn em:last-child { margin-right: 0; }
 /* 해가 바뀌는 자리에는 실선을 하나 긋는다 — 구획이 눈에 잡혀야 건너뛸 수 있다.
    ★★그리고 **붙여 둔다.** 열 해가 쌓이자 목록이 5,697px 이 됐고(2026-09-03,
      여행 38개, 375px 화면), 가운데쯤에서는 지금 보고 있는 것이 2025년인지
@@ -1436,7 +1447,7 @@ input.code {
   box-shadow: inset 0 1px 0 var(--flap-hi), inset 0 -1px 0 var(--flap-lo);
 }
 
-.grouphd.year .gn { font-size: var(--t-micro); }
+
 
 
 /* ── 만들기 · 참여하기 ────────────────────────────────────────────────── */
