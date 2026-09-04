@@ -159,23 +159,17 @@
     /* ★★판이 제가 무슨 판인지 **선언한다**(2026-09-04). 칸 이름만 있으면 표로 시작하는데,
        안내판은 늘 머리에 이름과 시계를 단다. 위 여권 카드가 TRIPLOG · PASSPORT 라
        둘이 **여권과 출발 안내판 한 쌍**이 된다.
-     ★시계는 장식이 아니라 사실이다 — 지금 시각. 그래서 진짜로 간다(아래 tickClock). */
+     ★오른쪽 끝은 시계 자리인데, 이 판에는 **몇 편이 서 있는지**를 놓는다. 시계는 폰이
+       이미 위에 달고 있고, 이 목록에서 궁금한 것은 시각이 아니라 여행이 몇 번인지다. */
     el.innerHTML = '<div class="tboard">'
                  + '<div class="tbtop"><span class="pl" aria-hidden="true">✈</span>'
-                 + '<b>TRIPLOG</b><em>DEPARTURES</em>'
-                 + `<time class="clk" id="tbclock">${clockNow()}</time></div>`
+                 + '<b>TRIPLIST</b><em>DEPARTURES</em>'
+                 + `<span class="cnt">${trips.length}편</span></div>`
                  + '<div class="tbhd" aria-hidden="true">'
-                 + '<span>Date</span><span>Trip</span><span>Days</span><span>Status</span></div>'
+                 + '<span>Date</span><span>Trip</span><span>Days</span></div>'
                  + html + '</div>';
     flipOnce(el);
   }
-
-  /* 시계 — 안내판의 그 시계다. 분이 바뀌는 것만 보면 되므로 20초에 한 번 본다. */
-  const clockNow = () => {
-    const d = new Date();
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  };
-  setInterval(() => { const c = $('tbclock'); if (c) c.textContent = clockNow(); }, 20000);
 
   /* ★★쪽자가 넘어가듯 줄이 위에서부터 뒤집히며 선다.
      ★**한 세션에 한 번만.** 홈은 하루에 몇 번씩 여는 화면이라 매번 돌면 금세 질린다 —
@@ -205,7 +199,7 @@
     if (days) bits.push(`${days}일`);
     return `<section class="ygroup">`
          + `<h2 class="grouphd${bare ? ' year' : ''}">`
-         + `<span class="gt">${esc(title)}</span>`
+         + `<span class="gt">${bare ? cells(title) : esc(title)}</span>`
          + `<span class="gn">${esc(bits.join(' · '))}</span></h2>`
          + list.map(t => card(t, ph)).join('')
          + `</section>`;
@@ -527,6 +521,11 @@
      ★글자로 떨어지는 곳(윈도우)에서는 **첫 나라만** 깐다. 'ESPTQA' 는 모노그램이
        아니라 벽이고, 그걸 겹치면 글자 뭉치가 된다 — 여권 국기 줄에서 내린 것과
        같은 판단이다(겹쳐서 읽히는 것은 그림일 때뿐이다). */
+  /* ★★**글자 하나에 칸 하나.** 이게 쪽자판이다 — 배경에 격자를 깔아 두는 것으로는
+     안 된다(그건 글자 뒤 벽지지 칸이 아니다. 2026-09-04에 그렇게 만들었다가 되돌렸다).
+     한글은 음절이 정사각형이라 라틴 숫자와 같은 칸에 그대로 앉는다. */
+  const cells = str => [...String(str)].map(ch => `<i>${esc(ch)}</i>`).join('');
+
   /* 안내판의 **항공사 로고 자리**가 국기 자리다. 나라를 여럿 걸친 여행이면 여러 장을
      겹쳐 세운다(실제로 넷 있다 — ES,PT,QA 처럼).
      ★윈도우는 국기를 안 그리고 'JP' 두 글자로 떨어뜨린다. 그때는 코드 칩으로 낸다 —
@@ -535,8 +534,10 @@
     const codes = U.codeList(country).filter(c => U.flag(c));
     if (!codes.length) return '<span class="tfl"></span>';
     const draw = canDrawFlags();
-    return `<span class="tfl${draw ? ' n' + codes.length : ' ab'}" aria-hidden="true">${
-      codes.map(c => `<b>${draw ? U.flag(c) : esc(c)}</b>`).join('')}</span>`;
+    /* 국기도 칸에 앉는다 — 판에서는 그것도 쪽자 한 장이다.
+       글자로 떨어지는 기계에서는 두 글자가 한 칸에 들어가므로 칸을 넓혀 준다(.ab). */
+    return `<span class="tfl${draw ? '' : ' ab'}" aria-hidden="true">${
+      codes.map(c => `<i>${draw ? U.flag(c) : esc(c)}</i>`).join('')}</span>`;
   }
 
 
@@ -579,9 +580,9 @@
         : '<span class="md is-empty"></span>';
     }).join('')}</span>` : '';
 
-    /* ★상태 칸 — 안내판의 '지연 · 결항 · 도착' 자리다. 우리 것은 '여행 중' 과 D-day.
-       ★지난 여행은 **비워 둔다.** 서른여덟 중 서른다섯이 빈칸이 되는데, 진짜 판도
-         빈칸이 많다 — 그 여백이 곧 '아무 일 없음' 이다. 끝난 것에 날짜를 세지 않는다. */
+    /* ★상태 칸을 따로 세웠다가 뺐다(2026-09-04). 지난 여행에는 쓸 말이 없어서 서른여덟
+       중 서른다섯이 빈칸이었다 — 한 번도 안 차는 칸은 판이 아니라 구멍이다.
+       떠날 때까지 며칠·며칠차만 **날짜 밑에** 되돌린다. */
     let st = '', stOn = '';
     if (phase === 'soon' && t.start_on) {
       const n = Math.ceil((Date.parse(t.start_on) - Date.parse(U.todayISO())) / DAYMS);
@@ -592,12 +593,17 @@
     }
 
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button" data-id="${esc(t.id)}">
-      <span class="tdt">${esc(t.start_on ? U.md(t.start_on) : '--.--')}</span>
-      <span class="tnm">${flagCell(t.country)}<b>${esc(t.name)}</b></span>
-      <span class="tdy">${nDays ? `<b>${nDays}</b><u>일</u>` : ''}</span>
-      <span class="tsx${stOn}">${esc(st)}</span>
+      <span class="ttop">
+        <span class="tdt">${cells(t.start_on
+          ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '')
+          : '--.--')}</span>
+        ${flagCell(t.country)}
+        <span class="tdy">${nDays ? cells(nDays + '일') : ''}</span>
+        ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
+        ${stops.length ? `<span class="tst">${stops.length}곳</span>` : ''}
+      </span>
+      <span class="tnm">${cells(t.name)}</span>
       ${rail}
-      ${stops.length ? `<span class="tst">${stops.length}곳</span>` : ''}
     </button>`;
   }
 

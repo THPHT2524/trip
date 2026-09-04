@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=208') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=215') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=208') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=215') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=208') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=215') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -82,9 +82,12 @@
      서른여덟 줄에 실선을 그으면 판이 격자가 된다. */
   --stripe:  rgba(22, 48, 43, .022);
   --onnow:   rgba(43, 74, 203, .07);
-  /* 쪽자판의 칸 선. 사진 속 판은 **글자가 없는 자리에도 칸이 보인다** — 그게 판을
-     화면이 아니라 물건으로 만든다. 판 전체에 통째로 깔아 줄마다 어긋나지 않게 한다. */
-  --cell:    rgba(22, 48, 43, .055);
+  /* 쪽자 한 장. 위는 밝고 아래는 어둡고 가운데를 이음매가 지난다 — 판때기의 문법이다. */
+  --flap-a:  #EDF1EF;
+  --flap-b:  #DCE3DF;
+  --flap-hi: rgba(255, 255, 255, .8);
+  --flap-lo: rgba(22, 48, 43, .10);
+  --seam:    rgba(22, 48, 43, .22);
   --route:   #2B4ACB;   /* 구조색: 활성 레일 · 링크 · 초점 */
   --route-w: #E3E8FB;   /* 코발트의 옅은 바탕 */
   --warn:    #A6392C;
@@ -180,7 +183,13 @@
     --rail:    #2E4139;
     --stripe:  rgba(255, 255, 255, .024);
     --onnow:   rgba(138, 160, 255, .11);
-    --cell:    rgba(255, 255, 255, .05);
+    /* ★판때기는 판 바탕보다 **확실히 밝아야** 한다. 처음엔 아랫면이 #18241F 라
+       바탕 #16241F 과 거의 같아서 칸이 사라졌다(2026-09-04). 한 단 올린다. */
+    --flap-a:  #2B3B34;
+    --flap-b:  #1F2E28;
+    --flap-hi: rgba(255, 255, 255, .09);
+    --flap-lo: rgba(0, 0, 0, .5);
+    --seam:    rgba(0, 0, 0, .66);
     --route:   #8AA0FF;
     --route-w: #1B2440;
     --warn:    #E9877A;
@@ -1172,15 +1181,10 @@ input.code {
   /* ★가로 여백을 여기서 주지 않는다. #trips 가 이미 16px 을 주고 있어서 겹치면
      32px 이 되어 위 여권 카드보다 좁아진다(2026-09-04 실측 311 vs 343). */
   border: 1px solid var(--line); border-radius: var(--r);
-  /* ★★**칸 격자를 판에 통째로 깐다.** 줄마다 깔면 줄 사이에서 어긋나는데, 판에 한 번
-     깔면 위에서 아래까지 한 장으로 이어진다 — 사진 속 판이 그렇게 생겼다(2026-09-04).
-     줄무늬(--stripe)는 반투명이라 이 격자가 그대로 비친다.
-   ★머리·칸이름·연도 띠는 제 바탕이 불투명해서 격자를 덮는다. 진짜 판도 그 자리는
-     쪽자가 아니라 인쇄된 판이다. */
+  /* ★배경에 격자를 깔았다가 걷었다(2026-09-04). 그건 글자 뒤 벽지지 칸이 아니다 —
+     격자 간격과 글자가 아무 상관이 없어서 글자가 칸에 앉지 않았다.
+     쪽자는 글자마다 하나씩 붙인다(js/app.js 의 cells, 아래 .trip i). */
   background-color: var(--card);
-  background-image: linear-gradient(90deg, var(--cell) 1px, transparent 1px);
-  background-size: 13px 100%;
-  background-position: 12px 0;
 }
 /* ★판 머리 — 안내판은 제가 무슨 판인지 늘 선언하고 오른쪽 끝에 시계가 있다.
    위 여권 카드가 TRIPLOG · PASSPORT 라 둘이 여권과 출발 안내판 한 쌍이 된다. */
@@ -1199,8 +1203,9 @@ input.code {
   font-style: normal; font-family: var(--mono); font-size: var(--t-micro);
   letter-spacing: .2em; color: var(--ink-3);
 }
-/* 시계는 장식이 아니라 사실이다 — 지금 시각. 그래서 진짜로 간다. */
-.tbtop .clk {
+/* ★오른쪽 끝은 안내판의 시계 자리다. 여기엔 **몇 편이 서 있는지**를 놓는다 —
+   시계는 폰이 이미 위에 달고 있고, 이 목록에서 궁금한 것은 시각이 아니라 여행 수다. */
+.tbtop .cnt {
   margin-left: auto; font-family: var(--mono); font-size: var(--t-read);
   font-weight: 600; letter-spacing: .04em; color: var(--route);
   font-variant-numeric: tabular-nums;
@@ -1208,24 +1213,25 @@ input.code {
 
 /* 칸 이름 — 영문 한 줄, 아주 작게. 사진 속 판이 그렇게 생겼다. */
 .tbhd {
-  display: grid; grid-template-columns: 44px 1fr 38px 46px; gap: 8px;
+  display: flex; gap: 8px;
   padding: 7px 12px 5px;
   background: var(--paper); border-bottom: 1px solid var(--line);
   font-family: var(--mono); font-size: 8px; font-weight: 600;
   letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3);
 }
-.tbhd span:last-child { text-align: right; }
+.tbhd span:last-child { margin-left: auto; }
 
 /* 줄 — 선을 긋지 않는다. 한 칸 걸러 살짝 밝게만(안내판이 그렇다). */
 .trip {
-  /* ★가로 사이만 벌린다. gap 하나로 두면 **세로에도 8px** 이 먹어서 레일이 그만큼
-     내려앉고 줄이 51px 이 된다 — 레일과의 간격은 제 margin 이 맡는다(2026-09-04). */
-  display: grid; grid-template-columns: 44px 1fr 38px 46px; gap: 0 8px;
-  align-items: center; width: 100%; text-align: left;
+  /* ★★**두 층으로 짠다**(2026-09-04). 날짜·국기·기간이 윗줄에 작은 칸으로 서고,
+     여행 이름은 **아랫줄을 통째로** 써서 큰 칸에 앉는다 — 한 줄에 다 넣으면 이름 칸이
+     열 칸도 안 남아 긴 이름이 잘린다(바르셀로나·포르투·리스본은 열세 음절이다). */
+  display: flex; flex-direction: column; gap: 2px;
+  width: 100%; text-align: left;
   appearance: none; cursor: pointer; color: inherit; font: inherit;
   /* ★줄 사이 틈(10px)을 없애고 나니 이번엔 빽빽했다 — 그 숨통을 **줄 안으로** 옮긴다.
      여백은 칠해지지만 틈은 안 칠해진다는 것이 이 판에서의 차이다(2026-09-04). */
-  background: none; border: 0; padding: 8px 12px 9px;
+  background: none; border: 0; padding: 6px 12px 7px;
   /* ★행간을 조인다. body 의 1.55 가 그대로 내려오면 두 줄짜리 칸이 41px 이 되어
      줄 하나가 57px 이 된다 — 안내판은 촘촘해야 훑힌다(2026-09-04 실측). */
   line-height: 1.2;
@@ -1235,53 +1241,65 @@ input.code {
 .trip.is-now { background-color: var(--onnow); box-shadow: inset 3px 0 0 var(--route); }
 
 /* 출발일 = 훑는 기둥. 구조색을 쓴다 — 이 목록에서 눈이 따라가는 세로줄이다. */
-.trip .tdt {
-  font-family: var(--mono); font-size: var(--t-body); font-weight: 600;
-  letter-spacing: .01em; color: var(--route);
+/* ── 쪽자 한 칸 ─────────────────────────────────────────────────────────
+   ★**글자 하나가 칸 하나에 앉는다.** 위는 밝고 아래는 어둡고 가운데를 이음매가 지난다 —
+     쪽자판의 그 판때기다. 배경에 격자를 까는 것과는 다르다: 칸이 글자를 따라간다.
+   ★한글은 음절이 정사각형이라 숫자와 같은 칸을 쓴다. 다만 Plex Mono 에 한글이 없어
+     글꼴만 고딕으로 바꾼다(.ko) — 칸 크기는 그대로다. */
+.trip i {
+  font-style: normal; flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 13px; height: 18px; position: relative;
+  font-family: var(--mono); font-size: 11.5px; font-weight: 600;
+  background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
+  box-shadow: inset 0 1px 0 var(--flap-hi), inset 0 -1px 0 var(--flap-lo);
 }
+.trip i::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 1px; background: var(--seam);
+}
+.trip .ttop { display: flex; align-items: center; gap: 6px; }
+.trip .tdt, .trip .tdy, .trip .tfl, .trip .tnm { display: flex; gap: 1px; }
+.trip .tdy { align-items: center; }
+.trip .tdy u { text-decoration: none; font-family: var(--mono); font-size: var(--t-micro);
+  color: var(--ink-3); margin-left: 3px; }
+
+
+.trip .tdt i { color: var(--route); }
 /* 상태 — 안내판의 '지연 · 결항 · 도착' 자리. 지난 여행은 빈칸이다. */
+/* 떠날 때까지 며칠 · 며칠차 — 날짜 밑에 붙는다. 지난 여행에는 없다. */
+.trip .tdt { flex-wrap: wrap; }
 .trip .tsx {
-  grid-column: 4; justify-self: end; white-space: nowrap;
+  flex: 0 0 100%; font-style: normal; margin-top: 2px;
   font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
-  color: var(--route);
+  letter-spacing: .04em; color: var(--route);
 }
-.trip .tsx.on {
-  color: var(--paper); background: var(--route);
-  padding: 2px 5px; border-radius: var(--r-xs);
-}
+.trip .tsx.on { color: var(--paper); background: var(--route);
+  border-radius: var(--r-xs); padding: 1px 4px; flex: 0 0 auto; }
 
-/* 나라 = 항공사 로고 자리. 여행 이름과 한 칸을 쓰므로 제 폭만 차지한다. */
-.trip .tfl { flex: 0 0 auto; display: flex; align-items: center; font-size: 15px; line-height: 1; }
-.trip .tfl b { font-weight: 400; display: inline-block; }
-.trip .tfl.n2 b + b, .trip .tfl.n3 b + b { margin-left: -5px; }
-.trip .tfl.n3 { font-size: 13px; }
-/* 국기를 못 그리는 기계 — 두 글자 코드 칩으로 떨어진다 */
-.trip .tfl.ab { gap: 2px; font-size: 0; }
-.trip .tfl.ab b {
-  font-family: var(--mono); font-size: var(--t-micro); font-weight: 700;
-  letter-spacing: .02em; color: var(--ink-2);
-  border: 1px solid var(--line); border-radius: var(--r-xs); padding: 1px 3px;
-}
+/* 나라 = 항공사 로고 자리. 판에서는 그것도 쪽자 한 장이다. */
+.trip .tfl { flex: 0 0 auto; }
+.trip .tfl i { font-size: 13px; font-weight: 400; }
+/* 국기를 못 그리는 기계 — 두 글자가 한 칸에 들어가므로 칸을 넓힌다 */
+.trip .tfl.ab i { width: 21px; font-size: 9px; font-weight: 700; color: var(--ink-2); }
 
-.trip .tnm { min-width: 0; display: flex; align-items: center; gap: 7px; }
-.trip .tnm > b {
-  flex: 0 1 auto; min-width: 0;
-  font-size: var(--t-read); font-weight: 700; letter-spacing: -.02em;
-  line-height: 1.25; color: var(--ink);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* 이름은 아랫줄을 통째로 쓴다 — 큰 칸이라 열세 음절도 앉는다.
+   한글은 Plex Mono 에 없으므로 글꼴만 고딕으로 바꾼다(칸 크기는 판의 문법 그대로). */
+.trip .tnm { min-width: 0; overflow: hidden; }
+.trip .tnm i {
+  width: 19px; height: 24px;
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  letter-spacing: -.02em; color: var(--ink);
 }
 
 /* 기간 — 안내판의 탑승구 자리. 며칠·몇 곳을 **한 줄**로 둔다.
    두 줄로 쌓았더니 줄 높이가 그것 하나 때문에 정해졌다(2026-09-04). */
-.trip .tdy { text-align: right; font-family: var(--mono); white-space: nowrap; }
-.trip .tdy b { font-size: var(--t-body); font-weight: 600; color: var(--ink); }
-.trip .tdy u {
-  text-decoration: none; font-size: var(--t-micro); font-weight: 400;
-  color: var(--ink-3); margin-left: 1px;
-}
+.trip .tdy { justify-content: flex-end; }
+.trip .tdy i { color: var(--ink); }
 /* '몇 곳' 은 레일과 같은 줄, 기간 밑에 선다 — 레일이 그 곳들을 찍은 그림이라 나란하다 */
+/* 몇 곳 — 윗줄 오른쪽 끝. 레일은 아랫줄을 통째로 쓰게 비켜 준다. */
 .trip .tst {
-  grid-column: 3; align-self: center; text-align: right;
+  margin-left: auto; flex: 0 0 auto; align-self: center; text-align: right;
   font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3);
 }
 
@@ -1308,10 +1326,9 @@ input.code {
 /* ★안내판 줄 **밑을 통째로** 가로지른다. 칸 옆에 끼우면 이름과 자리를 다투는데,
    아래로 내리면 폭을 다 쓰므로 카드 시절보다 오히려 길다(2026-09-04). */
 .mrail {
-  grid-column: 1 / 3;
   position: relative;
   display: flex; align-items: center;
-  height: 10px; margin-top: 4px;
+  height: 9px; margin-top: 1px;
 }
 .mrail::before {
   content: ''; position: absolute; left: 0; right: 0; top: 50%;
@@ -1369,12 +1386,18 @@ input.code {
   border-bottom: 1px solid var(--line);
 }
 /* 연도는 칩이다 — 안내판의 구역 표시가 늘 상자 안에 들어 있다 */
-.grouphd.year .gt {
-  font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: var(--t-body); font-weight: 600; letter-spacing: .04em;
-  color: var(--paper); background: var(--route);
-  padding: 1px 7px; border-radius: var(--r-xs); text-transform: none;
+/* 연도도 칸에 앉는다 — 같은 판의 문법이다 */
+.grouphd.year .gt { display: flex; gap: 1px; text-transform: none; }
+.grouphd.year .gt i {
+  font-style: normal; display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 20px; position: relative;
+  font-family: var(--mono); font-size: 13px; font-weight: 600;
+  color: var(--route);
+  background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
+  box-shadow: inset 0 1px 0 var(--flap-hi), inset 0 -1px 0 var(--flap-lo);
 }
+.grouphd.year .gt i::after { content: ''; position: absolute; left: 0; right: 0;
+  top: 50%; height: 1px; background: var(--seam); }
 .grouphd.year .gn { font-size: var(--t-micro); }
 
 
