@@ -664,7 +664,24 @@
   }
 
   // ── 게이트 ────────────────────────────────────────────────────────────
+  /* ★★로그인 화면이 **이 앱에 대해 아무것도 말하지 않았다** — 검은 바탕에 글자 세 줄이
+     전부였다(2026-09-04). 정작 이 앱의 서명인 세계지도는 여권 카드 안에 있어서
+     로그인해야만 보였다. 그 대륙을 첫 화면에 아주 옅게 깐다.
+   ★새로 그리는 것이 없다. WORLD.d 는 이미 받아 둔 그 패스고 색도 여권과 같은 --wland 다 —
+     같은 그림을 두 번 쓰는 것이지 장식을 하나 더 만드는 것이 아니다.
+   ★점도 항로도 안 찍는다. 로그인 전에는 이 사람이 어디를 다녀왔는지 모른다 —
+     모르는 것을 그리지 않는다. 움직이지도 않는다: 첫 화면에서 움직이는 것은 소음이다. */
+  let gateDrawn = false;
+  function drawGateWorld() {
+    if (gateDrawn || typeof WORLD === 'undefined') return;
+    gateDrawn = true;
+    $('gate-world').innerHTML =
+      `<svg viewBox="${WORLD.vb}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">`
+      + `<path class="gland" d="${WORLD.d}"/></svg>`;
+  }
+
   function showGate(msg) {
+    drawGateWorld();
     $('gate').hidden = false;
     $('app').hidden = true;
     $('tabs').hidden = true;

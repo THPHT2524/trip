@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=184') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=189') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=184') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=189') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=184') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=189') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -978,7 +978,11 @@ input.code {
    같은 눈금(4의 배수)에서 고르면 칸마다 제 무게가 있으면서도 한 장으로 읽힌다. */
 .pflagwrap {
   display: flex; flex-direction: column; gap: 5px;
-  padding: 16px var(--pad-box) 0;
+  /* ★★지도 쪽에 **바싹 붙인다.** 국기는 '어디를' 이라 지도와 같은 것을 말한다 —
+     떨어뜨려 놓으면 지도와 이름 사이에 붕 뜬 셋째 덩이가 된다. 위 여백을 절반으로
+     줄여 지도와 한 덩이로 묶었다(2026-09-04). 층 넷의 사이가 16·20·18·16 로 죄다
+     같아서 카드에 위계가 없던 것을 세 덩이로 가른 작업의 절반이다. */
+  padding: 10px var(--pad-box) 0;
 }
 .pflags {
   /* 가운데로 모은다 — 도장을 한쪽으로 몰아 찍지 않는다. */
@@ -1020,7 +1024,9 @@ input.code {
 /* 여권의 머리 — 이름·종류가 왼쪽, 앱 표식이 오른쪽. 진짜 여권 인적사항면의 배치다. */
 .phead {
   display: flex; align-items: center; gap: 12px;
-  padding: 20px var(--pad-box) 0;
+  /* ★여기가 **덩이가 갈리는 자리**다 — 위는 '어디를'(지도·국기), 아래는 '얼마나'(이름·격자).
+     이 여백 하나만 넓히면 나머지는 저절로 묶여 읽힌다. */
+  padding: 24px var(--pad-box) 0;
 }
 .pname { flex: 0 0 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .pname b {
@@ -1058,7 +1064,8 @@ input.code {
 }
 
 .pgrid {
-  margin: 0; padding: 18px var(--pad-box) 16px;
+  /* ★이름줄과 한 덩이 — 위를 좁힌다. 아래는 MRZ 의 실선이 이미 가르므로 그대로 둔다. */
+  margin: 0; padding: 12px var(--pad-box) 16px;
   display: flex; gap: 10px;
 }
 .pgrid > div { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
@@ -1330,11 +1337,33 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .btn[disabled] { opacity: .5; cursor: default; }
 
 /* ── 게이트 · 빈 화면 ─────────────────────────────────────────────────── */
+/* ★★첫 화면 — 여권 속 세계지도를 여기서 미리 보여 준다.
+   로그인 전에는 이 앱이 무엇인지 말해 줄 것이 글자밖에 없었다.
+   ★지도는 **읽는 것이 아니라 바탕**이다. 글자 뒤에서 대륙 모양만 겨우 보이는 세기로 두고,
+     가장자리는 흐려서 잘린 그림이 아니라 이어지는 세계로 읽히게 한다. */
 .gate {
+  position: relative; isolation: isolate;
   min-height: 100dvh; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 18px; padding: 24px;
   text-align: center;
 }
+/* ★**자르지 않는다.** 처음엔 화면을 채우려고 slice 로 키웠는데, 그러면 아시아가 밖으로
+   나가 정작 한국이 안 보이고 '지도 조각' 으로 읽혔다. 세계는 통째로 보여야 세계다 —
+   폭에 맞춰 통째로 눕히면 글자 높이를 가로지르는 띠가 된다(여권의 워터마크가 그렇다).
+   ★좌우로만 흘려 없앤다. 위아래는 자를 것이 없다 — 이미 대륙이 거기서 끝난다. */
+.gworld {
+  position: absolute; z-index: -1; pointer-events: none;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(124%, 900px); aspect-ratio: 1000 / 431;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+}
+.gworld svg { width: 100%; height: 100%; display: block; }
+/* ★글자 뒤 글로우를 넣었다가 뺐다. 지도가 이미 충분히 옅어서 하는 일이 없었고,
+   어두운 화면에서는 글자 둘레에 얼룩만 남겼다 — 안 보이는 장치가 하나 줄었다. */
+.gate > :not(.gworld) { position: relative; }
+.gland { fill: var(--wland); opacity: .30; }
+@media (prefers-color-scheme: dark) { .gland { opacity: .42; } }
 .gate h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
 .gate p { margin: 0; color: var(--ink-2); font-size: var(--t-read); max-width: 26em; }
 .gate .err { color: var(--warn); font-size: var(--t-body); }
@@ -1521,7 +1550,10 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
   position: fixed; right: var(--pad);
   bottom: calc(14px + env(safe-area-inset-bottom));
   z-index: 42;
-  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  /* ★★**한 줄로 눕힌다.** 세로로 쌓았더니 알약 둘이 88px 을 차지해 목록 카드 두 장의
+     날짜를 가렸다(2026-09-04). 눕히면 한 줄 40px 이라 가리는 면적이 절반이고,
+     따로 노는 단추 둘이 아니라 **한 묶음**으로 읽힌다. 375px 에서 196px 이라 넉넉하다. */
+  display: flex; align-items: center; gap: 8px;
 }
 .hbtn {
   appearance: none; cursor: pointer; font: inherit;
@@ -1530,6 +1562,9 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
   border: 1px solid var(--line); background: var(--card); color: var(--ink-2);
   box-shadow: var(--sh-lift);
 }
+/* ★곁 동작은 한 단 작게. 나란히 서면 크기가 같을 때 둘 다 주역처럼 보인다 —
+   여는 빈도가 다른 둘이라 무게도 달라야 한다(초대 코드는 초대받은 날 한 번 쓴다). */
+.hbtn:not(.primary) { padding: 9px 13px; font-size: var(--t-meta); color: var(--ink-3); }
 /* .fab 과 같은 이유로 종이색이다 — 흰 글자는 어두운 화면의 옅은 코발트 위에서 2.46:1 이 된다 */
 .hbtn.primary { background: var(--route); border-color: var(--route); color: var(--paper); }
 .hbtn:active { transform: translateY(1px); }
