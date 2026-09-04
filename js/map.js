@@ -303,6 +303,31 @@ const Maps = (function () {
     if (still) map.jumpTo(to); else map.easeTo(Object.assign({ duration: 420 }, to));
   }
 
+  /* ★★그날 전체를 보일 때는 **가려지지 않는 자리**에 맞춰 축척을 잡는다(2026-09-05).
+     사방 36px 균일로 잡고 있었는데, 지도 위에는 위성/지도 토글이 떠 있고 아래에는
+     날짜 탭과 카드 띠가 떠 있다 — 그 밑으로 들어간 핀은 '전체' 라면서 안 보였다.
+     실측: 위 48px · 아래 121px 이 늘 가려져 있다.
+   ★핀은 아래끝이 좌표이고 이름표가 그 위에 서므로 **위로만** 제 키(46px)만큼 자란다.
+     그래서 위쪽에만 그 몫을 더한다.
+   ★값을 박지 않고 잰다 — 토글이나 띠 높이를 바꿔도 따라온다. */
+  const PIN_H = 46;
+  function fitPad() {
+    const wrap = map.getContainer().getBoundingClientRect();
+    const bp = $('basepick').getBoundingClientRect();
+    const nav = $('mapdays');
+    const navR = nav.hidden ? null : nav.getBoundingClientRect();
+    return {
+      top: Math.max(36, Math.round(bp.bottom - wrap.top) + PIN_H + 8),
+      bottom: navR ? Math.round(wrap.bottom - navR.top) + 10 : 36,
+      /* 이름표는 핀을 가운데 두고 좌우로 벌어진다 — 가장자리 핀의 이름이 안 잘리게.
+         ⚠ 완전히 막지는 못한다. 이름표는 120px 까지 늘어나므로 한쪽으로 60px 까지
+           삐져나올 수 있는데, 그만큼 비우면 375px 화면에서 볼 자리가 3분의 1 없어진다.
+           58px 은 실측으로 고른 값이다: 48 일 때 사흘치에서 최대 10px 이 잘렸다
+           (Day2 4개 · Day3 7개). 58 이면 셋 다 0 이고, 375px 화면에서 5% 만 낸다. */
+      left: 58, right: 58,
+    };
+  }
+
   function draw() {
     if (!ensureMap()) return;
     markers.forEach(m => m.remove());
@@ -356,7 +381,7 @@ const Maps = (function () {
     } else if (pts.length) {
       const b = new maplibregl.LngLatBounds();
       pts.forEach(p => b.extend(p));
-      map.fitBounds(b, { padding: 36, maxZoom: 16, animate: false });
+      map.fitBounds(b, { padding: fitPad(), maxZoom: 16, animate: false });
     } else {
       map.jumpTo({ center: [127.9, 36.5], zoom: 5 });      // 아무것도 없으면 한반도 전체
       note.textContent = '이 여행에는 좌표가 있는 일정이 없습니다 — 구글맵 링크를 붙이면 여기에 찍힙니다';
