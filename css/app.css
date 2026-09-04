@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=246') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=247') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=246') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=247') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=246') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=247') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1336,18 +1336,23 @@ input.code {
      나라가 하나인 여행은 뒤의 두 칸이 글자 없는 가로판으로 남는다.
    ★글자 크기로 채운다 — 이모지는 글자라 자체 여백이 붙어 오므로 칸보다 크게 잡고
      넘치는 만큼 잘라낸다(overflow). 기계마다 여백이 달라 딱 맞추는 수는 없다. */
-.trip .tnm .tfl i { flex: 0 0 28px; width: 28px; overflow: hidden; }
+/* ★국기판만 **작게**(22×18). 이름 쪽자(14.5×26)와 키를 맞췄더니 국기 두 장이
+   58×26 이라 줄에서 제일 무거운 덩어리가 됐다 — 국기는 표지지 행선지가 아니다.
+   판 안에서 세로 가운데에 앉아 로고판처럼 보인다. */
+.trip .tnm .tfl { align-items: center; }
+.trip .tnm .tfl i { flex: 0 0 22px; width: 22px; height: 18px; overflow: hidden; }
 /* ★40px — 칸(28×26)보다 **일부러 크게** 잡고 넘치는 만큼 잘라낸다. 이모지 국기는
    글자라 그림 둘레에 여백이 붙어 오는데(그림 높이가 글자 크기의 3/4쯤), 칸에 맞춰
    잡으면 그 여백까지 칸에 들어와 그림이 판 가운데 조그맣게 뜬다. 키워서 여백을
    칸 밖으로 밀어내면 그림만 남아 판을 채운다. 좌우로 3할쯤 잘리지만 국기는 대개
    가로 줄무늬나 단색 바탕이라 가운데만 봐도 읽힌다.
-   34px 은 폭만 차고 **높이가 6px 남았다**(2026-09-04 아이폰 실물). 40px 으로 올린다. */
-.trip .tnm i.fl { font-size: 40px; line-height: 1; letter-spacing: 0; }
+   26px 칸에 34px 은 폭만 차고 **높이가 6px 남아** 40px 으로 올렸다(아이폰 실물).
+   판을 18px 로 줄이면서 같은 비율로 31px 로 내린다. */
+.trip .tnm i.fl { font-size: 31px; line-height: 1; letter-spacing: 0; }
 /* 국기를 못 그리는 기계 — 두 글자 코드가 들어온다. 가로판이라 자리는 넉넉하다. */
 .trip .tnm i.fl.ab {
-  font-family: var(--mono); font-size: 11px; font-weight: 700;
-  letter-spacing: .02em; color: var(--ink-2);
+  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .01em; color: var(--ink-2);
 }
 
 /* 이름은 아랫줄을 통째로 쓴다 — 스물두 칸이라 열세 음절이 넉넉히 앉는다.
