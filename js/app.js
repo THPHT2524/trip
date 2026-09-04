@@ -287,7 +287,7 @@
        ★움직임을 줄여 달라는 설정이면 css 의 전역 규칙이 통째로 끈다. */
     const glow = pts.map((p) => {
       const seed = p.x * 7.13 + p.y * 3.71;
-      const dur = 2.6 + (seed % 3.2);
+      const dur = 5.6 + (seed % 5.4);          // 5.6~11초 — 2.6~5.8초는 너무 빨랐다
       const delay = seed % dur;
       return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${(rOf(p.n) * 2).toFixed(1)}"`
         + ` style="animation-duration:${dur.toFixed(2)}s;animation-delay:-${delay.toFixed(2)}s"/>`;
