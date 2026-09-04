@@ -20,6 +20,7 @@ const Maps = (function () {
 
   let map = null, markers = [], route = { type: 'FeatureCollection', features: [] };
   let trip = null, rows = [], days = [], pick = null;
+  let spots = [], cur = -1, quiet = false;   // 카드 띠 — quiet 은 되먹임 막기
   let onPick = () => {};
 
   /* ── 밑그림 ────────────────────────────────────────────────────────────
@@ -192,32 +193,102 @@ const Maps = (function () {
     const el = $('mapdays');
     if (!days.length) { el.hidden = true; return; }
     el.hidden = false;
+    /* ★'전체' 를 뺐다(2026-09-05). 지도에서 사흘치를 한꺼번에 켜면 핀이 서로를 가리고
+       하루 동선이 다른 날 동선과 엉킨다 — 지도는 **하루씩** 보는 물건이다.
+       그리고 아래 카드 띠도 하루치여야 넘기는 일이 끝이 있다. */
     el.innerHTML = days.map((d, i) =>
       `<button type="button" role="tab" data-day="${esc(d)}" aria-selected="${String(pick === d)}">Day ${i + 1}</button>`
-    ).join('') +
-      `<button type="button" role="tab" data-day="" aria-selected="${String(pick === null)}">전체</button>`;
+    ).join('');
   }
 
   /* ★이름을 마커 위에 **늘 띄운다.** 핀만 있으면 '1번이 어디였더라' 를 확인하러
      일정 탭으로 돌아가게 된다 — 지도를 여는 이유가 그걸 안 하기 위해서다.
      이름표와 핀을 한 요소에 담고, 아래끝을 좌표에 맞춘 뒤 핀 반지름만큼 내린다. */
-  function pinEl(r, n) {
+  function pinEl(r, n, idx) {
     const k = U.kvar(r.kind);
     const el = document.createElement('div');
     el.className = 'mk';
     el.title = r.name;
     el.innerHTML = `<span class="mlbl">${esc(r.name)}</span>`
       + `<span class="mpin${r.done ? ' is-done' : ''}" style="--k: var(--${k})">${n}</span>`;
-    el.addEventListener('click', () => onPick(r.id));
+    /* ★핀을 눌러도 **지도를 안 떠난다**(2026-09-05). 전에는 일정 탭으로 데려갔는데,
+       지도를 여는 이유가 그 왕복을 안 하기 위해서였다 — 이제 아래 카드가 그 자리에서
+       답한다. 일정으로 가는 길은 카드 안에 단추로 남겨 둔다. */
+    el.addEventListener('click', () => select(idx, true));
     return el;
+  }
+
+  /* ── 정거장 카드 띠 ─────────────────────────────────────────────────────
+     ★지도에 핀만 있으면 '이게 뭐였지' 가 생기고, 그걸 풀려고 일정 탭으로 돌아가게 된다.
+       핀 위 이름표가 절반을 풀었고, 이 띠가 나머지를 푼다 — 시각·구분·쓴 돈까지 그 자리에서.
+     ★옆으로 넘기면 지도가 따라간다. 목록을 훑는 몸짓과 지도를 훑는 몸짓이 하나가 된다.
+     ⚠ 스크롤로 고른 것을 다시 스크롤시키면 되먹임이 돈다 — quiet 로 막는다. */
+  function cardHtml(s2, i) {
+    const r = s2.r;
+    const t = r.at_time ? String(r.at_time).slice(0, 5) : '';
+    const cost = (r.cost != null) ? U.money(r.cost, r.cost_cur || (trip && trip.base_cur)) : '';
+    const url = r.map_url || GM.placeUrl(r.name);
+    return `<article class="mcard" data-i="${i}">
+      <span class="mcn" style="--k: var(--${U.kvar(r.kind)})">${s2.n}</span>
+      <span class="mcb">
+        <span class="mct">${t ? `<em>${esc(t)}</em>` : ''}<b>${esc(r.name)}</b></span>
+        <span class="mcm">${esc(r.kind)}${cost ? ` · ${esc(cost)}` : ''}</span>
+      </span>
+      <span class="mca">
+        <a class="act" href="${esc(url)}" target="_blank" rel="noopener">길찾기</a>
+        <button class="act" type="button" data-go="${esc(r.id)}">일정</button>
+      </span>
+    </article>`;
+  }
+
+  function drawStrip() {
+    const el = $('mstrip');
+    if (!spots.length) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
+    el.innerHTML = spots.map(cardHtml).join('');
+    cur = -1;
+  }
+
+  /* 가운데에 온 카드를 고른 것으로 본다 */
+  function nearest() {
+    const el = $('mstrip');
+    const mid = el.scrollLeft + el.clientWidth / 2;
+    let best = 0, gap = Infinity;
+    [...el.children].forEach((c, i) => {
+      const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid);
+      if (d < gap) { gap = d; best = i; }
+    });
+    return best;
+  }
+
+  function select(i, scroll) {
+    if (i < 0 || i >= spots.length) return;
+    cur = i;
+    markers.forEach((m, j) => m.getElement().classList.toggle('is-on', j === i));
+    const el = $('mstrip');
+    [...el.children].forEach((c, j) => c.classList.toggle('is-on', j === i));
+    if (scroll) {
+      /* ⚠ behavior:'smooth' 를 쓰지 않는다. 부드러운 스크롤은 애니메이션 루프가 돌 때만
+         움직이는데, 안 돌면 **아무 데도 안 간다** — 조용히 실패한다. 핀을 눌렀는데 띠가
+         그대로 있는 것보다 툭 옮겨 가는 편이 낫다(2026-09-05, 실측으로 확인). */
+      quiet = true;
+      el.scrollLeft = el.children[i].offsetLeft - (el.clientWidth - el.children[i].offsetWidth) / 2;
+      setTimeout(() => { quiet = false; }, 120);
+    }
+    const r = spots[i].r;
+    /* 띠가 아래를 가리므로 그만큼 위로 올려 **보이는 곳의 가운데**에 놓는다 */
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const to = { center: [r.lng, r.lat], zoom: Math.max(map.getZoom(), 15.2), offset: [0, -46] };
+    if (still) map.jumpTo(to); else map.easeTo(Object.assign({ duration: 420 }, to));
   }
 
   function draw() {
     if (!ensureMap()) return;
     markers.forEach(m => m.remove());
     markers = [];
+    spots = [];
 
-    const show = pick ? [pick] : days;
+    const show = pick ? [pick] : days;   // pick 은 open() 이 늘 채운다
     const lines = [], pts = [];
     let missing = 0;
 
@@ -236,13 +307,16 @@ const Maps = (function () {
       }
       geo.forEach((r, i) => {
         pts.push([r.lng, r.lat]);
-        markers.push(new maplibregl.Marker({ element: pinEl(r, i + 1), anchor: 'bottom', offset: [0, 11] })
+        const idx = spots.length;
+        spots.push({ r: r, n: i + 1 });
+        markers.push(new maplibregl.Marker({ element: pinEl(r, i + 1, idx), anchor: 'bottom', offset: [0, 11] })
           .setLngLat([r.lng, r.lat]).addTo(map));
       });
     });
 
     route = { type: 'FeatureCollection', features: lines };
     addRoute();
+    drawStrip();
 
     /* 좌표가 없어 지도에서 빠진 일정을 **반드시 적는다.**
        조용히 빠지면 동선이 틀렸다는 것을 알 방법이 없다. */
@@ -273,6 +347,24 @@ const Maps = (function () {
     if (!map) return;
     clearTimeout(rz);
     rz = setTimeout(() => map.resize(), 150);
+  });
+
+  /* 띠를 넘기면 지도가 따라간다. 손을 뗀 뒤에 판단해야 넘기는 중에 지도가 출렁이지 않는다. */
+  let sc = 0;
+  $('mstrip').addEventListener('scroll', () => {
+    if (quiet) return;
+    clearTimeout(sc);
+    sc = setTimeout(() => {
+      const i = nearest();
+      if (i !== cur) select(i, false);
+    }, 90);
+  }, { passive: true });
+
+  $('mstrip').addEventListener('click', e => {
+    const go = e.target.closest('[data-go]');
+    if (go) { onPick(go.dataset.go); return; }
+    const c = e.target.closest('.mcard');
+    if (c) select(+c.dataset.i, true);
   });
 
   $('basepick').addEventListener('click', e => {
@@ -311,7 +403,12 @@ const Maps = (function () {
         days = all.sort();
       }
       if (day !== undefined) pick = day;
-      if (pick && !days.includes(pick)) pick = null;
+      if (!pick || !days.includes(pick)) {
+        /* 하루만 보는 화면이라 빈 값이 없다. 일정이 있는 첫날로 연다 —
+           빈 날로 열면 지도가 아무것도 없는 채로 뜬다. */
+        const has = days.filter(d => withGeo(rows.filter(r => r.on_date === d)).length);
+        pick = has[0] || days[0] || null;
+      }
       drawTabs();
       setBasemap();
       draw();
