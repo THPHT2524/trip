@@ -252,18 +252,45 @@ const Cost = (function () {
   /* ★★바코드를 **이 여행의 수**로 그린다(2026-09-05). 아무 수나 박아 두면 그건 그림
      이지만, 출발·도착 날짜에서 뽑으면 종이마다 다른 무늬가 나온다 — 영수증마다
      바코드가 다른 것과 같은 이치다. 읽으라고 있는 것이 아니라 '이 종이의 것' 이라는
-     표시다. 막대 굵기도 그 수에서 나온다. */
+     표시다.
+     ★★굵기를 임의로 짓지 않고 **인터리브드 2 of 5** 로 짠다(2026-09-06). 영수증에
+       실제로 찍히는 그 부호다: 숫자 하나가 좁은 막대 셋·넓은 막대 둘(그래서 2 of 5)
+       이고, 두 숫자를 한 짝으로 묶어 앞은 **막대**에 뒤는 **틈**에 싣는다(그래서
+       인터리브드). 자리 수가 짝수라야 하는데 날짜 여섯 자리 둘이라 늘 열두 자리다.
+       전에는 숫자 열둘에 막대 열둘이라 종이 폭의 5분의 1도 못 채웠다 — 이 부호는
+       예순 몇 조각이 나오므로 폭을 %로 나눠 주면 종이에 꽉 찬다. */
+  const ITF = ['NNWWN', 'WNNNW', 'NWNNW', 'WWNNN', 'NNWNW',
+               'WNWNN', 'NWWNN', 'NNNWW', 'WNNWN', 'NWNWN'];
+  const WIDE = 3;                        // 넓은 조각은 좁은 것의 세 배 — 이 부호의 규격이다
+
   function barcode() {
-    const d = (t) => String(t || '').replace(/-/g, '').slice(2);
-    const code = (d(trip && trip.start_on) + d(trip && trip.end_on)) || '000000000000';
-    const bars = [...code].map(n => {
-      const w = 1 + (+n % 4);            // 1~4px — 굵기가 그 자리 숫자다
-      const g = 1 + ((+n + 2) % 3);      // 사이 틈도 마찬가지
-      return `<i style="width:${w}px"></i><u style="width:${g}px"></u>`;
+    /* 20260829 · 20260831 — 연도를 네 자리로 다 적는다. 열여섯 자리라 짝수 규칙에
+       맞고, 조각이 여든 몇으로 늘어 종이 폭을 촘촘히 채운다. */
+    const d = (t) => String(t || '').replace(/-/g, '');
+    const a = d(trip && trip.start_on) || '00000000';
+    const b = d(trip && trip.end_on) || a;
+    const code = a + b;
+
+    const mods = [];                                   // [폭단위, 막대인가]
+    const put = (u, bar) => mods.push([u, bar]);
+    [0, 1, 2, 3].forEach(i => put(1, i % 2 === 0));     // 시작 부호 — 좁은 넷
+    for (let i = 0; i + 1 < code.length; i += 2) {
+      const a = ITF[+code[i]] || ITF[0];
+      const b = ITF[+code[i + 1]] || ITF[0];
+      for (let k = 0; k < 5; k++) {
+        put(a[k] === 'W' ? WIDE : 1, true);            // 앞 숫자는 막대에
+        put(b[k] === 'W' ? WIDE : 1, false);           // 뒤 숫자는 틈에
+      }
+    }
+    put(WIDE, true); put(1, false); put(1, true);      // 끝 부호
+
+    /* px 가 아니라 %로 준다 — 종이 폭이 기기마다 달라도 늘 꽉 찬다. */
+    const sum = mods.reduce((s, m) => s + m[0], 0);
+    $('cost-bc').innerHTML = mods.map(([u, bar]) => {
+      const g = bar ? 'i' : 'u';
+      return `<${g} style="width:${(u / sum * 100).toFixed(3)}%"></${g}>`;
     }).join('');
-    $('cost-bc').innerHTML = `<i style="width:2px"></i><u style="width:2px"></u>${bars}`
-                           + '<i style="width:2px"></i>';
-    $('cost-bn').textContent = `*${code}*`;
+    $('cost-bn').textContent = `${a} ${b}`;
   }
 
   function draw() {
@@ -335,11 +362,26 @@ const Cost = (function () {
     const c = M.cash;
     /* ★영수증 안에서는 라벨이 먼저다 — TOTAL 과 같은 어법(작은 대문자 mono).
        '남은 현금' 을 뒤에 달면 값·라벨·곁말 셋이 한 줄에 안 들어가 접힌다. */
-    $('cost-wallet').innerHTML = (c && c.bal > 0.5) ? `
+    /* ★현금은 **한 줄이 아니라 장부 석 줄**이다(2026-09-06). '남은 돈' 하나만 적어
+       두면 그 수가 어디서 왔는지 알 수 없다 — 바꾼 만큼에서 쓴 만큼을 빼면 남는다는
+       것이 현금의 전부라, 셋을 나란히 세워야 서로를 설명한다.
+       ★쓴 돈은 **뺄셈으로 낸다**(바꾼 것 − 남은 것). 현금 줄을 따로 세면 지갑이
+         못 댄 줄까지 섞여 남은 돈과 아귀가 안 맞는다 — money.js 의 지갑이 이미
+         한 벌로 굴린 수라 그 둘만 쓰면 늘 맞는다.
+       ★원화는 그때그때의 환율이 아니라 **지갑의 평균 원가**로 낸다. 그래야 세 줄의
+         원화가 더해서 맞는다(172,491 = 87,712 + 84,779). */
+    const krw = v => esc(U.money(Math.round(v), U.SETTLE));
+    $('cost-wallet').innerHTML = (c && c.bal > 0.5 && c.got > 0) ? `
       <div class="wallet">
-        <span class="wl">CASH LEFT</span>
-        <span class="wv">${esc(U.money(c.bal, c.cur))}</span>
-        <span class="wr">평균 ${(c.rate || 0).toFixed(2)}원 · 원가 ${esc(U.money(c.paid, U.SETTLE))}</span>
+        <div class="whd">
+          <span class="wl">CASH</span>
+          <span class="wa">평균 ${(c.gotRate || 0).toFixed(2)}원</span>
+        </div>
+        <div class="wg">
+          <span class="wt">환전</span><b class="wf">${esc(U.money(c.got, c.cur))}</b><span class="wk">${krw(c.gotKrw)}</span>
+          <span class="wt">사용</span><b class="wf">${esc(U.money(c.got - c.bal, c.cur))}</b><span class="wk">${krw(c.gotKrw - c.paid)}</span>
+          <span class="wt on">남음</span><b class="wf on">${esc(U.money(c.bal, c.cur))}</b><span class="wk on">${krw(c.paid)}</span>
+        </div>
       </div>` : '';
 
     $('cost-miss').innerHTML = miss.length ? `
