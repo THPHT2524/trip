@@ -309,14 +309,21 @@ const Plan = (function () {
       <span class="pin">${num || ''}</span>
       <span class="stopcard">
         <button class="item${r.done ? ' is-done' : ''}${r._pending ? ' is-pending' : ''}" type="button" data-edit="${esc(r.id)}">
-          <span class="row1">
-            <span class="time${time ? '' : ' none'}">${esc(time || '시각 미정')}</span>
-            <span class="name">${esc(r.name)}</span>
-          </span>
+          <!-- ★★머리가 먼저다(2026-09-06). 항공사 여정표의 짜임을 빌려 왔다:
+               **구분·금액이 머리로 올라가고 시각+이름이 그 밑에 선다.** 훑을 때
+               눈이 먼저 잡는 것은 '무엇을 하는 자리이고 얼마 썼나' 이고, 이름은
+               그 다음이다 — 전에는 이름이 위라 스물아홉 줄에서 구분이 묻혔다.
+               ⚠ 마크업 순서만 바꿨다. row1/row2 라는 이름은 **뜻이 아니라 자리**를
+                 가리키던 것이라 그대로 두면 이제 거꾸로 읽힌다 — css 의 두 padding
+                 규칙이 이 순서를 따라 자리를 바꿨다(.acts 가 절대 위치라 그렇다). -->
           <span class="row2">
             <span class="kind">${esc(r.kind)}</span>
             ${cost}
             ${r.payer_id ? `<span class="badge who">${esc(Crew.nameOf(crew, r.payer_id) || '냄')}</span>` : ''}
+          </span>
+          <span class="row1">
+            <span class="time${time ? '' : ' none'}">${esc(time || '시각 미정')}</span>
+            <span class="name">${esc(r.name)}</span>
           </span>
         </button>
         ${r.memo ? `<span class="acts at-name"><button class="act has" type="button"

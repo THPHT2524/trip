@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=328') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=329') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=328') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=329') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=328') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=329') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -387,18 +387,23 @@ a { color: var(--route); text-underline-offset: 2px; }
   border-color: var(--route);
   box-shadow: 0 0 0 4px var(--route-w);
 }
-.stop.is-next .item {
-  border-color: var(--route);
-  box-shadow: var(--sh-ring);
-}
+/* ★테두리가 사라졌으므로 **홈 카드의 '지금' 과 같은 어법**으로 바꾼다
+   (.trip.is-now — 옅은 물빛 바탕). 두 화면이 같은 몸짓으로 '여기다' 를 말한다.
+   왼쪽 띠는 안 넣는다: 글자를 밀어내 그 한 줄만 어긋나 보인다. */
+.stop.is-next .item { background: var(--onnow); }
 
 /* ── 일정 한 줄 ───────────────────────────────────────────────────────── */
+/* ★★카드를 **걷었다**(2026-09-06). 하루 스물아홉 줄인 날이 있는데 테두리 있는 판이
+   스물아홉 장 서면 그것만으로 화면이 무겁다. 항공사 여정표처럼 **가로선으로만** 끊는다
+   — 금은 구간(.seg)이 긋는다. 왼쪽 여백도 0 으로 둔다: 그래야 결제 줄의 12px
+   들여쓰기가 비로소 '이 장소에 딸린 것' 으로 읽힌다(전에는 둘이 같은 x 에 섰다).
+   ⚠ 테두리가 없어지면 **누를 곳의 경계**도 없어진다. :active 배경이 그 일을 혼자
+     맡게 되므로 지우면 안 된다 — 이 화면에서 제일 자주 누르는 것이다. */
 .item {
   display: block; width: 100%; text-align: left;
-  appearance: none; border: 1px solid var(--line); background: var(--card);
-  border-radius: var(--r);
-  padding: var(--pad-row);
-  margin: 4px 0;
+  appearance: none; border: 0; background: none; border-radius: 0;
+  padding: 10px 0 11px;
+  margin: 0;
   cursor: pointer;
   color: inherit; font: inherit;
 }
@@ -419,7 +424,10 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* ★왼쪽 46px 을 걷었다. 이름 아래로 맞춰 들여 쓰던 자리인데, 오른쪽에 .acts 자리를
      내주고 나니 375px 폰에서 내용이 으깨져 '이동' 이 두 줄로 쪼개졌다(2026-09-01).
      메타는 이름이 아니라 **줄 전체**에 붙는 것이라 왼쪽 끝에서 시작해도 맞다. */
-  margin-top: 3px; padding-right: 92px;   /* 오른쪽은 .acts 자리 */
+  /* ⚠ 이 줄이 **머리로 올라갔다**(2026-09-06). 오른쪽 92px 은 카드 아래에 앉는
+     '지도·못 감' 자리였으므로 아래로 내려간 .row1 이 물려받는다. 여기는 위에 앉는
+     메모 단추만 비켜 주면 된다(.has-memo 규칙이 아래에 있다). */
+  margin-top: 0; padding-right: 4px;
   /* ★넘치면 **접는다.** 65줄 중 메타가 붐비는 것은 10줄뿐이고(2026-09-02 측정:
      중앙값 19px, 상위 10줄만 203~255px), 그 10줄에서 배지를 '…' 로 잘라 버리면
      누가 냈는지가 사라진다. 접히면 그 줄만 19px 씩 는다 — 열 줄이면 190px 로,
@@ -446,7 +454,10 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ── 구간 — 이 화면의 서명 ────────────────────────────────────────────── */
 /* 정거장 사이의 **빈 곳이 정보를 갖는다.** 거리는 여기 적히고, 누르면 길찾기로 나간다.
    레일이 이 구간에서만 점선이 된다 — 지나가는 중이라는 뜻이다. */
-.seg { position: relative; padding-left: var(--gutter); height: 26px; }
+/* ★구간이 **금도 긋는다**. 카드를 걷었으므로 정거장과 정거장을 가르는 것이 이 선
+   하나다 — 레일을 가로질러 종이 폭을 다 쓴다(여정표가 그렇게 끊는다). */
+.seg { position: relative; padding-left: var(--gutter); height: 27px;
+  border-top: 1px solid var(--line); }
 .seg::before {
   content: ''; position: absolute;
   left: calc(var(--rail-x) - 1px); top: 0; bottom: 0; width: 4px;
@@ -480,7 +491,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* 좌표가 없어 거리를 못 내는 구간 — 레일은 잇되 아무 말도 하지 않는다.
    짧게 둔다: 없는 정보에 자리를 크게 내주면 빈 곳이 실수처럼 보인다. */
-.seg.seg-blank { height: 14px; }
+.seg.seg-blank { height: 15px; }
 
 /* 줄마다 붙는 작은 동작. 카드를 누르면 수정이고, 이건 그보다 가벼운 것들이다.
    ★★전에는 카드 **아래에 제 줄**을 갖고 있었다. 한 줄당 26px 인데 65개짜리 여행에서
@@ -527,7 +538,10 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ⚠ 클래스 이름을 `top` 으로 쓰면 안 된다 — 머리말 `.top`(sticky·배경·패딩)이 같이 걸린다.
    실제로 걸려서 메모 단추가 76×55 짜리 검은 덩어리가 됐다(2026-09-02). */
 .acts.at-name { top: 4px; bottom: auto; }
-.stop.has-memo .item .row1 { padding-right: 52px; }
+/* 메모는 머리줄 오른쪽에 앉는다(.acts.at-name 이 top:4px 이다) — 그 줄이 비켜 준다 */
+.stop.has-memo .item .row2 { padding-right: 52px; }
+/* 이름 줄이 '지도·못 감' 자리를 물려받았다 */
+.item .row1 { margin-top: 3px; padding-right: 92px; }
 
 /* ── 메모 쪽지 ─────────────────────────────────────────────────────────
    ★뒤를 어둡게 덮지 않는다. 한 줄짜리 메모를 보려고 화면이 닫히면 보던 자리를 잃는다.
