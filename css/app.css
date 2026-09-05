@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=341') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=345') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=341') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=345') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=341') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=345') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -437,7 +437,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* 머리줄이 비켜 줄 것은 메모·지도 둘이다. 메모가 없는 줄에서도 폭을 안 줄인다 —
      구분은 짧고 왼쪽에 붙어 있어 오른쪽이 비어도 잃는 것이 없고, 줄마다 폭이
      달라지면 구분이 좌우로 흔들려 보인다. */
-  padding: 10px 84px 0 0;
+  padding: 10px 104px 0 0;
   /* ★넘치면 **접는다.** 65줄 중 메타가 붐비는 것은 10줄뿐이고(2026-09-02 측정:
      중앙값 19px, 상위 10줄만 203~255px), 그 10줄에서 배지를 '…' 로 잘라 버리면
      누가 냈는지가 사라진다. 접히면 그 줄만 19px 씩 는다 — 열 줄이면 190px 로,
@@ -524,10 +524,11 @@ a { color: var(--route); text-underline-offset: 2px; }
      .stop 의 바닥이 마지막 결제 줄이라 '지도·못 감' 이 결제 줄 위로 내려앉았다.
      카드와 .acts 만 감싸는 껍데기를 하나 두어 기준을 카드로 되돌린다. */
 .stopcard { position: relative; display: block; }
+/* ★단추 셋이 **머리줄 오른쪽 한 자리**에 모였다(2026-09-06) — 이름줄은 통째로
+   이름 몫이 됐다. 사이를 6px 벌린다: 아래 ::after 가 좌우로 3px 씩 번지므로
+   그래야 이웃의 누르는 자리끼리 딱 맞닿고 겹치지 않는다. */
 .acts {
-  position: absolute; right: 4px; bottom: 4px;
-  /* 상자를 줄인 만큼 사이를 벌린다 — 아래 ::after 가 좌우로 3px 씩 번지므로
-     6px 이면 이웃끼리 딱 맞닿고 겹치지는 않는다 */
+  position: absolute; right: 4px; top: 4px;
   display: flex; gap: 6px;
 }
 /* ★손가락 크기. 글자는 11px 그대로 두고 **여백만** 키운다 —
@@ -557,18 +558,16 @@ a { color: var(--route); text-underline-offset: 2px; }
    자리에서 **무엇이 단추인지는 따로 말해야 한다.**
    ⚠ .act 는 이 앱 전체가 쓰는 이름이다(계산기·로그아웃·환율 채우기…). .acts 안에
      있는 것에만 건다 — 다른 화면의 단추까지 상자가 되면 안 된다. */
-.acts .act { border: 1px solid var(--line); }
-.acts .act:hover, .acts .act:focus-visible { border-color: var(--route); }
-/* ★지도만 상자가 없다 — 글자가 아니라 **그림**이라 테두리 없이도 단추로 읽힌다.
-   셋 다 상자면 오른쪽이 상자 밭이 되는데, 이 하나는 앱 밖으로 나가는 것이라
-   나머지 둘(기록을 건드리는 것)과 생김새가 달라도 된다. */
-.acts .act.go {
-  border: 0; min-width: 28px; padding: 0 3px; font-size: 15px; line-height: 1;
+/* ★★셋 다 **그림**이라 상자를 안 두른다(2026-09-06). 테두리를 둘렀던 것은 글자로
+   된 단추가 '이동'·'08:50' 과 생김새가 같아서였는데, 그림은 그 자체로 누를 것처럼
+   보인다 — 셋 다 상자면 오른쪽이 상자 밭이 된다.
+   ⚠ 글자가 없으므로 뜻은 aria-label 이 진다(markup 참고). 색으로도 못 알린다:
+     이모지는 color 를 안 받는다. 그래서 hover 는 흐리기로 말한다. */
+.acts .act {
+  border: 0; min-width: 30px; padding: 0 3px; font-size: 15px; line-height: 1;
 }
-.acts .act.go:hover, .acts .act.go:focus-visible { border-color: transparent; opacity: .7; }
-/* 값이 들어 있어서 뜬 것 — '지도·못 감' 처럼 늘 있는 동작이 아니라 **이 줄에만 있는 것**이라
-   조금 진하게 둔다. 그래야 훑을 때 메모가 붙은 줄이 눈에 걸린다. */
-.act.has { color: var(--ink-2); }
+.acts .act:hover, .acts .act:focus-visible { opacity: .62; }
+
 /* ★메모 단추는 **이름 줄**의 오른쪽에 앉는다. 아래 줄에 셋을 나란히 세워 봤더니
      오른쪽 자리가 136px 이 되어 '이동 ¥1,960 · ₩17,070' 이 셋으로 쪼개졌다 —
      메타 줄에는 자리가 없고 이름 줄에는 있다(이름 폭 중앙값 140px / 칸 271px).
@@ -576,9 +575,9 @@ a { color: var(--route); text-underline-offset: 2px; }
      '지도·못 감' 은 이 줄에 **하는 것**이라 아래다. */
 /* ⚠ 클래스 이름을 `top` 으로 쓰면 안 된다 — 머리말 `.top`(sticky·배경·패딩)이 같이 걸린다.
    실제로 걸려서 메모 단추가 76×55 짜리 검은 덩어리가 됐다(2026-09-02). */
-.acts.at-name { top: 4px; bottom: auto; }
+
 /* 이름줄이 비켜 줄 것은 '취소' 하나뿐이다 — 그만큼 이름이 길게 선다 */
-.item .row1 { padding-right: 38px; }
+.item .row1 { padding-right: 0; }
 
 /* ── 메모 쪽지 ─────────────────────────────────────────────────────────
    ★뒤를 어둡게 덮지 않는다. 한 줄짜리 메모를 보려고 화면이 닫히면 보던 자리를 잃는다.
@@ -618,10 +617,28 @@ a { color: var(--route); text-underline-offset: 2px; }
 .payrow .badge { flex: 0 0 auto; }
 /* 수단 라벨은 줄 맨 앞. 폭을 고정해야 이름들이 세로로 한 기둥에 선다
    (현금·카드·환전 셋 다 두 글자라 자연히 같지만, 못 박아 두면 흔들릴 일이 없다) */
-.payrow .badge.way { min-width: 38px; text-align: center; }
-/* 금액은 줄 맨 끝에서 오른쪽으로 맞춘다 — 결제 줄 여럿이 세로로 자릿수가 맞아야 한다 */
-.payrow .pm { flex: 0 0 auto; margin-left: auto; text-align: right;
-  font-family: var(--mono); font-size: var(--t-cap); color: var(--ink); white-space: nowrap; }
+.payrow .badge.way { min-width: 34px; padding-left: 3px; padding-right: 3px; text-align: center; }
+/* ★★금액 칸의 폭을 **못 박는다**(2026-09-06). 폭이 내용을 따라가면 그 왼쪽에 붙는
+   결제자 배지가 금액 자릿수마다 좌우로 밀려서, 세로로 훑을 때 배지가 층계처럼
+   어긋난다. 78px 은 ₩1,234,567(10자) 이 들어가는 폭이다 — 그보다 큰 수는
+   여행 하나에서 안 나온다. */
+.payrow .pm { flex: 0 0 78px; margin-left: auto; text-align: right;
+  font-family: var(--mono); font-size: var(--t-cap); color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* ★★결제자는 수단과 **다른 물건**이다(2026-09-06). 수단(현금·카드·환전)은 이 앱이
+   정해 둔 닫힌 값이고, 결제자는 **사람**이다 — 둘이 같은 회색 각진 칩이면 한 줄에
+   같은 종류가 둘 있는 것처럼 읽힌다.
+   모양과 색으로 가른다: 수단은 각진 회색 칩, 사람은 **둥근 물빛 칩**. 10px 짜리
+   글자에서는 색보다 모양이 먼저 읽히므로 둘 다 바꾼다.
+   ★물빛(--onnow)은 이 앱이 '지금·나' 에 쓰는 색이다 — 사람에게 그 색을 주면
+     홈의 '지금 여행' 과 같은 계열로 묶인다.
+   폭은 '각자 2명' 이 들어가는 만큼. 금액 칸이 고정폭이라 이 배지도 한 기둥에 선다. */
+.payrow .badge.pw {
+  /* ⚠ 폭을 못 박지 않는다. 금액 칸이 고정폭이고 이 배지는 그 바로 앞이라, **오른끝은
+     이미 한 기둥에 선다**(실측 316px). min-width 를 주면 이름이 짧을 때 텅 빈
+     알약이 되어 그것대로 눈에 걸린다. */
+  border-radius: 999px; background: var(--onnow); color: var(--ink-2);
+}
 .payrow:active, .payadd:active { background: var(--sunk); }
 /* ★★결제 목록은 **선 둘 사이에 갇힌다**(2026-09-06). 위는 실선(장소에서 내역으로
    넘어가는 자리), 아래는 점선(내역에서 합계로 넘어가는 자리) — 실선이 더 큰 매듭이다. */

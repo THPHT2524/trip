@@ -251,7 +251,7 @@ const Plan = (function () {
   function stopHtml(r, nid, num) {
     const k = U.kvar(r.kind);
     const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : '',
-                 r.memo ? 'has-memo' : ''].filter(Boolean).join(' ');
+                 ].filter(Boolean).join(' ');
     const time = r.at_time ? r.at_time.slice(0, 5) : '';
     /* ★비용이 없으면 **아무 말도 하지 않는다.** 전에는 '비용 미정' 을 적었는데,
        65줄짜리 여행에서 57줄이 그랬다 — 빈 칸의 이름을 57번 읽는 셈이다.
@@ -310,7 +310,7 @@ const Plan = (function () {
       return `<button class="payrow" type="button" data-edit="${esc(c.id)}">
         <span class="badge way">${esc(way)}</span>
         <span class="pn">${esc(c.name)}</span>
-        ${who ? `<span class="badge">${esc(who)}</span>` : ''}
+        ${who ? `<span class="badge pw">${esc(who)}</span>` : ''}
         <span class="pm">${esc(U.money(c.cost, c.cost_cur))}</span>
       </button>`;
     }).join('');
@@ -337,19 +337,18 @@ const Plan = (function () {
             <span class="name">${esc(r.name)}</span>
           </span>
         </button>
-        <!-- ★단추를 두 줄로 갈라 앉힌다(2026-09-06). 셋을 한 줄에 세우면 오른쪽이
-             136px 이 되어 이름이 그만큼 잘린다 — 두 줄에 나눠 반씩 문다.
-             ★머리줄에 **기록을 건드리는 것**(메모·취소), 이름줄에 **밖으로 나가는
-               것**(지도)을 둔다. 지도는 이 앱을 떠나는 유일한 단추라 장소 이름
-               바로 옆이 맞고, 그 이름이 곧 지도에서 찾을 것이다. -->
-        <span class="acts at-name">
-          ${r.memo ? `<button class="act has" type="button"
-             data-memo="${esc(r.id)}" aria-label="메모 보기">메모</button>` : ''}
-          <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '취소'}</button>
-        </span>
+        <!-- ★★단추 셋이 **머리줄 한 자리**에 모인다(2026-09-06). 두 줄로 갈라 두었던
+             것은 '메모 취소 지도' 세 낱말이 136px 을 먹어 이름을 잘랐기 때문인데,
+             그림으로 바꾸니 셋이 96px 이면 된다 — 이름줄은 통째로 이름 몫이 됐다.
+             ★글자가 없으므로 뜻은 aria-label 이 진다. 상자도 안 두른다: 그림은 그
+               자체로 누를 것처럼 보이고, 셋 다 상자면 오른쪽이 상자 밭이 된다. -->
         <span class="acts">
-          ${link ? `<a class="act go" href="${esc(link)}" target="_blank" rel="noopener"
+          ${r.memo ? `<button class="act" type="button" data-memo="${esc(r.id)}"
+             aria-label="메모 보기"><span aria-hidden="true">📝</span></button>` : ''}
+          ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener"
              aria-label="지도에서 보기"><span aria-hidden="true">📍</span></a>` : ''}
+          <button class="act" type="button" data-done="${esc(r.id)}"
+             aria-label="${r.done ? '되돌리기' : '취소'}"><span aria-hidden="true">${r.done ? '↩️' : '✖️'}</span></button>
         </span>
       </span>
       ${payHtml}
