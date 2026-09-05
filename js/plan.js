@@ -298,12 +298,18 @@ const Plan = (function () {
     const payHtml = kids.map(c => {
       const who = c.split ? `각자${+c.qty > 1 ? ' ' + (+c.qty) + '명' : ''}`
                 : (c.payer_id ? (Crew.nameOf(crew, c.payer_id) || '냄') : '');
-      const way = c.settle === 'cash' ? '현금' : c.settle === 'exchange' ? '환전' : '';
+      /* ★결제 수단은 **셋 다 적는다**(2026-09-06). 전에는 카드일 때만 비워 뒀는데,
+         라벨이 이름 앞으로 오면서 그 자리가 비면 줄마다 이름 시작점이 달라진다 —
+         기본값이라 안 적던 것이 이제는 기둥을 무너뜨린다. */
+      const way = c.settle === 'cash' ? '현금' : c.settle === 'exchange' ? '환전' : '카드';
       /* ★금액이 **맨 뒤**다. 앞에 두면 배지 개수에 따라 숫자가 좌우로 밀려서
          결제 줄이 둘만 돼도 자릿수가 안 맞는다 — 세로로 읽히라고 mono 를 쓰는 판에. */
+      /* ★수단이 **맨 앞**이다. 무엇으로 냈는지가 줄의 성질이라 이름보다 먼저 온다 —
+         현금 줄은 지갑에서 빠지고 환전 줄은 지출이 아니다. 폭을 고정해 이름들이
+         세로로 한 기둥에 선다. 누가 냈나는 뒤에 남는다(그건 줄의 성질이 아니다). */
       return `<button class="payrow" type="button" data-edit="${esc(c.id)}">
+        <span class="badge way">${esc(way)}</span>
         <span class="pn">${esc(c.name)}</span>
-        ${way ? `<span class="badge">${esc(way)}</span>` : ''}
         ${who ? `<span class="badge">${esc(who)}</span>` : ''}
         <span class="pm">${esc(U.money(c.cost, c.cost_cur))}</span>
       </button>`;
@@ -342,7 +348,8 @@ const Plan = (function () {
           <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '취소'}</button>
         </span>
         <span class="acts">
-          ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
+          ${link ? `<a class="act go" href="${esc(link)}" target="_blank" rel="noopener"
+             aria-label="지도에서 보기"><span aria-hidden="true">📍</span></a>` : ''}
         </span>
       </span>
       ${payHtml}

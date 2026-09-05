@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=339') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=341') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=339') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=341') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=339') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=341') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -437,7 +437,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* 머리줄이 비켜 줄 것은 메모·지도 둘이다. 메모가 없는 줄에서도 폭을 안 줄인다 —
      구분은 짧고 왼쪽에 붙어 있어 오른쪽이 비어도 잃는 것이 없고, 줄마다 폭이
      달라지면 구분이 좌우로 흔들려 보인다. */
-  padding: 10px 96px 0 0;
+  padding: 10px 84px 0 0;
   /* ★넘치면 **접는다.** 65줄 중 메타가 붐비는 것은 10줄뿐이고(2026-09-02 측정:
      중앙값 19px, 상위 10줄만 203~255px), 그 10줄에서 배지를 '…' 로 잘라 버리면
      누가 냈는지가 사라진다. 접히면 그 줄만 19px 씩 는다 — 열 줄이면 190px 로,
@@ -526,24 +526,27 @@ a { color: var(--route); text-underline-offset: 2px; }
 .stopcard { position: relative; display: block; }
 .acts {
   position: absolute; right: 4px; bottom: 4px;
-  display: flex; gap: 2px;
+  /* 상자를 줄인 만큼 사이를 벌린다 — 아래 ::after 가 좌우로 3px 씩 번지므로
+     6px 이면 이웃끼리 딱 맞닿고 겹치지는 않는다 */
+  display: flex; gap: 6px;
 }
 /* ★손가락 크기. 글자는 11px 그대로 두고 **여백만** 키운다 —
      절대 위치라 카드가 커지지 않는다. 27×22 였고(2026-09-02 측정) 걸으면서
      4px 간격으로 둘을 구별해 눌러야 했다. 한쪽('못 감')은 데이터를 바꾼다. */
 /* ★★**보이는 크기는 그대로, 누르는 자리만 넓힌다**(2026-09-04).
-   .act 는 이 앱에서 제일 자주 누르는 것이고(일정 한 화면에 135개: 메모·지도·못 감·
-   되돌리기·계산기·로그아웃·내보내기) 34px 이었다 — 손가락 권장은 44px 이다.
-   높이를 올리면 정거장 카드가 통째로 커지므로, 안 보이는 겹을 위아래로 5px 씩 덧대
-   44px 로 만든다. 세로 이웃과 98px 떨어져 있어 남의 자리를 뺏지 않는다(실측).
-   ⚠ 가로 이웃과는 2px 밖에 안 떨어져 있다 — 가로는 1px 만 넓힌다. */
+   .act 는 이 앱에서 제일 자주 누르는 것이라 손가락 권장 44px 을 맞춰야 하는데,
+   보이는 상자를 그만큼 키우면 정거장이 통째로 커진다. 안 보이는 겹을 덧댄다.
+   ★상자를 34×26 으로 줄였다(2026-09-06, 44×34 였다). 테두리를 두르고 나니
+     44×34 짜리 상자 셋이 오른쪽에서 정거장만큼 커 보였다 — 테두리가 생기면
+     같은 크기도 더 크게 읽힌다. 겹을 위아래 9px · 좌우 3px 로 늘려 누르는
+     자리는 40×44 로 지킨다(.acts 의 gap 을 6px 로 벌려 이웃과 안 겹친다). */
 .act { position: relative; }
-.act::after { content: ''; position: absolute; inset: -5px -1px; }
+.act::after { content: ''; position: absolute; inset: -9px -3px; }
 .act {
   appearance: none; cursor: pointer;
   background: none; border: 0; white-space: nowrap;
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 44px; min-height: 34px; padding: 0 6px;
+  min-width: 34px; min-height: 26px; padding: 0 7px;
   font: inherit; font-size: var(--t-meta); font-weight: 600;
   color: var(--ink-3); text-decoration: none; border-radius: var(--r-sm);
 }
@@ -556,6 +559,13 @@ a { color: var(--route); text-underline-offset: 2px; }
      있는 것에만 건다 — 다른 화면의 단추까지 상자가 되면 안 된다. */
 .acts .act { border: 1px solid var(--line); }
 .acts .act:hover, .acts .act:focus-visible { border-color: var(--route); }
+/* ★지도만 상자가 없다 — 글자가 아니라 **그림**이라 테두리 없이도 단추로 읽힌다.
+   셋 다 상자면 오른쪽이 상자 밭이 되는데, 이 하나는 앱 밖으로 나가는 것이라
+   나머지 둘(기록을 건드리는 것)과 생김새가 달라도 된다. */
+.acts .act.go {
+  border: 0; min-width: 28px; padding: 0 3px; font-size: 15px; line-height: 1;
+}
+.acts .act.go:hover, .acts .act.go:focus-visible { border-color: transparent; opacity: .7; }
 /* 값이 들어 있어서 뜬 것 — '지도·못 감' 처럼 늘 있는 동작이 아니라 **이 줄에만 있는 것**이라
    조금 진하게 둔다. 그래야 훑을 때 메모가 붙은 줄이 눈에 걸린다. */
 .act.has { color: var(--ink-2); }
@@ -568,7 +578,7 @@ a { color: var(--route); text-underline-offset: 2px; }
    실제로 걸려서 메모 단추가 76×55 짜리 검은 덩어리가 됐다(2026-09-02). */
 .acts.at-name { top: 4px; bottom: auto; }
 /* 이름줄이 비켜 줄 것은 '취소' 하나뿐이다 — 그만큼 이름이 길게 선다 */
-.item .row1 { padding-right: 48px; }
+.item .row1 { padding-right: 38px; }
 
 /* ── 메모 쪽지 ─────────────────────────────────────────────────────────
    ★뒤를 어둡게 덮지 않는다. 한 줄짜리 메모를 보려고 화면이 닫히면 보던 자리를 잃는다.
@@ -606,6 +616,9 @@ a { color: var(--route); text-underline-offset: 2px; }
 .payrow .pn { flex: 1; min-width: 0; font-weight: 600;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .payrow .badge { flex: 0 0 auto; }
+/* 수단 라벨은 줄 맨 앞. 폭을 고정해야 이름들이 세로로 한 기둥에 선다
+   (현금·카드·환전 셋 다 두 글자라 자연히 같지만, 못 박아 두면 흔들릴 일이 없다) */
+.payrow .badge.way { min-width: 38px; text-align: center; }
 /* 금액은 줄 맨 끝에서 오른쪽으로 맞춘다 — 결제 줄 여럿이 세로로 자릿수가 맞아야 한다 */
 .payrow .pm { flex: 0 0 auto; margin-left: auto; text-align: right;
   font-family: var(--mono); font-size: var(--t-cap); color: var(--ink); white-space: nowrap; }
