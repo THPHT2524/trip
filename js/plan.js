@@ -248,6 +248,30 @@ const Plan = (function () {
     return band + `<section class="day">${html}</section>`;
   }
 
+  /* ★★결제자는 **한 글자 + 그 사람의 색**이다(2026-09-06). 이름을 다 적으면 길이가
+     제각각이라 금액 앞이 들쭉날쭉했고, 한 줄에 배지가 둘(수단·사람)이면 어느 쪽이
+     사람인지도 안 보였다. 동그란 색칠판은 사람이라는 것을 모양만으로 말한다.
+   ★색은 **아이디에서 뽑는다** — 같은 사람은 늘 같은 색이다(랜덤이되 안 흔들린다).
+     여덟 색은 이 앱의 구분 색이 쓰는 색상환 자리에서 골랐다. 채도·밝기는 테마마다
+     한 벌뿐이라(--pc-s/--pc-l) 어느 색을 뽑아도 이 화면의 톤을 벗어나지 않는다.
+   ★한 글자만 남으므로 **온전한 이름은 title·aria-label 이 진다.**
+   ★'각자 냄' 은 사람이 아니다 — 색을 주지 않고 회색으로 남긴다. */
+  const PHUE = [210, 14, 152, 253, 42, 328, 188, 96];
+  function payerChip(c) {
+    if (c.split) {
+      const n = +c.qty > 1 ? ` ${+c.qty}명` : '';
+      return `<span class="badge pw none" title="각자 냄${esc(n)}"
+        aria-label="각자 냄${esc(n)}">각</span>`;
+    }
+    if (!c.payer_id) return '';
+    const nm = Crew.nameOf(crew, c.payer_id) || '냄';
+    const id = String(c.payer_id);
+    let h = 0;
+    for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    return `<span class="badge pw" style="--pc: ${PHUE[h % PHUE.length]}"
+      title="${esc(nm)}" aria-label="${esc(nm)}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
+  }
+
   function stopHtml(r, nid, num) {
     const k = U.kvar(r.kind);
     const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : '',
@@ -296,8 +320,7 @@ const Plan = (function () {
            넣는 방식 자체가 없었다 — 안 눌린 것이 당연했다. 없는 기능의 사용량으로
            그 기능의 자리값을 매긴 것이 틀렸다. */
     const payHtml = kids.map(c => {
-      const who = c.split ? `각자${+c.qty > 1 ? ' ' + (+c.qty) + '명' : ''}`
-                : (c.payer_id ? (Crew.nameOf(crew, c.payer_id) || '냄') : '');
+      const who = payerChip(c);
       /* ★결제 수단은 **셋 다 적는다**(2026-09-06). 전에는 카드일 때만 비워 뒀는데,
          라벨이 이름 앞으로 오면서 그 자리가 비면 줄마다 이름 시작점이 달라진다 —
          기본값이라 안 적던 것이 이제는 기둥을 무너뜨린다. */
@@ -310,7 +333,7 @@ const Plan = (function () {
       return `<button class="payrow" type="button" data-edit="${esc(c.id)}">
         <span class="badge way">${esc(way)}</span>
         <span class="pn">${esc(c.name)}</span>
-        ${who ? `<span class="badge pw">${esc(who)}</span>` : ''}
+        ${who}
         <span class="pm">${esc(U.money(c.cost, c.cost_cur))}</span>
       </button>`;
     }).join('');
