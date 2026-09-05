@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=337') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=338') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=337') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=338') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=337') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=338') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -541,6 +541,14 @@ a { color: var(--route); text-underline-offset: 2px; }
   color: var(--ink-3); text-decoration: none; border-radius: var(--r-sm);
 }
 .act:hover, .act:focus-visible { color: var(--route); }
+/* ★★정거장의 단추 셋(메모·취소·지도)에는 **테두리를 두른다**(2026-09-06). 카드를
+   걷어내면서 이것들이 맨 종이 위의 글자로 남았는데, 그러자 '이동' 이나 '08:50' 과
+   생김새가 같아져 누를 것인지 읽을 것인지가 구별되지 않았다 — 테두리가 없어진
+   자리에서 **무엇이 단추인지는 따로 말해야 한다.**
+   ⚠ .act 는 이 앱 전체가 쓰는 이름이다(계산기·로그아웃·환율 채우기…). .acts 안에
+     있는 것에만 건다 — 다른 화면의 단추까지 상자가 되면 안 된다. */
+.acts .act { border: 1px solid var(--line); }
+.acts .act:hover, .acts .act:focus-visible { border-color: var(--route); }
 /* 값이 들어 있어서 뜬 것 — '지도·못 감' 처럼 늘 있는 동작이 아니라 **이 줄에만 있는 것**이라
    조금 진하게 둔다. 그래야 훑을 때 메모가 붙은 줄이 눈에 걸린다. */
 .act.has { color: var(--ink-2); }

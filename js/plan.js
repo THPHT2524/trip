@@ -331,16 +331,18 @@ const Plan = (function () {
             <span class="name">${esc(r.name)}</span>
           </span>
         </button>
-        <!-- ★단추를 두 줄로 갈라 앉힌다(2026-09-06). 머리줄에는 **이 장소에 대한 것**
-             (메모·지도), 이름줄에는 **이 줄에 하는 것**(취소). 셋을 한 줄에 세우면
-             오른쪽이 136px 이 되어 이름이 그만큼 잘린다 — 두 줄에 나눠 반씩 문다. -->
+        <!-- ★단추를 두 줄로 갈라 앉힌다(2026-09-06). 셋을 한 줄에 세우면 오른쪽이
+             136px 이 되어 이름이 그만큼 잘린다 — 두 줄에 나눠 반씩 문다.
+             ★머리줄에 **기록을 건드리는 것**(메모·취소), 이름줄에 **밖으로 나가는
+               것**(지도)을 둔다. 지도는 이 앱을 떠나는 유일한 단추라 장소 이름
+               바로 옆이 맞고, 그 이름이 곧 지도에서 찾을 것이다. -->
         <span class="acts at-name">
           ${r.memo ? `<button class="act has" type="button"
              data-memo="${esc(r.id)}" aria-label="메모 보기">메모</button>` : ''}
-          ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
+          <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '취소'}</button>
         </span>
         <span class="acts">
-          <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '취소'}</button>
+          ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
         </span>
       </span>
       ${payHtml}
