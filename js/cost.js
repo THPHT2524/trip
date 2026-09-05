@@ -131,6 +131,41 @@ const Cost = (function () {
     }).join('');
   }
 
+  /* ★★환전은 **지출이 아니다** — 돈이 줄지 않고 모양만 바뀐다. 그래서 합계에도
+     '무엇에·누가' 에도 안 들어간다. 그런데 여행에서 제일 자주 되짚는 수 중 하나가
+     '언제 얼마 바꿨더라' 라서, 영수증 아래에 **따로 한 칸**을 낸다(2026-09-05).
+     지출 목록과 섞지 않고, 제 소계를 제가 낸다. */
+  function exchanges() {
+    const ex = rows.filter(r => r.settle === 'exchange' && r.cost != null)
+      .sort((a, b) => String(a.on_date).localeCompare(String(b.on_date))
+                   || String(a.at_time || '').localeCompare(String(b.at_time || '')));
+    if (!ex.length) return '';
+    let got = 0, krw = 0, cur = null;
+    const li = ex.map(r => {
+      const v = (r.fx != null) ? r.cost * r.fx : null;
+      got += r.cost; if (v != null) krw += v; cur = r.cost_cur || cur;
+      /* ★한 줄이다. 여기엔 '이름' 이 없어서(장소가 아니라 날짜가 주어다) 두 층으로
+         나눌 것이 없다 — 나눠 봤더니 줄 사이가 헐렁하기만 했다(2026-09-05). */
+      return `<li>
+        <span class="rq ex">
+          <span class="ed">${esc(U.md(r.on_date))}</span>
+          ${r.at_time ? `<span class="et">${esc(String(r.at_time).slice(0, 5))}</span>` : ''}
+          <span class="ru">${esc(U.money(r.cost, r.cost_cur))}</span>
+          <span class="rx">${r.fx != null ? (+r.fx).toFixed(2) + '원' : '환율 없음'}</span>
+          <span class="rd"></span>
+          <span class="rv${v == null ? ' na' : ''}">${v == null ? '—' : esc(U.money(v, U.SETTLE))}</span>
+        </span>
+      </li>`;
+    }).join('');
+    return `<section class="cblock exblock"><h3 class="chd">Exchange</h3>
+      <ul class="clist tight">${li}</ul>
+      <div class="exsum">
+        <span class="l">${esc(U.money(got, cur))}</span>
+        <span class="rd"></span>
+        <span class="v">${esc(U.money(krw, U.SETTLE))}</span>
+      </div></section>`;
+  }
+
   function table(title, entries, colorOf) {
     if (!entries.length) return '';
     const max = Math.max(...entries.map(e => e[1].sum));
@@ -214,6 +249,23 @@ const Cost = (function () {
      kind 색을 빌려 쓰면 'BY DAY' 와 'BY KIND' 가 같은 그림으로 보인다. */
   const tone = i => `color-mix(in srgb, var(--route) ${Math.max(26, 100 - i * 26)}%, var(--sunk))`;
 
+  /* ★★바코드를 **이 여행의 수**로 그린다(2026-09-05). 아무 수나 박아 두면 그건 그림
+     이지만, 출발·도착 날짜에서 뽑으면 종이마다 다른 무늬가 나온다 — 영수증마다
+     바코드가 다른 것과 같은 이치다. 읽으라고 있는 것이 아니라 '이 종이의 것' 이라는
+     표시다. 막대 굵기도 그 수에서 나온다. */
+  function barcode() {
+    const d = (t) => String(t || '').replace(/-/g, '').slice(2);
+    const code = (d(trip && trip.start_on) + d(trip && trip.end_on)) || '000000000000';
+    const bars = [...code].map(n => {
+      const w = 1 + (+n % 4);            // 1~4px — 굵기가 그 자리 숫자다
+      const g = 1 + ((+n + 2) % 3);      // 사이 틈도 마찬가지
+      return `<i style="width:${w}px"></i><u style="width:${g}px"></u>`;
+    }).join('');
+    $('cost-bc').innerHTML = `<i style="width:2px"></i><u style="width:2px"></u>${bars}`
+                           + '<i style="width:2px"></i>';
+    $('cost-bn').textContent = `*${code}*`;
+  }
+
   function draw() {
     M = MONEY.total(rows, FXS.rateOf);                     // 현금 지갑까지 한 번에 — 아래는 결과만 읽는다
     const paid = rows.filter(has);
@@ -255,6 +307,8 @@ const Cost = (function () {
     const byPayer = [...pm.entries()].sort((a, b) => b[1].sum - a[1].sum);
 
     $('cost-blocks').innerHTML = items();
+    $('cost-ex').innerHTML = exchanges();
+    barcode();
 
     /* 요약 띠 — 날·구분·사람. '사람' 은 혼자 다녀서 한 칸뿐이면 아무 말도 안 하므로 뺀다. */
     const dayParts = dayList().map((d, i) => ({
@@ -284,8 +338,6 @@ const Cost = (function () {
         <span class="wl">CASH LEFT</span>
         <span class="wv">${esc(U.money(c.bal, c.cur))}</span>
         <span class="wr">평균 ${(c.rate || 0).toFixed(2)}원 · 원가 ${esc(U.money(c.paid, U.SETTLE))}</span>
-        ${c.got ? `<span class="wx">EXCHANGED<b>${esc(U.money(c.got, c.cur))}</b>
-          <span class="wr">평균 ${(c.gotRate || 0).toFixed(2)}원 · ${esc(U.money(c.gotKrw, U.SETTLE))}</span></span>` : ''}
       </div>` : '';
 
     $('cost-miss').innerHTML = miss.length ? `

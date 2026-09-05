@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=305') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=309') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=305') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=309') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=305') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=309') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -954,11 +954,13 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* 바코드 — 영수증의 끝. 읽으라고 있는 게 아니라 '여기서 끝' 을 말한다 */
 .rbc {
-  margin-top: 13px; height: 30px; opacity: .3;
-  background: repeating-linear-gradient(90deg,
-    var(--ink-3) 0 1px, transparent 1px 3px, var(--ink-3) 3px 5px, transparent 5px 9px,
-    var(--ink-3) 9px 10px, transparent 10px 13px, var(--ink-3) 13px 16px, transparent 16px 18px);
+  /* 바코드 앞에 금을 긋는다 — 여기부터는 내용이 아니라 종이의 마감이다 */
+  margin-top: 13px; padding-top: 13px; border-top: 1px dashed var(--line);
+  height: 43px; display: flex; align-items: flex-end; justify-content: center;
+  gap: 0; overflow: hidden;
 }
+.rbc i { display: block; height: 30px; background: var(--ink-3); opacity: .42; }
+.rbc u { display: block; height: 30px; }
 /* 바코드 밑의 수 — 읽으라고 있는 게 아니다. 이 종이가 끝났다는 표시다 */
 .rbn {
   margin-top: 5px; text-align: center;
@@ -1982,15 +1984,27 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 }
 .rcp .wallet .wv { font-size: var(--t-body); }
 .rcp .wallet .wr { font-size: var(--t-micro); }
-/* 바꾼 총액 — 남은 현금 밑에 한 줄. 같은 지갑 이야기라 같은 상자 안에 둔다 */
-.rcp .wallet .wx {
-  flex: 0 0 100%; display: flex; align-items: baseline; gap: 8px; margin-top: 6px;
-  padding-top: 6px; border-top: 1px dashed var(--line);
-  font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
-  letter-spacing: .16em; color: var(--ink-3);
+/* ── 환전 칸 ─────────────────────────────────────────────────────────
+   지출이 아니라 **돈의 모양이 바뀐 기록**이다. 그래서 색 점이 없고(구분이 없다),
+   왼쪽에 날짜가 온다 — 여기서 궁금한 것은 '무엇에' 가 아니라 '언제' 다. */
+.exblock { border-top: 1px dashed var(--ink-3) !important; margin-top: 13px; }
+.exblock .clist.tight li { padding: 3px 0; }
+/* 환전 한 줄 — 날짜·시각·바꾼 돈·환율 ‥‥ 낸 돈 */
+.clist .rq.ex { margin-top: 0; padding-left: 0; }
+.clist .ed { flex: 0 0 auto; font-size: var(--t-cap); font-weight: 600; color: var(--ink); }
+.clist .et { flex: 0 0 auto; margin-left: 6px; font-size: var(--t-meta); color: var(--ink-3); }
+.clist .rq.ex .ru { margin-left: 10px; color: var(--ink-2); }
+.clist .rq .rx { color: var(--ink-3); }
+/* 제 소계는 제가 낸다 — 합계(TOTAL)와 섞이지 않는다 */
+.exsum {
+  display: flex; align-items: baseline; margin-top: 7px; padding-top: 7px;
+  border-top: 1px dashed var(--line);
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
 }
-.rcp .wallet .wx b { font-size: var(--t-cap); letter-spacing: 0; color: var(--ink-2); }
-.rcp .wallet .wx .wr { flex: 1 1 auto; margin-left: 0; }
+.exsum .l { flex: 0 0 auto; font-size: var(--t-cap); color: var(--ink-2); }
+.exsum .rd { flex: 1 1 auto; min-width: 14px; margin: 0 8px;
+  border-bottom: 1px dotted var(--dots); transform: translateY(-3px); }
+.exsum .v { flex: 0 0 auto; font-size: var(--t-body); font-weight: 600; color: var(--ink); }
 .wallet {
   display: flex; align-items: baseline; gap: 8px;
   padding: var(--pad-row); margin: 0 var(--pad) 4px;
