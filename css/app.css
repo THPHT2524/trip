@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=300') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=304') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=300') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=304') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=300') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=304') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -933,18 +933,11 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: flex; align-items: baseline; margin-top: 1px; padding-left: 14px;
   font-family: var(--mono); font-variant-numeric: tabular-nums;
 }
-/* 딸린 결제 — '└' 로 들여선다. 부모 이름을 되풀이하지 않는다 */
-.clist .rq.br { padding-left: 26px; position: relative; }
-.clist .rq.br::before {
-  /* ⚠ CSS 이스케이프(백슬래시+2514)로 쓰지 않는다. 파일에 넣는 쪽에서 그 백슬래시가
-     8진수 이스케이프로 읽혀 엉뚱한 글자가 박혔다 — 진짜 글자를 그대로 쓴다. */
-  content: '└'; position: absolute; left: 11px;
-  color: var(--ink-3); font-family: var(--mono); font-size: var(--t-meta); line-height: 1;
-}
-.clist .rb {
-  flex: 0 0 auto; margin-right: 9px; max-width: 42%;
-  font-family: var(--sans); font-size: var(--t-cap); color: var(--ink-2);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* 곁말 — 무엇에 썼는지. 이름 뒤에 붙는다 */
+.clist .rl em {
+  flex: 0 0 auto; font-style: normal; margin-left: 7px;
+  font-family: var(--sans); font-size: var(--t-cap); color: var(--ink-3);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
 .clist .ru { flex: 0 0 auto; font-size: var(--t-meta); color: var(--ink-3); }
 .clist .rx { flex: 0 0 auto; margin-left: 6px; font-size: var(--t-meta); color: var(--ink-3); }
@@ -1971,13 +1964,25 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .seg3 button:focus-visible { outline: 2px solid var(--route); outline-offset: -2px; }
 
 /* 지갑에 남은 현금 — 비용 탭 머리에 한 줄 */
-.rcp .wallet { margin: 11px 0 0; padding: 8px 10px; border-radius: var(--r-sm); }
+.rcp .wallet {
+  margin: 11px 0 0; padding: 8px 10px; border-radius: var(--r-sm);
+  flex-wrap: wrap;      /* ⚠ 없으면 '바꾼 총액' 줄이 안 접혀 옆으로 삐져나간다 */
+}
 .rcp .wallet .wl {
   flex: 0 0 auto; font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
   letter-spacing: .16em; color: var(--ink-3);
 }
 .rcp .wallet .wv { font-size: var(--t-body); }
 .rcp .wallet .wr { font-size: var(--t-micro); }
+/* 바꾼 총액 — 남은 현금 밑에 한 줄. 같은 지갑 이야기라 같은 상자 안에 둔다 */
+.rcp .wallet .wx {
+  flex: 0 0 100%; display: flex; align-items: baseline; gap: 8px; margin-top: 6px;
+  padding-top: 6px; border-top: 1px dashed var(--line);
+  font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
+  letter-spacing: .16em; color: var(--ink-3);
+}
+.rcp .wallet .wx b { font-size: var(--t-cap); letter-spacing: 0; color: var(--ink-2); }
+.rcp .wallet .wx .wr { flex: 1 1 auto; margin-left: 0; }
 .wallet {
   display: flex; align-items: baseline; gap: 8px;
   padding: var(--pad-row); margin: 0 var(--pad) 4px;

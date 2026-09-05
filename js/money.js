@@ -39,6 +39,10 @@ const MONEY = (function () {
     };
     let bal = 0;        // 지갑에 남은 현지통화
     let paid = 0;       // 그 잔액을 만드는 데 든 원화
+    /* ★**바꾼 총액**은 따로 센다(2026-09-05). bal·paid 는 쓸수록 줄어서 '지금 남은 것'
+       만 말한다 — '이 여행에서 얼마를 바꿨나' 는 그 값으로 되짚을 수 없다. */
+    let got = 0;        // 바꾼 외화의 총합
+    let gotKrw = 0;     // 그때 낸 원화의 총합
     let cur = null;     // 지갑의 통화
     const per = new Map();
 
@@ -53,6 +57,7 @@ const MONEY = (function () {
       if (r.settle === 'exchange') {
         if (fx == null) { per.set(r.id, { krw: null, spend: false, why: 'no-fx' }); return; }
         bal += amt; paid += amt * fx; cur = r.cost_cur || cur;
+        got += amt; gotKrw += amt * fx;
         per.set(r.id, { krw: amt * fx, spend: false, why: 'exchange', auto: at != null });
         return;
       }
@@ -86,7 +91,9 @@ const MONEY = (function () {
     return {
       per,
       /* 지금 지갑에 남은 현금과 그 원가. rate 는 남은 돈의 평균 환율이다. */
-      cash: { bal, paid, cur, rate: bal > 0 ? paid / bal : null },
+      cash: { bal, paid, cur, rate: bal > 0 ? paid / bal : null,
+              /* 바꾼 총액과 그 값 — 남은 것(bal·paid)과는 다른 수다 */
+              got, gotKrw, gotRate: got > 0 ? gotKrw / got : null },
     };
   }
 
