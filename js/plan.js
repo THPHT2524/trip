@@ -219,7 +219,10 @@ const Plan = (function () {
     /* ★날 수도 쪽자에 앉는다 — 홈의 연도 띠(2026 · 4 TIMES 24 DAYS)와 같은 어법이다.
        두 화면이 같은 판때기를 쓰면 한 물건으로 읽힌다(2026-09-04). */
     const band = `<div class="dayband">
-        <span class="daytag">Day${String(n).split('').map(x => `<i>${x}</i>`).join('')}</span>
+        <!-- ★쪽자판을 걷었다(2026-09-06). 여행 머리말에서 판때기를 걷을 때 세운
+             규칙이 여기에도 걸린다 — **판의 결은 홈에만 둔다.** 카드까지 걷어낸
+             목록 위에 판때기 한 장이 남으니 화면에서 제일 무거운 물건이 됐다. -->
+        <span class="daytag">Day <b>${n}</b></span>
         <span class="date">${esc(U.md(d))} ${esc(U.dowOf(d))}</span>
         <span class="sum">${cost}</span>
       </div>`;

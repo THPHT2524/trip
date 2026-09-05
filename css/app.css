@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=329') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=330') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=329') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=330') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=329') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=330') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -316,15 +316,19 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ★★홈의 **연도 띠와 같은 띠**로 만든다(2026-09-04). 하는 일이 똑같다: 긴 목록을
    내려가는 동안 '지금 몇째 날을 보고 있나' 를 붙들어 준다. 홈에서 그 문제를 그렇게
    풀었으면 여기서도 같은 물건이어야 두 화면이 한 앱으로 읽힌다.
-   바탕은 종이색이 아니라 --sunk, 위아래를 실선으로 끊고, 여백을 조여 구역 표시가
-   내용보다 무거워지지 않게 한다(홈에서 47px → 26px 로 낮춘 것과 같은 판단). */
+   ★★띠를 **가볍게 고쳐 앉혔다**(2026-09-06). 정거장 카드를 걷어내고 나니 --sunk
+   바탕에 위아래 실선까지 두른 이 띠가 화면에서 제일 무거운 물건이 됐다 — 구역
+   표시가 내용보다 무거워지지 않게 한다던 그 판단이 뒤집힌 것이다.
+   ① 바탕은 종이색으로. sticky 라 불투명은 여전히 필요하다(투명하면 글이 겹친다).
+   ② 실선 둘 대신 **위에 한 줄만**, 대신 --line 이 아니라 --ink-3 로. 정거장을
+      가르는 금(--line)보다 진해야 '날이 바뀌었다' 가 '곳이 바뀌었다' 를 이긴다 —
+      영수증에서 목록 위 금을 진하게 준 것과 같은 어법이다. */
 .dayband {
   position: sticky; top: var(--h-top); z-index: 20;
-  background: var(--sunk);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  padding: 5px var(--pad);
-  display: flex; align-items: center; gap: 10px;
+  background: var(--paper);
+  border-top: 1px solid var(--ink-3);
+  padding: 9px var(--pad) 7px;
+  display: flex; align-items: baseline; gap: 9px;
 }
 /* ★레일은 **두 겹으로** 그린다. 하나만으로는 안 된다 —
    ① `#days::before` : 컨테이너를 세로로 관통한다. 요소 사이 여백이 어떻게 바뀌든 이어진다.
@@ -340,15 +344,15 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 #days::before { bottom: 22px; }
 .dayband::before { bottom: 0; }
-/* 'DAY' 는 이름, 수는 쪽자. 홈 연도 칩과 같은 크기·같은 색이다. */
+/* 'DAY' 는 이름, 수는 그 이름이 가리키는 것. 판때기 없이 굵기와 색으로만 가른다. */
 .daytag {
-  display: flex; align-items: center; gap: 2px;
+  flex: 0 0 auto;
   font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
   letter-spacing: .16em; color: var(--ink-3); text-transform: uppercase;
   padding-left: var(--gutter);
 }
-.daytag i { width: 15px; height: 20px; font-size: var(--flap-md); color: var(--route); }
-.daytag i:first-of-type { margin-left: 5px; }
+.daytag b { font-size: var(--t-cap); color: var(--route); }
+/* ⚠ 날짜는 한글 요일을 달고 있다 — mono 를 씌우면 '08.29 토' 의 토가 벌어진다 */
 .dayband .date { font-size: var(--t-body); color: var(--ink-2); font-weight: 500; }
 .dayband .sum {
   margin-left: auto; font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
@@ -437,6 +441,10 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 /* 구분과 금액은 이 줄의 뼈대라 줄이지 않는다 — 접힐 것은 배지 쪽이다 */
 .item .row2 > .kind, .item .row2 > .money { flex: 0 0 auto; }
+/* ★★금액을 **줄 끝으로 민다**(2026-09-06). 바로 밑의 결제 줄 금액들이 이미 줄 끝에서
+   자릿수를 맞추고 있다 — 자리 합계가 그 기둥의 머리로 서야 '이 셋을 더한 것' 으로
+   읽힌다. 구분 옆에 붙어 있을 때는 둘이 아무 상관 없는 수처럼 떨어져 있었다. */
+.item .row2 > .money { margin-left: auto; }
 .kind {
   font-size: var(--t-meta); font-weight: 600; letter-spacing: .02em;
   color: var(--k, var(--k-etc));
@@ -1555,7 +1563,7 @@ input.code {
 .trip .ttop i, .trip .tnm i,
 .tbtop .cnt i,
 .grouphd .gn i, .grouphd.year .gt i,
-.daytag i, .top .tcc i {
+.top .tcc i {
   font-style: normal; display: inline-flex; align-items: center; justify-content: center;
   font-family: var(--mono); font-weight: 600;
   background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
