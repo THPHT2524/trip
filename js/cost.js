@@ -355,6 +355,22 @@ const Cost = (function () {
           <span class="wk">${krw(c.paid)}</span></div>
       </div>` : '';
 
+    /* ★★영수증 아랫단의 **깨알글씨**. 가게 영수증이 거기에 적는 것은 인사말이 아니라
+       '이 종이의 수가 어떻게 나온 것인가' 다 — 우리도 그것만 적는다.
+       ★세 줄 다 **그 일이 실제로 있었을 때만** 나온다. 환전을 안 했으면 환전 얘기를
+         안 하고, 현금을 안 썼으면 지갑 얘기를 안 한다. 늘 떠 있는 안내문은 두 번째
+         보는 순간부터 배경이 되고, 배경이 된 글은 정작 필요할 때도 안 읽힌다. */
+    const fine = [];
+    if (rows.some(r => r.settle === 'exchange' && r.cost != null))
+      fine.push('환전은 지출이 아니라 합계에서 뺐습니다');
+    if (c && c.got > c.bal + 0.5)
+      fine.push('현금 지출은 지갑 평균 환율로 환산했습니다');
+    /* money.js 가 줄마다 '사람이 적은 환율인가, 그날 고시를 가져다 쓴 것인가' 를
+       남겨 둔다 — 지어낸 수가 아니라는 것을 여기서 한 번 밝힌다. */
+    if (paid.some(r => { const p = M.per.get(r.id); return p && p.auto; }))
+      fine.push('환율을 안 적은 줄은 그날 고시로 환산했습니다');
+    $('cost-fine').innerHTML = fine.map(t => `<span>${esc(t)}</span>`).join('');
+
     $('cost-miss').innerHTML = miss.length ? `
       <section class="cblock warnblock">
         <h3 class="chd">환율이 없어 합계에서 빠진 ${miss.length}건</h3>

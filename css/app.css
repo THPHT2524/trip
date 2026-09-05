@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=319') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=320') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=319') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=320') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=319') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=320') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -966,8 +966,19 @@ a { color: var(--route); text-underline-offset: 2px; }
 .clist .rv.na { color: var(--ink-3); }
 
 /* 바코드 — 영수증의 끝. 읽으라고 있는 게 아니라 '여기서 끝' 을 말한다 */
+/* ── 깨알글씨 ─────────────────────────────────────────────────────────
+   종이의 마감 구역은 여기서 시작한다 — 금을 긋는 일도 여기가 맡는다.
+   ★한 줄씩 세운다. 쉼표로 이으면 한 문장으로 읽혀 셋이 서로 다른 얘기라는 게 안 보인다. */
+.rfine {
+  margin-top: 13px; padding-top: 13px; border-top: 1px dashed var(--ink-3);
+  display: flex; flex-direction: column; gap: 2px; text-align: center;
+  font-size: var(--t-micro); line-height: 1.65; color: var(--ink-3);
+}
+.rfine:empty { display: none; }
+/* 깨알글씨가 있으면 금은 그쪽이 이미 그었다 — 바코드는 붙어서 따라온다 */
+.rfine:not(:empty) + .rbc { margin-top: 10px; padding-top: 0; border-top: 0; }
 .rbc {
-  /* 바코드 앞에 금을 긋는다 — 여기부터는 내용이 아니라 종이의 마감이다 */
+  /* 깨알글씨가 없을 때는 바코드가 금을 긋는다 — 여기부터 종이의 마감이다 */
   margin-top: 13px; padding-top: 13px; border-top: 1px dashed var(--ink-3);
   height: 48px; display: flex; align-items: flex-end;
   gap: 0; overflow: hidden;
