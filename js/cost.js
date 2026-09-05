@@ -15,10 +15,8 @@ const Cost = (function () {
 
 
   let trip = null, rows = [], crew = [];
-  /* ★★영수증의 몸통은 **항목 목록**이다 — 가게 영수증이 그렇다. 묶어 보는 것은
-     그 아래 붙는 '내역' 이고, 셋(날짜·구분·사람) 중 하나만 골라 본다.
-     한꺼번에 셋을 다 세우면 같은 돈을 세 번 세어 놓고 어느 것이 답인지 안 말해 준다. */
-  let view = 'item';        // item · day · kind · payer
+  /* ★★영수증의 몸통은 **항목 목록**이다 — 가게 영수증이 그렇다. 날짜로만 나누고
+     보기 전환은 두지 않는다: 묶어 본 것은 합계 밑의 한 줄 띠 셋이 한 번에 말한다. */
 
   /* ★셈은 js/money.js 한 곳에서만 한다. 홈·일정·여기가 같은 함수를 쓴다 —
      각자 세면 언젠가 갈린다(실제로 갈렸었다). 여기서는 결과만 읽는다. */
@@ -79,10 +77,9 @@ const Cost = (function () {
     if (!paid.length) return '';
     const par = new Map(rows.map(r => [r.id, r]));
 
-    /* ★★진짜 영수증의 짜임이다: 품명 한 줄, 그 밑에 딸린 것들이 '└' 로 들여선다
+    /* ★★진짜 영수증의 짜임: 품명 한 줄, 딸린 것들이 '└' 로 들여선다
        (스타벅스 영수증의 '그린 티 라떼' 밑 '└ X-우유 / └ Lt얼음').
-       우리 데이터가 이미 그 모양이다 — 장소 한 줄에 결제 여럿이 parent_id 로 붙는다.
-       전에는 줄마다 부모 이름을 다시 찍어서 'KOKO HOTEL…' 이 두 번 나왔다. */
+       우리 데이터가 이미 그 모양이다 — 장소 한 줄에 결제 여럿이 parent_id 로 붙는다. */
     const groups = new Map();
     paid.slice()
       .sort((a, b) => String(a.on_date).localeCompare(String(b.on_date))
@@ -94,30 +91,42 @@ const Cost = (function () {
         groups.get(key).kids.push(r);
       });
 
-    const li = [...groups.values()].map(g => {
-      const kv = U.kvar(g.head.kind);
-      /* 딸린 결제가 하나뿐이고 이름이 부모와 같으면 굳이 가지를 치지 않는다 —
-         '식사' 밑에 '└ 식사' 는 같은 말을 두 번 하는 것이다. */
-      const solo = g.kids.length === 1 && (g.kids[0].id === g.head.id || g.kids[0].name === g.head.kind);
-      const row = (r, branch) => {
-        const q = Math.max(1, +r.qty || 1);
-        const v = inBase(r);
-        return `<span class="rq${branch ? ' br' : ''}">
-          ${branch ? `<span class="rb">${esc(r.name)}</span>` : ''}
-          <span class="ru">${esc(plain(r.cost / q, r.cost_cur))}</span>
-          <span class="rx">× ${q}</span>
-          <span class="rd"></span>
-          <span class="rv${v == null ? ' na' : ''}">${esc(U.money(r.cost, r.cost_cur))}</span>
-        </span>`;
-      };
-      return `<li style="--k: var(--${kv})">
-        <span class="rl"><span class="rk"></span><span class="rn">${esc(g.head.name)}</span></span>
-        ${g.kids.map(r => row(r, !solo)).join('')}
-      </li>`;
-    }).join('');
+    const one = (r, branch) => {
+      const q = Math.max(1, +r.qty || 1);
+      const v = inBase(r);
+      return `<span class="rq${branch ? ' br' : ''}">
+        ${branch ? `<span class="rb">${esc(r.name)}</span>` : ''}
+        <span class="ru">${esc(plain(r.cost / q, r.cost_cur))}</span>
+        <span class="rx">× ${q}</span>
+        <span class="rd"></span>
+        <span class="rv${v == null ? ' na' : ''}">${esc(U.money(r.cost, r.cost_cur))}</span>
+      </span>`;
+    };
 
-    return `<section class="cblock"><h3 class="chd">Items</h3>
-      <ul class="clist tight">${li}</ul></section>`;
+    /* ★날짜로 나눈다. 영수증에 'ITEMS' 라고 적힌 것을 본 적이 없다 — 대신 그 자리에
+       **언제 산 것인지**가 온다. 사흘치가 한 종이에 이어 붙으므로 날이 바뀌는 자리에
+       금을 긋는다(하루짜리 여행이면 나눌 것이 없으니 긋지 않는다). */
+    const byDay = new Map();
+    [...groups.values()].forEach(g => {
+      const d = g.head.on_date;
+      if (!byDay.has(d)) byDay.set(d, []);
+      byDay.get(d).push(g);
+    });
+    const many = byDay.size > 1;
+
+    return [...byDay.entries()].map(([d, gs]) => {
+      const li = gs.map(g => {
+        const solo = g.kids.length === 1
+          && (g.kids[0].id === g.head.id || g.kids[0].name === g.head.kind);
+        return `<li style="--k: var(--${U.kvar(g.head.kind)})">
+          <span class="rl"><span class="rk"></span><span class="rn">${esc(g.head.name)}</span></span>
+          ${g.kids.map(r => one(r, !solo)).join('')}
+        </li>`;
+      }).join('');
+      return `<section class="cblock">
+        ${many ? `<h3 class="chd rday">${esc(U.md(d))} ${esc(U.dowOf(d))}</h3>` : ''}
+        <ul class="clist tight">${li}</ul></section>`;
+    }).join('');
   }
 
   function table(title, entries, colorOf) {
@@ -185,6 +194,24 @@ const Cost = (function () {
     return out.sort();
   }
 
+  /* ★★합계 밑의 **한 줄 띠 셋**. 영수증 아래에 붙는 요약이다 — 같은 돈을 세 각도로
+     한 번씩만 보여 준다. 목록 세 벌을 세우면 같은 수를 세 번 세어 놓고 어느 것이
+     답인지 안 말해 주는데, 띠 한 줄이면 '비율' 만 말하고 정확한 수는 위 항목이 말한다.
+   ★조각 안에 이름을 적는다 — 좁으면(12% 미만) 뺀다. 밖에 범례를 세우면 줄이 는다. */
+  function strip(label, parts) {
+    const sum = parts.reduce((a, p) => a + p.v, 0);
+    if (!sum) return '';
+    return `<div class="rstrip"><span class="sl">${esc(label)}</span>
+      <span class="sb">${parts.filter(p => p.v > 0).map(p => {
+        const pct = p.v / sum * 100;
+        return `<i style="width:${pct.toFixed(2)}%;--k:${p.k}"
+          >${pct >= 12 ? `<b>${esc(p.n)}</b>` : ''}</i>`;
+      }).join('')}</span></div>`;
+  }
+  /* 날·사람에는 정해진 색이 없다 — 코발트 한 색을 옅기로 층을 낸다.
+     kind 색을 빌려 쓰면 'BY DAY' 와 'BY KIND' 가 같은 그림으로 보인다. */
+  const tone = i => `color-mix(in srgb, var(--route) ${Math.max(26, 100 - i * 26)}%, var(--sunk))`;
+
   function draw() {
     M = MONEY.total(rows, FXS.rateOf);                     // 현금 지갑까지 한 번에 — 아래는 결과만 읽는다
     const paid = rows.filter(has);
@@ -225,20 +252,19 @@ const Cost = (function () {
     });
     const byPayer = [...pm.entries()].sort((a, b) => b[1].sum - a[1].sum);
 
-    /* '누가 냈나' 는 혼자 다녀서 '안 적음' 한 칸뿐이면 아무 말도 안 한다 — 그때는 빼둔다 */
-    const hasPayer = byPayer.length > 1 || (byPayer[0] && byPayer[0][0] !== '안 적음');
-    const tabs = [['item', '항목'], ['day', '날짜'], ['kind', '구분']]
-      .concat(hasPayer ? [['payer', '사람']] : []);
-    if (!tabs.some(t => t[0] === view)) view = 'item';
-    $('cost-view').innerHTML = paid.length ? tabs.map(([v, label]) =>
-      `<button type="button" data-view="${v}" aria-pressed="${String(view === v)}">${label}</button>`
-    ).join('') : '';
+    $('cost-blocks').innerHTML = items();
 
-    $('cost-blocks').innerHTML =
-        view === 'item'  ? items()
-      : view === 'day'   ? (dayBars() || items())
-      : view === 'kind'  ? table('By kind', byKind, U.kvar)
-      :                    table('By payer', byPayer);
+    /* 요약 띠 — 날·구분·사람. '사람' 은 혼자 다녀서 한 칸뿐이면 아무 말도 안 하므로 뺀다. */
+    const dayParts = dayList().map((d, i) => ({
+      n: `D${i + 1}`, k: tone(i),
+      v: rows.filter(r => r.on_date === d && has(r)).reduce((a, r) => a + (inBase(r) || 0), 0),
+    }));
+    const hasPayer = byPayer.length > 1 || (byPayer[0] && byPayer[0][0] !== '안 적음');
+    $('cost-strips').innerHTML =
+        strip('BY DAY', dayParts)
+      + strip('BY KIND', byKind.map(([k, v]) => ({ n: k, k: `var(--${U.kvar(k)})`, v: v.sum })))
+      + (hasPayer ? strip('BY PERSON',
+          byPayer.map(([k, v], i) => ({ n: k, k: tone(i), v: v.sum }))) : '');
 
     /* 영수증 머리 — 가게 이름 자리에 여행 이름, 그 밑에 기간과 건수 */
     $('cost-head').innerHTML = paid.length
@@ -313,13 +339,6 @@ const Cost = (function () {
     if (e.target.closest('[data-fxall]')) { fillAll(); return; }
     const b = e.target.closest('[data-fx]');
     if (b) fillFx(b.dataset.fx);
-  });
-
-  $('cost-view').addEventListener('click', e => {
-    const b = e.target.closest('button[data-view]');
-    if (!b || b.dataset.view === view) return;
-    view = b.dataset.view;
-    draw();
   });
 
   return {

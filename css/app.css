@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=296') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=298') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=296') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=298') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=296') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=298') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -893,20 +893,35 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .colink a:hover, .colink a:focus-visible { border-color: var(--route); }
 
-/* 보기 전환 — 영수증의 '내역' 을 무엇으로 묶어 볼지. 알약이 아니라 납작한 띠다:
-   이건 화면을 옮기는 것이 아니라 같은 종이를 다르게 접어 보는 것이라 조용해야 한다. */
-.rseg.seg3 {
-  margin: 11px 0 2px; border-radius: var(--r-xs);
-  border-color: var(--line); background: var(--paper);
+/* 날이 바뀌는 자리 — 사흘치가 한 종이에 이어 붙으므로 금을 긋는다 */
+.chd.rday {
+  font-family: var(--mono); font-size: var(--t-meta); letter-spacing: .1em;
+  color: var(--ink-2); text-transform: none;
 }
-.rseg.seg3:empty { display: none; }
-.rseg.seg3 button {
-  /* ⚠ 한글에 자간을 주지 않는다. .04em 만 걸어도 '항 목' 으로 흩어진다 —
-     이 앱에서 세 번째로 밟은 함정이다(.top .span.ko · .rhd .rnm · 여기). */
-  min-height: 32px; padding: 0; background: none; color: var(--ink-3);
-  font-family: var(--sans); font-size: var(--t-cap); font-weight: 600; letter-spacing: -.01em;
+
+/* ★★합계 밑의 한 줄 띠 — 같은 돈을 세 각도로 한 번씩. 비율만 말하고,
+   정확한 수는 위 항목 목록이 이미 말했다. */
+.rstrip { display: flex; align-items: center; gap: 9px; margin-top: 9px; }
+.rstrip .sl {
+  flex: 0 0 66px;
+  font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
+  letter-spacing: .12em; color: var(--ink-3);
 }
-.rseg.seg3 button[aria-pressed="true"] { background: var(--sunk); color: var(--ink); }
+.rstrip .sb {
+  flex: 1 1 auto; display: flex; height: 15px; border-radius: 3px;
+  overflow: hidden; background: var(--sunk);
+}
+.rstrip .sb i {
+  display: flex; align-items: center; justify-content: center;
+  font-style: normal;            /* <i> 는 기본이 기울임이다 — 조각 이름이 누웠었다 */
+  background: var(--k); min-width: 2px; overflow: hidden;
+}
+/* 조각 안의 이름 — 좁으면 js 가 안 넣는다. 바탕이 밝으므로 글자는 종이색이다 */
+.rstrip .sb b {
+  font-family: var(--sans); font-size: 9.5px; font-weight: 700; letter-spacing: -.01em;
+  color: var(--paper); white-space: nowrap;
+}
+
 
 /* 항목 목록 — 두 층이다. 위는 품명, 아래는 **단가 × 수량 ‥‥ 금액**.
    영수증의 몸통이 그 셋이고, 그래서 이 화면이 영수증으로 읽힌다. */
