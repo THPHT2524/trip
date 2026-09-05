@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=330') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=331') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=330') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=331') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=330') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=331') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -484,8 +484,12 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: inline-flex; align-items: center; gap: 5px;
   font-family: var(--mono); font-size: var(--t-meta); letter-spacing: .01em;
   color: var(--ink-3); text-decoration: none;
-  background: var(--paper); padding: 2px 7px 2px 0;
+  padding: 2px 7px 2px 0;
 }
+/* ⚠ 여기 --paper 바탕이 있었다. 손가락 크기(30px)를 맞추느라 이 링크가 구간(27px)보다
+   위아래로 2px 씩 삐져나오는데, 그 바탕이 **구간이 긋는 금을 덮어 먹었다** — 카드를
+   걷으면서 구간에 금을 준 순간(v=329) 드러났다. 덮을 것도 없었다: 레일은 x=30 이고
+   이 링크는 gutter 뒤 x=62 에서 시작한다. 레일을 가리는 것은 .seg::before 다. */
 .seg a .km { color: var(--ink-2); font-weight: 500; }
 .seg a:hover .km, .seg a:focus-visible .km { color: var(--route); }
 .seg a::after {
