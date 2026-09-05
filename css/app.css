@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=293') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=296') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=293') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=296') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=293') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=296') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -876,8 +876,9 @@ a { color: var(--route); text-underline-offset: 2px; }
 .rhd { text-align: center; padding: 15px 0 12px; border-bottom: 1px dashed var(--line); }
 .rhd:empty { display: none; }
 .rhd .rnm {
-  display: block; font-family: var(--sans); font-size: var(--t-read); font-weight: 700;
-  letter-spacing: -.01em; color: var(--ink);
+  /* 가게 이름 자리 — 영수증에서 제일 큰 글자다. 여행 이름이 그 자리를 받는다 */
+  display: block; font-family: var(--sans); font-size: 19px; font-weight: 700;
+  letter-spacing: -.02em; color: var(--ink);
 }
 .rhd .rsb {
   display: block; margin-top: 5px;
@@ -914,6 +915,19 @@ a { color: var(--route); text-underline-offset: 2px; }
 .clist .rq {
   display: flex; align-items: baseline; margin-top: 1px; padding-left: 14px;
   font-family: var(--mono); font-variant-numeric: tabular-nums;
+}
+/* 딸린 결제 — '└' 로 들여선다. 부모 이름을 되풀이하지 않는다 */
+.clist .rq.br { padding-left: 26px; position: relative; }
+.clist .rq.br::before {
+  /* ⚠ CSS 이스케이프(백슬래시+2514)로 쓰지 않는다. 파일에 넣는 쪽에서 그 백슬래시가
+     8진수 이스케이프로 읽혀 엉뚱한 글자가 박혔다 — 진짜 글자를 그대로 쓴다. */
+  content: '└'; position: absolute; left: 11px;
+  color: var(--ink-3); font-family: var(--mono); font-size: var(--t-meta); line-height: 1;
+}
+.clist .rb {
+  flex: 0 0 auto; margin-right: 9px; max-width: 42%;
+  font-family: var(--sans); font-size: var(--t-cap); color: var(--ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .clist .ru { flex: 0 0 auto; font-size: var(--t-meta); color: var(--ink-3); }
 .clist .rx { flex: 0 0 auto; margin-left: 6px; font-size: var(--t-meta); color: var(--ink-3); }
@@ -972,8 +986,9 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .ctotal .big {
   margin-left: auto;
+  /* 결제금액 — 영수증은 이 수의 자간을 **넓힌다**('1,0 0 0'). 마지막 수라는 표시다 */
   font-family: var(--mono); font-size: 28px; font-weight: 700;
-  font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: var(--ink); line-height: 1.1;
+  font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--ink); line-height: 1.1;
 }
 .ctotal .sub { flex: 0 0 100%; margin-top: 3px; text-align: right;
   font-size: var(--t-cap); color: var(--ink-3); }

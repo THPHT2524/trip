@@ -78,35 +78,44 @@ const Cost = (function () {
     const paid = rows.filter(has);
     if (!paid.length) return '';
     const par = new Map(rows.map(r => [r.id, r]));
-    const li = paid
-      .slice()
+
+    /* ★★진짜 영수증의 짜임이다: 품명 한 줄, 그 밑에 딸린 것들이 '└' 로 들여선다
+       (스타벅스 영수증의 '그린 티 라떼' 밑 '└ X-우유 / └ Lt얼음').
+       우리 데이터가 이미 그 모양이다 — 장소 한 줄에 결제 여럿이 parent_id 로 붙는다.
+       전에는 줄마다 부모 이름을 다시 찍어서 'KOKO HOTEL…' 이 두 번 나왔다. */
+    const groups = new Map();
+    paid.slice()
       .sort((a, b) => String(a.on_date).localeCompare(String(b.on_date))
                    || String(a.at_time || '').localeCompare(String(b.at_time || '')))
-      .map(r => {
+      .forEach(r => {
         const p = r.parent_id ? par.get(r.parent_id) : null;
-        const where = (p && p.name) || r.name;
-        const what = p ? r.name : '';
-        const kv = U.kvar((p && p.kind) || r.kind);
-        const v = inBase(r);
-        /* ★★**단가 × 수량 = 금액.** 영수증의 몸통이 그 셋이다.
-           ⚠ DB 의 cost 는 **총액**이다(plan.js 의 폼이 qty 로 되나눠 단가를 보여 준다) —
-             거꾸로 알면 두 배를 찍는다. 단가는 여기서도 나눠서 낸다. */
+        const key = p ? p.id : r.id;
+        if (!groups.has(key)) groups.set(key, { head: p || r, kids: [] });
+        groups.get(key).kids.push(r);
+      });
+
+    const li = [...groups.values()].map(g => {
+      const kv = U.kvar(g.head.kind);
+      /* 딸린 결제가 하나뿐이고 이름이 부모와 같으면 굳이 가지를 치지 않는다 —
+         '식사' 밑에 '└ 식사' 는 같은 말을 두 번 하는 것이다. */
+      const solo = g.kids.length === 1 && (g.kids[0].id === g.head.id || g.kids[0].name === g.head.kind);
+      const row = (r, branch) => {
         const q = Math.max(1, +r.qty || 1);
-        const unit = r.cost / q;
-        return `<li style="--k: var(--${kv})">
-          <span class="rl">
-            <span class="rk"></span>
-            <span class="rn">${esc(where)}</span>
-            ${what ? `<em>${esc(what)}</em>` : ''}
-          </span>
-          <span class="rq">
-            <span class="ru">${esc(plain(unit, r.cost_cur))}</span>
-            <span class="rx">× ${q}</span>
-            <span class="rd"></span>
-            <span class="rv${v == null ? ' na' : ''}">${esc(U.money(r.cost, r.cost_cur))}</span>
-          </span>
-        </li>`;
-      }).join('');
+        const v = inBase(r);
+        return `<span class="rq${branch ? ' br' : ''}">
+          ${branch ? `<span class="rb">${esc(r.name)}</span>` : ''}
+          <span class="ru">${esc(plain(r.cost / q, r.cost_cur))}</span>
+          <span class="rx">× ${q}</span>
+          <span class="rd"></span>
+          <span class="rv${v == null ? ' na' : ''}">${esc(U.money(r.cost, r.cost_cur))}</span>
+        </span>`;
+      };
+      return `<li style="--k: var(--${kv})">
+        <span class="rl"><span class="rk"></span><span class="rn">${esc(g.head.name)}</span></span>
+        ${g.kids.map(r => row(r, !solo)).join('')}
+      </li>`;
+    }).join('');
+
     return `<section class="cblock"><h3 class="chd">Items</h3>
       <ul class="clist tight">${li}</ul></section>`;
   }
