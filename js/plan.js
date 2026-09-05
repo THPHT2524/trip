@@ -251,9 +251,13 @@ const Plan = (function () {
   /* ★★결제자는 **한 글자 + 그 사람의 색**이다(2026-09-06). 이름을 다 적으면 길이가
      제각각이라 금액 앞이 들쭉날쭉했고, 한 줄에 배지가 둘(수단·사람)이면 어느 쪽이
      사람인지도 안 보였다. 동그란 색칠판은 사람이라는 것을 모양만으로 말한다.
-   ★색은 **아이디에서 뽑는다** — 같은 사람은 늘 같은 색이다(랜덤이되 안 흔들린다).
+   ★★색은 **동행자 목록의 순번**으로 준다(2026-09-06). 처음에는 아이디를 해시했는데,
+     색이 여덟뿐이라 **두 사람이 같은 칸에 떨어질 수 있었다** — 셋이면 세 번에 한 번은
+     겹친다(생일 문제). 순번으로 돌리면 여덟 명까지 무조건 다 다르다.
      여덟 색은 이 앱의 구분 색이 쓰는 색상환 자리에서 골랐다. 채도·밝기는 테마마다
      한 벌뿐이라(--pc-s/--pc-l) 어느 색을 뽑아도 이 화면의 톤을 벗어나지 않는다.
+     ⚠ 목록에 없는 사람(초대에서 빠진 옛 결제)은 해시로 떨어뜨린다 — 색이 없느니
+       겹칠 위험을 안고라도 주는 편이 낫다.
    ★한 글자만 남으므로 **온전한 이름은 title·aria-label 이 진다.**
    ★'각자 냄' 은 사람이 아니다 — 색을 주지 않고 회색으로 남긴다. */
   const PHUE = [210, 14, 152, 253, 42, 328, 188, 96];
@@ -266,9 +270,9 @@ const Plan = (function () {
     if (!c.payer_id) return '';
     const nm = Crew.nameOf(crew, c.payer_id) || '냄';
     const id = String(c.payer_id);
-    let h = 0;
-    for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-    return `<span class="badge pw" style="--pc: ${PHUE[h % PHUE.length]}"
+    let n = crew.findIndex(m => m.user_id === c.payer_id);
+    if (n < 0) { n = 0; for (let i = 0; i < id.length; i += 1) n = (n * 31 + id.charCodeAt(i)) >>> 0; }
+    return `<span class="badge pw" style="--pc: ${PHUE[n % PHUE.length]}"
       title="${esc(nm)}" aria-label="${esc(nm)}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
   }
 
