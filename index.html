@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=324">
+<link rel="stylesheet" href="/css/app.css?v=328">
 </head>
 <body>
 
@@ -342,15 +342,17 @@
                 <option>THB</option><option>VND</option><option>SGD</option><option>MYR</option>
                 <option>IDR</option><option>PHP</option><option>AED</option><option>MVR</option>
               </select></div>
-            <div class="field unit" id="if-fx-wrap"><label for="if-fx">환율</label>
-              <input id="if-fx" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
+            <!-- 승인금액 — 카드 결제 순간 잡히는 **원화 금액**. 환율을 물어보던 자리다:
+                 사람이 아는 것은 비율이 아니라 결제 알림에 찍힌 그 금액이다. -->
+            <div class="field unit" id="if-apv-wrap"><label for="if-apv">승인금액</label>
+              <input id="if-apv" type="number" inputmode="numeric" step="1" min="0" class="mono"></div>
             <div class="field unit" id="if-krw-wrap" hidden><label for="if-krw">낸 원화</label>
               <input id="if-krw" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
           </div>
 
           <!-- ⚠ id 를 if-sum 으로 쓰면 안 된다 — 시트 제목이 이미 그 id 다(제목이 덮인다) -->
             <p class="hint" id="if-calc"></p>
-            <p class="hint" id="if-fx-hint">비우면 그날 전신환매도율로 자동 계산합니다. 적으면 그 값이 이깁니다.</p>
+            <p class="hint" id="if-fx-hint">카드 승인 원화를 적으면 그 값이 이깁니다. 비우면 그날 전신환매도율로 자동 계산합니다.</p>
 
           <div class="field">
             <label for="if-payer">누가 냈나</label>
@@ -397,22 +399,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=324"></script>
-<script src="/js/map-config.js?v=324"></script>
-<script src="/js/money.js?v=324"></script>
-<script src="/js/util.js?v=324"></script>
-<script src="/js/worldmap.js?v=324"></script>
-<script src="/js/geo.js?v=324"></script>
-<script src="/js/gmaps.js?v=324"></script>
-<script src="/js/db.js?v=324"></script>
-<script src="/js/fx.js?v=324"></script>
-<script src="/js/outbox.js?v=324"></script>
+<script src="/js/supabase-config.js?v=328"></script>
+<script src="/js/map-config.js?v=328"></script>
+<script src="/js/money.js?v=328"></script>
+<script src="/js/util.js?v=328"></script>
+<script src="/js/worldmap.js?v=328"></script>
+<script src="/js/geo.js?v=328"></script>
+<script src="/js/gmaps.js?v=328"></script>
+<script src="/js/db.js?v=328"></script>
+<script src="/js/fx.js?v=328"></script>
+<script src="/js/outbox.js?v=328"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=324"></script>
-<script src="/js/plan.js?v=324"></script>
-<script src="/js/map.js?v=324"></script>
-<script src="/js/cost.js?v=324"></script>
-<script src="/js/app.js?v=324"></script>
+<script src="/js/crew.js?v=328"></script>
+<script src="/js/plan.js?v=328"></script>
+<script src="/js/map.js?v=328"></script>
+<script src="/js/cost.js?v=328"></script>
+<script src="/js/app.js?v=328"></script>
 
 </body>
 </html>

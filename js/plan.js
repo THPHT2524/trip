@@ -74,10 +74,10 @@ const Plan = (function () {
     const cash = settle === 'cash';
     $('if-cost-lbl').textContent = ex ? '받은 금액' : '단가';
     $('if-qty-wrap').hidden = ex;              // 환전에 '갯수' 는 뜻이 없다
-    $('if-fx-wrap').hidden = ex || krwOnly || cash;
-    if (cash) $('if-fx').value = '';
+    $('if-apv-wrap').hidden = ex || krwOnly || cash;
+    if (cash) $('if-apv').value = '';
     $('if-krw-wrap').hidden = !ex;
-    $('if-fx-hint').hidden = ex || krwOnly;    // 환율 칸이 숨은 마당에 그 설명만 남으면 안 된다
+    $('if-fx-hint').hidden = ex || krwOnly;    // 승인금액 칸이 숨은 마당에 그 설명만 남으면 안 된다
     /* 칸을 없앤 자리에 **지갑을 보여 준다** — 얼마 남았는지가 곧 '이걸 현금으로 낼 수 있나' 다 */
     $('if-fx-hint').textContent = cash ? walletLine() : FX_HINT;
     /* ★'각자 냄' 을 고르면 갯수는 곧 **인원**이다 — 기차를 각자 카드로 찍으면
@@ -111,8 +111,14 @@ const Plan = (function () {
     }
     const tot = unit * qty;
     const head = qty > 1 ? `합계 ${U.money(tot, cur)}` : '';
-    const own = +$('if-fx').value || 0;
-    if (own) { el.textContent = head + `${head ? ' · ' : ''}${U.money(tot * own, U.SETTLE)}`; return; }
+    /* ★승인금액은 **이미 원화**다 — 환율처럼 곱하지 않는다. 대신 그 금액이 총액에
+       견주어 몇 원짜리 환율이었는지를 옆에 적어 준다(저장되는 값이 그 비율이다). */
+    const apv = +$('if-apv').value || 0;
+    if (apv) {
+      el.textContent = head + `${head ? ' · ' : ''}승인 ${U.money(apv, U.SETTLE)}`
+        + (tot > 0 ? ` — 환율 ${(apv / tot).toFixed(2)}원` : '');
+      return;
+    }
     if (cur === U.SETTLE) { el.textContent = head; return; }
 
     /* ★환율 칸이 비어 있으면 **그날 고시로 미리 셈해 보여 준다.** 저장한 뒤 비용 탭에
@@ -133,10 +139,10 @@ const Plan = (function () {
         .then(got => { if (got) showSum(); }).catch(() => {});
     }
   }
-  ['if-cost', 'if-qty', 'if-fx', 'if-krw', 'if-cur'].forEach(id =>
+  ['if-cost', 'if-qty', 'if-apv', 'if-krw', 'if-cur'].forEach(id =>
     $(id).addEventListener('input', showSum));
   $('if-payer').addEventListener('change', drawSettle);
-  $('if-cur').addEventListener('change', drawSettle);   // 통화가 바뀌면 환율 칸의 뜻도 바뀐다
+  $('if-cur').addEventListener('change', drawSettle);   // 원화로 냈으면 승인금액도 물을 것이 없다
   $('if-settle').addEventListener('click', e => {
     const b = e.target.closest('button[data-settle]');
     if (!b) return;
@@ -379,7 +385,11 @@ const Plan = (function () {
     $('if-qty').value = q > 1 ? q : '';
     $('if-cost').value = (r && r.cost != null) ? (+r.cost / q) : '';
     $('if-cur').value = (r && r.cost_cur) || (trip && trip.base_cur) || 'KRW';
-    $('if-fx').value = (r && r.fx != null) ? r.fx : '';
+    /* 저장된 것은 비율이지만 보여 주는 것은 금액이다 — 총액을 곱해 되짚는다.
+       (환전은 제 칸이 따로 있고, 현금은 지갑 평균이라 둘 다 여기 안 온다) */
+    $('if-apv').value = (r && r.settle !== 'exchange' && r.settle !== 'cash'
+                         && r.cost != null && r.fx != null)
+      ? Math.round(+r.cost * +r.fx) : '';
     $('if-memo').value = (r && r.memo) || '';
     $('if-payer').value = (r && r.split) ? 'split' : ((r && r.payer_id) || '');
     $('if-lat').value = (r && r.lat != null) ? r.lat : '';
@@ -442,6 +452,9 @@ const Plan = (function () {
     }
   }
 
+  /* 화면의 단가 × 갯수. cost 칸과 fx 칸이 **같은 총액**을 봐야 해서 한 곳에 둔다. */
+  const tot = () => (+$('if-cost').value || 0) * Math.max(1, +$('if-qty').value || 1);
+
   function valueOf() {
     /* 결제 줄은 **부모의 날짜·구분을 물려받는다** — 따로 적게 두면 어긋난 채 저장되고
        그러면 그 결제가 다른 날 합계에 들어간다. */
@@ -460,10 +473,17 @@ const Plan = (function () {
       cost_cur: $('if-cur').value,
       /* 환전은 '얼마 주고 얼마 받았나' 로 받아 환율을 우리가 낸다 — 사람이 9.4 를 계산하게 두지 않는다 */
       /* 현금은 환율을 갖지 않는다 — 지갑의 평균으로 센다. 감춘 칸에 값이 남아 있어도 안 보낸다. */
+      /* ★★카드는 **승인 원화**를 받아 같은 셈으로 비율을 낸다(2026-09-06). 사람이 아는
+         것은 환율이 아니라 결제 알림에 찍힌 그 금액이다 — 환전 칸이 이미 그렇게 하고
+         있었고, 같은 길을 쓰니 DB 에 칸을 늘리지 않아도 된다. 반올림하지 않으므로
+         고치러 다시 열면 적었던 금액이 그대로 돌아온다.
+         ⚠ 실제 청구는 이 값도 아니다 — 카드사는 매입일(보통 1~3일 뒤) 환율로 다시
+           잡는다. 그래도 우리가 아는 것 중에는 이게 제일 가깝다. */
       fx: settle === 'cash' ? ''
         : settle === 'exchange'
           ? (+$('if-cost').value > 0 ? String(+$('if-krw').value / +$('if-cost').value) : '')
-          : $('if-fx').value,
+          : ($('if-apv').value !== '' && tot() > 0
+              ? String(+$('if-apv').value / tot()) : ''),
       settle,
       parent_id: parentOf,
       split: $('if-payer').value === 'split',
