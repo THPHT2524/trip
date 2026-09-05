@@ -131,40 +131,9 @@ const Cost = (function () {
     }).join('');
   }
 
-  /* ★★환전은 **지출이 아니다** — 돈이 줄지 않고 모양만 바뀐다. 그래서 합계에도
-     '무엇에·누가' 에도 안 들어간다. 그런데 여행에서 제일 자주 되짚는 수 중 하나가
-     '언제 얼마 바꿨더라' 라서, 영수증 아래에 **따로 한 칸**을 낸다(2026-09-05).
-     지출 목록과 섞지 않고, 제 소계를 제가 낸다. */
-  function exchanges() {
-    const ex = rows.filter(r => r.settle === 'exchange' && r.cost != null)
-      .sort((a, b) => String(a.on_date).localeCompare(String(b.on_date))
-                   || String(a.at_time || '').localeCompare(String(b.at_time || '')));
-    if (!ex.length) return '';
-    let got = 0, krw = 0, cur = null;
-    const li = ex.map(r => {
-      const v = (r.fx != null) ? r.cost * r.fx : null;
-      got += r.cost; if (v != null) krw += v; cur = r.cost_cur || cur;
-      /* ★한 줄이다. 여기엔 '이름' 이 없어서(장소가 아니라 날짜가 주어다) 두 층으로
-         나눌 것이 없다 — 나눠 봤더니 줄 사이가 헐렁하기만 했다(2026-09-05). */
-      return `<li>
-        <span class="rq ex">
-          <span class="ed">${esc(U.md(r.on_date))}</span>
-          ${r.at_time ? `<span class="et">${esc(String(r.at_time).slice(0, 5))}</span>` : ''}
-          <span class="ru">${esc(U.money(r.cost, r.cost_cur))}</span>
-          <span class="rx">${r.fx != null ? (+r.fx).toFixed(2) + '원' : '환율 없음'}</span>
-          <span class="rd"></span>
-          <span class="rv${v == null ? ' na' : ''}">${v == null ? '—' : esc(U.money(v, U.SETTLE))}</span>
-        </span>
-      </li>`;
-    }).join('');
-    return `<section class="cblock exblock"><h3 class="chd">Exchange</h3>
-      <ul class="clist tight">${li}</ul>
-      <div class="exsum">
-        <span class="l">${esc(U.money(got, cur))}</span>
-        <span class="rd"></span>
-        <span class="v">${esc(U.money(krw, U.SETTLE))}</span>
-      </div></section>`;
-  }
+  /* ★환전 내역 목록은 걷었다(2026-09-06). 넉 줄을 다 세워 봤더니 영수증 끝이
+     길어지기만 하고, 거기서 알게 되는 것이 위 현금 칸의 '환전 ¥20,000 ₩172,491'
+     한 줄과 같았다. 언제 바꿨는지는 일정에 그 줄이 그대로 서 있다. */
 
   function table(title, entries, colorOf) {
     if (!entries.length) return '';
@@ -335,7 +304,6 @@ const Cost = (function () {
     const byPayer = [...pm.entries()].sort((a, b) => b[1].sum - a[1].sum);
 
     $('cost-blocks').innerHTML = items();
-    $('cost-ex').innerHTML = exchanges();
     barcode();
 
     /* 요약 띠 — 날·구분·사람. '사람' 은 혼자 다녀서 한 칸뿐이면 아무 말도 안 하므로 뺀다. */
@@ -378,9 +346,15 @@ const Cost = (function () {
           <span class="wa">평균 ${(c.gotRate || 0).toFixed(2)}원</span>
         </div>
         <div class="wg">
-          <span class="wt">환전</span><b class="wf">${esc(U.money(c.got, c.cur))}</b><span class="wk">${krw(c.gotKrw)}</span>
-          <span class="wt">사용</span><b class="wf">${esc(U.money(c.got - c.bal, c.cur))}</b><span class="wk">${krw(c.gotKrw - c.paid)}</span>
-          <span class="wt on">남음</span><b class="wf on">${esc(U.money(c.bal, c.cur))}</b><span class="wk on">${krw(c.paid)}</span>
+          <div class="wc"><span class="wt">환전</span>
+            <b class="wf">${esc(U.money(c.got, c.cur))}</b>
+            <span class="wk">${krw(c.gotKrw)}</span></div>
+          <div class="wc"><span class="wt">사용</span>
+            <b class="wf">${esc(U.money(c.got - c.bal, c.cur))}</b>
+            <span class="wk">${krw(c.gotKrw - c.paid)}</span></div>
+          <div class="wc on"><span class="wt">남음</span>
+            <b class="wf">${esc(U.money(c.bal, c.cur))}</b>
+            <span class="wk">${krw(c.paid)}</span></div>
         </div>
       </div>` : '';
 
