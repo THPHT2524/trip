@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=338') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=339') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=338') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=339') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=338') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=339') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -454,10 +454,17 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 .money { font-size: var(--t-cap); color: var(--ink-2); white-space: nowrap; }
 .money.none { color: var(--ink-3); }
+/* ★★배지는 **채운다**(2026-09-06). 전에는 1px 테두리 + 둥근 모서리였는데, 정거장
+   단추(메모·취소·지도)에 테두리를 두르자 둘이 똑같은 생김새가 됐다 — 결제 줄에서
+   '현금' 과 '취소' 가 같은 물건으로 보였다.
+   **테두리는 누를 것, 채운 것은 읽을 것.** 이 한 줄로 앱 전체가 갈린다
+   (동행자 목록의 '만든 사람'·'나' 도 같은 규칙을 물려받는다).
+   ⚠ 그래서 여기에 hover 나 cursor 를 주면 안 된다 — 규칙이 도로 흐려진다. */
 .badge {
   font-family: var(--mono); font-size: var(--t-micro); letter-spacing: .04em;
-  border: 1px solid var(--line); border-radius: var(--r-xs);
-  padding: 1px 4px; color: var(--ink-3);
+  border: 0; border-radius: var(--r-xs);
+  background: var(--sunk);
+  padding: 2px 6px; color: var(--ink-3);
   white-space: nowrap;          /* 좁은 칸에서 '메모' 가 두 글자로 쪼개지지 않게 */
 }
 
