@@ -50,14 +50,17 @@ const Cost = (function () {
   /* ★★영수증의 줄. **점선이 이름과 금액을 잇는다** — 목록이 길어질수록 그 선이 값을 한다.
      수는 오른쪽에서 자릿수를 맞춰 세로로 읽히고(tabular-nums), 막대는 그 밑에 깔려
      비율을 말한다. 정확한 수는 정렬이, 비율은 막대가 맡는다 — 둘이 안 싸운다. */
-  function line(name, n, sum, max, kv, miss, bars) {
+  /* ★묶음 줄의 금액에는 **기호를 안 찍는다.** 여기 오는 수는 전부 원화로 환산된
+     것이고, 통화는 맨 아래 TOTAL 이 한 번 말한다 — 영수증도 한 종이에 기호를
+     스무 번 찍지 않는다(항목 목록은 다르다: 거기는 엔·달러가 섞여 있어 기호가 정보다). */
+  function line(name, sub, sum, max, kv, miss, bars) {
     return `<li${kv ? ` style="--k: var(--${kv})"` : ''}>
       <span class="rl">
         ${kv ? '<span class="rk"></span>' : ''}
         <span class="rn">${esc(name)}</span>
-        ${n ? `<em>${n}건</em>` : ''}
+        ${sub ? `<em>${esc(sub)}</em>` : ''}
         <span class="rd"></span>
-        <span class="rv">${sum ? esc(U.money(sum, U.SETTLE)) : '—'}</span>
+        <span class="rv">${sum ? esc(plain(sum, U.SETTLE)) : '—'}</span>
       </span>
       ${bars || bar(sum, max, kv)}
       ${miss ? `<span class="cn">${miss}건 환율 없음</span>` : ''}
@@ -114,7 +117,7 @@ const Cost = (function () {
     return `<section class="cblock">
       <h3 class="chd">${esc(title)}</h3>
       <ul class="clist">${entries.map(([k, v]) =>
-        line(k, v.n, v.sum, max, colorOf ? colorOf(k) : null, v.miss)).join('')}</ul>
+        line(k, v.n ? v.n + '건' : '', v.sum, max, colorOf ? colorOf(k) : null, v.miss)).join('')}</ul>
     </section>`;
   }
 
@@ -149,9 +152,10 @@ const Cost = (function () {
         const seg = U.KINDS.filter(k => x.byK[k]).map(k =>
           `<i style="width:${(x.byK[k] / max * 100).toFixed(1)}%;--k: var(--${U.kvar(k)})"></i>`
         ).join('');
-        return line(`D${i + 1}`, 0, x.sum, max, null, 0,
-          `<span class="cbar stack">${seg}</span>`)
-          .replace('<em>', '<em class="dt">');
+        /* 곁말은 그 날의 날짜다 — 'D1' 만으로는 며칟날인지 모른다(일정 탭의 띠는
+           'DAY 1 08.29 토' 라고 말한다). 같은 물음에 같은 답을 준다. */
+        return line(`D${i + 1}`, U.md(x.d), x.sum, max, null, 0,
+          `<span class="cbar stack">${seg}</span>`);
       }).join('')}</ul>
     </section>`;
   }
