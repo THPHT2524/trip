@@ -318,10 +318,14 @@ const Cost = (function () {
       + (hasPayer ? strip('BY PERSON',
           byPayer.map(([k, v], i) => ({ n: k, k: tone(i), v: v.sum }))) : '');
 
-    /* 영수증 머리 — 가게 이름 자리에 **무슨 영수증인지**. 여행 이름은 바로 위
-       머리말에 이미 크게 서 있다(2026-09-06) — 두 줄 사이에서 같은 말이 겹쳤다. */
+    /* 영수증 머리 — 가게 이름 자리에 **무슨 종이인지**. 여행 이름은 바로 위
+       머리말에 이미 크게 서 있다(2026-09-06) — 두 줄 사이에서 같은 말이 겹쳤다.
+       ★'EXPENSES' 는 범주 이름이라 이 종이가 무엇인지는 말하지 않았다. 영수증은
+         제 첫 줄에서 제가 무슨 종이인지 선언한다 — 그리고 이 화면에서 사람의
+         목소리로 말하는 줄은 여기 하나뿐이라 한글로 둔다. 밑의 기계 인쇄
+         (TOTAL·BY DAY·CASH·ITEMS)는 영문 mono 그대로다. */
     $('cost-head').innerHTML = paid.length
-      ? `<span class="rnm">EXPENSES</span>
+      ? `<span class="rnm">여행 영수증</span>
          <span class="rsb">${esc(U.range(trip.start_on, trip.end_on))} · ${paid.length} ITEMS</span>`
       : '';
 
@@ -330,32 +334,21 @@ const Cost = (function () {
     const c = M.cash;
     /* ★영수증 안에서는 라벨이 먼저다 — TOTAL 과 같은 어법(작은 대문자 mono).
        '남은 현금' 을 뒤에 달면 값·라벨·곁말 셋이 한 줄에 안 들어가 접힌다. */
-    /* ★현금은 **한 줄이 아니라 장부 석 줄**이다(2026-09-06). '남은 돈' 하나만 적어
-       두면 그 수가 어디서 왔는지 알 수 없다 — 바꾼 만큼에서 쓴 만큼을 빼면 남는다는
-       것이 현금의 전부라, 셋을 나란히 세워야 서로를 설명한다.
-       ★쓴 돈은 **뺄셈으로 낸다**(바꾼 것 − 남은 것). 현금 줄을 따로 세면 지갑이
-         못 댄 줄까지 섞여 남은 돈과 아귀가 안 맞는다 — money.js 의 지갑이 이미
-         한 벌로 굴린 수라 그 둘만 쓰면 늘 맞는다.
-       ★원화는 그때그때의 환율이 아니라 **지갑의 평균 원가**로 낸다. 그래야 세 줄의
-         원화가 더해서 맞는다(172,491 = 87,712 + 84,779). */
+    /* ★현금은 **한 줄짜리 칩**이다(2026-09-06). 환전·사용·남음 셋을 원화까지 붙여
+       세워 봤더니 108px 짜리 판때기가 되어 영수증 위쪽을 다 먹었다. 한 줄에
+       들어가는 것은 두 짝뿐이라(293px 중 273px) **바꾼 것과 남은 것**만 남긴다 —
+       쓴 것은 그 둘의 차이라 셋 중 유일하게 되짚을 수 있는 수다.
+       ★원화는 그때그때의 환율이 아니라 **지갑의 평균 원가**로 낸다. 그래야 두 원화의
+         차이가 실제로 쓴 원화가 된다(172,491 − 84,779 = 87,712). */
     const krw = v => esc(U.money(Math.round(v), U.SETTLE));
     $('cost-wallet').innerHTML = (c && c.bal > 0.5 && c.got > 0) ? `
       <div class="wallet">
-        <div class="whd">
-          <span class="wl">CASH</span>
-          <span class="wa">평균 ${(c.gotRate || 0).toFixed(2)}원</span>
-        </div>
-        <div class="wg">
-          <div class="wc"><span class="wt">환전</span>
-            <b class="wf">${esc(U.money(c.got, c.cur))}</b>
-            <span class="wk">${krw(c.gotKrw)}</span></div>
-          <div class="wc"><span class="wt">사용</span>
-            <b class="wf">${esc(U.money(c.got - c.bal, c.cur))}</b>
-            <span class="wk">${krw(c.gotKrw - c.paid)}</span></div>
-          <div class="wc on"><span class="wt">남음</span>
-            <b class="wf">${esc(U.money(c.bal, c.cur))}</b>
-            <span class="wk">${krw(c.paid)}</span></div>
-        </div>
+        <div class="wc"><span class="wt">환전</span>
+          <b class="wf">${esc(U.money(c.got, c.cur))}</b>
+          <span class="wk">${krw(c.gotKrw)}</span></div>
+        <div class="wc on"><span class="wt">남음</span>
+          <b class="wf">${esc(U.money(c.bal, c.cur))}</b>
+          <span class="wk">${krw(c.paid)}</span></div>
       </div>` : '';
 
     $('cost-miss').innerHTML = miss.length ? `
