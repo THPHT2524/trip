@@ -215,7 +215,7 @@ const Cost = (function () {
       }).join('')}</span></div>`;
   }
   /* 날·사람에는 정해진 색이 없다 — 코발트 한 색을 옅기로 층을 낸다.
-     kind 색을 빌려 쓰면 'BY DAY' 와 'BY KIND' 가 같은 그림으로 보인다. */
+     kind 색을 빌려 쓰면 '날짜별' 과 '구분별' 이 같은 그림으로 보인다. */
   const tone = i => `color-mix(in srgb, var(--route) ${Math.max(26, 100 - i * 26)}%, var(--sunk))`;
 
   /* ★★바코드를 **이 여행의 수**로 그린다(2026-09-05). 아무 수나 박아 두면 그건 그림
@@ -273,10 +273,10 @@ const Cost = (function () {
     /* ★합계는 영수증의 맨 아래다 — 위에 놓았던 큰 수를 내렸다. 영수증은 항목을 다
        찍고 마지막에 합을 낸다. 그 순서가 곧 '이 수가 어디서 왔는지' 를 말한다. */
     /* ★곁말에서 'n건 합산 · 원화 기준' 을 뺐다(2026-09-06). 건수는 바로 위 머리에
-       ITEMS 로 이미 서 있고, ₩ 기호가 원화라는 것을 말한다 — 같은 말을 세 번 했다.
+       건수로 이미 서 있고, ₩ 기호가 원화라는 것을 말한다 — 같은 말을 세 번 했다.
        못 센 줄만 남긴다. 그건 어디에도 안 적혀 있고, 합계가 틀렸다는 뜻이다. */
     $('cost-total').innerHTML = paid.length
-      ? `<span class="tl">TOTAL</span>
+      ? `<span class="tl">합계</span>
          <span class="big">${esc(U.money(total, U.SETTLE))}</span>`
          + (miss.length ? `<span class="sub"><span class="warn">${miss.length}건 환율 없음</span></span>` : '')
       : '<span class="sub">아직 비용을 적은 일정이 없습니다</span>';
@@ -313,20 +313,23 @@ const Cost = (function () {
     }));
     const hasPayer = byPayer.length > 1 || (byPayer[0] && byPayer[0][0] !== '안 적음');
     $('cost-strips').innerHTML =
-        strip('BY DAY', dayParts)
-      + strip('BY KIND', byKind.map(([k, v]) => ({ n: k, k: `var(--${U.kvar(k)})`, v: v.sum })))
-      + (hasPayer ? strip('BY PERSON',
+        strip('날짜별', dayParts)
+      + strip('구분별', byKind.map(([k, v]) => ({ n: k, k: `var(--${U.kvar(k)})`, v: v.sum })))
+      + (hasPayer ? strip('사람별',
           byPayer.map(([k, v], i) => ({ n: k, k: tone(i), v: v.sum }))) : '');
 
     /* 영수증 머리 — 가게 이름 자리에 **무슨 종이인지**. 여행 이름은 바로 위
        머리말에 이미 크게 서 있다(2026-09-06) — 두 줄 사이에서 같은 말이 겹쳤다.
        ★'EXPENSES' 는 범주 이름이라 이 종이가 무엇인지는 말하지 않았다. 영수증은
          제 첫 줄에서 제가 무슨 종이인지 선언한다 — 그리고 이 화면에서 사람의
-         목소리로 말하는 줄은 여기 하나뿐이라 한글로 둔다. 밑의 기계 인쇄
-         (TOTAL·BY DAY·CASH·ITEMS)는 영문 mono 그대로다. */
+         목소리로 말하는 줄은 여기 하나뿐이라 한글로 둔다.
+       ★★그러고 나니 밑의 라벨만 영문으로 남아 겉돌았다(2026-09-06). 항목 이름이
+         죄다 한글인 종이다 — 합계·현금·날짜별·구분별·사람별 로 다 옮긴다.
+         ⚠ 이 라벨들은 자간이 벌어져 있었다(.12~.22em). 한글에 그 자간을 그대로
+           두면 낱자가 흩어진다 — 옮기면서 자간을 같이 0 으로 푼다(css). */
     $('cost-head').innerHTML = paid.length
       ? `<span class="rnm">여행 영수증</span>
-         <span class="rsb">${esc(U.range(trip.start_on, trip.end_on))} · ${paid.length} ITEMS</span>`
+         <span class="rsb">${esc(U.range(trip.start_on, trip.end_on))} · ${paid.length}항목 · 원화기준</span>`
       : '';
 
     /* 환율이 없어 합계에서 빠진 줄 — 감추지 않는다. 그 자리에서 채울 수 있게 한다. */
@@ -343,6 +346,7 @@ const Cost = (function () {
     const krw = v => esc(U.money(Math.round(v), U.SETTLE));
     $('cost-wallet').innerHTML = (c && c.bal > 0.5 && c.got > 0) ? `
       <div class="wallet">
+        <span class="wl">현금</span>
         <div class="wc"><span class="wt">환전</span>
           <b class="wf">${esc(U.money(c.got, c.cur))}</b>
           <span class="wk">${krw(c.gotKrw)}</span></div>

@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=317') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=319') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=317') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=319') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=317') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=319') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -890,9 +890,13 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: block; font-family: var(--sans); font-size: 19px; font-weight: 700;
   letter-spacing: -.01em; color: var(--ink);
 }
+/* 곁말 — 기간 · 몇 항목 · 무슨 돈으로 센 것인가. 셋 다 이 종이 전체에 걸린 사실이라
+   여기 한 번만 적고, 밑에서는 다시 말하지 않는다.
+   ⚠ 자간이 .14em 이었다. 라틴 대문자(ITEMS)를 재고 준 값이라 한글이 들어오는 지금은
+     '원 화 기 준' 으로 벌어진다 — 숫자가 읽히는 만큼만 남기고 절반으로 줄인다. */
 .rhd .rsb {
   display: block; margin-top: 5px;
-  font-family: var(--mono); font-size: var(--t-micro); letter-spacing: .14em; color: var(--ink-3);
+  font-family: var(--mono); font-size: var(--t-micro); letter-spacing: .07em; color: var(--ink-3);
 }
 /* 더모아로 가는 길 — 영수증 밖, 점선 상자. 이 종이에 딸린 물건이지만 이 종이는 아니다 */
 .colink { margin: 13px var(--pad) 0; }
@@ -912,10 +916,11 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ★★합계 밑의 한 줄 띠 — 같은 돈을 세 각도로 한 번씩. 비율만 말하고,
    정확한 수는 위 항목 목록이 이미 말했다. */
 .rstrip { display: flex; align-items: center; gap: 9px; margin-top: 9px; }
+/* 66px 은 'BY PERSON' 을 재고 준 폭이다 — '사람별' 은 그 절반이라 막대가 그만큼 길어진다 */
 .rstrip .sl {
-  flex: 0 0 66px;
-  font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
-  letter-spacing: .12em; color: var(--ink-3);
+  flex: 0 0 42px;
+  font-family: var(--sans); font-size: var(--t-cap); font-weight: 700;
+  letter-spacing: 0; color: var(--ink-3);
 }
 .rstrip .sb {
   flex: 1 1 auto; display: flex; height: 15px; border-radius: 3px;
@@ -1011,9 +1016,11 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 10px;
 }
 .ctotal:empty { display: none; }
+/* ⚠ 'TOTAL' 이던 시절의 자간 .22em 을 한글에 그대로 두면 '합 계' 로 흩어진다.
+   sans 로 바꾸고 자간을 0 으로 푼다 — 이 앱이 .top .span.ko 에서 이미 겪은 함정이다. */
 .ctotal .tl {
-  font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
-  letter-spacing: .22em; color: var(--ink-2);
+  font-family: var(--sans); font-size: var(--t-cap); font-weight: 700;
+  letter-spacing: 0; color: var(--ink-2);
 }
 .ctotal .big {
   margin-left: auto;
@@ -1994,9 +2001,14 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
      해 놓고 배경이 없었다. 얹히는 칸은 제가 앉은 바닥보다 한 켜 밝아야 한다. */
 .wallet {
   display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
-  gap: 4px 14px;
+  gap: 4px 10px;
   padding: 8px 11px; margin: 0 var(--pad) 4px;
   border-radius: var(--r); background: var(--sunk);
+}
+/* 칩의 이름. 위의 '합계' 와 같은 어법이라 같은 글꼴·같은 굵기로 세운다 */
+.wallet .wl {
+  flex: 0 0 auto; font-family: var(--sans); font-size: var(--t-cap); font-weight: 700;
+  letter-spacing: 0; color: var(--ink-3);
 }
 /* 한 짝 = 이름 · 현지돈 · 원화. 셋을 세로로 쌓으면 칩이 판때기가 된다 */
 .wallet .wc {
