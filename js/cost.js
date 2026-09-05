@@ -15,6 +15,10 @@ const Cost = (function () {
 
 
   let trip = null, rows = [], crew = [];
+  /* ★★영수증의 몸통은 **항목 목록**이다 — 가게 영수증이 그렇다. 묶어 보는 것은
+     그 아래 붙는 '내역' 이고, 셋(날짜·구분·사람) 중 하나만 골라 본다.
+     한꺼번에 셋을 다 세우면 같은 돈을 세 번 세어 놓고 어느 것이 답인지 안 말해 준다. */
+  let view = 'item';        // item · day · kind · payer
 
   /* ★셈은 js/money.js 한 곳에서만 한다. 홈·일정·여기가 같은 함수를 쓴다 —
      각자 세면 언젠가 갈린다(실제로 갈렸었다). 여기서는 결과만 읽는다. */
@@ -39,21 +43,78 @@ const Cost = (function () {
     return m;
   }
 
-  const bar = (v, max) =>
-    `<span class="cbar"><i style="width:${max > 0 ? Math.round(v / max * 100) : 0}%"></i></span>`;
+  const bar = (v, max, k) =>
+    `<span class="cbar"><i style="width:${max > 0 ? Math.round(v / max * 100) : 0}%${
+      k ? `;--k: var(--${k})` : ''}"></i></span>`;
+
+  /* ★★영수증의 줄. **점선이 이름과 금액을 잇는다** — 목록이 길어질수록 그 선이 값을 한다.
+     수는 오른쪽에서 자릿수를 맞춰 세로로 읽히고(tabular-nums), 막대는 그 밑에 깔려
+     비율을 말한다. 정확한 수는 정렬이, 비율은 막대가 맡는다 — 둘이 안 싸운다. */
+  function line(name, n, sum, max, kv, miss, bars) {
+    return `<li${kv ? ` style="--k: var(--${kv})"` : ''}>
+      <span class="rl">
+        ${kv ? '<span class="rk"></span>' : ''}
+        <span class="rn">${esc(name)}</span>
+        ${n ? `<em>${n}건</em>` : ''}
+        <span class="rd"></span>
+        <span class="rv">${sum ? esc(U.money(sum, U.SETTLE)) : '—'}</span>
+      </span>
+      ${bars || bar(sum, max, kv)}
+      ${miss ? `<span class="cn">${miss}건 환율 없음</span>` : ''}
+    </li>`;
+  }
+
+  /* 단가는 **기호 없이** 숫자만. 통화는 오른쪽 금액이 한 번 말한다 —
+     영수증도 한 줄에 기호를 두 번 찍지 않는다. */
+  const plain = (v, cur) => (v == null || !Number.isFinite(+v)) ? ''
+    : (+v).toLocaleString('ko-KR', { maximumFractionDigits: (cur === 'KRW' || cur === 'JPY') ? 0 : 2 });
+
+  /* 항목 — 결제 줄 하나가 한 줄. 어디서 쓴 것인지(부모 장소)가 이름이고,
+     무엇에 쓴 것인지(줄 이름)가 곁말이다. 영수증에서 품명과 규격의 사이다. */
+  function items() {
+    const paid = rows.filter(has);
+    if (!paid.length) return '';
+    const par = new Map(rows.map(r => [r.id, r]));
+    const li = paid
+      .slice()
+      .sort((a, b) => String(a.on_date).localeCompare(String(b.on_date))
+                   || String(a.at_time || '').localeCompare(String(b.at_time || '')))
+      .map(r => {
+        const p = r.parent_id ? par.get(r.parent_id) : null;
+        const where = (p && p.name) || r.name;
+        const what = p ? r.name : '';
+        const kv = U.kvar((p && p.kind) || r.kind);
+        const v = inBase(r);
+        /* ★★**단가 × 수량 = 금액.** 영수증의 몸통이 그 셋이다.
+           ⚠ DB 의 cost 는 **총액**이다(plan.js 의 폼이 qty 로 되나눠 단가를 보여 준다) —
+             거꾸로 알면 두 배를 찍는다. 단가는 여기서도 나눠서 낸다. */
+        const q = Math.max(1, +r.qty || 1);
+        const unit = r.cost / q;
+        return `<li style="--k: var(--${kv})">
+          <span class="rl">
+            <span class="rk"></span>
+            <span class="rn">${esc(where)}</span>
+            ${what ? `<em>${esc(what)}</em>` : ''}
+          </span>
+          <span class="rq">
+            <span class="ru">${esc(plain(unit, r.cost_cur))}</span>
+            <span class="rx">× ${q}</span>
+            <span class="rd"></span>
+            <span class="rv${v == null ? ' na' : ''}">${esc(U.money(r.cost, r.cost_cur))}</span>
+          </span>
+        </li>`;
+      }).join('');
+    return `<section class="cblock"><h3 class="chd">Items</h3>
+      <ul class="clist tight">${li}</ul></section>`;
+  }
 
   function table(title, entries, colorOf) {
     if (!entries.length) return '';
     const max = Math.max(...entries.map(e => e[1].sum));
     return `<section class="cblock">
       <h3 class="chd">${esc(title)}</h3>
-      <ul class="clist">${entries.map(([k, v]) => `
-        <li${colorOf ? ` style="--k: var(--${colorOf(k)})"` : ''}>
-          <span class="ck">${esc(k)}<em>${v.n}</em></span>
-          ${bar(v.sum, max)}
-          <span class="cv">${esc(U.money(v.sum, U.SETTLE))}</span>
-          ${v.miss ? `<span class="cn">${v.miss}건 환율 없음</span>` : ''}
-        </li>`).join('')}</ul>
+      <ul class="clist">${entries.map(([k, v]) =>
+        line(k, v.n, v.sum, max, colorOf ? colorOf(k) : null, v.miss)).join('')}</ul>
     </section>`;
   }
 
@@ -69,27 +130,29 @@ const Cost = (function () {
     if (days.length < 2) return '';        // 하루뿐이면 견줄 것이 없다
     const per = days.map(d => {
       const list = rows.filter(r => r.on_date === d && has(r));
-      let sum = 0; const byK = {};
+      let sum = 0, n = 0; const byK = {};
       list.forEach(r => {
-        const v = inBase(r); if (v == null) return;
+        const v = inBase(r); n += 1; if (v == null) return;
         sum += v; byK[r.kind] = (byK[r.kind] || 0) + v;
       });
-      return { d, sum, byK };
+      return { d, sum, n, byK };
     });
     const max = Math.max(...per.map(x => x.sum));
     if (!max) return '';
-    const wide = days.length <= 6;         // 좁으면 금액을 적지 않는다 — 겹치느니 뺀다
 
     return `<section class="cblock">
-      <h3 class="chd">하루에 얼마씩</h3>
-      <div class="daybars">${per.map((x, i) => `
-        <div class="dbar">
-          <span class="col">${x.sum ? U.KINDS.filter(k => x.byK[k]).map(k =>
-            `<i style="--k: var(--${U.kvar(k)}); height:${(x.byK[k] / max * 100).toFixed(1)}%"></i>`
-          ).join('') : '<em></em>'}</span>
-          <span class="lb">D${i + 1}</span>
-          ${wide ? `<span class="amt">${x.sum ? esc(U.money(x.sum, U.SETTLE)) : ''}</span>` : ''}
-        </div>`).join('')}</div>
+      <h3 class="chd">By day</h3>
+      <ul class="clist">${per.map((x, i) => {
+        /* ★막대는 **쌓아서** 그린다. 세로 기둥이던 시절부터 지켜 온 것이다 —
+           그날 얼마 썼는지(길이)와 무엇에 썼는지(색)를 한 그림이 같이 말한다.
+           가로로 눕히면서 그 성질을 잃으면 줄만 늘고 정보는 준다. */
+        const seg = U.KINDS.filter(k => x.byK[k]).map(k =>
+          `<i style="width:${(x.byK[k] / max * 100).toFixed(1)}%;--k: var(--${U.kvar(k)})"></i>`
+        ).join('');
+        return line(`D${i + 1}`, 0, x.sum, max, null, 0,
+          `<span class="cbar stack">${seg}</span>`)
+          .replace('<em>', '<em class="dt">');
+      }).join('')}</ul>
     </section>`;
   }
 
@@ -117,8 +180,11 @@ const Cost = (function () {
 
     /* ★'3건 · ¥2,400' 처럼 적으면 셋을 더해 2,400 인 줄 읽힌다. 실제로는 하나가 빠졌다.
        센 것과 빠진 것을 갈라 적는다. */
+    /* ★합계는 영수증의 맨 아래다 — 위에 놓았던 큰 수를 내렸다. 영수증은 항목을 다
+       찍고 마지막에 합을 낸다. 그 순서가 곧 '이 수가 어디서 왔는지' 를 말한다. */
     $('cost-total').innerHTML = paid.length
-      ? `<span class="big">${esc(U.money(total, U.SETTLE))}</span>
+      ? `<span class="tl">TOTAL</span>
+         <span class="big">${esc(U.money(total, U.SETTLE))}</span>
          <span class="sub">${paid.length - miss.length}건 합산 · 원화 기준`
          + (miss.length ? ` · <span class="warn">${miss.length}건 환율 없음</span>` : '')
          + '</span>'
@@ -146,19 +212,36 @@ const Cost = (function () {
     });
     const byPayer = [...pm.entries()].sort((a, b) => b[1].sum - a[1].sum);
 
+    /* '누가 냈나' 는 혼자 다녀서 '안 적음' 한 칸뿐이면 아무 말도 안 한다 — 그때는 빼둔다 */
+    const hasPayer = byPayer.length > 1 || (byPayer[0] && byPayer[0][0] !== '안 적음');
+    const tabs = [['item', '항목'], ['day', '날짜'], ['kind', '구분']]
+      .concat(hasPayer ? [['payer', '사람']] : []);
+    if (!tabs.some(t => t[0] === view)) view = 'item';
+    $('cost-view').innerHTML = paid.length ? tabs.map(([v, label]) =>
+      `<button type="button" data-view="${v}" aria-pressed="${String(view === v)}">${label}</button>`
+    ).join('') : '';
+
     $('cost-blocks').innerHTML =
-        dayBars()
-      + table('무엇에', byKind, U.kvar)
-      + (byPayer.length > 1 || (byPayer[0] && byPayer[0][0] !== '안 적음')
-          ? table('누가 냈나', byPayer) : '');
+        view === 'item'  ? items()
+      : view === 'day'   ? (dayBars() || items())
+      : view === 'kind'  ? table('By kind', byKind, U.kvar)
+      :                    table('By payer', byPayer);
+
+    /* 영수증 머리 — 가게 이름 자리에 여행 이름, 그 밑에 기간과 건수 */
+    $('cost-head').innerHTML = paid.length
+      ? `<span class="rnm">${esc((trip.name || '').toUpperCase())}</span>
+         <span class="rsb">${esc(U.range(trip.start_on, trip.end_on))} · ${paid.length} ITEMS</span>`
+      : '';
 
     /* 환율이 없어 합계에서 빠진 줄 — 감추지 않는다. 그 자리에서 채울 수 있게 한다. */
     /* 지갑에 남은 현금 — 환전을 적기 시작하면 제일 먼저 궁금해지는 숫자다 */
     const c = M.cash;
+    /* ★영수증 안에서는 라벨이 먼저다 — TOTAL 과 같은 어법(작은 대문자 mono).
+       '남은 현금' 을 뒤에 달면 값·라벨·곁말 셋이 한 줄에 안 들어가 접힌다. */
     $('cost-wallet').innerHTML = (c && c.bal > 0.5) ? `
       <div class="wallet">
+        <span class="wl">CASH LEFT</span>
         <span class="wv">${esc(U.money(c.bal, c.cur))}</span>
-        <span class="wl">남은 현금</span>
         <span class="wr">평균 ${(c.rate || 0).toFixed(2)}원 · 원가 ${esc(U.money(c.paid, U.SETTLE))}</span>
       </div>` : '';
 
@@ -217,6 +300,13 @@ const Cost = (function () {
     if (e.target.closest('[data-fxall]')) { fillAll(); return; }
     const b = e.target.closest('[data-fx]');
     if (b) fillFx(b.dataset.fx);
+  });
+
+  $('cost-view').addEventListener('click', e => {
+    const b = e.target.closest('button[data-view]');
+    if (!b || b.dataset.view === view) return;
+    view = b.dataset.view;
+    draw();
   });
 
   return {

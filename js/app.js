@@ -96,7 +96,28 @@
        그리고 여행 안에 들어와 있는 사람은 이미 어느 여행인지 안다(홈의 여권과
        카드 바탕이 그 일을 한다). 64px 머리말에 세 번째 표식을 넣지 않는다. */
     $('trip-name').textContent = t ? t.name : '여행';
-    $('trip-span').textContent = t ? fmtSpan(t.start_on, t.end_on) : '';
+    /* ★★머리말을 **홈에서 누른 그 줄의 확대판**으로 만든다(2026-09-05). 판에서 한 줄을
+       눌러 들어왔는데 안에서는 그냥 글자로 바뀌어서, 같은 물건 안으로 들어온 느낌이
+       끊겼다. 같은 국가코드 뱃지 · 같은 쪽자 날짜 · 같은 작은 대문자 라벨을 쓴다.
+     ★국기가 아니라 **뱃지**다. 머리말에 작은 국기를 달면 윈도우에서 'JP' 두 글자로
+       떨어져 글꼴 깨진 것처럼 보인다 — 뱃지는 애초에 두 글자로 설계된 물건이라
+       그 함정이 없다(홈 줄에서 이미 그렇게 쓰고 있다). */
+    /* ⚠ 머리말에서는 칸을 **나라 수만큼만** 건다. 홈에서 셋으로 고정한 것은 서른여덟
+       줄이 세로로 맞아야 해서인데, 머리말은 한 줄뿐이라 맞출 상대가 없다 —
+       빈 판때기 둘이 뱃지와 이름 사이를 벌려 놓기만 했다. */
+    const cc = t ? codeChars(t.country) : [];
+    $('trip-cc').innerHTML = cc.length ? row([[0, cc, 'cc']], cc.length) : '';
+    if (t) {
+      const mine = shape.filter(r => r.trip_id === t.id && !r.parent_id);
+      const nd = U.tripDays(t);
+      $('trip-span').className = 'span';
+      $('trip-span').innerHTML =
+        row([[0, t.start_on ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt']], DATE_COLS)
+        + (nd ? `<em>${nd}</em><b>days</b>` : '')
+        + (mine.length ? `<em>${mine.length}</em><b>places</b>` : '');
+    } else {
+      $('trip-span').textContent = '';
+    }
     document.querySelectorAll('#tabs button').forEach(b =>
       b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
     document.querySelectorAll('.pane').forEach(p =>
