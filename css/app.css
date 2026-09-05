@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=336') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=337') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=336') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=337') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=336') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=337') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -614,11 +614,14 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-family: var(--mono); font-size: var(--t-cap); color: var(--ink);
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-/* ★★결제가 **없는** 자리에서는 점선을 걷는다. 점선의 일은 '이 줄은 위 장소에
-   딸렸다' 고 말하는 것인데, 묶을 결제가 없으면 말할 것이 없다 — 그런데도 예순여섯
-   자리마다 그어져서, 하나로 이어져야 할 레일이 예순여섯 토막으로 잘려 보였다
-   (2026-09-03). 결제가 붙은 자리에서는 그대로 남는다 — 거기서는 할 말이 있다. */
-.stopcard + .payfoot { border-top: 0; }
+/* ★★결제가 **없는** 자리에서는 금을 걷었었다(2026-09-03). 그때는 이 선이 레일 코앞
+   (12px)에서 시작해서, 예순여섯 자리마다 그어지자 하나로 이어져야 할 레일이
+   예순여섯 토막으로 잘려 보였기 때문이다.
+   ★그 이유가 사라졌다(2026-09-06). 선이 --pay-in(50px) 안쪽에서 시작하므로 레일을
+     건드리지 않는다. 그래서 되살리되 **실선**으로 준다 — 결제가 있든 없든
+     장소명 밑에는 늘 같은 금이 그어져, 블록의 끝이 어디인지가 줄마다 안 흔들린다.
+     (결제가 붙으면 그 아래 점선이 하나 더 생겨 목록을 합계와 가른다.) */
+.stopcard + .payfoot { border-top-style: solid; }
 .payadd:hover, .payadd:focus-visible { color: var(--route); }
 
 /* 비어 있는 날 — 감추지 않는다. 3일차가 비었다는 사실 자체가 정보다. */
