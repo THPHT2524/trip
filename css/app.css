@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=304') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=305') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=304') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=305') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=304') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=305') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -933,6 +933,14 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: flex; align-items: baseline; margin-top: 1px; padding-left: 14px;
   font-family: var(--mono); font-variant-numeric: tabular-nums;
 }
+/* 딸린 결제 — 들여쓰기만으로 딸린 줄임을 말한다. 가지 글자는 안 그린다 */
+.clist .rq.br { padding-left: 14px; }
+.clist .rb {
+  flex: 0 0 auto; margin-right: 9px; max-width: 40%;
+  font-family: var(--sans); font-size: var(--t-cap); color: var(--ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 /* 곁말 — 무엇에 썼는지. 이름 뒤에 붙는다 */
 .clist .rl em {
   flex: 0 0 auto; font-style: normal; margin-left: 7px;

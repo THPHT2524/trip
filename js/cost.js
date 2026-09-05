@@ -77,42 +77,58 @@ const Cost = (function () {
     if (!paid.length) return '';
     const par = new Map(rows.map(r => [r.id, r]));
 
-    /* ★결제 줄 하나가 한 줄이다. 부모·자식으로 가지 치지 않는다 —
-       '└' 로 매달아 봤더니 줄이 두 층이 되면서 금액 기둥이 흔들렸다(2026-09-05).
-       평평하게 두면 어디서 무엇에 썼는지가 한 줄에 다 있고, 금액이 세로로 곧게 선다. */
-    const li = paid.slice()
+    /* ★★장소 한 줄, 그 밑에 산 것들이 들여선다 — 영수증의 짜임 그대로다.
+       우리 데이터가 이미 그 모양이다(장소 한 줄에 결제 여럿이 parent_id 로 붙는다).
+       ★'└' 같은 가지 글자는 안 그린다(2026-09-05). 들여쓴 것만으로 딸린 줄인 줄 알고,
+         글자를 하나 더 얹으면 금액 기둥 앞이 시끄러워진다. */
+    const groups = new Map();
+    paid.slice()
       .sort((a, b) => String(a.on_date).localeCompare(String(b.on_date))
                    || String(a.at_time || '').localeCompare(String(b.at_time || '')))
-      .map(r => {
+      .forEach(r => {
         const p = r.parent_id ? par.get(r.parent_id) : null;
-        const q = Math.max(1, +r.qty || 1);
-        const v = inBase(r);
-        /* 결제 줄 이름이 부모의 구분과 같으면(‘식사’ 밑의 ‘식사’) 곁말을 뺀다 */
-        const what = (p && r.name !== p.kind) ? r.name : '';
-        return { d: p ? p.on_date : r.on_date, html: `<li style="--k: var(--${U.kvar((p && p.kind) || r.kind)})">
-          <span class="rl">
-            <span class="rk"></span>
-            <span class="rn">${esc((p && p.name) || r.name)}</span>
-            ${what ? `<em>${esc(what)}</em>` : ''}
-          </span>
-          <span class="rq">
-            <span class="ru">${esc(plain(r.cost / q, r.cost_cur))}</span>
-            <span class="rx">× ${q}</span>
-            <span class="rd"></span>
-            <span class="rv${v == null ? ' na' : ''}">${esc(U.money(r.cost, r.cost_cur))}</span>
-          </span>
-        </li>` };
+        const key = p ? p.id : r.id;
+        if (!groups.has(key)) groups.set(key, { head: p || r, kids: [] });
+        groups.get(key).kids.push(r);
       });
+
+    const one = (r, branch) => {
+      const q = Math.max(1, +r.qty || 1);
+      const v = inBase(r);
+      return `<span class="rq${branch ? ' br' : ''}">
+        ${branch ? `<span class="rb">${esc(r.name)}</span>` : ''}
+        <span class="ru">${esc(U.money(r.cost / q, r.cost_cur))}</span>
+        <span class="rx">× ${q}</span>
+        <span class="rd"></span>
+        <span class="rv${v == null ? ' na' : ''}">${esc(U.money(r.cost, r.cost_cur))}</span>
+      </span>`;
+    };
 
     /* ★날짜로 나눈다. 영수증에 'ITEMS' 라고 적힌 것을 본 적이 없다 — 그 자리에는
        **언제 산 것인지**가 온다. 하루짜리 여행이면 나눌 것이 없으니 안 긋는다. */
     const byDay = new Map();
-    li.forEach(x => { if (!byDay.has(x.d)) byDay.set(x.d, []); byDay.get(x.d).push(x.html); });
+    [...groups.values()].forEach(g => {
+      const d = g.head.on_date;
+      if (!byDay.has(d)) byDay.set(d, []);
+      byDay.get(d).push(g);
+    });
     const many = byDay.size > 1;
 
-    return [...byDay.entries()].map(([d, rowsHtml]) => `<section class="cblock">
-      ${many ? `<h3 class="chd rday">${esc(U.md(d))} ${esc(U.dowOf(d))}</h3>` : ''}
-      <ul class="clist tight">${rowsHtml.join('')}</ul></section>`).join('');
+    return [...byDay.entries()].map(([d, gs]) => {
+      const li = gs.map(g => {
+        /* 딸린 결제가 하나뿐이고 이름이 부모의 구분과 같으면 들여쓰지 않는다 —
+           '식사' 밑에 '식사' 는 같은 말을 두 번 하는 것이다. */
+        const solo = g.kids.length === 1
+          && (g.kids[0].id === g.head.id || g.kids[0].name === g.head.kind);
+        return `<li style="--k: var(--${U.kvar(g.head.kind)})">
+          <span class="rl"><span class="rk"></span><span class="rn">${esc(g.head.name)}</span></span>
+          ${g.kids.map(r => one(r, !solo)).join('')}
+        </li>`;
+      }).join('');
+      return `<section class="cblock">
+        ${many ? `<h3 class="chd rday">${esc(U.md(d))} ${esc(U.dowOf(d))}</h3>` : ''}
+        <ul class="clist tight">${li}</ul></section>`;
+    }).join('');
   }
 
   function table(title, entries, colorOf) {
