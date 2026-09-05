@@ -276,12 +276,13 @@ const Cost = (function () {
        센 것과 빠진 것을 갈라 적는다. */
     /* ★합계는 영수증의 맨 아래다 — 위에 놓았던 큰 수를 내렸다. 영수증은 항목을 다
        찍고 마지막에 합을 낸다. 그 순서가 곧 '이 수가 어디서 왔는지' 를 말한다. */
+    /* ★곁말에서 'n건 합산 · 원화 기준' 을 뺐다(2026-09-06). 건수는 바로 위 머리에
+       ITEMS 로 이미 서 있고, ₩ 기호가 원화라는 것을 말한다 — 같은 말을 세 번 했다.
+       못 센 줄만 남긴다. 그건 어디에도 안 적혀 있고, 합계가 틀렸다는 뜻이다. */
     $('cost-total').innerHTML = paid.length
       ? `<span class="tl">TOTAL</span>
-         <span class="big">${esc(U.money(total, U.SETTLE))}</span>
-         <span class="sub">${paid.length - miss.length}건 합산 · 원화 기준`
-         + (miss.length ? ` · <span class="warn">${miss.length}건 환율 없음</span>` : '')
-         + '</span>'
+         <span class="big">${esc(U.money(total, U.SETTLE))}</span>`
+         + (miss.length ? `<span class="sub"><span class="warn">${miss.length}건 환율 없음</span></span>` : '')
       : '<span class="sub">아직 비용을 적은 일정이 없습니다</span>';
 
     const byKind = U.KINDS.map(k => [k, group(r => r.kind).get(k)])
@@ -322,9 +323,10 @@ const Cost = (function () {
       + (hasPayer ? strip('BY PERSON',
           byPayer.map(([k, v], i) => ({ n: k, k: tone(i), v: v.sum }))) : '');
 
-    /* 영수증 머리 — 가게 이름 자리에 여행 이름, 그 밑에 기간과 건수 */
+    /* 영수증 머리 — 가게 이름 자리에 **무슨 영수증인지**. 여행 이름은 바로 위
+       머리말에 이미 크게 서 있다(2026-09-06) — 두 줄 사이에서 같은 말이 겹쳤다. */
     $('cost-head').innerHTML = paid.length
-      ? `<span class="rnm">${esc((trip.name || '').toUpperCase())}</span>
+      ? `<span class="rnm">EXPENSES</span>
          <span class="rsb">${esc(U.range(trip.start_on, trip.end_on))} · ${paid.length} ITEMS</span>`
       : '';
 

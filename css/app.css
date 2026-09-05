@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=309') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=311') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=309') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=311') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=309') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=311') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -269,7 +269,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding: 0; margin-left: -10px;
 }
 .top .who { flex: 1; min-width: 0; }
-/* ★머리말 = 홈에서 누른 그 줄의 확대판. 뱃지·쪽자 날짜·작은 대문자 라벨이 다 같다. */
+/* ★뱃지는 홈 줄 그대로, 날짜는 판을 벗고 색만 이어받는다(2026-09-06). */
 .top .nmline { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .top h1 {
   margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em;
@@ -280,14 +280,20 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-size: 8px; letter-spacing: -.05em; }
 .top .tcc i.cc { background: var(--route); color: var(--paper);
   box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .22); }
+/* 국기 — 오른쪽 끝, 두 줄의 위아래 가운데(.top 이 align-items:center 다).
+   윈도우처럼 못 그리는 데서는 국가코드 두 글자로 떨어지므로 mono 로 받는다. */
+.top .tflag { flex: 0 0 auto; font-size: 26px; line-height: 1; letter-spacing: -.02em; }
+.top .tflag.ab {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .04em; color: var(--ink-3);
+}
 .top .span {
   display: flex; align-items: center; gap: 1.5px; margin-top: 3px;
   font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
   letter-spacing: .02em;
   overflow: hidden; white-space: nowrap;
 }
-.top .span i { flex: 0 0 9.5px; width: 9.5px; height: 15px;
-  font-size: var(--flap-sm); color: var(--route); }
+.top .span .dt { color: var(--route); font-weight: 600; letter-spacing: .04em; }
 .top .span em {
   font-style: normal; margin-left: 9px;
   font-family: var(--mono); font-size: var(--flap-sm); font-weight: 600; color: var(--ink-2);
@@ -1508,8 +1514,7 @@ input.code {
 .trip .ttop i, .trip .tnm i,
 .tbtop .cnt i,
 .grouphd .gn i, .grouphd.year .gt i,
-.daytag i,
-.top .tcc i, .top .span i {
+.daytag i, .top .tcc i {
   font-style: normal; display: inline-flex; align-items: center; justify-content: center;
   font-family: var(--mono); font-weight: 600;
   background: linear-gradient(180deg, var(--flap-a) 0 49.4%, var(--flap-b) 50.6% 100%);
