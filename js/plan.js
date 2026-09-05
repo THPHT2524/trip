@@ -219,10 +219,10 @@ const Plan = (function () {
     /* ★날 수도 쪽자에 앉는다 — 홈의 연도 띠(2026 · 4 TIMES 24 DAYS)와 같은 어법이다.
        두 화면이 같은 판때기를 쓰면 한 물건으로 읽힌다(2026-09-04). */
     const band = `<div class="dayband">
-        <!-- ★쪽자판을 걷었다(2026-09-06). 여행 머리말에서 판때기를 걷을 때 세운
-             규칙이 여기에도 걸린다 — **판의 결은 홈에만 둔다.** 카드까지 걷어낸
-             목록 위에 판때기 한 장이 남으니 화면에서 제일 무거운 물건이 됐다. -->
-        <span class="daytag">Day <b>${n}</b></span>
+        <!-- ★★이 띠는 **레일 밖이다**(2026-09-06). 정거장이 아니라 구역 표시라
+             레일을 물려받지 않는다 — 들여쓰기도 없고 선도 지나가지 않는다.
+             날이 바뀌는 자리에서 레일이 끊기는 것이 곧 '여기서 하루가 끝났다' 다. -->
+        <span class="daytag">Day ${n}</span>
         <span class="date">${esc(U.md(d))} ${esc(U.dowOf(d))}</span>
         <span class="sum">${cost}</span>
       </div>`;
@@ -271,7 +271,7 @@ const Plan = (function () {
         if (!paid.length) return '';
         /* '합' 은 **둘 이상**일 때만 붙인다 — 결제가 하나뿐인데 '합' 이라고 하면
            무엇을 더한 것인지 되묻게 된다. 그냥 그 자리에서 쓴 돈이다. */
-        const lbl = paid.length > 1 ? '합 ' : '';
+        const lbl = paid.length > 1 ? '합계 ' : '';
         const curs = new Set(paid.map(x => x.cost_cur));
         if (curs.size === 1 && paid.every(x => x.cost != null)) {
           const one = paid.reduce((a, x) => a + (+x.cost || 0), 0);
@@ -311,33 +311,46 @@ const Plan = (function () {
     return `<div class="${cls}" style="--k: var(--${k})">
       <span class="pin">${num || ''}</span>
       <span class="stopcard">
+        <!-- ★★머리가 먼저다(2026-09-06). 항공사 여정표의 짜임을 빌려 왔다: **구분이
+             머리로 올라가고 시각+이름이 그 밑에 선다.** 훑을 때 눈이 먼저 잡는 것은
+             '무엇을 하는 자리인가' 이고 이름은 그 다음이다 — 전에는 이름이 위라
+             스물아홉 줄에서 구분이 묻혔다.
+             ★★★그리고 이 줄은 **단추 밖이다**(2026-09-06). 수정 시트가 열리는 자리는
+               시각+이름 그 한 줄뿐이어야 한다 — 머리줄 오른쪽에는 메모·지도가 앉아
+               있어서, 그 줄까지 단추면 그 둘을 노리다 빗나갈 때마다 시트가 열린다.
+             ⚠ row1/row2 는 **뜻이 아니라 자리**를 가리키던 이름이라 이제 거꾸로 읽힌다.
+               css 의 padding 규칙들이 이 순서를 따라 자리를 바꿨다(.acts 가 절대 위치라
+               '위/아래' 를 보고 앉는다). -->
+        <span class="row2">
+          <span class="kind">${esc(r.kind)}</span>
+          ${r.payer_id ? `<span class="badge who">${esc(Crew.nameOf(crew, r.payer_id) || '냄')}</span>` : ''}
+        </span>
         <button class="item${r.done ? ' is-done' : ''}${r._pending ? ' is-pending' : ''}" type="button" data-edit="${esc(r.id)}">
-          <!-- ★★머리가 먼저다(2026-09-06). 항공사 여정표의 짜임을 빌려 왔다:
-               **구분·금액이 머리로 올라가고 시각+이름이 그 밑에 선다.** 훑을 때
-               눈이 먼저 잡는 것은 '무엇을 하는 자리이고 얼마 썼나' 이고, 이름은
-               그 다음이다 — 전에는 이름이 위라 스물아홉 줄에서 구분이 묻혔다.
-               ⚠ 마크업 순서만 바꿨다. row1/row2 라는 이름은 **뜻이 아니라 자리**를
-                 가리키던 것이라 그대로 두면 이제 거꾸로 읽힌다 — css 의 두 padding
-                 규칙이 이 순서를 따라 자리를 바꿨다(.acts 가 절대 위치라 그렇다). -->
-          <span class="row2">
-            <span class="kind">${esc(r.kind)}</span>
-            ${cost}
-            ${r.payer_id ? `<span class="badge who">${esc(Crew.nameOf(crew, r.payer_id) || '냄')}</span>` : ''}
-          </span>
           <span class="row1">
             <span class="time${time ? '' : ' none'}">${esc(time || '시각 미정')}</span>
             <span class="name">${esc(r.name)}</span>
           </span>
         </button>
-        ${r.memo ? `<span class="acts at-name"><button class="act has" type="button"
-           data-memo="${esc(r.id)}" aria-label="메모 보기">메모</button></span>` : ''}
-        <span class="acts">
+        <!-- ★단추를 두 줄로 갈라 앉힌다(2026-09-06). 머리줄에는 **이 장소에 대한 것**
+             (메모·지도), 이름줄에는 **이 줄에 하는 것**(취소). 셋을 한 줄에 세우면
+             오른쪽이 136px 이 되어 이름이 그만큼 잘린다 — 두 줄에 나눠 반씩 문다. -->
+        <span class="acts at-name">
+          ${r.memo ? `<button class="act has" type="button"
+             data-memo="${esc(r.id)}" aria-label="메모 보기">메모</button>` : ''}
           ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener">지도</a>` : ''}
-          <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '못 감'}</button>
+        </span>
+        <span class="acts">
+          <button class="act" type="button" data-done="${esc(r.id)}">${r.done ? '되돌리기' : '취소'}</button>
         </span>
       </span>
       ${payHtml}
-      <button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>
+      <!-- ★★합계가 **발치로 내려왔다**(2026-09-06). 영수증과 같은 차례다 — 항목을 다
+           찍고 마지막에 합을 낸다. 머리에 있을 때는 무엇을 더한 값인지 모르는 채로
+           먼저 보였고, 여기서는 바로 위 금액들의 기둥 끝에 앉아 저절로 설명된다. -->
+      <div class="payfoot">
+        <button class="payadd" type="button" data-pay="${esc(r.id)}">＋ 결제 추가</button>
+        ${cost}
+      </div>
     </div>`;
   }
 
