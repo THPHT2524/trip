@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=444') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=445') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=444') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=445') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=444') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=445') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -2004,9 +2004,9 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 .pico { width: 15px; height: 13px; flex: 0 0 auto; fill: none;
   stroke: currentColor; stroke-width: 1.3; }
 .pico .f { fill: currentColor; stroke: none; }
-/* ── 여권번호 ──────────────────────────────────────────────────────────
-   ★인적사항면의 오른쪽 위 — 종류·발행국·번호. 진짜 여권이 그 자리에 적는 셋이고,
-     셋 다 아래 MRZ 가 기계용으로 이미 찍는 값이다(js/app.js 의 pheadHtml 참고).
+/* ── 언제부터 ──────────────────────────────────────────────────────────
+   ★여권의 발급일 자리다. 이 카드에서 **딱 하나** 남은 곁값이라 오른쪽 끝에 선다 —
+     왜 하나뿐인지는 js/app.js 의 pheadHtml 주석에 적어 두었다(네 번 틀렸다).
    ★칸의 짜임은 밑의 격자(.pgrid)와 같다: 작은 이름표 밑에 값. 한 카드 안에서
      같은 것을 두 가지 방법으로 적지 않는다. 다만 여기는 곁글이라 값이 한 단 작다. */
 .pno {
