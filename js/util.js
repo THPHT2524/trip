@@ -67,11 +67,45 @@ const U = (function () {
   /* ── 나라 ────────────────────────────────────────────────────────────────
      ★사람이 여행마다 **직접 고른다.** 전에는 현지통화에서 유추했는데 유로는 나라가
        열이 넘고 달러는 미국 밖에서도 쓴다 — 어림으로 국기를 붙일 일이 아니다.
-     ★한국 사람이 갈 만한 곳으로 추렸다. 없는 나라가 생기면 여기 한 줄 늘리면 된다
-       (250개를 다 세우면 고르는 일이 일이 된다 — 쓰는 사람이 한 명인 앱이다).
      ★★윈도우는 국기 이모지를 안 그리고 'JP' 두 글자로 떨어뜨린다. 그래서 화면에서는
-       **크게 바탕에 깔아** 모노그램으로 읽히게 한다(css 의 .bgflag·.pflags 참고). */
-  const COUNTRY = [
+       **크게 바탕에 깔아** 모노그램으로 읽히게 한다(css 의 .bgflag·.pflags 참고).
+
+   ★★★서른셋만 세워 두고 '250개를 다 세우면 고르는 일이 일이 된다' 고 적어 두었는데,
+     **그건 굴리는 고르개였을 때 이야기였다**(2026-09-07). 적는 칸으로 바꾼 순간
+     목록이 길어도 드는 값이 없어졌다 — '스리' 두 자면 스리랑카가 나온다. 그런데
+     목록에 없어서 **뱃지가 아예 안 떴다.**
+   ★그렇다고 이백몇십 줄을 손으로 적지 않는다. 브라우저가 이미 갖고 있다:
+     Intl.DisplayNames 가 ISO 코드를 한국어 이름으로 옮겨 준다. AA~ZZ 를 물어
+     제 이름이 돌아오는 것만 남기면 그게 곧 목록이다(279개 나온다).
+   ★국기도 안 적는다. 코드 두 글자를 지역표시기호로 옮기면 그대로 국기다 —
+     손으로 적어 둔 서른셋과 **전부 일치**하는 것을 확인하고 뺐다(오타가 날 자리를
+     없앤다).
+   ⚠ 아래 서른셋은 남긴다. 두 가지 일을 한다: **자주 가는 순서로 목록 앞에 서고**
+     (나머지는 가나다순), ICU 이름이 길거나 낯선 넷을 덮는다 — 대한민국→한국,
+     오스트레일리아→호주, '홍콩(중국 특별행정구)'→홍콩, 마카오도 같다.
+   ⚠ ICU 가 없는 기계에서는 이 서른셋만 남는다. 있던 것이 없어지지는 않는다. */
+  /* 코드 두 글자 → 국기. 지역표시기호(U+1F1E6~) 두 자를 잇는 것이 국기 이모지다.
+     ⚠ 이것은 **목록을 세울 때 쓰는 날것**이다. 두 글자면 무엇이든 그려 내므로
+       'ZZ' 도 🇿🇿 가 된다 — 밖으로 내보내는 flag() 는 아는 코드만 그린다.
+       (모르는 국기를 지어내지 않는다. 테스트 둘이 그것을 지킨다.) */
+  const flagOf = code => (/^[A-Z]{2}$/.test(code)
+    ? String.fromCodePoint(...[...code].map(c => 0x1F1E6 + c.charCodeAt(0) - 65)) : '');
+  /* 나라가 아닌 것 — ICU 는 이런 것도 지역으로 센다. 여행할 수 있는 곳만 남긴다.
+     ★ZZ 는 '알려지지 않은 지역' 이다. 이름이 코드와 다르니 목록에 끼어들었고,
+       그러자 flag('ZZ') 가 🇿🇿 를 만들어 냈다 — 테스트 둘이 그것을 잡았다.
+     ★CS·YU·ZR·AN 은 없어진 나라의 옛 코드다. ICU 는 지금 이름으로 옮겨 주는데
+       (CS·YU→세르비아, ZR→콩고, AN→퀴라소) 그러면 같은 이름이 목록에 둘씩 선다. */
+  const NOT_A_PLACE = new Set([
+    'EU', 'UN', 'EZ', 'QO', 'XA', 'XB', 'ZZ',
+    /* ISO 3166-3 — 없어진 나라의 옛 코드. ICU 가 지금 이름으로 옮겨 주는 바람에
+       '베트남'·'독일'·'러시아' 같은 이름이 목록에 둘씩 섰다(열두 짝을 세어 확인).
+       UK 는 ISO 가 아니라 예약 코드다 — 영국은 GB 다. */
+    'AN', 'BU', 'CS', 'CT', 'DD', 'DY', 'FQ', 'FX', 'HV', 'JT', 'MI', 'NH',
+    'NQ', 'NT', 'PC', 'PU', 'PZ', 'RH', 'SU', 'TP', 'UK', 'VD', 'WK', 'YD',
+    'YU', 'ZR',
+  ]);
+  const ALIAS = {};          // ICU 이름 → 코드. 위 NEAR 가 덮어쓴 넷을 위해 둔다
+  const NEAR = [
     ['KR', '한국', '🇰🇷'], ['JP', '일본', '🇯🇵'], ['TW', '대만', '🇹🇼'],
     ['HK', '홍콩', '🇭🇰'], ['MO', '마카오', '🇲🇴'], ['CN', '중국', '🇨🇳'],
     ['TH', '태국', '🇹🇭'], ['VN', '베트남', '🇻🇳'], ['SG', '싱가포르', '🇸🇬'],
@@ -84,10 +118,32 @@ const U = (function () {
     ['AE', '아랍에미리트', '🇦🇪'], ['MV', '몰디브', '🇲🇻'], ['QA', '카타르', '🇶🇦'],
     ['IN', '인도', '🇮🇳'], ['MN', '몽골', '🇲🇳'],
   ];
-  const FLAG = Object.fromEntries(COUNTRY.map(([c, , f]) => [c, f]));
+  const COUNTRY = (() => {
+    const near = NEAR.map(([c, n]) => [c, n, flagOf(c)]);
+    let dn = null;
+    try { dn = new Intl.DisplayNames(['ko'], { type: 'region' }); } catch (e) { return near; }
+    const have = new Set(NEAR.map(([c]) => c));
+    const rest = [];
+    const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (const a of A) for (const b of A) {
+      const c = a + b;
+      if (have.has(c) || NOT_A_PLACE.has(c)) continue;
+      let n = '';
+      try { n = dn.of(c); } catch (e) { continue; }
+      if (!n || n === c) continue;          // ICU 가 모르는 코드는 코드를 그대로 돌려준다
+      rest.push([c, n, flagOf(c)]);
+    }
+    rest.sort((x, y) => x[1].localeCompare(y[1], 'ko'));
+    /* ★덮어쓴 넷의 **ICU 이름도 받아 준다**(2026-09-07). 목록에는 '한국' 이 서지만
+       칸에 '대한민국' 을 친 사람이 아무 일도 안 일어나는 것을 보면 안 된다 —
+       사전에 있는 말이면 다 알아들어야 한다. 오스트레일리아·홍콩·마카오도 같다. */
+    NEAR.forEach(([c, n]) => { const i = dn.of(c); if (i && i !== c && i !== n) ALIAS[i] = c; });
+    return near.concat(rest);
+  })();
   const CNAME = Object.fromEntries(COUNTRY.map(([c, n]) => [c, n]));
-  const flag = code => FLAG[code] || '';
   const countryName = code => CNAME[code] || '';
+  /* 아는 나라만 국기를 준다 — 모르는 코드는 빈 문자열이다(지어내지 않는다) */
+  const flag = code => (CNAME[code] ? flagOf(code) : '');
   /* 여행 하나가 두 나라를 걸치는 일이 있다(방콕+프놈펜, 싱가포르+말레이시아).
      그래서 나라는 **쉼표로 이은 목록**이다 — 'TH,KH'. 표의 제약과 같은 모양(place.sql).
      ★★모르는 코드를 **버리지 않는다.** 전에는 FLAG 에 없으면 걸러 냈는데, 그 목록이
@@ -98,7 +154,7 @@ const U = (function () {
                           .filter(c => /^[A-Z]{2}$/.test(c))
                           .filter((c, i, a) => a.indexOf(c) === i);
   /* 그릴 수 있는 국기만. 모르는 나라는 국기가 없을 뿐 값은 남아 있다. */
-  const flags = t => codeList(t).map(c => FLAG[c]).filter(Boolean);
+  const flags = t => codeList(t).map(c => flag(c)).filter(Boolean);
 
   /* 통화를 고르면 나라도 대개 정해진다 — 새 여행 폼에서 **미리 골라 준다**(바꿀 수 있다).
      통화 하나가 여러 나라인 것(EUR·USD)은 비워 둔다. 지어내지 않는다. */
@@ -143,14 +199,14 @@ const U = (function () {
     const draw = () => {
       chips.innerHTML = picked.map(c =>
         `<button type="button" class="pick" data-drop="${c}">` +
-        (FLAG[c] ? `<span class="pf">${FLAG[c]}</span>` : '') +
+        (flag(c) ? `<span class="pf">${flag(c)}</span>` : '') +
         `${esc(CNAME[c] || c)}<span class="px">✕</span></button>`).join('');
       chips.hidden = !picked.length;
     };
     inp.addEventListener('change', () => {
       const v = inp.value.trim();
       if (!v) return;
-      const c = byName.get(v) || (CNAME[v.toUpperCase()] ? v.toUpperCase() : '');
+      const c = byName.get(v) || ALIAS[v] || (CNAME[v.toUpperCase()] ? v.toUpperCase() : '');
       if (!c) return;                       // 아직 다 안 적었거나 없는 이름 — 적은 것을 지우지 않는다
       inp.value = '';
       if (!picked.includes(c)) { picked.push(c); draw(); }

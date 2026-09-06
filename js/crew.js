@@ -92,7 +92,7 @@ const Crew = (function () {
      짧고 확실하다 — 도시를 고치면 이 미리보기도 따라 바뀐다. */
   function hintName() {
     const d = U.tripName('', $('set-cities').value);
-    $('set-name').placeholder = d || '오사카·교토';
+    $('set-name').placeholder = d || '포항';
   }
 
   async function copyLink() {

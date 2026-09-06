@@ -903,7 +903,7 @@
   /* 나라 고르개 둘. crew.js 가 여행 설정 쪽을 쓰므로 전역에 얹어 준다. */
   /* 새 여행 폼에서도 같은 미리보기 — 비워 두면 도시가 이름이 된다(crew.js 와 같은 규칙) */
   $('new-cities').addEventListener('input', () => {
-    $('new-name').placeholder = U.tripName('', $('new-cities').value) || '오사카';
+    $('new-name').placeholder = U.tripName('', $('new-cities').value) || '포항';
   });
   const newPick = U.countryPicker($('new-country'), $('new-flags'));
   window.SETPICK = U.countryPicker($('set-country'), $('set-flags'));
@@ -914,7 +914,17 @@
     const c = U.guessCountry($('new-cur').value);
     if (c) newPick.set(c);
   });
-  $('new-open').addEventListener('click', () => { $('new-err').textContent = ''; openDlg('new-dlg', 'new-name'); });
+  $('new-open').addEventListener('click', () => {
+    $('new-err').textContent = '';
+    /* ★날짜 기본값은 **오늘**(2026-09-07). 빈 칸으로 두었더니 '나중에 정해도 된다' 는
+       말이 무색하게 매번 둘 다 골라야 했다 — 이 앱은 대개 떠나는 날 언저리에 여행을
+       만든다. 하루짜리로 서 있다가 고치면 되고, 안 고쳐도 틀린 값은 아니다.
+       ⚠ 이미 적어 둔 값은 안 덮는다(닫았다 다시 열 때 지워지면 안 된다). */
+    const today = U.todayISO();
+    if (!$('new-from').value) $('new-from').value = today;
+    if (!$('new-to').value) $('new-to').value = today;
+    openDlg('new-dlg', 'new-name');
+  });
   $('join-open').addEventListener('click', () => { $('join-err').textContent = ''; openDlg('join-dlg', 'join-code'); });
   document.querySelectorAll('dialog.dlg').forEach(d => {
     d.querySelector('[data-close]').addEventListener('click', () => d.close());
