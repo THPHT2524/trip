@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=399">
+<link rel="stylesheet" href="/css/app.css?v=402">
 </head>
 <body>
 
@@ -317,23 +317,23 @@
           <input type="hidden" id="if-lng">
 
           <div class="field" id="if-place-wrap">
-            <label for="if-link" data-en="map link">구글맵 링크</label>
+            <label for="if-link">구글맵 링크</label>
             <input id="if-link" type="text" inputmode="url" autocomplete="off" spellcheck="false"
                    placeholder="https://maps.app.goo.gl/… 붙여넣기">
             <p class="hint" id="if-geo">좌표 없음 — 지도와 거리 표시에서 빠집니다</p>
           </div>
 
           <div class="row">
-            <div class="field"><label for="if-name" id="if-name-lbl" data-en="place">장소명</label>
+            <div class="field"><label for="if-name" id="if-name-lbl">장소명</label>
               <input id="if-name" type="text" required maxlength="80" placeholder="오사카성"></div>
-            <div class="field kind" id="if-kind-wrap"><label for="if-kind" data-en="kind">구분</label>
+            <div class="field kind" id="if-kind-wrap"><label for="if-kind">구분</label>
               <select id="if-kind"></select></div>
           </div>
 
           <div class="row" id="if-when-wrap">
-            <div class="field"><label for="if-date" data-en="date">날짜</label>
+            <div class="field"><label for="if-date">날짜</label>
               <input id="if-date" type="date" class="mono" required></div>
-            <div class="field"><label for="if-time" data-en="time">시각</label>
+            <div class="field"><label for="if-time">시각</label>
               <input id="if-time" type="time" class="mono"></div>
           </div>
 
@@ -346,7 +346,7 @@
              돈이 원화에서 현지통화로 건너오는 길. **환전은 지출이 아니라** 지갑에 넣는 것이다. -->
         <div id="if-pay">
           <div class="field">
-            <span class="lbl" data-en="payment">결제</span>
+            <span class="lbl">결제</span>
             <div class="seg3" id="if-settle">
               <button type="button" data-settle="" aria-pressed="true">카드</button>
               <button type="button" data-settle="cash" aria-pressed="false">현금</button>
@@ -355,11 +355,11 @@
           </div>
 
           <div class="row tight">
-            <div class="field"><label for="if-cost" id="if-cost-lbl" data-en="unit">단가</label>
+            <div class="field"><label for="if-cost" id="if-cost-lbl">단가</label>
               <input id="if-cost" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
-            <div class="field unit" id="if-qty-wrap"><label for="if-qty" id="if-qty-lbl" data-en="qty">갯수</label>
+            <div class="field unit" id="if-qty-wrap"><label for="if-qty" id="if-qty-lbl">갯수</label>
               <input id="if-qty" type="number" inputmode="numeric" step="1" min="1" class="mono" placeholder="1"></div>
-            <div class="field unit" id="if-cur-wrap"><label for="if-cur" data-en="cur">통화</label>
+            <div class="field unit" id="if-cur-wrap"><label for="if-cur">통화</label>
               <select id="if-cur">
                 <option>KRW</option><option>JPY</option><option>USD</option><option>EUR</option>
                 <option>CNY</option><option>TWD</option><option>HKD</option><option>MOP</option>
@@ -368,9 +368,9 @@
               </select></div>
             <!-- 승인금액 — 카드 결제 순간 잡히는 **원화 금액**. 환율을 물어보던 자리다:
                  사람이 아는 것은 비율이 아니라 결제 알림에 찍힌 그 금액이다. -->
-            <div class="field unit" id="if-apv-wrap"><label for="if-apv" data-en="approved">승인금액</label>
+            <div class="field unit" id="if-apv-wrap"><label for="if-apv">승인금액</label>
               <input id="if-apv" type="number" inputmode="numeric" step="1" min="0" class="mono"></div>
-            <div class="field unit" id="if-krw-wrap" hidden><label for="if-krw" data-en="paid krw">낸 원화</label>
+            <div class="field unit" id="if-krw-wrap" hidden><label for="if-krw">낸 원화</label>
               <input id="if-krw" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
           </div>
 
@@ -379,7 +379,7 @@
             <p class="hint" id="if-fx-hint">카드 승인 원화를 적으면 그 값이 이깁니다. 비우면 그날 전신환매도율로 자동 계산합니다.</p>
 
           <div class="field">
-            <label for="if-payer" data-en="payer">누가 냈나</label>
+            <label for="if-payer">누가 냈나</label>
             <select id="if-payer"><option value="">안 적음</option><option value="split">각자 냄</option></select>
           </div>
         </div><!-- /#if-pay -->
@@ -437,22 +437,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=399"></script>
-<script src="/js/map-config.js?v=399"></script>
-<script src="/js/money.js?v=399"></script>
-<script src="/js/util.js?v=399"></script>
-<script src="/js/worldmap.js?v=399"></script>
-<script src="/js/geo.js?v=399"></script>
-<script src="/js/gmaps.js?v=399"></script>
-<script src="/js/db.js?v=399"></script>
-<script src="/js/fx.js?v=399"></script>
-<script src="/js/outbox.js?v=399"></script>
+<script src="/js/supabase-config.js?v=402"></script>
+<script src="/js/map-config.js?v=402"></script>
+<script src="/js/money.js?v=402"></script>
+<script src="/js/util.js?v=402"></script>
+<script src="/js/worldmap.js?v=402"></script>
+<script src="/js/geo.js?v=402"></script>
+<script src="/js/gmaps.js?v=402"></script>
+<script src="/js/db.js?v=402"></script>
+<script src="/js/fx.js?v=402"></script>
+<script src="/js/outbox.js?v=402"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=399"></script>
-<script src="/js/plan.js?v=399"></script>
-<script src="/js/map.js?v=399"></script>
-<script src="/js/cost.js?v=399"></script>
-<script src="/js/app.js?v=399"></script>
+<script src="/js/crew.js?v=402"></script>
+<script src="/js/plan.js?v=402"></script>
+<script src="/js/map.js?v=402"></script>
+<script src="/js/cost.js?v=402"></script>
+<script src="/js/app.js?v=402"></script>
 
 </body>
 </html>

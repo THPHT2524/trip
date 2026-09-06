@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=399') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=402') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=399') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=402') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=399') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=402') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -2317,23 +2317,33 @@ details[open] > summary::after { content: '−'; }
 .pick:hover .px, .pick:focus-visible .px { color: var(--warn); }
 .pick[disabled] { opacity: .5; cursor: default; }
 
-/* ★★빽빽한 줄에는 **라틴 이름표를 안 단다**(2026-09-06). 390px 에 칸이 넷인데
-   '갯수 QTY' 가 두 줄로 접히면서 그 칸만 아래로 처졌고, '승인금액 APPROVED' 가
-   넓어진 만큼 통화 칸이 눌려 'JPY' 가 'JP' 로 잘렸다. 서식의 어법은 지키되,
-   자리가 없는 줄에서는 한글만 세운다 — 실제 서식의 잔칸도 그렇게 생겼다. */
 .form .row.tight { flex-wrap: nowrap; gap: 6px; }
-.form .row.tight label[data-en]::after { content: none; }
 /* ★★단가가 이 줄의 **주인공**이다. 곁칸 셋에 88px 씩 고정으로 주고 나면 375px 폰에서
-     단가에 57px 만 남아 '214000' 이 '2140(' 로 잘렸다(2026-09-02). 남는 자리는 단가가
-     갖고, 곁칸은 **제 내용이 들어갈 만큼만** 갖는다 — 갯수는 한두 자리, 통화는 세 글자,
-     환율은 8.7093 이다. 좁아지면 곁칸이 먼저 줄어든다(0 1 auto). */
+     단가에 57px 만 남아 '214000' 이 '2140(' 로 잘렸다(2026-09-02).
+   ★★★그러다 반대로 뒤집혔다(2026-09-06). '환율' 이 '승인금액' 이 되면서 id 가
+     if-fx-wrap → if-apv-wrap 으로 바뀌었는데 **여기 폭 규칙은 옛 이름 그대로** 남아
+     있었다. 짝을 잃은 승인금액이 number 칸의 내재 폭(158px)을 그대로 들고 서서,
+     단가는 제 min-width 인 88px 까지 눌리고 통화는 80px 밑으로 밀려 'JPY' 가
+     'JP' 로 잘렸다. **id 를 적어 거는 규칙은 이름이 바뀌면 조용히 죽는다.**
+   ★고정폭 대신 **비율**로 맨다. 이 줄의 뼈대는 이렇다:
+       현금 [        단가        ][갯수][통화]
+       카드 [  단가  ][갯수][통화][ 승인금액 ]
+     갯수와 통화는 **어느 쪽에서나 같은 크기**이고, 카드에서 단가가 절반으로 줄어
+     그 절반이 맨 뒤의 승인금액이 된다 — 돈 칸 둘이 남는 자리를 똑같이 나눈다
+     (둘 다 flex: 1 1 0). 폭을 픽셀로 못 박으면 기계마다 어느 쪽이 이길지가 달라진다.
+   ⚠ 갯수와 통화는 **안 줄어든다**(flex-shrink: 0). 이 둘은 값의 길이가 정해져 있어
+     (두 자리 · 세 글자) 한 픽셀만 눌려도 곧바로 글자가 잘린다 — 실제로 'JPY' 가
+     'JP' 로 잘렸다. 좁아질 때 양보하는 것은 돈 칸이다: 돈은 칸보다 길어져도
+     안에서 밀려 보이지 잘리지 않는다.
+   ⚠ 돈 칸에는 min-width 를 주지 않는다. 88px 을 걸어 두면 좁은 기계에서 그 칸만
+     안 줄어들어 **둘이 반반이라는 규칙이 먼저 깨진다.** */
 /* ⚠ min-width 를 `.field` 에 걸면 `.field.unit` 도 같이 맞는다 — width 보다 min-width 가
    세서 곁칸 셋이 도로 88px 이 됐다(v=69 에서 그렇게 틀렸다). :not(.unit) 으로 가른다. */
-.form .row.tight .field:not(.unit) { flex: 1 1 0; min-width: 88px; }
+.form .row.tight .field:not(.unit) { flex: 1 1 0; min-width: 0; }
 .form .row.tight .field.unit { flex: 0 1 auto; min-width: 0; }
-#if-qty-wrap { width: 58px; }
-#if-cur-wrap { width: 80px; }
-#if-fx-wrap, #if-krw-wrap { width: 84px; }
+#if-qty-wrap { flex: 0 0 58px; }
+#if-cur-wrap { flex: 0 0 80px; }
+#if-apv-wrap, #if-krw-wrap { flex: 1 1 0; min-width: 0; }
 .form .row.tight select { padding-right: 24px; background-position: right 11px center, right 6px center; }
 .hint { margin: -4px 0 0; font-size: var(--t-cap); color: var(--ink-3); word-break: keep-all; }
 .hint.ok { color: var(--route); }
