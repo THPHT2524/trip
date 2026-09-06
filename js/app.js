@@ -281,31 +281,21 @@
      곧 범례다. 그래서 없었던 구분도 뺀 자리 없이 선다.
    ★레일은 양끝으로 삐져나온다 — 여행이 이 카드에서 끝나지 않는다는 뜻이고,
      카드의 미니 레일도 그렇게 생겼다. */
-  /* ── 여권의 윗줄 ──────────────────────────────────────────────────────
-     ★★실물 여권을 보고 다시 짰다(2026-09-07). 인적사항면의 윗줄은 **세 토막**이다:
-       왼쪽에 서식 이름이 작게(여권 PASSPORT), 그 옆에 발행국이 크게(대한민국
-       REPUBLIC OF KOREA), 오른쪽 끝에 **칩 표식**.
-     ★★오른쪽 그 자리를 다섯 번 채워 봤다 — 구분 색 점, 해마다의 막대, 종류·발행국·
-       번호, SINCE 2017, 기요셰. 다섯 다 틀렸고 답은 실물에 있었다: 거기 있는 것은
-       **작고 단순한 표식 하나**다. 사실도 무늬도 아니다.
-     ★그래서 여태 이름 옆에 붙어 있던 그 표식(.pico)을 오른쪽 끝으로 보낸다.
-       새로 만든 것이 아니라 **제자리를 찾아 준 것**이다. */
   function pheadHtml() {
+    const dots = U.KINDS.map(k =>
+      `<i style="--k:var(--${U.kvar(k)})"></i>`).join('');
+    const label = U.KINDS.join(', ');
     return `<div class="phead">
-    <span class="ptype">여행기록 <em>TRIPLOG</em></span>
-    <span class="pstate">대한민국 <em>Republic of Korea</em></span>
-    <svg viewBox="0 0 14 12" class="pico" aria-hidden="true">
-      <rect x=".8" y=".8" width="12.4" height="10.4" rx="2.2"/>
-      <circle cx="4.9" cy="6" r="1.7" class="f"/>
-      <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg>
+    <div class="pname">
+      <b>TRIPLOG</b>
+      <span class="ptype" aria-hidden="true"><svg viewBox="0 0 14 12" class="pico">
+        <rect x=".8" y=".8" width="12.4" height="10.4" rx="2.2"/>
+        <circle cx="4.9" cy="6" r="1.7" class="f"/>
+        <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg> <i>·</i> PASSPORT</span>
+    </div>
+    <div class="prail" role="img" aria-label="일정 구분 ${esc(label)}">${dots}</div>
   </div>`;
   }
-
-
-
-
-
-
 
   /* ── 여권 위의 세계지도 ──────────────────────────────────────────────────
      **다녀온 공항을 점으로 찍는다.** 여권 격자가 '얼마나' 를 말한다면 지도는 '어디를'
@@ -423,14 +413,13 @@
   const pad = (t) => (t + '<'.repeat(MRZ)).slice(0, MRZ);
   const mrzSafe = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]+/g, '<');
   /* ★격자 라벨과 **같은 열쇠**를 쓴다 — 라벨을 바꾸면 여기도 바꿔야 도장이 찍힌다. */
-  const MRZ_CODE = { Countries: 'C', Cities: 'T', Flights: 'F', Days: 'D' };
+  const MRZ_CODE = { COUNTRIES: 'C', CITIES: 'T', FLIGHTS: 'F', DAYS: 'D' };
   /* ★위 격자에 **선 칸만** 적는다. 전에는 0 도 그대로 찍어서, 셈을 못 받아 온 날
      '1C<0A<0P<3D' 라고 도장이 찍혔다 — 없는 것을 0 이라고 말한 셈이다(2026-09-02 폰). */
   function mrzLines(cells) {
     const who = mrzSafe((DB.email() || '').split('@')[0]) || 'TRAVELLER';
     return [pad('P<KOR<' + who),
-            pad(cells.filter(([, en]) => MRZ_CODE[en])
-              .map(([, en, v]) => v + MRZ_CODE[en]).join('<'))];
+            pad(cells.filter(([k]) => MRZ_CODE[k]).map(([k, v]) => v + MRZ_CODE[k]).join('<'))];
   }
 
   /* 국기 줄을 **판에 맞춘다.** 몇 장인지에 따라 겹치는 폭도 줄 수도 달라지므로 그려진 뒤에 잰다.
@@ -572,10 +561,7 @@
     /* 라벨은 영문이다 — 진짜 여권이 그렇다(한국 여권도 모든 칸이 국·영문 병기다).
        아래 MRZ 도 로마자라 둘이 한 덩어리로 읽힌다. */
     const cells = [
-      /* ★이름표는 **한글/English** 짝이다 — 실물 여권이 칸마다 그렇게 적는다
-         (종류/Type · 국가코드/Country code · 발급일/Date of issue). */
-      ['나라', 'Countries', n.countries], ['도시', 'Cities', n.cities],
-      ['비행', 'Flights', n.flights], ['일수', 'Days', n.days],
+      ['COUNTRIES', n.countries], ['CITIES', n.cities], ['FLIGHTS', n.flights], ['DAYS', n.days],
     ].filter(([, v]) => v);
     if (!cells.length) return '';
 
@@ -584,8 +570,8 @@
       ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
         flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
       ${pheadHtml()}
-      <dl class="pgrid">${cells.map(([ko, en, v]) =>
-        `<div><dt>${esc(ko)}<em>${esc(en)}</em></dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
+      <dl class="pgrid">${cells.map(([k, v]) =>
+        `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
     </section>`;
   }
