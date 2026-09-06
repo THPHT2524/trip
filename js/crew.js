@@ -30,10 +30,16 @@ const Crew = (function () {
     const mine = DB.uid();
     const owner = trip.owner_id === mine;
 
-    $('crew-list').innerHTML = list.map(m => `
+    /* ★동그라미 색은 U.hue 가 정한다 — 일정 탭의 결제자 동그라미와 **같은 색**이다.
+       같은 사람이 어느 화면에서나 같은 색이어야 한다. */
+    $('crew-list').innerHTML = list.map(m => {
+      const nm = String(m.email || '').split('@')[0];
+      return `
       <li class="crewrow">
+        <span class="av" style="--pc: ${U.hue(list, m.user_id)}"
+          aria-hidden="true">${esc(nm.trim().charAt(0).toUpperCase())}</span>
         <span class="who2">
-          <span class="nm">${esc(String(m.email || '').split('@')[0])}</span>
+          <span class="nm">${esc(nm)}</span>
           <span class="em">${esc(m.email)}</span>
         </span>
         <span class="tagrow">
@@ -42,7 +48,8 @@ const Crew = (function () {
           ${owner && m.user_id !== mine
             ? `<button class="act danger" type="button" data-kick="${esc(m.user_id)}">내보내기</button>` : ''}
         </span>
-      </li>`).join('');
+      </li>`;
+    }).join('');
 
     /* ★칸에는 **코드**를 보여준다. 링크는 375px 칸에서 잘려 못 읽는데,
        정작 사람이 읽고 불러 줄 수 있는 것은 코드다. 복사 단추가 링크를 가져간다. */
@@ -62,6 +69,21 @@ const Crew = (function () {
     $('set-del').hidden = !owner;
     $('set-danger').hidden = !owner;
     $('set-note').textContent = owner ? '' : '여행을 만든 사람만 고칠 수 있습니다.';
+
+    /* 서식 번호 자리 — 나라와 떠난 해. 안내판이 날짜 옆에 다는 항공사 코드와 같은 것이다. */
+    const cc = U.codeList(trip.country || '');
+    const yr = (trip.start_on || trip.end_on || '').slice(0, 4);
+    $('set-cc').innerHTML = (cc.length ? `<b>${esc(cc[0])}</b>` : '') + (yr ? ` ${esc(yr)}` : '');
+
+    /* ★도장은 **다녀온 여행에만** 찍힌다 — 그래서 장식이 아니라 한 가지 사실이다.
+       끝난 날이 오늘보다 앞설 때만. 끝을 안 적은 여행은 끝났는지 알 수 없다. */
+    const over = trip.end_on && trip.end_on < U.todayISO();
+    $('set-stamp').hidden = !over;
+    if (over) {
+      const n = U.tripDays(trip);
+      $('set-stamp').innerHTML = `<span><b>다녀옴</b>`
+        + `<em>${esc(U.md(trip.end_on))}${n ? ` · ${n} DAYS` : ''}</em></span>`;
+    }
   }
 
   async function copyLink() {

@@ -172,9 +172,54 @@ const U = (function () {
      (2026-09-02에 뜻을 그렇게 정했다 — 그전에는 base_cur 가 합계 통화였다) */
   const SETTLE = 'KRW';
 
+  /* ── 그림 단추의 그림 ────────────────────────────────────────────────
+     ★★이모지였다(📝 📍 ✖️ ↩️ 🧭 🗓️). 두 가지가 걸렸다(2026-09-06).
+       하나, 이 앱은 **채도 높은 색을 장소구분 여섯에만** 쓰기로 해 놓았는데
+       이모지가 노랑·빨강·갈색을 규칙 밖에서 들여왔다. 둘, 색 그림(📝·📍)은
+       color 를 무시하고 글리프로 떨어지는 것(✖️·↩️)은 받아서, 한 줄에 무게가
+       셋이었다 — 밝은 판에서 특히 어긋났다.
+     ★선 그림 하나로 통일한다. currentColor 를 타므로 --icon 한 토큰이 여섯을
+       다 잡고, 두 판에서 같은 무게로 앉는다.
+     ★16 칸에 1.6 선. 24px 판 안에 15px 로 앉으면 선이 1.5px 로 떨어져
+       이 앱의 실선(1px)보다 딱 한 뼘 굵다 — 글이 아니라 **누르는 것**으로 읽힌다. */
+  const ICON = {
+    memo: '<path d="M3.5 5h9M3.5 8h9M3.5 11h5"/>',
+    pin:  '<path d="M8 14c3.2-3.7 4.8-6.4 4.8-8A4.8 4.8 0 0 0 3.2 6c0 1.6 1.6 4.3 4.8 8Z"/>'
+        + '<circle cx="8" cy="6.1" r="1.6"/>',
+    x:    '<path d="M4.6 4.6 11.4 11.4M11.4 4.6 4.6 11.4"/>',
+    undo: '<path d="M5.6 2.6 2.4 5.8l3.2 3.2"/>'
+        + '<path d="M2.4 5.8h6.4a3.9 3.9 0 0 1 0 7.8H5.6"/>',
+    nav:  '<path d="M13.7 2.3 2.5 6.9l5 1.6 1.6 5z"/>',
+    cal:  '<rect x="2.8" y="4.3" width="10.4" height="9.2" rx="1.6"/>'
+        + '<path d="M2.8 7.3h10.4M5.6 2.7v2.4M10.4 2.7v2.4"/>'
+  };
+  function icon(name) {
+    return `<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" focusable="false"
+      fill="none" stroke="currentColor" stroke-width="1.6"
+      stroke-linecap="round" stroke-linejoin="round">${ICON[name] || ''}</svg>`;
+  }
+
+  /* ── 사람의 색 ────────────────────────────────────────────────────────
+     ★★일정 탭의 결제자 동그라미가 쓰던 것을 여기로 옮겼다(2026-09-06) —
+       설정 탭의 동행자 줄도 같은 색을 써야 **같은 사람이 어느 화면에서나
+       같은 색**이 된다. 두 곳에 같은 배열을 적어 두면 언젠가 갈린다.
+     ★색상만 사람마다 다르고 채도·밝기는 판마다 한 벌뿐이다(--pc-s/--pc-l) —
+       어느 색을 뽑아도 이 화면의 톤을 벗어나지 않는다.
+     ★순번으로 돌린다: 여덟 명까지 무조건 다 다르다. 해시로 떨어뜨리면
+       셋만 되어도 세 번에 한 번 겹쳤다(생일 문제).
+     ⚠ 목록에 없는 사람(초대에서 빠진 옛 결제)만 해시로 간다 — 색이 없느니
+       겹칠 위험을 안고라도 주는 편이 낫다. */
+  const PHUE = [210, 14, 152, 253, 42, 328, 188, 96];
+  function hue(crew, userId) {
+    const id = String(userId || '');
+    let n = (crew || []).findIndex(m => m.user_id === userId);
+    if (n < 0) { n = 0; for (let i = 0; i < id.length; i += 1) n = (n * 31 + id.charCodeAt(i)) >>> 0; }
+    return PHUE[n % PHUE.length];
+  }
+
   return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
-           cityList, countryPicker, SETTLE };
+           cityList, countryPicker, SETTLE, icon, hue };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용

@@ -272,13 +272,13 @@ const Maps = (function () {
         <span class="mcr">
           <span class="mfl">시간</span>
           <em>${t ? esc(t) : '--:--'}</em>
-          <!-- 일정 탭과 같은 어법: 동그란 판 위의 그림. 뜻은 aria-label 이 진다.
-               🧭 는 길을 찾아 나가는 것, 🗓 는 앱 안의 일정으로 돌아가는 것이다. -->
+          <!-- 일정 탭과 같은 어법: 동그란 판 위의 선 그림. 뜻은 aria-label 이 진다.
+               화살표는 길을 찾아 나가는 것, 달력은 앱 안의 일정으로 돌아가는 것이다. -->
           <span class="mca">
             <a class="act" href="${esc(url)}" target="_blank" rel="noopener"
-               aria-label="길찾기"><span aria-hidden="true">🧭</span></a>
+               aria-label="길찾기">${U.icon('nav')}</a>
             <button class="act" type="button" data-go="${esc(r.id)}"
-               aria-label="일정에서 보기"><span aria-hidden="true">🗓️</span></button>
+               aria-label="일정에서 보기">${U.icon('cal')}</button>
           </span>
         </span>
         <span class="mcr">

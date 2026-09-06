@@ -126,7 +126,7 @@ const Cost = (function () {
         </li>`;
       }).join('');
       return `<section class="cblock">
-        ${many ? `<h3 class="chd rday">${esc(U.md(d))} <span class="dw">${esc(U.dowOf(d))}</span></h3>` : ''}
+        ${many ? `<h3 class="chd rday">${esc(U.md(d))} <i class="ko">${esc(U.dowOf(d))}</i></h3>` : ''}
         <ul class="clist tight">${li}</ul></section>`;
     }).join('');
   }

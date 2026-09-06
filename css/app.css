@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=389') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=395') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=389') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=395') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=389') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=395') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -262,6 +262,11 @@ body {
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'zero' 1;
 }
+/* ★★등폭 칸 안의 한글. Plex Mono 에는 한글이 없어서 **낱자만** 대체 글꼴로
+   떨어지는데, 사이의 **빈칸은 등폭 그대로**(600/1000)라 '직 선 35km' 처럼
+   벌어진다. 자간을 0 으로 해 놓고도 벌어지던 이유가 이것이었다(2026-09-06).
+   숫자는 세로로 줄을 맞춰야 하므로 칸은 등폭으로 두고, 한글만 싸서 꺼낸다. */
+.ko { font-style: normal; font-family: var(--sans); letter-spacing: 0; }
 
 a { color: var(--route); text-underline-offset: 2px; }
 :focus-visible {
@@ -472,8 +477,12 @@ a { color: var(--route); text-underline-offset: 2px; }
    ⚠ 그래서 여기에 hover 나 cursor 를 주면 안 된다 — 규칙이 도로 흐려진다. */
 .badge {
   /* ⚠ 자간 0. 여기 오는 말은 이제 죄다 한글이다(카드·현금·환전·만든 사람·나) —
-     .04em 이면 두 글자가 벌어져 '카 드' 로 읽힌다. */
-  font-family: var(--mono); font-size: var(--t-micro); letter-spacing: 0;
+     .04em 이면 두 글자가 벌어져 '카 드' 로 읽힌다.
+   ⚠⚠ 글꼴도 **고딕**이어야 한다(2026-09-06). 등폭이었는데 Plex Mono 에는 한글이
+     없어서 낱자만 대체 글꼴로 떨어지고 **사이의 빈칸은 등폭 그대로**였다 —
+     600/1000 짜리 넓은 빈칸이 껴서 '만 든  사 람' 으로 벌어졌다. 자간을 0 으로
+     해 놓고도 벌어진 이유가 이것이다: 흩은 것은 자간이 아니라 빈칸이었다. */
+  font-family: var(--sans); font-size: var(--t-micro); letter-spacing: 0;
   border: 0; border-radius: var(--r-xs);
   background: var(--sunk);
   padding: 2px 6px; color: var(--ink-3);
@@ -588,16 +597,18 @@ a { color: var(--route); text-underline-offset: 2px; }
      24×26 짜리 **타원**이 됐다(2026-09-06 실측). 원은 두 변이 같아야 원이다. */
   border: 0; width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0;
   background: var(--sunk); border-radius: 50%;
-  font-size: 11px; line-height: 1;
-  /* ⚠ '이모지는 color 를 안 받는다' 가 **셋 다 그렇지는 않았다**(2026-09-06 밝은 판
-     실측). 📝·📍 는 색 그림이라 color 를 무시하지만 ✖️·↩️ 는 글리프로 떨어져 색을
-     받는다 — 그래서 --ink-3 일 때 밝은 판에서 옅은 회색 X 가 되어 거의 안 보였다.
-     두 판이 서로 반대를 원하므로 --icon 으로 갈라 둔다(위 토큰 참고).
-     색 그림 둘(📝·📍)은 이 값을 무시하므로 어느 판에서도 안 변한다. */
+  line-height: 1;
+  /* ★★이모지였을 때는 여기가 어지러웠다: 색 그림(📝·📍)은 color 를 무시하고
+     글리프(✖️·↩️)는 받아서, 한 줄에 무게가 셋이었다. 선 그림으로 바꾼 뒤로는
+     이 한 줄이 여섯을 다 잡는다 — currentColor 를 타기 때문이다.
+     ★--icon 이 판마다 갈려 있는 이유는 위 토큰 주석에 있다(두 판이 서로 반대를 원한다). */
   color: var(--icon);
 }
+/* 선 그림 — 판 24px 안에 15px. 선은 1.6/16 × 15 = 1.5px 로 떨어져
+   이 앱의 실선(1px)보다 딱 한 뼘 굵다: 글이 아니라 누르는 것으로 읽힌다. */
+.act .ic { width: 15px; height: 15px; display: block; }
 .acts .act:hover, .acts .act:focus-visible,
-.mca .act:hover, .mca .act:focus-visible { background: var(--onnow); }
+.mca .act:hover, .mca .act:focus-visible { background: var(--onnow); color: var(--route); }
 /* 카드 안이라 --sunk 이 스텁과 같은 색이 된다 — 한 켜 더 눌러 판을 갈라 준다 */
 .mca .act { background: var(--paper); }
 
@@ -1211,7 +1222,6 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-family: var(--mono); font-size: var(--t-meta); letter-spacing: .1em;
   color: var(--ink-2);
 }
-.chd.rday .dw { font-family: var(--sans); letter-spacing: 0; }
 
 /* ★★합계 밑의 한 줄 띠 — 같은 돈을 세 각도로 한 번씩. 비율만 말하고,
    정확한 수는 위 항목 목록이 이미 말했다. */
@@ -1364,6 +1374,12 @@ a { color: var(--route); text-underline-offset: 2px; }
 .chd {
   margin: 0 0 8px; font-size: var(--t-cap); font-weight: 700; letter-spacing: 0;
   color: var(--ink-3);
+}
+/* 신고서 안의 머리말도 칸 이름표와 같은 어법이다 — 한글이 크고 라틴이 작다 */
+.chd[data-en]::after {
+  content: ' ' attr(data-en);
+  font-family: var(--mono); font-size: 8.5px; font-weight: 500; letter-spacing: .12em;
+  color: var(--ink-3); text-transform: uppercase;
 }
 .clist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
 /* ★줄은 **두 층**이다: 위는 이름‥‥금액(점선이 끝에서 끝까지), 아래는 막대.
@@ -1545,15 +1561,93 @@ a { color: var(--route); text-underline-offset: 2px; }
 .mtab tbody tr.on > * { background: var(--sunk); }
 .mtab tbody tr.on th button { color: var(--route); }
 
-/* ── 동행자 ───────────────────────────────────────────────────────────── */
-.crew { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+/* ── 신고서 종이 ───────────────────────────────────────────────────────
+   ★★설정 탭에만 종이가 없었다 — 그 이야기는 index.html 의 이 판 주석에 있다.
+   ★테두리는 **관공서 서식**의 것이다: 굵은 바깥선 하나에 안쪽은 실선으로만 나눈다.
+     이 앱의 다른 종이(영수증·티켓)와 다른 어법인데, 서식이 원래 그렇게 생겼다.
+   ★모서리는 거의 안 굴린다(--r-xs). 서류는 잘린 종이지 카드가 아니다. */
+.acard {
+  margin: 12px 12px 0; background: var(--card);
+  border: 1.5px solid var(--ink-3); border-radius: var(--r-xs);
+}
+/* 머리 — 서식 이름은 두 나라 말로 적힌다. 그게 이 종이의 표식이다 */
+.chead {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 10px;
+  padding: 11px 13px 9px; border-bottom: 1.5px solid var(--ink-3);
+}
+.chead .t { font-size: 17px; font-weight: 700; letter-spacing: 0; line-height: 1.15; }
+.chead .t em {
+  display: block; margin-top: 3px; font-style: normal;
+  font-family: var(--mono); font-size: 8.5px; font-weight: 500; letter-spacing: .14em;
+  color: var(--ink-3); text-transform: uppercase;
+}
+/* 나라와 해 — 안내판의 항공사 코드 자리와 같은 것을 여기서는 서식 번호로 쓴다 */
+.chead .cc {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: var(--t-meta); font-weight: 700;
+  letter-spacing: .1em; color: var(--ink-3);
+}
+.chead .cc b {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 26px; height: 19px; border-radius: var(--r-xs);
+  background: var(--route); color: #fff; font-size: 11px; letter-spacing: .04em;
+}
+/* 판 사이는 실선 하나로 나눈다 — 서식의 칸막이다(밖에서는 점선이지만 여기는 서식이다).
+   ⚠ 여백은 판이 한 번만 댄다 — .cblock 과 .form 이 둘 다 대면 좌우가 30px 이 된다. */
+.acard > .cblock { padding: 12px 14px 14px; border-top: 1px solid var(--line); }
+.acard > .chead + .cblock { border-top: 0; }
+.acard .form { padding: 0; }
+
+/* ★도장 — 이 종이의 표식이고, **장식이 아니다**: 다녀온 여행에만 찍힌다.
+   '지난 여행인지' 를 이 화면에서 알 방법이 여태 없었다(js/crew.js 가 채운다). */
+.astamp { padding: 14px 13px 20px; }
+.astamp[hidden] { display: none; }
+/* ⚠ 색은 **구분색이 아니어야 한다.** 처음에 --k-see(관광)로 찍었는데, 이 앱은
+   채도 있는 색을 장소구분 여섯에만 쓰기로 해 놓았다 — 도장은 구분이 아니다.
+   실제 도장이 그렇듯 옅은 잉크로 찍는다: --ink-3 이 이 앱의 그 색이다. */
+.astamp > span {
+  display: block; width: 132px; margin: 0 auto; padding: 7px 0 6px;
+  border: 2px solid var(--ink-3); border-radius: var(--r-xs);
+  text-align: center; color: var(--ink-3);
+  transform: rotate(-6deg);
+}
+.astamp b { display: block; font-size: 13px; font-weight: 800; letter-spacing: .08em; }
+/* 종이 밖의 발치 — 저장·지우기와 그 곁말이 산다.
+   ⚠ 두 단추를 **양 끝**으로 미는 규칙은 .form 안에만 있었다(.form .row.btns.split).
+     폼 밖으로 나오면서 안 걸려 둘이 붙어 버렸다 — 여기서 다시 적는다. */
+.aform { padding: 14px 14px 0; display: flex; flex-direction: column; gap: 10px; }
+.aform .row.btns.split {
+  display: flex; flex-wrap: nowrap; align-items: center;
+  justify-content: space-between; gap: 10px;
+}
+.aform .row.btns.split > .btn { flex: 0 0 auto; }
+.aform .row.btns.split > .btn[hidden] { display: none; }
+.aform .row.btns.split > .btn:only-child { margin-left: auto; }
+.aform .hint, .aform .err { margin: 0; }
+.astamp em {
+  display: block; margin-top: 2px; font-style: normal;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+}
+
+/* ── 동행자 ───────────────────────────────────────────────────────────
+   ★★테두리 있는 카드였다(2026-09-06에 걷었다). 일정도 영수증도 이미 **줄**로
+     끊는데 여기만 판이 서 있었고, 판 안에 판이라 두 겹으로 보였다.
+   ★사람 앞에 동그라미를 놓는다 — 일정 탭의 결제자 동그라미와 **같은 색**이다
+     (U.hue 가 정한다). 같은 사람이 어느 화면에서나 같은 색이어야 한다. */
+.crew { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .crewrow {
   display: flex; align-items: center; gap: 10px;
-  border: 1px solid var(--line); border-radius: var(--r); background: var(--card);
-  padding: var(--pad-row);
+  padding: 9px 0; border-top: 1px solid var(--line);
+}
+.crewrow:first-child { border-top: 0; }
+.crewrow .av {
+  flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: hsl(var(--pc) var(--pc-s) var(--pc-l)); color: var(--paper);
+  font-size: var(--t-cap); font-weight: 700;
 }
 .crewrow .who2 { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.crewrow .nm { font-size: var(--t-read); font-weight: 600; }
+.crewrow .nm { font-size: var(--t-body); font-weight: 600; }
 .crewrow .em {
   font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1561,11 +1655,8 @@ a { color: var(--route); text-underline-offset: 2px; }
 .tagrow { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .act.danger { color: var(--warn); }
 
-/* 초대 코드 — 불러 줄 수 있게 크고 성기게 */
-input.code {
-  font-size: 17px; letter-spacing: .14em; text-align: center;
-  background: var(--sunk);
-}
+/* 초대 코드 — 불러 줄 수 있게 크고 성기게. 서식 아래쪽의 일련번호 자리다 */
+input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 
 /* ── 하단 탭 ──────────────────────────────────────────────────────────── */
 .tabs {
@@ -2206,7 +2297,12 @@ details[open] > summary::after { content: '−'; }
 .pick:hover .px, .pick:focus-visible .px { color: var(--warn); }
 .pick[disabled] { opacity: .5; cursor: default; }
 
+/* ★★빽빽한 줄에는 **라틴 이름표를 안 단다**(2026-09-06). 390px 에 칸이 넷인데
+   '갯수 QTY' 가 두 줄로 접히면서 그 칸만 아래로 처졌고, '승인금액 APPROVED' 가
+   넓어진 만큼 통화 칸이 눌려 'JPY' 가 'JP' 로 잘렸다. 서식의 어법은 지키되,
+   자리가 없는 줄에서는 한글만 세운다 — 실제 서식의 잔칸도 그렇게 생겼다. */
 .form .row.tight { flex-wrap: nowrap; gap: 6px; }
+.form .row.tight label[data-en]::after { content: none; }
 /* ★★단가가 이 줄의 **주인공**이다. 곁칸 셋에 88px 씩 고정으로 주고 나면 375px 폰에서
      단가에 57px 만 남아 '214000' 이 '2140(' 로 잘렸다(2026-09-02). 남는 자리는 단가가
      갖고, 곁칸은 **제 내용이 들어갈 만큼만** 갖는다 — 갯수는 한두 자리, 통화는 세 글자,
@@ -2342,20 +2438,34 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .ctotal .none b { font-weight: 600; color: var(--ink-2); }
 .empty strong { display: block; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
 
-/* 좌표 없는 일정이 지도에서 빠졌다는 사실을 조용히 넘기지 않는다 */
+/* 좌표 없는 일정이 지도에서 빠졌다는 사실을 조용히 넘기지 않는다.
+   ⚠ 여기 오는 것은 **한글 문장**이다 — 등폭이었는데 낱말 사이가 전부 벌어져
+     '지 도  타 일 이  거 부 됐 습 니 다' 로 읽혔다(위 .ko 주석 참고).
+     한 낱말만 싸서 될 일이 아니라 문장이므로 칸째로 고딕이다. */
 .note {
-  font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
+  font-family: var(--sans); font-size: var(--t-meta); color: var(--ink-3);
   padding: 8px var(--pad) 0; text-align: center;
 }
 
 /* ── 폼 ───────────────────────────────────────────────────────────────── */
+/* ★★이름표를 **두 나라 말**로 단다(2026-09-06). 이 앱의 네 화면이 다 여행 서류
+   (여권·안내판·티켓·영수증)인데 폼만 웹 폼이었다 — 그런데 폼이 담는 것은 이름·나라·
+   기간·동행이라 애초에 **입국신고서** 그 자체다. 신고서는 한글이 크고 라틴이 작다.
+   ★라틴은 data-en 에서 온다: 안 적은 칸은 그냥 한글만 선다(고칠 것을 강요하지 않는다).
+   ⚠ 자간은 **라틴에만** 준다. 한글에 주면 낱자가 흩어진다(이 앱이 여러 번 밟은 함정). */
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label, .field .lbl { font-size: var(--t-cap); font-weight: 600; color: var(--ink-2); }
+.field label[data-en]::after, .field .lbl[data-en]::after {
+  content: ' ' attr(data-en);
+  font-family: var(--mono); font-size: 8.5px; font-weight: 500; letter-spacing: .12em;
+  color: var(--ink-3); text-transform: uppercase;
+}
 /* 결제 방식 셋 — 카드 / 현금 / 환전·출금. 라디오지만 눈에는 한 덩어리로 보여야 한다 */
-.seg3 { display: flex; gap: 0; border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
+.seg3 { display: flex; gap: 0; border: 1px solid var(--line); border-radius: var(--r-sm);
+  overflow: hidden; box-shadow: inset 0 1px 0 var(--flap-hi); }
 .seg3 button {
   flex: 1 1 0; appearance: none; cursor: pointer; border: 0; min-height: 42px;
-  background: var(--card); color: var(--ink-2);
+  background: var(--sunk); color: var(--ink-2);
   font: inherit; font-size: var(--t-body); font-weight: 600;
   border-left: 1px solid var(--line);
 }
@@ -2396,9 +2506,16 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 /* 남은 돈이 이 칩의 답이다 — 두 짝 중 하나만 밝다 */
 .wallet .wc.on .wt { color: var(--ink-2); }
 .wallet .wc.on .wf, .wallet .wc.on .wk { color: var(--ink); }
+/* ★★칸은 **음각**이다(2026-09-06). --card 로 칠해 놓고 있었는데, 이 앱의 폼은
+   전부 --card 짜리 종이(시트·신고서) 위에 얹혀 있어서 칸과 종이가 같은 색이었다 —
+   테두리 하나로만 버티는 사각형이 열둘씩 섰다. 홈 안내판의 쪽자와 같은 어법으로
+   바꾼다: 판보다 어둡고, 그림자가 **위에** 온다(볼록한 것과 반대).
+   ⚠ 테두리를 남긴다. 계산기 화면(.mcbody)의 폼은 --paper 위에 바로 얹혀 있어서
+     --sunk 만으로는 1.03:1 이라 칸이 사라진다 — 종이가 무엇이든 서게 하는 것은 금이다. */
 input, select, textarea {
   font-family: inherit; font-size: var(--t-read); color: var(--ink);
-  background: var(--card); border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--sunk); border: 1px solid var(--line); border-radius: var(--r-sm);
+  box-shadow: inset 0 1px 0 var(--flap-hi);
   padding: 9px 11px;
   width: 100%;
   min-width: 0;              /* flex 안에서 내재 너비가 칸을 밀어내지 않게 */
@@ -2511,7 +2628,14 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
   padding: 14px 14px 10px;
   border-bottom: 1px solid var(--line);
 }
+/* 설정 탭의 신고서와 같은 머리다 — 한글이 크고 라틴이 작다.
+   같은 사무소가 낸 서식으로 읽히게 하는 것이 이 두 줄이다. */
 .sheethd h2 { flex: 1; margin: 0; font-size: var(--t-read); font-weight: 700; letter-spacing: -.01em; }
+.sheethd h2[data-en]::after {
+  content: attr(data-en); display: block; margin-top: 2px;
+  font-family: var(--mono); font-size: 8.5px; font-weight: 500; letter-spacing: .14em;
+  color: var(--ink-3); text-transform: uppercase;
+}
 .sheetx {
   appearance: none; border: 0; background: none; cursor: pointer;
   font-size: 16px; line-height: 1; color: var(--ink-3);

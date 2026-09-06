@@ -89,6 +89,8 @@ const Plan = (function () {
     $('if-kind-wrap').hidden = kid;
     $('if-when-wrap').hidden = kid;
     $('if-name-lbl').textContent = kid ? '결제 이름' : '장소명';
+    /* 라틴 이름표도 같이 바뀐다 — 한 이름표가 두 가지 일을 하는 자리다 */
+    $('if-name-lbl').dataset.en = kid ? 'item' : 'place';
     $('if-name').placeholder = kid ? '술값' : '오사카성';
     /* ★★장소를 넣을 때는 돈을 묻지 않는다 — 결제는 저장한 뒤 따로 붙인다.
        한 자리에서 결제가 둘 이상인 일이 흔한데, 첫 결제만 장소 줄에 얹으면
@@ -235,7 +237,7 @@ const Plan = (function () {
              레일을 물려받지 않는다 — 들여쓰기도 없고 선도 지나가지 않는다.
              날이 바뀌는 자리에서 레일이 끊기는 것이 곧 '여기서 하루가 끝났다' 다. -->
         <span class="daytag">Day ${n}</span>
-        <span class="date">${esc(U.md(d))} ${esc(U.dowOf(d))}</span>
+        <span class="date">${esc(U.md(d))} <i class="ko">${esc(U.dowOf(d))}</i></span>
         <span class="sum">${cost}</span>
       </div>`;
 
@@ -272,7 +274,6 @@ const Plan = (function () {
        겹칠 위험을 안고라도 주는 편이 낫다.
    ★한 글자만 남으므로 **온전한 이름은 title·aria-label 이 진다.**
    ★'각자 냄' 은 사람이 아니다 — 색을 주지 않고 회색으로 남긴다. */
-  const PHUE = [210, 14, 152, 253, 42, 328, 188, 96];
   function payerChip(c) {
     if (c.split) {
       const n = +c.qty > 1 ? ` ${+c.qty}명` : '';
@@ -281,10 +282,8 @@ const Plan = (function () {
     }
     if (!c.payer_id) return '';
     const nm = Crew.nameOf(crew, c.payer_id) || '냄';
-    const id = String(c.payer_id);
-    let n = crew.findIndex(m => m.user_id === c.payer_id);
-    if (n < 0) { n = 0; for (let i = 0; i < id.length; i += 1) n = (n * 31 + id.charCodeAt(i)) >>> 0; }
-    return `<span class="badge pw" style="--pc: ${PHUE[n % PHUE.length]}"
+    /* 색은 U.hue 가 정한다 — 설정 탭의 동행자 줄이 같은 것을 쓴다(같은 사람 같은 색) */
+    return `<span class="badge pw" style="--pc: ${U.hue(crew, c.payer_id)}"
       title="${esc(nm)}" aria-label="${esc(nm)}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
   }
 
@@ -311,7 +310,10 @@ const Plan = (function () {
         if (!paid.length) return '';
         /* '합' 은 **둘 이상**일 때만 붙인다 — 결제가 하나뿐인데 '합' 이라고 하면
            무엇을 더한 것인지 되묻게 된다. 그냥 그 자리에서 쓴 돈이다. */
-        const lbl = paid.length > 1 ? '합계 ' : '';
+        /* ⚠ 한글은 **고딕으로 싸서** 낸다. 이 칸은 등폭인데 Plex Mono 에는 한글이
+           없어서 낱자만 대체 글꼴로 떨어지고 사이의 빈칸은 등폭 그대로였다 —
+           600/1000 짜리 넓은 빈칸이 껴서 '합 계' 로 벌어졌다(.badge 와 같은 병). */
+        const lbl = paid.length > 1 ? '<i class="ko">합계</i> ' : '';
         const curs = new Set(paid.map(x => x.cost_cur));
         if (curs.size === 1 && paid.every(x => x.cost != null)) {
           const one = paid.reduce((a, x) => a + (+x.cost || 0), 0);
@@ -380,14 +382,17 @@ const Plan = (function () {
              것은 '메모 취소 지도' 세 낱말이 136px 을 먹어 이름을 잘랐기 때문인데,
              그림으로 바꾸니 셋이 96px 이면 된다 — 이름줄은 통째로 이름 몫이 됐다.
              ★글자가 없으므로 뜻은 aria-label 이 진다. 상자도 안 두른다: 그림은 그
-               자체로 누를 것처럼 보이고, 셋 다 상자면 오른쪽이 상자 밭이 된다. -->
+               자체로 누를 것처럼 보이고, 셋 다 상자면 오른쪽이 상자 밭이 된다.
+             ★★그림은 **선 그림**이다(2026-09-06). 이모지였을 때는 색 그림 둘이
+               color 를 무시하고 글리프 둘만 받아서 한 줄에 무게가 셋이었다 —
+               U.icon 주석에 그 이야기가 적혀 있다. -->
         <span class="acts">
           ${r.memo ? `<button class="act" type="button" data-memo="${esc(r.id)}"
-             aria-label="메모 보기"><span aria-hidden="true">📝</span></button>` : ''}
+             aria-label="메모 보기">${U.icon('memo')}</button>` : ''}
           ${link ? `<a class="act" href="${esc(link)}" target="_blank" rel="noopener"
-             aria-label="지도에서 보기"><span aria-hidden="true">📍</span></a>` : ''}
+             aria-label="지도에서 보기">${U.icon('pin')}</a>` : ''}
           <button class="act" type="button" data-done="${esc(r.id)}"
-             aria-label="${r.done ? '되돌리기' : '취소'}"><span aria-hidden="true">${r.done ? '↩️' : '✖️'}</span></button>
+             aria-label="${r.done ? '되돌리기' : '취소'}">${U.icon(r.done ? 'undo' : 'x')}</button>
         </span>
       </span>
       ${payHtml}
@@ -406,10 +411,11 @@ const Plan = (function () {
     const m = GEO.dist(a, b);
     if (m == null) return '<div class="seg seg-blank"></div>';
     const url = GM.dirUrl(a, b);
-    const label = `직선 ${GEO.label(m)}`;
+    /* 한글은 고딕으로 싼다 — 위 '합계' 와 같은 이유(등폭 빈칸이 낱말을 벌린다) */
+    const label = `<i class="ko">직선</i> ${esc(GEO.label(m))}`;
     return `<div class="seg">${
-      url ? `<a href="${esc(url)}" target="_blank" rel="noopener"><span class="km">${esc(label)}</span></a>`
-          : `<span class="km">${esc(label)}</span>`}</div>`;
+      url ? `<a href="${esc(url)}" target="_blank" rel="noopener"><span class="km">${label}</span></a>`
+          : `<span class="km">${label}</span>`}</div>`;
   }
 
   // ── 폼 ────────────────────────────────────────────────────────────────
@@ -467,8 +473,11 @@ const Plan = (function () {
     /* ★접어 둔 칸에 값이 들어 있으면 펴 준다 — 안 그러면 고치러 왔다가 못 본다 */
     $('if-more').open = !!(r && r.memo);
     $('if-del').hidden = !r;
+    /* 머리말도 설정 탭의 신고서와 같은 어법 — 한글이 크고 라틴이 작다.
+       같은 사무소가 낸 서식으로 읽히게 하는 것이 이 한 줄이다. */
     $('if-sum').textContent = parentOf ? (r ? '결제 고치기' : '결제 추가')
                             : (r ? '일정 고치기' : '일정 추가');
+    $('if-sum').dataset.en = parentOf ? 'payment entry' : 'itinerary entry';
     $('if-err').textContent = '';
     /* ★★맨 **끝**에서 부른다. 중간에 있었더니 두 가지가 어긋났다(2026-09-02):
        현금일 때 비운 환율 칸이 바로 아래에서 다시 채워졌고, '각자 냄' 을 아직 안 읽어
