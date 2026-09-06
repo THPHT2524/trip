@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=384') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=385') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=384') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=385') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=384') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=385') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -934,10 +934,11 @@ a { color: var(--route); text-underline-offset: 2px; }
    ★칸마다 금을 긋는다 — 레퍼런스의 스텁이 DATE·VENUE·ADMISSION 을 그렇게 나눈다.
      여기서는 나눌 것이 둘(번호·구분)이라 금도 하나면 된다. */
 .mcard .mck {
-  /* ★금 위아래를 **똑같이** 벌린다(7px). 3px/4px 로 붙어 있을 때는 금이 구분에
-     달라붙어 '구분의 밑줄' 처럼 보였다 — 금은 둘을 가르는 것이지 하나에 붙는 것이
-     아니다(2026-09-06). 카드가 77px 로 커져 낼 자리가 생겼다. */
-  align-self: stretch; margin-top: 7px; padding-top: 7px;
+  /* ★금 위아래를 **똑같이** 벌린다(11px). 3/4px 일 때는 금이 구분에 달라붙어
+     '구분의 밑줄' 처럼 보였고, 7px 도 아직 좁았다 — 금은 둘을 가르는 것이지
+     하나에 붙는 것이 아니라, 위아래가 넉넉해야 번호와 구분이 **두 칸**으로 읽힌다.
+     카드가 81px 로 커져 낼 자리가 생겼다(스텁 안쪽 75px 중 내용이 55px). */
+  align-self: stretch; margin-top: 11px; padding-top: 11px;
   border-top: 1px solid color-mix(in srgb, var(--ink-3) 26%, transparent);
   text-align: center;
   font-size: var(--t-micro); font-weight: 700; letter-spacing: 0; line-height: 1;
