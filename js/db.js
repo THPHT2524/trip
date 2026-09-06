@@ -126,7 +126,8 @@ const DB = (function () {
         country: /^[A-Z]{2}(,[A-Z]{2})*$/.test(country || '') ? country : null,
         cities: String(cities || '').trim() || null,
       };
-      if (!row.name) throw new Error('여행 이름을 입력하세요.');
+      /* 이름은 폼이 도시로 채워 보낸다 — 둘 다 비었을 때만 여기서 막힌다 */
+      if (!row.name) throw new Error('여행 이름이나 도시를 입력하세요.');
       if (row.start_on && row.end_on && row.start_on > row.end_on) {
         throw new Error('끝나는 날이 시작하는 날보다 앞설 수 없습니다.');
       }

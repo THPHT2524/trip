@@ -259,9 +259,18 @@ const U = (function () {
     return PHUE[n % PHUE.length];
   }
 
+  /* ── 여행 이름 ────────────────────────────────────────────────────────
+     ★★안 적으면 **도시를 잇는다**(2026-09-06). 서른여덟 여행 중 **서른넷**이
+       손으로 적은 이름과 도시 나열이 글자 하나까지 같았다(세어 확인) — 같은 것을
+       두 칸에 두 번 적고 있었던 셈이다.
+     ★그래도 칸은 없애지 않는다. 다른 넷이 '하와이(호놀룰루)' · '미국 서부(로스앤젤레스·
+       라스베이거스·샌프란시스코)' 처럼 **부르는 이름이 따로 있는** 경우다 —
+       비워 둘 수 있게만 하고, 적으면 적은 것이 이긴다. */
+  const tripName = (name, cities) => String(name || '').trim() || cityList(cities).join('·');
+
   return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
-           cityList, countryPicker, SETTLE, icon, hue };
+           cityList, countryPicker, SETTLE, icon, hue, tripName };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용

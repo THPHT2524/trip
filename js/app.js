@@ -800,7 +800,8 @@
     busy(true, '');
     try {
       const t = await DB.trips.create({
-        name: $('new-name').value,
+        /* 안 적으면 도시를 잇는다 — U.tripName 의 주석에 왜인지 적어 두었다 */
+        name: U.tripName($('new-name').value, $('new-cities').value),
         start_on: $('new-from').value || null,
         end_on: $('new-to').value || null,
         base_cur: $('new-cur').value,
@@ -900,6 +901,10 @@
     if (focusId) setTimeout(() => $(focusId).focus({ preventScroll: true }), 0);
   };
   /* 나라 고르개 둘. crew.js 가 여행 설정 쪽을 쓰므로 전역에 얹어 준다. */
+  /* 새 여행 폼에서도 같은 미리보기 — 비워 두면 도시가 이름이 된다(crew.js 와 같은 규칙) */
+  $('new-cities').addEventListener('input', () => {
+    $('new-name').placeholder = U.tripName('', $('new-cities').value) || '오사카';
+  });
   const newPick = U.countryPicker($('new-country'), $('new-flags'));
   window.SETPICK = U.countryPicker($('set-country'), $('set-flags'));
   /* 통화를 고르면 나라도 대개 정해진다 — 아직 아무것도 안 골랐을 때만 미리 골라 준다.

@@ -64,6 +64,7 @@ const Crew = (function () {
     $('set-cur').value = trip.base_cur || 'KRW';
     SETPICK.set(trip.country || '');
     $('set-cities').value = trip.cities || '';
+    hintName();
     ['set-name', 'set-from', 'set-to', 'set-cur', 'set-cities', 'set-save']
       .forEach(id => { $(id).disabled = !owner; });
     SETPICK.disable(!owner);
@@ -86,6 +87,14 @@ const Crew = (function () {
     }
   }
 
+  /* ★이름 칸을 비워 두면 무엇이 들어갈지를 **흐린 글씨로 미리 보여 준다.**
+     '안 적어도 됩니다' 라고 안내문을 다는 것보다, 들어갈 값 자체를 보여 주는 편이
+     짧고 확실하다 — 도시를 고치면 이 미리보기도 따라 바뀐다. */
+  function hintName() {
+    const d = U.tripName('', $('set-cities').value);
+    $('set-name').placeholder = d || '오사카·교토';
+  }
+
   async function copyLink() {
     const v = inviteUrl(trip);          // 칸에는 코드가 있지만 복사하는 것은 링크다
     try {
@@ -104,7 +113,8 @@ const Crew = (function () {
     $('set-err').textContent = '';
     try {
       const patch = {
-        name: $('set-name').value.trim(),
+        /* 안 적으면 도시를 잇는다 — U.tripName 의 주석에 왜인지 적어 두었다 */
+        name: U.tripName($('set-name').value, $('set-cities').value),
         start_on: $('set-from').value || null,
         end_on: $('set-to').value || null,
         base_cur: $('set-cur').value,
@@ -128,6 +138,7 @@ const Crew = (function () {
   }
 
   /* 그림은 U.ICON 이 갖는다 — 일정 줄의 그것들과 같은 자리에 모아 둔다 */
+  $('set-cities').addEventListener('input', hintName);
   $('crew-copy').innerHTML = U.icon('copy');
   $('crew-copy').addEventListener('click', copyLink);
   $('crew-form').addEventListener('submit', save);
