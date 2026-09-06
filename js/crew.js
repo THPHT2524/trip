@@ -11,7 +11,7 @@ const Crew = (function () {
   let trip = null, list = [];
   const memo = new Map();          // tripId → 멤버 목록
 
-  /* 비용 탭이 '누가 냈나' 를 사람 이름으로 적으려면 이 목록이 필요하다. */
+  /* 비용 탭이 '결제자' 를 사람 이름으로 적으려면 이 목록이 필요하다. */
   async function of(tripId, force) {
     if (!force && memo.has(tripId)) return memo.get(tripId);
     const rows = await DB.crew(tripId);

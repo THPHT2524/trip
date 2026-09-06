@@ -24,7 +24,7 @@ const Plan = (function () {
   let editing = null;   // 수정 중인 항목 id (null = 새로 추가)
   let loaded = false;   // 이 여행의 일정을 한 번이라도 받았나
   let offline = false;  // 마지막 읽기가 로컬 사본이었나
-  let crew = [];        // 동행자 — '누가 냈나' 를 사람 이름으로 고르게 한다
+  let crew = [];        // 동행자 — '결제자' 를 사람 이름으로 고르게 한다
 
 
   /* 세울 날짜를 정한다.
@@ -80,15 +80,12 @@ const Plan = (function () {
     $('if-fx-hint').hidden = ex || krwOnly;    // 승인금액 칸이 숨은 마당에 그 설명만 남으면 안 된다
     /* 칸을 없앤 자리에 **지갑을 보여 준다** — 얼마 남았는지가 곧 '이걸 현금으로 낼 수 있나' 다 */
     $('if-fx-hint').textContent = cash ? walletLine() : FX_HINT;
-    /* ★'각자 냄' 을 고르면 갯수는 곧 **인원**이다 — 기차를 각자 카드로 찍으면
-       단가 하나에 사람 수만큼 결제가 일어난다. 같은 칸이지만 이름이 달라야 뜻이 선다. */
-    $('if-qty-lbl').textContent = ($('if-payer').value === 'split') ? '인원' : '갯수';
     /* 결제 줄에는 장소가 없다 — 장소는 부모가 갖는다. 링크·구분·시각을 감춘다. */
     const kid = !!parentOf;
     $('if-place-wrap').hidden = kid;
     $('if-kind-wrap').hidden = kid;
     $('if-when-wrap').hidden = kid;
-    $('if-name-lbl').textContent = kid ? '결제 이름' : '장소명';
+    $('if-name-lbl').textContent = kid ? '항목' : '장소명';
     $('if-name').placeholder = kid ? '술값' : '오사카성';
     /* ★★장소를 넣을 때는 돈을 묻지 않는다 — 결제는 저장한 뒤 따로 붙인다.
        한 자리에서 결제가 둘 이상인 일이 흔한데, 첫 결제만 장소 줄에 얹으면
@@ -270,14 +267,8 @@ const Plan = (function () {
      한 벌뿐이라(--pc-s/--pc-l) 어느 색을 뽑아도 이 화면의 톤을 벗어나지 않는다.
      ⚠ 목록에 없는 사람(초대에서 빠진 옛 결제)은 해시로 떨어뜨린다 — 색이 없느니
        겹칠 위험을 안고라도 주는 편이 낫다.
-   ★한 글자만 남으므로 **온전한 이름은 title·aria-label 이 진다.**
-   ★'각자 냄' 은 사람이 아니다 — 색을 주지 않고 회색으로 남긴다. */
+   ★한 글자만 남으므로 **온전한 이름은 title·aria-label 이 진다.** */
   function payerChip(c) {
-    if (c.split) {
-      const n = +c.qty > 1 ? ` ${+c.qty}명` : '';
-      return `<span class="badge pw none" title="각자 냄${esc(n)}"
-        aria-label="각자 냄${esc(n)}">각</span>`;
-    }
     if (!c.payer_id) return '';
     const nm = Crew.nameOf(crew, c.payer_id) || '냄';
     /* 색은 U.hue 가 정한다 — 설정 탭의 동행자 줄이 같은 것을 쓴다(같은 사람 같은 색) */
@@ -345,7 +336,7 @@ const Plan = (function () {
          결제 줄이 둘만 돼도 자릿수가 안 맞는다 — 세로로 읽히라고 mono 를 쓰는 판에. */
       /* ★수단이 **맨 앞**이다. 무엇으로 냈는지가 줄의 성질이라 이름보다 먼저 온다 —
          현금 줄은 지갑에서 빠지고 환전 줄은 지출이 아니다. 폭을 고정해 이름들이
-         세로로 한 기둥에 선다. 누가 냈나는 뒤에 남는다(그건 줄의 성질이 아니다). */
+         세로로 한 기둥에 선다. 결제자는 뒤에 남는다(그건 줄의 성질이 아니다). */
       return `<button class="payrow" type="button" data-edit="${esc(c.id)}">
         <span class="badge way">${esc(way)}</span>
         <span class="pn">${esc(c.name)}</span>
@@ -465,7 +456,7 @@ const Plan = (function () {
                          && r.cost != null && r.fx != null)
       ? Math.round(+r.cost * +r.fx) : '';
     $('if-memo').value = (r && r.memo) || '';
-    $('if-payer').value = (r && r.split) ? 'split' : ((r && r.payer_id) || '');
+    $('if-payer').value = (r && r.payer_id) || '';
     $('if-lat').value = (r && r.lat != null) ? r.lat : '';
     $('if-lng').value = (r && r.lng != null) ? r.lng : '';
     /* ★접어 둔 칸에 값이 들어 있으면 펴 준다 — 안 그러면 고치러 왔다가 못 본다 */
@@ -564,8 +555,7 @@ const Plan = (function () {
               ? String(+$('if-apv').value / tot()) : ''),
       settle,
       parent_id: parentOf,
-      split: $('if-payer').value === 'split',
-      payer_id: $('if-payer').value === 'split' ? null : ($('if-payer').value || null),
+      payer_id: $('if-payer').value || null,
       done: editing ? !!(rows.find(r => r.id === editing) || {}).done : false,
       /* 시각이 없는 줄은 그날 맨 뒤에 붙인다. 시각이 있으면 서버 정렬이 시각을 먼저 본다. */
       seq: editing ? (rows.find(r => r.id === editing) || {}).seq || 0
@@ -727,12 +717,17 @@ const Plan = (function () {
       rows = []; editing = null; loaded = false;
       fillForm(null);
       $('days').innerHTML = '<p class="empty">불러오는 중…</p>';
-      /* 동행자 목록을 미리 받아 '누가 냈나' 를 채운다.
-         못 받아도(끊겼거나 혼자거나) 폼은 그대로 쓴다 — '안 적음' 만 남는다. */
+      /* 동행자 목록을 미리 받아 '결제자' 를 채운다.
+         못 받아도(끊겼거나 혼자거나) 폼은 그대로 쓴다 — '안 적음' 만 남는다.
+       ★★'각자 냄' 을 걷었다(2026-09-06). 한 결제를 여럿이 나눠 낸 일을 적는 값이었는데
+         서른여덟 여행 181줄에 **한 줄도 없었다** — 실제로는 한 사람이 긁고 나중에
+         정산하지, 그 자리에서 갈라 내지 않는다. 고르개에 있던 것만으로 '결제자' 가
+         두 가지 물음이 됐다: 사람이냐 방식이냐.
+       ⚠ db 의 split 칸과 money.js 의 그 갈래는 남겨 둔다 — 스키마를 바꾸는 일이고,
+         셈은 그 칸이 false 면 어차피 사람 한 명으로 떨어진다. */
       try {
         crew = await Crew.of(t.id);
         $('if-payer').innerHTML = '<option value="">안 적음</option>'
-          + '<option value="split">각자 냄</option>'
           + crew.map(m => `<option value="${esc(m.user_id)}">${esc(String(m.email || '').split('@')[0])}</option>`).join('');
       } catch (e) { crew = []; }
       try { await reload(); loaded = true; }

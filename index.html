@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=405">
+<link rel="stylesheet" href="/css/app.css?v=406">
 </head>
 <body>
 
@@ -379,8 +379,8 @@
             <p class="hint" id="if-fx-hint">승인 금액이 없으면 당일 전신환매도율을 기준으로 계산합니다.</p>
 
           <div class="field">
-            <label for="if-payer">누가 냈나</label>
-            <select id="if-payer"><option value="">안 적음</option><option value="split">각자 냄</option></select>
+            <label for="if-payer">결제자</label>
+            <select id="if-payer"><option value="">안 적음</option></select>
           </div>
         </div><!-- /#if-pay -->
 
@@ -437,22 +437,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=405"></script>
-<script src="/js/map-config.js?v=405"></script>
-<script src="/js/money.js?v=405"></script>
-<script src="/js/util.js?v=405"></script>
-<script src="/js/worldmap.js?v=405"></script>
-<script src="/js/geo.js?v=405"></script>
-<script src="/js/gmaps.js?v=405"></script>
-<script src="/js/db.js?v=405"></script>
-<script src="/js/fx.js?v=405"></script>
-<script src="/js/outbox.js?v=405"></script>
+<script src="/js/supabase-config.js?v=406"></script>
+<script src="/js/map-config.js?v=406"></script>
+<script src="/js/money.js?v=406"></script>
+<script src="/js/util.js?v=406"></script>
+<script src="/js/worldmap.js?v=406"></script>
+<script src="/js/geo.js?v=406"></script>
+<script src="/js/gmaps.js?v=406"></script>
+<script src="/js/db.js?v=406"></script>
+<script src="/js/fx.js?v=406"></script>
+<script src="/js/outbox.js?v=406"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=405"></script>
-<script src="/js/plan.js?v=405"></script>
-<script src="/js/map.js?v=405"></script>
-<script src="/js/cost.js?v=405"></script>
-<script src="/js/app.js?v=405"></script>
+<script src="/js/crew.js?v=406"></script>
+<script src="/js/plan.js?v=406"></script>
+<script src="/js/map.js?v=406"></script>
+<script src="/js/cost.js?v=406"></script>
+<script src="/js/app.js?v=406"></script>
 
 </body>
 </html>
