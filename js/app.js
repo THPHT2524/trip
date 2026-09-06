@@ -282,31 +282,17 @@
    ★레일은 양끝으로 삐져나온다 — 여행이 이 카드에서 끝나지 않는다는 뜻이고,
      카드의 미니 레일도 그렇게 생겼다. */
   function pheadHtml() {
-    /* ★★해마다 **몇 번 다녔나**. 이 자리에는 구분 색 점 여섯이 범례로 서 있었는데,
-       카드에 구분을 쓰는 데가 없었다 — 없는 것의 범례라 결국 무늬였다(2026-09-07).
-     ★카드가 여태 말하던 것은 총합 넷(나라·도시·비행·일)뿐이고, **언제 많이 다녔나**
-       는 아무 데서도 안 말했다. 여권을 넘길 때 눈에 들어오는 것이 바로 그 리듬이다.
-     ★가로축은 아래 안내판의 연도 머리띠와 **같은 축**이다 — 여기서 높은 해를 보고
-       그 해 띠로 내려가면 된다. 같은 것은 같은 자리에 둔다(카드의 미니 레일과
-       일정 탭 Day 탭이 그러는 것처럼).
-     ★올해만 코발트다. 이 앱이 '지금' 에 쓰는 색이라, 막대 하나가 밝은 것만으로
-       '여기까지 왔다' 가 읽힌다. */
-    const yr = new Map();
-    trips.forEach(t => {
-      const y = (t.end_on || t.start_on || '').slice(0, 4);
-      if (y) yr.set(y, (yr.get(y) || 0) + 1);
-    });
-    const years = [...yr.keys()].sort();
-    const max = Math.max(1, ...yr.values());
-    const now = String(new Date().getFullYear());
-    /* 열 해까지만 — 그보다 길면 막대가 실오라기가 된다. 최근 쪽을 남긴다. */
-    const show = years.slice(-10);
-    const bars = show.map(y => {
-      const n = yr.get(y);
-      return `<i style="height:${Math.max(12, Math.round(n / max * 100))}%"${
-        y === now ? ' class="on"' : ''}><span>${esc(n)}</span></i>`;
-    }).join('');
-    const say = show.map(y => `${y}년 ${yr.get(y)}번`).join(', ');
+    /* ★★이 자리를 세 번 고쳐 왔다: 앱 표식 → 구분 색 점 여섯(범례) → 해마다의 막대.
+       셋 다 틀렸다. 표식은 아무것도 안 말했고, 범례는 카드에 없는 것을 설명했고,
+       막대는 **이 카드의 물건이 아니었다** — 여권 어디에도 그래프는 없다.
+     ★★진짜 여권의 인적사항면은 그 자리에 **여권번호**를 적는다. 그리고 왼쪽 위에는
+       종류(TYPE)와 발행국(CODE)이 선다 — 그 셋이 그 면의 머리다.
+     ★값 셋이 다 사실이고, 셋 다 **아래 MRZ 가 기계용으로 이미 찍고 있는 것**이다
+       (P<KOR<…). 사람용으로 한 번 더 적는 것이 여권이 실제로 하는 일이라,
+       이 카드는 이제 그 성질까지 닮는다.
+     ★칸의 짜임은 밑의 격자(COUNTRIES·CITIES…)와 같다 — 작은 이름표 밑에 값.
+       한 카드 안에서 같은 것을 두 가지 방법으로 적지 않는다. */
+    const no = String(trips.length).padStart(4, '0');
     return `<div class="phead">
     <div class="pname">
       <b>TRIPLOG</b>
@@ -315,13 +301,14 @@
         <circle cx="4.9" cy="6" r="1.7" class="f"/>
         <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg> <i>·</i> PASSPORT</span>
     </div>
-    <div class="pyears" role="img" aria-label="해마다 다닌 횟수 — ${esc(say)}">
-      <span class="pb">${bars}</span>
-      <span class="pe" aria-hidden="true"><em>'${esc(show[0].slice(2))}</em>` +
-      `<em>'${esc(show[show.length - 1].slice(2))}</em></span>
-    </div>
+    <dl class="pno">
+      <div><dt>Type</dt><dd>P</dd></div>
+      <div><dt>Code</dt><dd>KOR</dd></div>
+      <div><dt>Passport No.</dt><dd>${esc(no)}</dd></div>
+    </dl>
   </div>`;
   }
+
 
 
   /* ── 여권 위의 세계지도 ──────────────────────────────────────────────────

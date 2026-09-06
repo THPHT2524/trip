@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=443') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=444') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=443') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=444') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=443') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=444') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -2004,34 +2004,24 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 .pico { width: 15px; height: 13px; flex: 0 0 auto; fill: none;
   stroke: currentColor; stroke-width: 1.3; }
 .pico .f { fill: currentColor; stroke: none; }
-/* ── 해마다 몇 번 ──────────────────────────────────────────────────────
-   ★구분 색 점 여섯이 범례로 서 있던 자리다. 카드에 구분을 쓰는 데가 없어 결국
-     무늬였다 — 그 자리를 카드가 여태 말하지 않던 것에 준다: **언제 많이 다녔나**.
-   ★가로축은 아래 안내판의 연도 머리띠와 같은 축이다(js/app.js 의 pheadHtml 참고).
-   ★막대는 바닥에서 자란다. 높이는 그 해의 횟수, 제일 많은 해가 꽉 찬다. */
-.pyears {
-  flex: 1 1 0; min-width: 96px; max-width: 168px;
-  display: flex; flex-direction: column; gap: 3px;
+/* ── 여권번호 ──────────────────────────────────────────────────────────
+   ★인적사항면의 오른쪽 위 — 종류·발행국·번호. 진짜 여권이 그 자리에 적는 셋이고,
+     셋 다 아래 MRZ 가 기계용으로 이미 찍는 값이다(js/app.js 의 pheadHtml 참고).
+   ★칸의 짜임은 밑의 격자(.pgrid)와 같다: 작은 이름표 밑에 값. 한 카드 안에서
+     같은 것을 두 가지 방법으로 적지 않는다. 다만 여기는 곁글이라 값이 한 단 작다. */
+.pno {
+  flex: 1 1 auto; margin: 0; display: flex; justify-content: flex-end; gap: 14px;
 }
-.pyears .pb {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  gap: 2px; height: 22px;
+.pno > div { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+.pno dt {
+  font-family: var(--mono); font-size: var(--t-unit); font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+  white-space: nowrap;
 }
-.pyears i {
-  flex: 1 1 0; min-width: 3px; max-width: 9px;
-  border-radius: 1px 1px 0 0; background: var(--rail);
+.pno dd {
+  margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: var(--t-cap); font-weight: 600; letter-spacing: .08em; color: var(--ink-2);
 }
-/* 올해 — 이 앱이 '지금' 에 쓰는 색. 막대 하나가 밝은 것만으로 '여기까지' 가 읽힌다 */
-.pyears i.on { background: var(--route); }
-/* 수는 낭독기 몫이다 — 열 해치 숫자를 다 적으면 그림이 표가 된다 */
-.pyears i span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-/* 양 끝 해만 적는다. 가운데를 다 적으면 축이 글자밭이 된다 */
-.pyears .pe {
-  display: flex; justify-content: space-between;
-  font-family: var(--mono); font-size: var(--t-unit); font-weight: 600;
-  letter-spacing: .06em; color: var(--ink-3);
-}
-.pyears .pe em { font-style: normal; }
 
 
 .pgrid {
