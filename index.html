@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=402">
+<link rel="stylesheet" href="/css/app.css?v=403">
 </head>
 <body>
 
@@ -126,7 +126,8 @@
          이름·나라·머무는 기간·동행·참조번호 — **입국신고서의 칸 그대로**라 컨셉을
          억지로 씌울 것이 없었다. 종이 한 장을 깔고 서식 이름을 머리에 단다.
        ★한글 이름표에 라틴을 작게 붙이는 것(data-en)이 이 서식의 어법이다 —
-         실제 신고서가 그렇게 생겼고, 그래서 시트의 폼도 같은 말을 쓴다. -->
+         실제 신고서가 그렇게 생겼다. ⚠ 두 나라 말은 **이 판에서만** 쓴다:
+         팝업 셋(새 여행·참여·일정/결제)은 적어 넣는 자리라 한글만 세운다. -->
     <div class="pane" data-tab="info" hidden>
       <div class="acard">
         <div class="chead">
@@ -227,18 +228,18 @@
 <dialog class="dlg" id="new-dlg" aria-labelledby="new-dlg-t">
   <div class="sheet">
     <header class="sheethd">
-      <h2 id="new-dlg-t" data-en="new trip">새 여행 만들기</h2>
+      <h2 id="new-dlg-t">새 여행 만들기</h2>
       <button class="sheetx" data-close type="button" aria-label="닫기">✕</button>
     </header>
     <div class="sheetbody">
       <form id="new" class="form">
         <div class="row">
           <div class="field">
-            <label for="new-name" data-en="name of trip">여행 이름</label>
+            <label for="new-name">여행 이름</label>
             <input id="new-name" name="name" type="text" required maxlength="60" placeholder="오사카">
           </div>
           <div class="field kind">
-            <label for="new-cur" data-en="currency">현지통화</label>
+            <label for="new-cur">현지통화</label>
             <select id="new-cur" name="cur">
               <option value="KRW">KRW</option>
               <option value="JPY">JPY</option>
@@ -260,17 +261,17 @@
           </div>
         </div>
         <div class="field">
-          <label for="new-country" data-en="country">나라</label>
+          <label for="new-country">나라</label>
           <select id="new-country" name="country"></select>
           <div class="picks" id="new-flags" hidden></div>
         </div>
-        <div class="field"><label for="new-cities" data-en="cities">도시</label>
+        <div class="field"><label for="new-cities">도시</label>
           <input id="new-cities" name="cities" type="text" maxlength="120" list="citylist"
                  placeholder="오사카, 교토" autocomplete="off"></div>
         <div class="row">
-          <div class="field"><label for="new-from" data-en="from">시작</label>
+          <div class="field"><label for="new-from">시작</label>
             <input id="new-from" name="from" type="date" class="mono"></div>
-          <div class="field"><label for="new-to" data-en="to">끝</label>
+          <div class="field"><label for="new-to">끝</label>
             <input id="new-to" name="to" type="date" class="mono"></div>
         </div>
         <p class="hint">날짜는 나중에 정해도 됩니다. 나라와 도시는 홈의 국기와 '몇 개국 몇 개 도시'가 됩니다 —
@@ -285,13 +286,13 @@
 <dialog class="dlg" id="join-dlg" aria-labelledby="join-dlg-t">
   <div class="sheet">
     <header class="sheethd">
-      <h2 id="join-dlg-t" data-en="join by code">초대 코드로 참여</h2>
+      <h2 id="join-dlg-t">초대 코드로 참여</h2>
       <button class="sheetx" data-close type="button" aria-label="닫기">✕</button>
     </header>
     <div class="sheetbody">
       <form id="join" class="form">
         <div class="field">
-          <label for="join-code" data-en="reference no.">초대 코드</label>
+          <label for="join-code">초대 코드</label>
           <input id="join-code" name="code" type="text" class="mono" required
                  autocomplete="off" spellcheck="false" placeholder="a1b2c3d4e5f6">
         </div>
@@ -437,22 +438,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=402"></script>
-<script src="/js/map-config.js?v=402"></script>
-<script src="/js/money.js?v=402"></script>
-<script src="/js/util.js?v=402"></script>
-<script src="/js/worldmap.js?v=402"></script>
-<script src="/js/geo.js?v=402"></script>
-<script src="/js/gmaps.js?v=402"></script>
-<script src="/js/db.js?v=402"></script>
-<script src="/js/fx.js?v=402"></script>
-<script src="/js/outbox.js?v=402"></script>
+<script src="/js/supabase-config.js?v=403"></script>
+<script src="/js/map-config.js?v=403"></script>
+<script src="/js/money.js?v=403"></script>
+<script src="/js/util.js?v=403"></script>
+<script src="/js/worldmap.js?v=403"></script>
+<script src="/js/geo.js?v=403"></script>
+<script src="/js/gmaps.js?v=403"></script>
+<script src="/js/db.js?v=403"></script>
+<script src="/js/fx.js?v=403"></script>
+<script src="/js/outbox.js?v=403"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=402"></script>
-<script src="/js/plan.js?v=402"></script>
-<script src="/js/map.js?v=402"></script>
-<script src="/js/cost.js?v=402"></script>
-<script src="/js/app.js?v=402"></script>
+<script src="/js/crew.js?v=403"></script>
+<script src="/js/plan.js?v=403"></script>
+<script src="/js/map.js?v=403"></script>
+<script src="/js/cost.js?v=403"></script>
+<script src="/js/app.js?v=403"></script>
 
 </body>
 </html>
