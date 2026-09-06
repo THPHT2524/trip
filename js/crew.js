@@ -46,7 +46,8 @@ const Crew = (function () {
           ${m.role === 'owner' ? '<span class="badge">만든 사람</span>' : ''}
           ${m.user_id === mine ? '<span class="badge">나</span>' : ''}
           ${owner && m.user_id !== mine
-            ? `<button class="act danger" type="button" data-kick="${esc(m.user_id)}">내보내기</button>` : ''}
+            ? `<button class="act danger" type="button" data-kick="${esc(m.user_id)}"
+                 aria-label="${esc(String(m.email || '').split('@')[0])} 내보내기">${U.icon('out')}</button>` : ''}
         </span>
       </li>`;
     }).join('');
@@ -126,6 +127,8 @@ const Crew = (function () {
     }
   }
 
+  /* 그림은 U.ICON 이 갖는다 — 일정 줄의 그것들과 같은 자리에 모아 둔다 */
+  $('crew-copy').innerHTML = U.icon('copy');
   $('crew-copy').addEventListener('click', copyLink);
   $('crew-form').addEventListener('submit', save);
 

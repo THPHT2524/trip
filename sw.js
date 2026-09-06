@@ -10,7 +10,7 @@
 
    ★V 를 올려야 새 파일이 나간다. index.html 의 ?v=N 과 함께 올린다.
      안 올리면 이미 받아 간 브라우저가 옛 앱을 계속 쓴다(card-dashboard 에서 실제로 겪은 사고다). */
-const V = 420;   // assets-sha:9d288ed92b97
+const V = 422;   // assets-sha:f2dd3f624f03
 const CACHE = `trip-shell-v${V}`;
 
 const SHELL = [
@@ -18,30 +18,30 @@ const SHELL = [
   '/index.html',
   '/themore',
   '/themore.html',
-  '/css/app.css?v=420',
+  '/css/app.css?v=422',
   '/css/maplibre-gl-5.24.0.css',
   '/js/vendor/supabase-js-2.111.0.js',
   '/js/vendor/maplibre-gl-csp-5.24.0.js',
   '/js/vendor/maplibre-gl-csp-worker-5.24.0.js',
-  '/js/supabase-config.js?v=420',
-  '/js/map-config.js?v=420',
-  '/js/money.js?v=420',
-  '/js/more.js?v=420',
-  '/js/themore.js?v=420',
-  '/js/util.js?v=420',
-  '/js/worldmap.js?v=420',
-  '/js/geo.js?v=420',
-  '/js/gmaps.js?v=420',
-  '/js/db.js?v=420',
-  '/js/outbox.js?v=420',
-  '/js/plan.js?v=420',
-  '/js/map.js?v=420',
-  '/js/crew.js?v=420',
-  '/js/cost.js?v=420',
-  '/js/app.js?v=420',
-  '/fonts/ibm-plex-mono-400.woff2?v=420',
-  '/fonts/ibm-plex-mono-500.woff2?v=420',
-  '/fonts/ibm-plex-mono-600.woff2?v=420',
+  '/js/supabase-config.js?v=422',
+  '/js/map-config.js?v=422',
+  '/js/money.js?v=422',
+  '/js/more.js?v=422',
+  '/js/themore.js?v=422',
+  '/js/util.js?v=422',
+  '/js/worldmap.js?v=422',
+  '/js/geo.js?v=422',
+  '/js/gmaps.js?v=422',
+  '/js/db.js?v=422',
+  '/js/outbox.js?v=422',
+  '/js/plan.js?v=422',
+  '/js/map.js?v=422',
+  '/js/crew.js?v=422',
+  '/js/cost.js?v=422',
+  '/js/app.js?v=422',
+  '/fonts/ibm-plex-mono-400.woff2?v=422',
+  '/fonts/ibm-plex-mono-500.woff2?v=422',
+  '/fonts/ibm-plex-mono-600.woff2?v=422',
 ];
 
 self.addEventListener('install', e => {

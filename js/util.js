@@ -117,11 +117,29 @@ const U = (function () {
      ★<select multiple> 을 쓰지 않는다 — 폰에서 여러 개를 고르는 일이 고역이다.
        한 번에 하나씩 고르고 고른 것이 눈에 남는 편이 손이 적다.
      ★두 폼(새 여행·여행 설정)이 같은 목록·같은 몸짓을 써야 하므로 한 곳에서 만든다. */
-  function countryPicker(sel, chips) {
-    if (!sel || !chips) return { get: () => '', set: () => {} };
+  /* ★★고르개(select)에서 **적는 칸**으로 바꿨다(2026-09-06). 나라는 서른셋인데,
+     서른세 줄을 폰에서 굴려 찾는 것보다 '일' 두 자를 치는 편이 늘 빠르다.
+   ★★그리고 **바로 아래 도시 칸이 이미 이 방식**이다(list=citylist). 붙어 있는 두
+     칸이 하나는 굴리고 하나는 적는 것이면 손이 두 가지를 기억해야 한다.
+   ★목록은 사라지지 않는다 — datalist 라 칸을 누르면 서른셋이 다 뜬다. 굴러서
+     찾던 사람은 그대로 굴러서 찾고, 아는 사람은 두 자만 친다.
+   ★코드로도 받는다(jp → 일본). 서식의 나라 칸은 원래 코드를 적는 자리다.
+   ⚠ 붙는 것은 change 에서만 한다. input(글자마다)으로 하면 '인도' 를 다 친 순간
+     인도가 붙어 버려서 '인도네시아' 를 칠 수가 없다 — 서른셋 중 겹치는 짝이 그
+     하나다(2026-09-06에 세어 확인). */
+  const CLIST = 'countrylist';
+  function countryPicker(inp, chips) {
+    if (!inp || !chips) return { get: () => '', set: () => {}, disable: () => {} };
     let picked = [];
-    sel.innerHTML = '<option value="">나라 고르기…</option>'
-      + COUNTRY.map(([c, n, f]) => `<option value="${c}">${f} ${n}</option>`).join('');
+    /* 목록은 문서에 한 벌만 — 두 폼(새 여행·설정)이 나눠 쓴다 */
+    if (!document.getElementById(CLIST)) {
+      const dl = document.createElement('datalist');
+      dl.id = CLIST;
+      dl.innerHTML = COUNTRY.map(([, n]) => `<option value="${esc(n)}"></option>`).join('');
+      document.body.appendChild(dl);
+    }
+    inp.setAttribute('list', CLIST);
+    const byName = new Map(COUNTRY.map(([c, n]) => [n, c]));
     const draw = () => {
       chips.innerHTML = picked.map(c =>
         `<button type="button" class="pick" data-drop="${c}">` +
@@ -129,10 +147,13 @@ const U = (function () {
         `${esc(CNAME[c] || c)}<span class="px">✕</span></button>`).join('');
       chips.hidden = !picked.length;
     };
-    sel.addEventListener('change', () => {
-      const c = sel.value;
-      sel.value = '';
-      if (c && !picked.includes(c)) { picked.push(c); draw(); }
+    inp.addEventListener('change', () => {
+      const v = inp.value.trim();
+      if (!v) return;
+      const c = byName.get(v) || (CNAME[v.toUpperCase()] ? v.toUpperCase() : '');
+      if (!c) return;                       // 아직 다 안 적었거나 없는 이름 — 적은 것을 지우지 않는다
+      inp.value = '';
+      if (!picked.includes(c)) { picked.push(c); draw(); }
     });
     chips.addEventListener('click', e => {
       const b = e.target.closest('[data-drop]');
@@ -143,7 +164,7 @@ const U = (function () {
     return {
       get: () => picked.join(','),
       set: (csv) => { picked = codeList(csv); draw(); },
-      disable: (off) => { sel.disabled = off; chips.querySelectorAll('button').forEach(b => { b.disabled = off; }); },
+      disable: (off) => { inp.disabled = off; chips.querySelectorAll('button').forEach(b => { b.disabled = off; }); },
     };
   }
 
@@ -207,7 +228,12 @@ const U = (function () {
     'tab-cost': '<path d="M3.6 2.4h8.8v11.6l-2.2-1.3-2.2 1.3-2.2-1.3-2.2 1.3z"/>'
               + '<path d="M6.1 5.8h3.8M6.1 8.4h3.8"/>',            // 영수증 — 밑이 뜯긴 종이
     'tab-info': '<rect x="1.9" y="3.4" width="12.2" height="9.2" rx="1.5"/>'
-              + '<path d="M4.5 6.7h3M4.5 9.6h6"/>'                 // 신고서 — 칸 둘이 적힌 서식
+              + '<path d="M4.5 6.7h3M4.5 9.6h6"/>',                // 신고서 — 칸 둘이 적힌 서식
+    /* 신고서 판의 둘. 종이 두 장이 겹친 것은 '베낀다', 문에서 나가는 화살표는 '내보낸다' */
+    copy: '<rect x="5.6" y="5.6" width="8" height="8" rx="1.6"/>'
+        + '<path d="M10.6 5.6V4.2A1.6 1.6 0 0 0 9 2.6H4.2A1.6 1.6 0 0 0 2.6 4.2V9a1.6 1.6 0 0 0 1.6 1.6h1.4"/>',
+    out:  '<path d="M9.4 2.6H4.2A1.6 1.6 0 0 0 2.6 4.2v7.6a1.6 1.6 0 0 0 1.6 1.6h5.2"/>'
+        + '<path d="M10.9 5.4 13.5 8l-2.6 2.6M13.5 8H6.4"/>'
   };
   function icon(name) {
     return `<svg class="ic" viewBox="0 0 16 16" aria-hidden="true" focusable="false"

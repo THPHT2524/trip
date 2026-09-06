@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=420') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=422') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=420') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=422') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=420') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=422') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -592,7 +592,7 @@ a { color: var(--route); text-underline-offset: 2px; }
    ⚠ 보이는 판은 24px 이지만 누르는 자리는 ::after 가 30×44 로 지킨다. */
 /* ★지도 카드의 둘(🧭 길찾기 · 🗓 일정)도 같은 어법으로 앉힌다 — 두 화면이 같은
    몸짓을 쓰면 '이건 눌러서 나가는 것' 을 한 번만 배우면 된다. */
-.acts .act, .mca .act {
+.acts .act, .mca .act, .acard .act {
   /* ⚠ min-height 도 같이 눌러야 한다 — 밑의 .act 가 26px 을 깔아 두어서,
      24×26 짜리 **타원**이 됐다(2026-09-06 실측). 원은 두 변이 같아야 원이다. */
   border: 0; width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0;
@@ -608,7 +608,15 @@ a { color: var(--route); text-underline-offset: 2px; }
    이 앱의 실선(1px)보다 딱 한 뼘 굵다: 글이 아니라 누르는 것으로 읽힌다. */
 .act .ic { width: 15px; height: 15px; display: block; }
 .acts .act:hover, .acts .act:focus-visible,
-.mca .act:hover, .mca .act:focus-visible { background: var(--onnow); color: var(--route); }
+.mca .act:hover, .mca .act:focus-visible,
+.acard .act:hover, .acard .act:focus-visible { background: var(--onnow); color: var(--route); }
+/* 내보내기는 사람을 빼는 일이라 붉다 — 이 판에서 유일하게 되돌릴 수 없는 몸짓이다 */
+.acard .act.danger { color: var(--warn); }
+.acard .act.danger:hover, .acard .act.danger:focus-visible {
+  color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+/* 코드 칸과 그림 단추가 한 줄에 — 단추는 24px 이라 늘어나지 않게 가운데로 맞춘다 */
+.acard .field > .row { align-items: center; }
 /* 카드 안이라 --sunk 이 스텁과 같은 색이 된다 — 한 켜 더 눌러 판을 갈라 준다 */
 .mca .act { background: var(--paper); }
 
