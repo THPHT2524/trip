@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=359') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=360') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=359') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=360') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=359') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=360') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -850,14 +850,42 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* ⚠ min-width:0 이 없으면 flex 항목의 기본값(auto)이 **내용 크기**라, 긴 이름 하나가
      카드를 화면 밖으로 밀어낸다 — 'KOKO HOTEL Osaka Namba Sennichimae' 에서 실제로
      그랬다(2026-09-05 아이폰). flex-basis 를 줬다고 폭이 지켜지는 게 아니다. */
+  /* ★position:relative 는 천공 자국(::before/::after)의 기준이다 */
+  position: relative;
   flex: 0 0 100%; min-width: 0; scroll-snap-align: center;
   display: flex; align-items: center; gap: 10px;
-  padding: 9px 10px 9px 11px;
+  padding: 0 10px 0 0;
   border-radius: var(--r); border: 1px solid var(--line);
   background: var(--card); box-shadow: var(--sh-map);
 }
 /* 가운데 온 카드 — 조용히. 고른 것은 지도의 핀이 크게 말한다 */
 .mcard.is-on { border-color: var(--route); }
+/* ── 스텁 ─────────────────────────────────────────────────────────────
+   ★★카드를 **입장권 스텁**으로 그린다(2026-09-06). 뜯는 쪽이 번호를 들고, 천공선이
+   둘을 가른다 — 옆으로 한 장씩 넘기는 이 띠에서는 그 몸짓이 곧 종이 뭉치를 훑는
+   몸짓이다(일정 탭에서 같은 컨셉을 물린 이유는 거기서는 스물아홉 장이 **동시에**
+   서기 때문이었다. 여기는 한 번에 한 장이다).
+   ★천공은 **점선이 아니라 구멍**이다. 파선은 잉크로 그은 선이라 '뜯는 자리' 로 안
+     읽힌다 — 종이 색 동그라미를 세로로 찍어야 뚫린 줄이 된다. */
+.mcard .mcs {
+  position: relative; flex: 0 0 44px; align-self: stretch;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--sunk); border-radius: var(--r) 0 0 var(--r);
+}
+.mcard .mcs::after {
+  content: ''; position: absolute; right: -1.5px; top: 8px; bottom: 8px; width: 3px;
+  background-image: radial-gradient(circle at 1.5px 3.5px, var(--paper) 1.5px, transparent 1.6px);
+  background-size: 3px 7px; background-repeat: repeat-y; z-index: 2;
+}
+/* 카드 위아래 모서리를 반씩 베어 문 자국 — 천공선이 종이 끝까지 이어진다 */
+.mcard::before, .mcard::after {
+  content: ''; position: absolute; left: 44px; width: 11px; height: 11px;
+  border-radius: 50%; background: var(--paper); transform: translateX(-50%); z-index: 2;
+}
+.mcard::before { top: -5.5px; }
+.mcard::after { bottom: -5.5px; }
+/* 몸통이 제 위아래 여백을 갖는다 — 카드에서 걷어 스텁이 끝까지 차게 했다 */
+.mcard .mcb { padding: 9px 0; }
 /* 번호는 지도의 핀과 **같은 물건**이라 같은 모양으로 그린다 */
 .mcard .mcn {
   flex: 0 0 auto;

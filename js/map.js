@@ -232,8 +232,15 @@ const Maps = (function () {
     const t = r.at_time ? String(r.at_time).slice(0, 5) : '';
     const cost = (r.cost != null) ? U.money(r.cost, r.cost_cur || (trip && trip.base_cur)) : '';
     const url = r.map_url || GM.placeUrl(r.name);
+    /* ★★카드는 **입장권 스텁**이다(2026-09-06). 일정 탭에서는 이 컨셉을 물렸다 —
+       스물아홉 장이 세로로 동시에 서면 라멘집까지 탑승권이 되어 단위가 안 맞았다.
+       여기서는 셋 다 뒤집힌다: 한 번에 **한 장**이고, 옆으로 넘기는 그 몸짓이 곧
+       종이 뭉치를 훑는 몸짓이며, 탑승권이 아니라 다녀온 곳에서 남는 스텁이다.
+     ★스텁이 드는 것은 **번호**다. 이 카드의 유일한 일이 지도의 핀과 이어 주는
+       것이라, 그 번호가 종이의 뜯는 쪽에 앉아야 뜻이 맞는다 — 모양은 동그란
+       핀 그대로 둔다(모양이 달라지면 지도의 그것과 같은 물건으로 안 읽힌다). */
     return `<article class="mcard" data-i="${i}">
-      <span class="mcn" style="--k: var(--${U.kvar(r.kind)})">${s2.n}</span>
+      <span class="mcs"><span class="mcn" style="--k: var(--${U.kvar(r.kind)})">${s2.n}</span></span>
       <span class="mcb">
         <span class="mct">${t ? `<em>${esc(t)}</em>` : ''}<b>${esc(r.name)}</b></span>
         <span class="mcm">${esc(r.kind)}${cost ? ` · ${esc(cost)}` : ''}</span>
