@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=387') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=388') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=387') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=388') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=387') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=388') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1026,7 +1026,11 @@ a { color: var(--route); text-underline-offset: 2px; }
      칸을 만드는 것처럼 굵직했다 — 여기 금이 할 일은 이름표와 값을 가르는 것
      하나뿐이라 글자만큼만 서면 된다(14px). */
 .mcard .mfl {
-  flex: 0 0 32px; padding: 1px 5px 1px 0;
+  /* ⚠ **오른쪽 정렬**이어야 한다. 왼쪽 정렬로 두면 '시간' 두 글자가 26px 칸의
+     왼쪽에 붙고 남은 빈 자리가 금 앞에 생겨, 이름표–금이 15px 로 벌어졌다
+     (금–값 10px 보다 넓었다 — 재보고 알았다, 2026-09-06). 글자를 금 쪽으로
+     밀어 붙이면 5px 이 되고, 칸은 고정폭이라 값들은 그대로 한 기둥에 선다. */
+  flex: 0 0 32px; padding: 1px 5px 1px 0; text-align: right;
   border-right: 1px solid color-mix(in srgb, var(--ink-3) 28%, transparent);
   font-size: var(--t-micro); font-weight: 600; letter-spacing: 0;
   color: var(--ink-3); white-space: nowrap;
