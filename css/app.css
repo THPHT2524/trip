@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=445') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=449') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=445') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=449') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=445') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=449') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -2004,23 +2004,29 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 .pico { width: 15px; height: 13px; flex: 0 0 auto; fill: none;
   stroke: currentColor; stroke-width: 1.3; }
 .pico .f { fill: currentColor; stroke: none; }
-/* ── 언제부터 ──────────────────────────────────────────────────────────
-   ★여권의 발급일 자리다. 이 카드에서 **딱 하나** 남은 곁값이라 오른쪽 끝에 선다 —
-     왜 하나뿐인지는 js/app.js 의 pheadHtml 주석에 적어 두었다(네 번 틀렸다).
-   ★칸의 짜임은 밑의 격자(.pgrid)와 같다: 작은 이름표 밑에 값. 한 카드 안에서
-     같은 것을 두 가지 방법으로 적지 않는다. 다만 여기는 곁글이라 값이 한 단 작다. */
-.pno {
-  flex: 1 1 auto; margin: 0; display: flex; justify-content: flex-end; gap: 14px;
+/* ── 기요셰 위의 값 ────────────────────────────────────────────────────
+   ★이름줄 오른쪽은 **무늬 위에 값**이다. 값만 두면 작은 글씨 하나가 뜬 것처럼
+     허전하고, 무늬만 두면 뜻이 없다 — 여권이 실제로 하는 일이 그 둘을 겹치는
+     것이다(보안 무늬 위에 인적사항을 인쇄한다).
+   ★기요셰는 여권·지폐가 백 년 넘게 두르는 그 얽힌 곡선이다(그리는 법은 js 쪽).
+   ⚠ 선은 얇고 옅다. 장식은 **읽히면 안 되고** 거기 있기만 하면 된다 — 진해지는
+     순간 무늬가 아니라 그림이 되어 위에 앉은 값과 다툰다. */
+.pmark { position: relative; margin-left: auto; flex: 0 0 auto; }
+.pguil {
+  position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
+  width: 74px; height: 74px; pointer-events: none;
+  fill: none; stroke: var(--ink-3); stroke-width: .35; opacity: .42;
 }
-.pno > div { display: flex; flex-direction: column; gap: 2px; text-align: right; }
+/* 값은 밑의 격자(.pgrid)와 **같은 자**다 — 한 카드에서 같은 물건은 같게 적는다.
+   곁글 크기로 적으면 오른쪽이 채워지지 않고 그냥 작은 글씨 하나가 뜬 것이 된다. */
+.pno { position: relative; margin: 0; text-align: right; }
 .pno dt {
-  font-family: var(--mono); font-size: var(--t-unit); font-weight: 500;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
-  white-space: nowrap;
+  font-size: var(--t-micro); font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-3); white-space: nowrap;
 }
 .pno dd {
-  margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: var(--t-cap); font-weight: 600; letter-spacing: .08em; color: var(--ink-2);
+  margin: 2px 0 0; font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: 19px; font-weight: 500; letter-spacing: -.02em; color: var(--ink);
 }
 
 
