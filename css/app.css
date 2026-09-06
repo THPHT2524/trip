@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=350') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=353') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=350') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=353') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=350') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=353') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -71,6 +71,10 @@
   --ink:     #16302B;   /* 소나무 잉크. 검정을 쓰지 않는다 */
   --ink-2:   #3C4F49;
   --ink-3:   #5C6D68;
+  /* ★정거장 아이콘 단추의 글리프 색. **두 판이 서로 반대를 원한다**(2026-09-06):
+     밝은 판에서는 옅으면 안 보이고, 어두운 판에서는 진하면 화면에서 제일 밝아진다.
+     그래서 한 토큰으로 갈라 둔다 — 밝은 판은 한 단계 진하게. */
+  --icon:    #3C4F49;
   --line:    #DCE4E0;   /* 실선 구획 */
   --wsea:    #E4EBE7;   /* 여권 지도의 바다 */
   /* ★여권 지도의 육지. **어두운 쪽에 맞췄다고 적어 놓고 안 맞아 있었다** —
@@ -203,6 +207,7 @@
     --ink:     #DFEAE5;
     --ink-2:   #ABBDB7;
     --ink-3:   #829691;
+    --icon:    #829691;   /* 어두운 판에서는 조용하게 — 진하면 ✖ 가 제일 밝아진다 */
     --line:    #25352F;
     --wsea:    #0F1D1A;
     --wland:   #375A50;
@@ -584,6 +589,12 @@ a { color: var(--route); text-underline-offset: 2px; }
   border: 0; width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0;
   background: var(--sunk); border-radius: 50%;
   font-size: 11px; line-height: 1;
+  /* ⚠ '이모지는 color 를 안 받는다' 가 **셋 다 그렇지는 않았다**(2026-09-06 밝은 판
+     실측). 📝·📍 는 색 그림이라 color 를 무시하지만 ✖️·↩️ 는 글리프로 떨어져 색을
+     받는다 — 그래서 --ink-3 일 때 밝은 판에서 옅은 회색 X 가 되어 거의 안 보였다.
+     두 판이 서로 반대를 원하므로 --icon 으로 갈라 둔다(위 토큰 참고).
+     색 그림 둘(📝·📍)은 이 값을 무시하므로 어느 판에서도 안 변한다. */
+  color: var(--icon);
 }
 .acts .act:hover, .acts .act:focus-visible { background: var(--onnow); }
 
@@ -1166,7 +1177,12 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-size: var(--t-cap); color: var(--ink-3); }
 
 /* 내역은 요약 밑에 온다 — 그 경계에 겹줄을 긋는다(영수증의 '====' 자리) */
-.cblock { padding: 12px 0 4px; }
+/* ★★좌우 여백은 **여기가 준다**. 한때 0 으로 깎았었는데(영수증 안에서 종이의
+   패딩과 두 번 세어져서), 그 바람에 이걸로 여백을 받던 설정 탭과 '환율 없음' 칸이
+   화면 끝까지 붙었다(2026-09-06). 두 번 세는 것은 **영수증 쪽에서** 푼다. */
+.cblock { padding: 12px var(--pad) 4px; }
+/* 영수증 안에서는 종이(.rcp)가 이미 좌우를 대 준다 */
+.rcp .cblock { padding-left: 0; padding-right: 0; }
 .cblock + .cblock { border-top: 1px dashed var(--line); }
 #cost-blocks .cblock:first-child { border-top: 1px dashed var(--ink-3); margin-top: 13px; }
 /* 판의 마지막 요소가 탭바에 잘리지 않게 — body 여백만으로는 모자랐다(동행자 탭의 저장 단추) */
