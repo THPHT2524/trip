@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=396') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=399') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=396') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=399') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=396') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=399') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -912,6 +912,13 @@ a { color: var(--route); text-underline-offset: 2px; }
 .mcard.is-on {
   box-shadow: var(--sh-map), 0 0 0 2px var(--paper), 0 0 0 4px var(--route);
 }
+/* 못 간 곳 — 색은 js 가 뺀다(--k 를 --rail 로 준다). 여기서는 이름을 긋는다.
+   일정 탭의 .item.is-done .name 과 **같은 몸짓**이라 배울 것이 없다.
+ ⚠ 구분 글자는 --k 를 따라가면 안 된다. --rail 은 **선 색**이라 어두운 판에서
+   #2E4139 인데, 그 색으로 글자를 쓰면 종이(#0E1A17) 위에서 안 읽힌다 —
+   지도의 핀도 테두리만 --rail 로 두고 글자는 --ink-3 으로 뺀다(.mpin.is-done). */
+.mcard.is-done .mcr b { color: var(--ink-3); text-decoration: line-through; }
+.mcard.is-done .mcr em, .mcard.is-done .mck { color: var(--ink-3); }
 /* ── 스텁 ─────────────────────────────────────────────────────────────
    ★★카드를 **입장권 스텁**으로 그린다(2026-09-06). 뜯는 쪽이 번호를 들고, 천공선이
    둘을 가른다 — 옆으로 한 장씩 넘기는 이 띠에서는 그 몸짓이 곧 종이 뭉치를 훑는
