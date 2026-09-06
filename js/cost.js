@@ -178,7 +178,7 @@ const Cost = (function () {
         ).join('');
         /* 곁말은 그 날의 날짜다 — 'D1' 만으로는 며칟날인지 모른다(일정 탭의 띠는
            'DAY 1 08.29 토' 라고 말한다). 같은 물음에 같은 답을 준다. */
-        return line(`D${i + 1}`, U.md(x.d), x.sum, max, null, 0,
+        return line(`Day ${i + 1}`, U.md(x.d), x.sum, max, null, 0,
           `<span class="cbar stack">${seg}</span>`);
       }).join('')}</ul>
     </section>`;
@@ -318,7 +318,10 @@ const Cost = (function () {
 
     /* 요약 띠 — 날·구분·사람. '사람' 은 혼자 다녀서 한 칸뿐이면 아무 말도 안 하므로 뺀다. */
     const dayParts = dayList().map((d, i) => ({
-      n: `D${i + 1}`, k: tone(i),
+      /* ★'D1' 이 아니라 'Day 1' 이다(2026-09-07). 일정 탭의 머리띠가 'DAY 1' 이라
+         같은 것을 가리키는 말이 두 화면에서 달랐다 — 줄인 말은 아낀 자리보다
+         '이게 무슨 D 지' 를 한 번 되묻게 하는 값이 크다. */
+      n: `Day ${i + 1}`, k: tone(i),
       v: rows.filter(r => r.on_date === d && has(r)).reduce((a, r) => a + (inBase(r) || 0), 0),
     }));
     const hasPayer = byPayer.length > 1 || (byPayer[0] && byPayer[0][0] !== '안 적음');
@@ -360,12 +363,15 @@ const Cost = (function () {
          차이가 실제로 쓴 원화가 된다(172,491 − 84,779 = 87,712). */
     const krw = v => esc(U.money(Math.round(v), U.SETTLE));
     $('cost-wallet').innerHTML = (c && c.bal > 0.5 && c.got > 0) ? `
+      <!-- ★★'현금' 이름표를 뺐다(2026-09-07). 칩 안의 두 짝이 이미 환전과 잔액이라
+           그 둘이 현금 이야기라는 것을 스스로 말한다 — 이름표는 자리만 먹고
+           남은 두 짝을 한쪽으로 밀어 두 값이 안 마주 보게 했다.
+           이제 **두 영역뿐**이라 좌우 끝에 하나씩 서고 그 사이가 곧 뺄셈이다. -->
       <div class="wallet">
-        <span class="wl">현금</span>
         <div class="wc"><span class="wt">환전</span>
           <b class="wf">${esc(U.money(c.got, c.cur))}</b>
           <span class="wk">${krw(c.gotKrw)}</span></div>
-        <div class="wc on"><span class="wt">남음</span>
+        <div class="wc on"><span class="wt">잔액</span>
           <b class="wf">${esc(U.money(c.bal, c.cur))}</b>
           <span class="wk">${krw(c.paid)}</span></div>
       </div>` : '';
