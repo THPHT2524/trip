@@ -240,14 +240,24 @@ const Maps = (function () {
        것이라, 그 번호가 종이의 뜯는 쪽에 앉아야 뜻이 맞는다 — 모양은 동그란
        핀 그대로 둔다(모양이 달라지면 지도의 그것과 같은 물건으로 안 읽힌다). */
     return `<article class="mcard" data-i="${i}">
-      <span class="mcs"><span class="mcn" style="--k: var(--${U.kvar(r.kind)})">${s2.n}</span></span>
+      <!-- ★스텁이 드는 것은 **번호와 구분** — 이 곳이 몇 번째이고 무슨 자리인가.
+           둘 다 지도에서 그대로 읽히는 것이라(핀의 수, 핀의 색) 뜯는 쪽에 같이 앉는다.
+           몸통에는 언제·어디·얼마만 남는다. -->
+      <span class="mcs" style="--k: var(--${U.kvar(r.kind)})">
+        <span class="mcn">${s2.n}</span>
+        <span class="mck">${esc(r.kind)}</span>
+      </span>
       <span class="mcb">
         <span class="mct">${t ? `<em>${esc(t)}</em>` : ''}<b>${esc(r.name)}</b></span>
-        <span class="mcm">${esc(r.kind)}${cost ? ` · ${esc(cost)}` : ''}</span>
+        ${cost ? `<span class="mcm">${esc(cost)}</span>` : ''}
       </span>
+      <!-- 일정 탭과 같은 어법: 동그란 판 위의 그림. 뜻은 aria-label 이 진다.
+           🧭 는 길을 찾아 나가는 것, 🗓 는 이 앱 안의 일정으로 돌아가는 것이다. -->
       <span class="mca">
-        <a class="act" href="${esc(url)}" target="_blank" rel="noopener">길찾기</a>
-        <button class="act" type="button" data-go="${esc(r.id)}">일정</button>
+        <a class="act" href="${esc(url)}" target="_blank" rel="noopener"
+           aria-label="길찾기"><span aria-hidden="true">🧭</span></a>
+        <button class="act" type="button" data-go="${esc(r.id)}"
+           aria-label="일정에서 보기"><span aria-hidden="true">🗓️</span></button>
       </span>
     </article>`;
   }
