@@ -203,6 +203,7 @@ const Maps = (function () {
     el.innerHTML = days.map((d, i) =>
       `<button type="button" role="tab" data-day="${esc(d)}" aria-selected="${String(pick === d)}">Day ${i + 1}</button>`
     ).join('');
+    placeTabs();
   }
 
   /* ★이름을 마커 위에 **늘 띄운다.** 핀만 있으면 '1번이 어디였더라' 를 확인하러
@@ -262,9 +263,14 @@ const Maps = (function () {
       <span class="mcb">
         <!-- ★단추는 **윗줄 맨 오른쪽**이다(2026-09-06). 옆에 세워 두었더니 이름이
              그만큼 짧아졌는데, 이름은 이 표에서 제일 긴 값이라 제 줄을 통째로
-             써야 한다. 시각은 다섯 글자뿐이라 그 줄에 자리가 남는다. -->
+             써야 한다. 시각은 다섯 글자뿐이라 그 줄에 자리가 남는다.
+             ★TIME·PLACE 이름표는 **그림으로 바꿨다**(2026-09-06). 글자 이름표는
+               두 줄짜리 표에서 자리만 먹었다 — 08:50 은 시각인 줄 알고 장소 이름은
+               장소인 줄 안다. 그림은 같은 자리를 8px 만 쓰면서 두 줄의 값이 한
+               기둥에 서게 붙들어 준다.
+               ⚠ aria-hidden 이다. 값이 이미 무엇인지 말하므로 읽어 줄 것이 없다. -->
         <span class="mcr">
-          <span class="mfl">Time</span>
+          <span class="mfi" aria-hidden="true">🕘</span>
           <em>${t ? esc(t) : '--:--'}</em>
           <!-- 일정 탭과 같은 어법: 동그란 판 위의 그림. 뜻은 aria-label 이 진다.
                🧭 는 길을 찾아 나가는 것, 🗓 는 앱 안의 일정으로 돌아가는 것이다. -->
@@ -276,7 +282,7 @@ const Maps = (function () {
           </span>
         </span>
         <span class="mcr">
-          <span class="mfl">Place</span>
+          <span class="mfi" aria-hidden="true">📍</span>
           <b>${esc(r.name)}</b>${cost ? `<i>${esc(cost)}</i>` : ''}
         </span>
       </span>
@@ -293,9 +299,10 @@ const Maps = (function () {
 
   function drawStrip() {
     const el = $('mstrip');
-    if (!spots.length) { el.hidden = true; el.innerHTML = ''; cur = -1; return; }
+    if (!spots.length) { el.hidden = true; el.innerHTML = ''; cur = -1; placeTabs(); return; }
     el.hidden = false;
     el.innerHTML = spots.map(cardHtml).join('');
+    placeTabs();                   // 카드 높이가 정해진 뒤에 탭을 그 위로 올린다
     /* ★날을 바꾸면 **첫 카드로 되돌린다**(2026-09-05). 안 되돌리면 3일차에서 보던
        자리가 1일차에 그대로 남아, 엉뚱한 카드가 가운데 서 있다.
        ★다만 지도는 안 옮긴다 — 날을 막 열었을 때는 그날 전체가 보여야 하고(fitBounds),
@@ -349,6 +356,20 @@ const Maps = (function () {
      그래서 위쪽에만 그 몫을 더한다.
    ★값을 박지 않고 잰다 — 토글이나 띠 높이를 바꿔도 따라온다. */
   const PIN_H = 46;
+  /* ★★날짜 탭을 **카드 띠 바로 위**에 앉힌다(2026-09-06). css 에 bottom:76px 으로
+     박아 두었는데, 그 76 은 그때 카드 높이에서 나온 수라 표가 커질 때마다 어긋났다
+     (실제로 겹쳤다). 띠의 높이를 재서 그 위에 올린다 — 카드가 어떻게 바뀌든 따라온다.
+     ★fitPad 가 이 탭의 top 을 읽어 지도의 아래 여백을 낸다. 그래서 **자리를 잡은
+       뒤에** 여백을 다시 재야 지도가 카드에 안 가린다. */
+  const STRIP_GAP = 6;             // 띠와 탭 사이
+  function placeTabs() {
+    const st = $('mstrip'), nav = $('mapdays');
+    if (nav.hidden) return;
+    const h = st.hidden ? 0 : st.offsetHeight;
+    const bottom = parseFloat(getComputedStyle(st).bottom) || 0;
+    nav.style.bottom = (h + bottom + STRIP_GAP) + 'px';
+  }
+
   function fitPad() {
     const wrap = map.getContainer().getBoundingClientRect();
     const bp = $('basepick').getBoundingClientRect();

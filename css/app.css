@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=373') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=377') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=373') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=377') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=373') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=377') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -815,6 +815,8 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* ⚠ z-index 3 — 안내문(2)보다 위다. 같은 층에 두면 안내문이 DOM 뒤에 있어서
      탭 단추의 **누르는 겹 위쪽 8px 을 가져간다**(2026-09-05 실측: 29px 그대로였다).
      안내문은 누르는 물건이 아니므로 그 가장자리를 내줘도 잃는 것이 없다. */
+  /* ⚠ 76px 은 **첫 값일 뿐**이다. 카드 높이에서 나온 수라 표가 바뀔 때마다 어긋난다 —
+     js/map.js 의 placeTabs() 가 띠 높이를 재서 이 값을 덮어쓴다(그래야 따라온다). */
   position: absolute; left: 0; right: 0; bottom: 76px; z-index: 3;
   /* ⚠ 위아래 8px 은 **누르는 겹이 앉을 자리**다. .daytabs 는 overflow-x:auto 라
      상자 밖으로 나간 것을 잘라 낸다 — 안쪽에 자리를 안 만들어 주면 단추의 ::after
@@ -839,12 +841,16 @@ a { color: var(--route); text-underline-offset: 2px; }
    ★카드를 화면 폭보다 좁게 잡아 **옆 카드가 비죽 보이게** 한다 — 넘길 것이 있다는 말을
      설명 없이 하는 방법이다(2026-09-05). */
 .mstrip {
-  position: absolute; left: 0; right: 0; bottom: 10px; z-index: 2;
+  position: absolute; left: 0; right: 0; bottom: 4px; z-index: 2;
   display: flex; gap: 8px;
   /* ★양옆 28px 은 **첫 카드와 마지막 카드가 가운데로 올 자리**다. 10px 이었을 때는
      첫 카드가 왼쪽에 붙어서 열자마자 어긋나 보였다 — 스냅은 스크롤할 곳이 있어야 한다.
      카드 폭을 안쪽 폭 100% 로 두면 28 + 카드 + 28 이 화면 폭과 같아져 정확히 가운데다. */
-  padding: 0 28px;
+  /* ★위아래 6px 은 **고른 표의 고리가 설 자리**다(2026-09-06). 0 이면 띠의 높이가
+     카드에 딱 맞고, overflow-x:auto 는 세로도 auto 로 만들기 때문에 바깥으로 4px
+     나간 고리가 위아래만 잘렸다 — 좌우에만 보이는 반쪽 고리가 됐다.
+     ⚠ 띠가 12px 두꺼워진 만큼 bottom 을 10px→4px 로 당겨 카드는 제자리에 둔다. */
+  padding: 6px 28px;
   overflow-x: auto; overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
@@ -871,7 +877,7 @@ a { color: var(--route); text-underline-offset: 2px; }
        종이 쪽으로 튀어나온다. 게다가 마스크는 바깥 그림자까지 잘라 먹는다.
      ★네 개를 요소 하나로 그린다 — 아래 ::before 가 radial-gradient 넷을 겹쳐 든다.
      ★모서리는 **직각**이다. 둥글면 앱의 카드로, 각지면 인쇄된 낱장으로 읽힌다. */
-  --bw: 5px;                       /* 테두리 굵기 */
+  --bw: 3px;                       /* 테두리 굵기 */
   --stub: 62px;                    /* 스텁 폭 — 아래 .mcs 와 같이 움직인다 */
   --nr: 7px;                       /* 반원의 반지름 */
   border-radius: 0; border: var(--bw) solid var(--k, var(--k-etc));
@@ -967,19 +973,13 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--paper); border: 3px solid var(--k, var(--k-etc));
   color: var(--ink); font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
 }
-/* ★★몸통은 **이름표 붙은 줄 둘**이다 — 표 도안이 값을 그렇게 적는다(레퍼런스 1의
-   DATE·VENUE·ADMISSION). 이름표를 왼쪽 고정폭 칸에 세워 두 줄의 값이 한 기둥에
-   선다 — 값마다 시작점이 다르면 두 줄이 아니라 두 조각으로 읽힌다. */
+/* ★★몸통은 **줄 둘**이다: 윗줄에 시각과 단추, 아랫줄에 장소 이름.
+   ⚠ TIME·PLACE **글자** 이름표는 걷고 그림으로 바꿨다(2026-09-06). 글자는 두 줄짜리
+     표에서 자리만 먹었다 — 08:50 은 시각인 줄 알고 장소 이름은 장소인 줄 안다.
+     그림은 같은 일(두 줄의 값을 한 기둥에 세우기)을 8px 로 한다. */
 .mcard .mcb { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column;
-  gap: 5px; padding: 10px 0 11px; }
+  gap: 4px; padding: 11px 0 12px; }
 .mcard .mcr { display: flex; align-items: baseline; gap: 9px; min-width: 0; line-height: 1.15; }
-/* ★이름표. 라틴으로 두는 것은 멋이 아니라 **자간을 줄 수 있어서**다 —
-   한글은 자간을 주면 낱자가 흩어진다(이 앱이 여러 번 밟은 함정). */
-.mcard .mfl {
-  flex: 0 0 34px;
-  font-family: var(--mono); font-size: 8px; font-weight: 600; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--ink-3); line-height: 1;
-}
 /* ★★시각과 장소는 **일정 탭과 같은 글자**다(2026-09-06). 같은 것을 두 화면이 다른
    크기·다른 색으로 적으면 옮겨 다닐 때마다 눈이 다시 맞춰야 한다 — 지도의 표에서
    고른 곳과 일정에서 그 줄은 같은 하나이고, 그러면 같게 보여야 한다.
@@ -999,9 +999,17 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-family: var(--mono); font-variant-numeric: tabular-nums;
   font-size: var(--t-meta); color: var(--ink-3); white-space: nowrap;
 }
-/* 단추는 윗줄 오른끝. baseline 정렬한 줄이라 가운데로 따로 맞춘다 */
+/* ★값 앞의 작은 그림. 폭을 못 박아 두 줄의 값이 한 기둥에 선다 */
+.mcard .mfi {
+  flex: 0 0 13px; font-size: 9.5px; line-height: 1; text-align: center;
+  opacity: .75;
+}
+/* 단추는 윗줄 오른끝. baseline 정렬한 줄이라 가운데로 따로 맞춘다.
+   ⚠ 오른쪽 3px 은 **안 보이는 손가락 겹**의 자리다(.act::after 가 좌우로 3px 씩
+     번진다). 안 비워 두면 그 겹이 카드 밖으로 나가 잘리고, 마지막 단추의 오른쪽을
+     그만큼 못 누른다(2026-09-06 실측: 넘침 3px). */
 .mcard .mca {
-  flex: 0 0 auto; margin-left: auto; align-self: center;
+  flex: 0 0 auto; margin-left: auto; align-self: center; padding-right: 3px;
   display: flex; align-items: center; gap: 6px;
 }
 
