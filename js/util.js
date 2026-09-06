@@ -142,6 +142,18 @@ const U = (function () {
   })();
   const CNAME = Object.fromEntries(COUNTRY.map(([c, n]) => [c, n]));
   const countryName = code => CNAME[code] || '';
+  /* 라틴 이름 — 여권 도장에 쓴다. 도장은 원래 그 나라 말과 영어로 찍히고,
+     대문자에 자간을 줄 수 있다(한글은 자간을 주면 낱자가 흩어진다). */
+  const countryNameEn = (() => {
+    let dn = null;
+    try { dn = new Intl.DisplayNames(['en'], { type: 'region' }); } catch (e) { /* 없으면 코드 */ }
+    return code => {
+      if (!CNAME[code]) return '';
+      let n = code;
+      try { n = dn ? dn.of(code) : code; } catch (e) { n = code; }
+      return (n || code).toUpperCase();
+    };
+  })();
   /* 아는 나라만 국기를 준다 — 모르는 코드는 빈 문자열이다(지어내지 않는다) */
   const flag = code => (CNAME[code] ? flagOf(code) : '');
   /* 여행 하나가 두 나라를 걸치는 일이 있다(방콕+프놈펜, 싱가포르+말레이시아).
@@ -326,7 +338,7 @@ const U = (function () {
 
   return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
-           cityList, countryPicker, SETTLE, icon, hue, tripName };
+           cityList, countryPicker, SETTLE, icon, hue, tripName, countryNameEn };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용

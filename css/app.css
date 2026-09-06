@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=433') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=438') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=433') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=438') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=433') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=438') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1692,30 +1692,61 @@ a { color: var(--route); text-underline-offset: 2px; }
    ★★비어 있는 칸 자체가 **'아직 안 다녀왔다'** 를 말한다 — 그래서 도장이 없어도
      이 칸은 선다. 장식이 아니라 한 가지 사실이다. */
 .aofc {
-  display: flex; align-items: center; gap: 10px;
-  min-height: 62px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 14px;
+  min-height: 96px; padding: 10px 14px;
   background-image: repeating-linear-gradient(-45deg,
     color-mix(in srgb, var(--ink-3) 16%, transparent) 0 1px, transparent 1px 6px);
 }
+/* ⚠ 접히게 둔다. 'UNITED STATES' 도장은 174px 이라 한 줄짜리 이름표와 5px 까지
+   붙는데, 도장은 기울어 있어서 왼아래 모서리가 그 5px 를 넘어 나온다(2026-09-07).
+   이름표는 읽으라고 있는 글이 아니라 '여기는 당신이 쓰는 데가 아니다' 라는 표시라
+   두 줄이 되어도 잃는 것이 없다. */
 .aofc .ofl {
-  flex: 1 1 auto;
+  flex: 0 1 auto; max-width: 44%;
   font-family: var(--mono); font-size: 8.5px; font-weight: 500; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--ink-3);
+  line-height: 1.5; text-transform: uppercase; color: var(--ink-3);
 }
 /* ★도장 — 다녀온 여행에만 찍힌다. '지난 여행인지' 를 이 화면에서 알 방법이
-   여태 없었다(js/crew.js 가 채운다). */
-.astamp { flex: 0 0 auto; }
+   여태 없었다(js/crew.js 가 채운다).
+   ⚠ margin-left:auto — 이름표가 안 늘어나게 바뀌면서(flex 0 1) 도장이 이름표에
+     바짝 붙어 따라다녔다. 도장은 칸의 **오른쪽 끝**에 찍힌다. */
+.astamp { flex: 0 0 auto; margin-left: auto; }
 .astamp[hidden] { display: none; }
 /* ⚠ 색은 **구분색이 아니어야 한다.** 처음에 --k-see(관광)로 찍었는데, 이 앱은
    채도 있는 색을 장소구분 여섯에만 쓰기로 해 놓았다 — 도장은 구분이 아니다.
-   실제 도장이 그렇듯 옅은 잉크로 찍는다: --ink-3 이 이 앱의 그 색이다. */
+   실제 도장이 그렇듯 옅은 잉크로 찍는다: --ink-3 이 이 앱의 그 색이다.
+ ★기울기는 **비뚤어야** 한다. 손으로 찍는 물건이라 반듯하면 인쇄로 보인다 —
+   -11도는 눈에 '삐뚤다' 로 읽히면서 글자는 아직 편하게 읽히는 각이다. */
+/* ★도장은 **둥근 네모** 하나다. 원테에 휘어 도는 글자로도 그려 봤는데 이 종이에는
+   과했다: 곡선이 하나뿐이라 직각 격자 위에서 혼자 튀었고, 휜 글자를 읽느라 정작
+   날짜가 늦게 읽혔다. 실제 도장 중에도 나라·비행기·날짜만 든 네모가 많다.
+ ★기울기는 **비뚤어야** 한다. 손으로 찍는 물건이라 반듯하면 인쇄로 보인다 —
+   -8도는 눈에 '삐뚤다' 로 읽히면서 글자는 아직 편하게 읽히는 각이다. */
 .astamp > span {
-  display: block; width: 128px; padding: 6px 0 5px;
-  border: 2px solid var(--ink-3); border-radius: var(--r-xs);
-  text-align: center; color: var(--ink-3);
-  transform: rotate(-6deg);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 18px 7px;
+  /* ★굵다. 도장은 고무판에 새겨 잉크를 묻혀 누르는 물건이라 획이 가늘 수가 없다 —
+     2px 로는 인쇄한 테두리로 읽혔다. */
+  border: 3px solid var(--ink-3);
+  /* ★모서리는 **왼아래 하나만** 둥글다. 넷 다 굴리면 알약처럼 반듯해지는데, 실제
+     도장은 판을 깎아 만든 물건이라 한 귀만 다르게 생긴 것이 흔하다 — 그 한 귀가
+     '찍은 것' 과 '그린 것' 을 가른다. */
+  border-radius: 0 0 0 10px;
+  color: var(--ink-3); line-height: 1.15;
+  transform: rotate(-8deg);
 }
-.astamp b { display: block; font-size: 13px; font-weight: 800; letter-spacing: .08em; }
+/* 나라 — 도장의 얼굴. 넓은 자간이 도장다움의 절반이라 **라틴 대문자**로 적는다
+   (한글에 자간을 주면 낱자가 흩어진다 — js/crew.js 의 stamp 주석 참고). */
+.astamp b { font-size: 14px; font-weight: 800; letter-spacing: .1em; white-space: nowrap; }
+.astamp i { font-style: normal; font-size: 15px; margin: 3px 0 1px; }
+.astamp em {
+  font-style: normal; font-family: var(--mono);
+  font-size: 15px; font-weight: 600; letter-spacing: .02em;
+}
+.astamp u {
+  text-decoration: none; margin-top: 1px;
+  font-family: var(--mono); font-size: 8px; font-weight: 600; letter-spacing: .2em;
+}
 /* 종이 밖의 발치 — 저장·지우기와 그 곁말이 산다.
    ⚠ 두 단추를 **양 끝**으로 미는 규칙은 .form 안에만 있었다(.form .row.btns.split).
      폼 밖으로 나오면서 안 걸려 둘이 붙어 버렸다 — 여기서 다시 적는다. */
