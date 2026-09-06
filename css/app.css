@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=368') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=371') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=368') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=371') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=368') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=371') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -862,20 +862,20 @@ a { color: var(--route); text-underline-offset: 2px; }
   padding: 0 8px 0 0;
   /* ★모서리를 --r(10) 에서 --r-sm(8) 로 낮춘다 — 표는 담는 상자가 아니라 낱장이다.
      둥글수록 카드로, 각질수록 종이로 읽힌다. */
-  /* ★★테두리가 **구분 색**이다(2026-09-06). 표 도안은 종이 둘레를 한 색으로 두르고
-     그 안에 내용을 앉힌다 — 그 한 색이 여기서는 '무슨 자리인가' 를 든다.
-     지도의 핀도 같은 색이라, 고른 표와 그 핀이 번호에 더해 **색으로도** 이어진다.
-     ⚠ 2px 이다. 1px 은 --line 이던 시절의 굵기라 색을 줘도 안 읽히고, 3px 부터는
-       한 장뿐인 카드에서 테두리가 내용을 이긴다. */
-  border-radius: var(--r-sm); border: 2px solid var(--k, var(--k-etc));
-  /* ★★**테두리 안쪽에 또 하나의 선**(2026-09-06). 표·상품권 도안이 거의 다 쓰는
-     장치다 — 인쇄물은 재단선 안쪽에 한 겹을 더 두른다. 요소를 안 늘리고 그림자
-     둘로 낸다: 4px 은 종이색으로 채우고 그 바로 바깥에 1px 금.
-     ⚠ 인셋 그림자는 **제 배경 위·자식 배경 아래**에 깔린다. 그래서 이 선은 몸통에만
-       보이고 스텁(제 배경이 있다)에서는 가려진다 — 레퍼런스도 그렇다. */
-  box-shadow: var(--sh-map),
-    inset 0 0 0 4px var(--card),
-    inset 0 0 0 5px color-mix(in srgb, var(--ink-3) 20%, transparent);
+  /* ★★★**굵은 구분 색 테두리 + 안으로 볼록한 반원**(2026-09-06, 레퍼런스 3).
+     표 도안은 종이 둘레를 한 색으로 두껍게 두르고, 그 테두리에서 반원이 안쪽으로
+     볼록 나온다. 그 한 색이 여기서는 '무슨 자리인가' 를 들고, 지도의 핀도 같은
+     색이라 고른 표와 그 핀이 번호에 더해 색으로도 이어진다.
+     ⚠ 반원은 **뚫는 것이 아니라 칠하는 것**이다. 마스크로 잘라 봤는데(v=369) 그건
+       레퍼런스가 하는 일이 아니었다 — 도안의 반원은 테두리와 **같은 색으로 채워져**
+       종이 쪽으로 튀어나온다. 게다가 마스크는 바깥 그림자까지 잘라 먹는다.
+     ★네 개를 요소 하나로 그린다 — 아래 ::before 가 radial-gradient 넷을 겹쳐 든다.
+     ★모서리는 **직각**이다. 둥글면 앱의 카드로, 각지면 인쇄된 낱장으로 읽힌다. */
+  --bw: 5px;                       /* 테두리 굵기 */
+  --stub: 62px;                    /* 스텁 폭 — 아래 .mcs 와 같이 움직인다 */
+  --nr: 7px;                       /* 반원의 반지름 */
+  border-radius: 0; border: var(--bw) solid var(--k, var(--k-etc));
+  box-shadow: var(--sh-map);
   /* ★★천공 자국을 **카드 안으로 가둔다**(2026-09-06). 영수증·일정에서는 그 반원이
      종이 바탕 위에 얹혀 안 보였는데, 이 카드는 **지도 위에 떠 있어서** 밖으로 나간
      반쪽이 까만 점이 되어 떠다녔다. 게다가 그만큼이 띠의 스크롤 높이가 되어
@@ -888,9 +888,7 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* 가운데 온 카드 — 조용히. 고른 것은 지도의 핀이 크게 말한다 */
 /* ⚠ 고른 표에서 테두리 색을 뺏으면 그 표만 구분 색을 잃는다 — 테두리는 그대로 두고
    **바깥에 물빛 고리**를 두른다. 홈·일정의 '지금·다음' 과 같은 어법이다. */
-.mcard.is-on { box-shadow: var(--sh-map), 0 0 0 2px var(--route),
-  inset 0 0 0 4px var(--card),
-  inset 0 0 0 5px color-mix(in srgb, var(--ink-3) 20%, transparent); }
+.mcard.is-on { box-shadow: var(--sh-map), 0 0 0 2px var(--route); }
 /* ── 스텁 ─────────────────────────────────────────────────────────────
    ★★카드를 **입장권 스텁**으로 그린다(2026-09-06). 뜯는 쪽이 번호를 들고, 천공선이
    둘을 가른다 — 옆으로 한 장씩 넘기는 이 띠에서는 그 몸짓이 곧 종이 뭉치를 훑는
@@ -899,7 +897,7 @@ a { color: var(--route); text-underline-offset: 2px; }
    ★천공은 **점선이 아니라 구멍**이다. 파선은 잉크로 그은 선이라 '뜯는 자리' 로 안
      읽힌다 — 종이 색 동그라미를 세로로 찍어야 뚫린 줄이 된다. */
 .mcard .mcs {
-  position: relative; flex: 0 0 62px; align-self: stretch;
+  position: relative; flex: 0 0 var(--stub); align-self: stretch;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   padding: 7px 4px;
   /* ★★★스텁은 **다른 색 종이**다(2026-09-06). 레퍼런스의 표들이 하나같이 그렇다 —
@@ -925,22 +923,28 @@ a { color: var(--route); text-underline-offset: 2px; }
   color: var(--k, var(--k-etc)); white-space: nowrap;
 }
 /* 구멍은 위아래 **끝까지** 뚫린다 — 모서리를 베어 문 반원과 이어져야 한 줄이 된다 */
-/* ★★구멍을 **스텁 안쪽**으로 들여 찍는다(2026-09-06). 경계에 걸쳐 있으면 절반은
-   어두운 스텁 위, 절반은 밝은 몸통 위라 한쪽이 안 보인다 — 레퍼런스도 점선을
-   어두운 스텁 쪽에만 찍는다. 색은 몸통 종이색: 뚫어서 밝은 종이가 비친 것이다. */
+/* ★★절취선은 **파선**이다(2026-09-06). 구멍을 찍어 봤는데, 마스크로 판 반원이
+   양끝에 생기고 나니 '뜯는 자리' 라는 말은 그 반원이 이미 다 한다 — 가운데까지
+   구멍이면 두 번 말하는 것이고, 어두운 스텁 위에서 구멍은 색이 애매해진다.
+   레퍼런스도 반원 사이를 **테두리와 같은 색 파선**으로 잇는다. 그 색이 여기서는
+   구분 색이라, 테두리·파선·핀·지도의 핀이 한 색으로 묶인다. */
 .mcard .mcs::after {
-  content: ''; position: absolute; right: 3px; top: 3px; bottom: 3px; width: 4px;
-  background-image: radial-gradient(circle at 2px 3.5px, var(--card) 1.7px, transparent 1.8px);
-  background-size: 4px 7px; background-repeat: repeat-y; z-index: 2;
+  content: ''; position: absolute; right: -1px; top: 0; bottom: 0; width: 0;
+  border-left: 2px dashed var(--k, var(--k-etc)); z-index: 2;
 }
 /* 카드 위아래 모서리를 반씩 베어 문 자국 — 천공선이 종이 끝까지 이어진다 */
-/* 모서리를 베어 문 자국도 같은 자리·같은 색으로 — 구멍 줄이 종이 끝까지 이어진다 */
-.mcard::before, .mcard::after {
-  content: ''; position: absolute; left: 57px; width: 11px; height: 11px;
-  border-radius: 50%; background: var(--card); transform: translateX(-50%); z-index: 2;
+/* ★반원 넷. 절취선 위·아래와 양끝 가운데에서 **안쪽으로 볼록** 나온다.
+   ⚠ inset:0 은 테두리 **안쪽**(padding box) 기준이라, 0%/100% 가 곧 테두리의
+     안쪽 가장자리다 — 거기 중심을 두면 절반만 보여 반원이 된다.
+   ⚠ pointer-events:none — 이 겹이 카드 위를 덮으므로 안 그러면 표를 못 누른다. */
+.mcard::before {
+  content: ''; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background-image:
+    radial-gradient(circle var(--nr) at var(--stub) 0, var(--k, var(--k-etc)) 99%, #0000 100%),
+    radial-gradient(circle var(--nr) at var(--stub) 100%, var(--k, var(--k-etc)) 99%, #0000 100%),
+    radial-gradient(circle var(--nr) at 0 50%, var(--k, var(--k-etc)) 99%, #0000 100%),
+    radial-gradient(circle var(--nr) at 100% 50%, var(--k, var(--k-etc)) 99%, #0000 100%);
 }
-.mcard::before { top: -5.5px; }
-.mcard::after { bottom: -5.5px; }
 /* 몸통이 제 위아래 여백을 갖는다 — 카드에서 걷어 스텁이 끝까지 차게 했다 */
 .mcard .mcb { padding: 9px 0; }
 /* 번호는 지도의 핀과 **같은 물건**이라 같은 모양으로 그린다 */
@@ -951,25 +955,35 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--paper); border: 3px solid var(--k, var(--k-etc));
   color: var(--ink); font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
 }
-.mcard .mcb { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column;
-  gap: 3px; padding: 11px 0 12px; }
-/* 윗줄 — 언제·얼마. 둘 다 수라서 mono 로 세우고, 금액은 줄 끝에 붙는다 */
-.mcard .mct {
-  display: flex; align-items: baseline; gap: 8px; min-width: 0;
-  font-family: var(--mono); font-variant-numeric: tabular-nums;
+/* ★★몸통은 **이름표 붙은 칸 둘**이다 — 표 도안이 값을 그렇게 적는다(레퍼런스 1의
+   DATE·VENUE·ADMISSION). 칸 사이는 세로 금으로 나눈다. */
+.mcard .mcb { min-width: 0; flex: 1 1 auto; display: flex; gap: 0; padding: 10px 0 11px; }
+.mcard .mcf { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mcard .mcf.grow { flex: 1 1 auto; }
+.mcard .mcf + .mcf {
+  margin-left: 11px; padding-left: 11px;
+  border-left: 1px solid color-mix(in srgb, var(--ink-3) 22%, transparent);
 }
-.mcard .mct em {
-  flex: 0 0 auto; font-style: normal;
-  font-size: var(--t-cap); font-weight: 600; letter-spacing: .04em; color: var(--route);
+/* ★이름표. 라틴으로 두는 것은 멋이 아니라 **자간을 줄 수 있어서**다 —
+   한글은 자간을 주면 낱자가 흩어진다(이 앱이 여러 번 밟은 함정). */
+.mcard .mfl {
+  font-family: var(--mono); font-size: 8px; font-weight: 600; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ink-3); line-height: 1;
 }
-.mcard .mct i {
-  margin-left: auto; font-style: normal;
-  font-size: var(--t-meta); color: var(--ink-3); white-space: nowrap;
+.mcard .mcf em {
+  font-style: normal; font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: var(--t-read); font-weight: 600; letter-spacing: .01em; color: var(--ink);
+  line-height: 1.15;
 }
-/* 아랫줄 — 어디. 이 카드에서 제일 큰 글자다 */
-.mcard .mcp {
+.mcard .mfv { display: flex; align-items: baseline; gap: 8px; min-width: 0; line-height: 1.15; }
+.mcard .mfv b {
   min-width: 0; font-size: var(--t-read); font-weight: 700; letter-spacing: -.015em;
   color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mcard .mfv i {
+  margin-left: auto; flex: 0 0 auto; font-style: normal;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: var(--t-meta); color: var(--ink-3); white-space: nowrap;
 }
 .mcard .mca { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
 
