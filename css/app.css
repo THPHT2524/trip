@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=438') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=439') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=438') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=439') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=438') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=439') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1728,10 +1728,10 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* ★굵다. 도장은 고무판에 새겨 잉크를 묻혀 누르는 물건이라 획이 가늘 수가 없다 —
      2px 로는 인쇄한 테두리로 읽혔다. */
   border: 3px solid var(--ink-3);
-  /* ★모서리는 **왼아래 하나만** 둥글다. 넷 다 굴리면 알약처럼 반듯해지는데, 실제
-     도장은 판을 깎아 만든 물건이라 한 귀만 다르게 생긴 것이 흔하다 — 그 한 귀가
-     '찍은 것' 과 '그린 것' 을 가른다. */
-  border-radius: 0 0 0 10px;
+  /* ★모서리는 **왼위·오른아래 둘만** 둥글고 나머지 둘은 직각이다. 넷 다 굴리면
+     알약처럼 반듯해지고 하나만 굴리면 실수처럼 보인다 — 마주 보는 두 귀가
+     굴러 있으면 그것이 판을 그렇게 깎았다는 뜻이 되어 '찍은 것' 으로 읽힌다. */
+  border-radius: 10px 0 10px 0;
   color: var(--ink-3); line-height: 1.15;
   transform: rotate(-8deg);
 }
