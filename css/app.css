@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=439') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=441') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=439') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=441') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=439') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=441') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1710,7 +1710,7 @@ a { color: var(--route); text-underline-offset: 2px; }
    여태 없었다(js/crew.js 가 채운다).
    ⚠ margin-left:auto — 이름표가 안 늘어나게 바뀌면서(flex 0 1) 도장이 이름표에
      바짝 붙어 따라다녔다. 도장은 칸의 **오른쪽 끝**에 찍힌다. */
-.astamp { flex: 0 0 auto; margin-left: auto; }
+.astamp { flex: 0 0 auto; margin-left: auto; --pi: 214; }
 .astamp[hidden] { display: none; }
 /* ⚠ 색은 **구분색이 아니어야 한다.** 처음에 --k-see(관광)로 찍었는데, 이 앱은
    채도 있는 색을 장소구분 여섯에만 쓰기로 해 놓았다 — 도장은 구분이 아니다.
@@ -1726,13 +1726,17 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: flex; flex-direction: column; align-items: center;
   padding: 8px 18px 7px;
   /* ★굵다. 도장은 고무판에 새겨 잉크를 묻혀 누르는 물건이라 획이 가늘 수가 없다 —
-     2px 로는 인쇄한 테두리로 읽혔다. */
-  border: 3px solid var(--ink-3);
+     2px 로는 인쇄한 테두리로 읽혔다.
+   ★★색은 **여행마다 다른 잉크**다(--pi 는 js 가 넣는다. U.ink 참고). 테두리와 글자가
+     한 잉크로 찍히므로 currentColor 로 잇는다 — 두 곳에 같은 색을 적으면 언젠가 갈린다.
+   ⚠ 잉크가 없으면(옛 화면) --ink-3 으로 떨어진다. 색이 안 나오는 것이 안 보이는 것보다 낫다. */
+  color: hsl(var(--pi) var(--pc-s) var(--pc-l));
+  border: 3px solid currentColor;
   /* ★모서리는 **왼위·오른아래 둘만** 둥글고 나머지 둘은 직각이다. 넷 다 굴리면
      알약처럼 반듯해지고 하나만 굴리면 실수처럼 보인다 — 마주 보는 두 귀가
      굴러 있으면 그것이 판을 그렇게 깎았다는 뜻이 되어 '찍은 것' 으로 읽힌다. */
   border-radius: 10px 0 10px 0;
-  color: var(--ink-3); line-height: 1.15;
+  line-height: 1.15;
   transform: rotate(-8deg);
 }
 /* 나라 — 도장의 얼굴. 넓은 자간이 도장다움의 절반이라 **라틴 대문자**로 적는다

@@ -114,7 +114,8 @@ const Crew = (function () {
     const land = cc.length ? U.countryNameEn(cc[0]) : '';
     const day = String(trip.start_on || trip.end_on || '')
       .replace(/-/g, '.').slice(2);                                      // 26.08.29
-    return `<span>`
+    /* 잉크는 여행마다 고정 — U.ink 주석에 왜인지 적어 두었다 */
+    return `<span style="--pi: ${U.ink(trip.id)}">`
       + (land ? `<b>${esc(land)}</b>` : '')
       + `<i aria-hidden="true">✈</i>`
       + (day ? `<em>${esc(day)}</em>` : '')

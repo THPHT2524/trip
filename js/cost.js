@@ -340,9 +340,12 @@ const Cost = (function () {
     /* ⚠ 머리는 **늘 뜬다**. 항목 수와 기준은 셀 것이 있을 때만 말한다 —
        0항목이라고 적는 것은 없는 것을 세는 짓이고, 아무것도 안 환산했으면
        '원화기준' 도 할 말이 아니다. */
+    /* ⚠ 한글은 **고딕으로 싸서** 낸다. 이 줄은 등폭에 자간 .7px 인데 Plex Mono 에는
+       한글이 없어서 낱자만 대체 글꼴로 떨어지고 사이의 빈칸은 등폭 그대로였다 —
+       '26 항 목 · 원 화 기 준' 으로 벌어졌다(.ko 주석 참고. 앱에 남은 마지막 자리였다). */
     $('cost-head').innerHTML = `<span class="rnm">여행 영수증</span>
       <span class="rsb">${esc(U.range(trip.start_on, trip.end_on))}${
-        paid.length ? ` · ${paid.length}항목 · 원화기준` : ''}</span>`;
+        paid.length ? ` · ${paid.length}<i class="ko">항목</i> · <i class="ko">원화기준</i>` : ''}</span>`;
 
     /* 환율이 없어 합계에서 빠진 줄 — 감추지 않는다. 그 자리에서 채울 수 있게 한다. */
     /* 지갑에 남은 현금 — 환전을 적기 시작하면 제일 먼저 궁금해지는 숫자다 */

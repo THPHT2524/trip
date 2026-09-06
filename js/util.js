@@ -319,6 +319,21 @@ const U = (function () {
        셋만 되어도 세 번에 한 번 겹쳤다(생일 문제).
      ⚠ 목록에 없는 사람(초대에서 빠진 옛 결제)만 해시로 간다 — 색이 없느니
        겹칠 위험을 안고라도 주는 편이 낫다. */
+  /* ── 도장 잉크 ────────────────────────────────────────────────────────
+     ★★여권 도장은 나라마다·공항마다 잉크가 다르다 — 파랑이 제일 흔하고 초록·보라·
+       붉은 것도 흔하다. 한 색으로만 찍으면 여권이 아니라 서식 인쇄로 보인다.
+     ★**여행마다 고정**이다. 그릴 때마다 굴리면 새로고침할 때 색이 바뀌는데, 그건
+       랜덤이 아니라 고장으로 읽힌다. 여행 아이디에서 뽑으므로 같은 여행은 늘 같은 색이다.
+     ★색상만 다르고 채도·밝기는 사람 동그라미와 **같은 토큰**(--pc-s/--pc-l)을 쓴다 —
+       판마다 한 벌뿐이라 어느 색을 뽑아도 이 앱의 톤을 안 벗어난다. */
+  const IHUE = [214, 154, 282, 352, 190, 28];
+  function ink(seed) {
+    const t = String(seed || '');
+    let n = 0;
+    for (let i = 0; i < t.length; i += 1) n = (n * 31 + t.charCodeAt(i)) >>> 0;
+    return IHUE[n % IHUE.length];
+  }
+
   const PHUE = [210, 14, 152, 253, 42, 328, 188, 96];
   function hue(crew, userId) {
     const id = String(userId || '');
@@ -338,7 +353,7 @@ const U = (function () {
 
   return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
-           cityList, countryPicker, SETTLE, icon, hue, tripName, countryNameEn };
+           cityList, countryPicker, SETTLE, icon, hue, tripName, countryNameEn, ink };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용
