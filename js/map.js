@@ -260,23 +260,25 @@ const Maps = (function () {
            모르는 값에는 '--:--' 를 찍는다. 빈 자리는 실수처럼 보이고 찍힌 줄표는
            '아직 안 정했다' 로 읽힌다. -->
       <span class="mcb">
-        <span class="mcf">
+        <!-- ★단추는 **윗줄 맨 오른쪽**이다(2026-09-06). 옆에 세워 두었더니 이름이
+             그만큼 짧아졌는데, 이름은 이 표에서 제일 긴 값이라 제 줄을 통째로
+             써야 한다. 시각은 다섯 글자뿐이라 그 줄에 자리가 남는다. -->
+        <span class="mcr">
           <span class="mfl">Time</span>
           <em>${t ? esc(t) : '--:--'}</em>
+          <!-- 일정 탭과 같은 어법: 동그란 판 위의 그림. 뜻은 aria-label 이 진다.
+               🧭 는 길을 찾아 나가는 것, 🗓 는 앱 안의 일정으로 돌아가는 것이다. -->
+          <span class="mca">
+            <a class="act" href="${esc(url)}" target="_blank" rel="noopener"
+               aria-label="길찾기"><span aria-hidden="true">🧭</span></a>
+            <button class="act" type="button" data-go="${esc(r.id)}"
+               aria-label="일정에서 보기"><span aria-hidden="true">🗓️</span></button>
+          </span>
         </span>
-        <span class="mcf grow">
+        <span class="mcr">
           <span class="mfl">Place</span>
-          <span class="mfv"><b>${esc(r.name)}</b>${
-            cost ? `<i>${esc(cost)}</i>` : ''}</span>
+          <b>${esc(r.name)}</b>${cost ? `<i>${esc(cost)}</i>` : ''}
         </span>
-      </span>
-      <!-- 일정 탭과 같은 어법: 동그란 판 위의 그림. 뜻은 aria-label 이 진다.
-           🧭 는 길을 찾아 나가는 것, 🗓 는 이 앱 안의 일정으로 돌아가는 것이다. -->
-      <span class="mca">
-        <a class="act" href="${esc(url)}" target="_blank" rel="noopener"
-           aria-label="길찾기"><span aria-hidden="true">🧭</span></a>
-        <button class="act" type="button" data-go="${esc(r.id)}"
-           aria-label="일정에서 보기"><span aria-hidden="true">🗓️</span></button>
       </span>
     </article>`;
   }
