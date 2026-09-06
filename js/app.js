@@ -29,7 +29,9 @@
   const esc = U.esc;
   const fmtSpan = U.span;
 
-  /* 진행 중 · 예정 · 지난 것. 날짜가 없는 여행은 '예정' 쪽에 둔다(아직 안 정한 것이지 지난 것이 아니다). */
+  /* 진행 중 · 예정 · 지난 것. 날짜가 없는 여행은 '예정' 쪽에 둔다(아직 안 정한 것이지 지난 것이 아니다).
+     ★목록을 **나누는 데는 안 쓴다**(2026-09-07부터 전부 연도별이다). 줄 하나가
+       어떤 얼굴을 할지만 정한다: 진행 중이면 코발트 띠, 예정이면 D-n. */
   function phase(t) {
     const now = U.todayISO();
     if (t.start_on && t.end_on) {
@@ -174,25 +176,27 @@
     $('citylist').innerHTML = [...seen].sort()
       .map(c => `<option value="${esc(c)}"></option>`).join('');
 
-    const group = { now: [], soon: [], past: [] };
-    trips.forEach(t => group[phase(t)].push(t));
-
-    /* ★★지난 여행을 **해마다** 나눈다. 스물넷이 한 덩어리로 3,000px 서 있으면
-       '작년에 어디 갔더라' 를 찾을 방법이 없다 — 연도가 이 목록의 자연스러운 눈금이다.
+    /* ★★여행을 **해마다** 나눈다. 서른여덟이 한 덩어리로 서 있으면 '작년에 어디
+       갔더라' 를 찾을 방법이 없다 — 연도가 이 목록의 자연스러운 눈금이다.
        ★나뉘고 나면 카드에서 연도를 뺄 수 있다(머리띠가 이미 말한다) — 같은 말을
-         스물네 번 되풀이하지 않는다.
-       ★지금·예정은 안 나눈다. 앞으로의 것은 몇 개 안 되고, 나누면 오히려 흩어진다. */
-    let html = '';
-    if (group.now.length) html += section('지금', group.now, 'now', false);
-    if (group.soon.length) html += section('예정', group.soon, 'soon', false);
+         서른여덟 번 되풀이하지 않는다.
+     ★★'지금' · '예정' 띠를 걷었다(2026-09-07). 앞으로의 것도 **연도 안에** 넣는다.
+       띠 둘이 한 해를 세 조각으로 갈라 놓고 있었는데, 그 셋 중 둘은 대개 한 줄짜리라
+       머리띠가 줄보다 큰 꼴이었다 — 게다가 오늘 떠난 여행과 나흘 뒤 떠날 여행이
+       같은 2026년인데 서로 다른 구역에 서서, 연도 띠의 '4 TIMES 24 DAYS' 가
+       그 둘을 안 세는 수가 됐다.
+     ★그 자리를 대신하는 것은 **줄 자신**이다: 진행 중인 여행 한 줄만 코발트 띠를
+       두르고 바탕이 밝다(.is-now). 나머지는 상태 조각(D-4)이 말한다 —
+       구역을 나누지 않아도 눈이 먼저 그 줄에 앉는다. */
     const byYear = new Map();
-    group.past.forEach(t => {
+    trips.forEach(t => {
       const y = (t.end_on || t.start_on || '').slice(0, 4) || '언젠가';
       if (!byYear.has(y)) byYear.set(y, []);
       byYear.get(y).push(t);
     });
+    let html = '';
     [...byYear.keys()].sort().reverse().forEach(y => {
-      html += section(y, byYear.get(y), 'past', y !== '언젠가');
+      html += section(y, byYear.get(y), y !== '언젠가');
     });
     /* ★판은 **하나**다. 해마다 상자를 따로 두면 안내판 여러 개가 쌓인 것처럼 보인다 —
        연도 띠는 그 한 판 안의 구역 머리다.
@@ -246,7 +250,9 @@
   /* ★한 해를 **한 상자**로 묶는다. 머리띠가 sticky 인데 상자가 없으면 형제끼리
      같은 자리(top: --h-top)에 겹쳐 붙는다 — 2026 과 2025 가 한 줄에 포개졌다
      (2026-09-03). 상자가 있으면 제 구간이 지나갈 때 다음 해가 밀어낸다. */
-  function section(title, list, ph, bare) {
+  /* ⚠ ph 를 안 받는다 — 줄마다 제 날짜로 phase 를 다시 잰다(구역이 없어졌으므로).
+     같은 해 안에 진행 중인 것과 지난 것이 섞여 서기 때문이다. */
+  function section(title, list, bare) {
     const days = list.reduce((a, t) => a + U.tripDays(t), 0);
     /* ★그 해가 얼마였는지도 **쪽자로 센다**(2026-09-04). '여행 4 · 24일' 은 글이었고,
        판 위에서 혼자 글이면 거기만 딴 물건으로 보인다. 수는 칸에, 이름은 옆에 작게 —
@@ -258,7 +264,7 @@
          + `<h2 class="grouphd${bare ? ' year' : ''}">`
          + `<span class="gt">${bare ? cells(title) : esc(title)}</span>`
          + `<span class="gn">${gn}</span></h2>`
-         + list.map(t => card(t, ph)).join('')
+         + list.map(t => card(t, phase(t))).join('')
          + `</section>`;
   }
 
@@ -587,8 +593,12 @@
      그 빈 칸들이 판을 판으로 보이게 한다 — 진짜 판이 그렇게 생겼다.
    ★칸은 묶음마다 센다. 묶음 사이는 빈 칸이 아니라 **틈**이라, 한 줄이 하나의
      격자가 아니라 따로 걸린 판 여럿이다(css 의 .tg 참고).
-     윗줄: 날짜 11(08.29-08.31) · 국가코드 3(ES,PT,QA 가 최대) · 며칠 2 · 몇 곳 3 */
-  const DATE_COLS = 11, CC_COLS = 3;
+     윗줄: 날짜 11(08.29-08.31) · 국가코드 2 · 며칠 2 · 몇 곳 3
+   ★★국가코드도 **두 칸**이다(2026-09-07, 셋이었다). 아랫줄 국기판이 이미 두 장이라
+     — 나라 셋짜리 여행이 서른여덟 중 하나뿐이라 셋째 칸이 그만큼 비어 있었다 —
+     윗줄만 셋이면 같은 것을 세는 두 칸이 서로 다른 폭으로 선다. 셋째 나라는 두
+     줄 다 안 적히고, 그건 여행 설정에 그대로 남아 있다. */
+  const DATE_COLS = 11, CC_COLS = 2;
   /* ★국기판은 **늘 두 장**(자리 고정), 이름은 늘 열여섯 칸(칸 폭은 css 가 화면에 맞춰 나눈다).
      자리를 고정하는 것은 줄마다 이름이 같은 데서 시작하게 하려는 것이니 못 박되,
      ★세 장은 너무 컸다 — 가로판 셋이 88px, 줄의 28% 였다(2026-09-04 아이폰 실물).
@@ -680,23 +690,16 @@
         : '<span class="md is-empty"></span>';
     }).join('')}</span>` : '';
 
-    /* ★상태 칸을 따로 세웠다가 뺐다(2026-09-04). 지난 여행에는 쓸 말이 없어서 서른여덟
-       중 서른다섯이 빈칸이었다 — 한 번도 안 차는 칸은 판이 아니라 구멍이다.
-       떠날 때까지 며칠·며칠차만 **날짜 밑에** 되돌린다. */
-    let st = '', stOn = '';
-    if (phase === 'soon' && t.start_on) {
-      const n = Math.ceil((Date.parse(t.start_on) - Date.parse(U.todayISO())) / DAYMS);
-      st = n > 0 ? `D-${n}` : 'D-DAY';
-    } else if (phase === 'now' && t.start_on) {
-      st = `${Math.floor((Date.parse(U.todayISO()) - Date.parse(t.start_on)) / DAYMS) + 1}일차`;
-      stOn = ' on';
-    }
-
+    /* ★상태 칸을 따로 세웠다가 뺐고(2026-09-04), 날짜 옆에 되돌렸던 조각(D-4 · 1일차)도
+       뺐다(2026-09-07). 서른여덟 줄 중 둘에만 뜨는 값이라 그 둘만 다른 짜임이 됐고,
+       정작 말하려던 '이게 지금 그 여행이다' 는 코발트 띠가 이미 하고 있었다 —
+       같은 말을 두 가지 물건으로 하면 줄이 흔들린다. */
     /* ★단추의 **이름을 따로 준다**. 안 주면 낭독기가 칸 마흔 개를 이어 붙여
        '02.14-02.21US8days2places US하와이' 로 읽는다 — 판은 눈으로 보는 물건이고,
        귀로 듣는 사람에게는 한 문장이어야 한다. 칸들은 통째로 감춘다(aria-hidden). */
     const say = [esc(t.name), t.start_on ? U.md(t.start_on) + (t.end_on ? ' ~ ' + U.md(t.end_on) : '') : '',
-                 nDays ? nDays + '일' : '', stops.length ? stops.length + '곳' : '', st]
+                 nDays ? nDays + '일' : '', stops.length ? stops.length + '곳' : '',
+                 phase === 'now' ? '지금 가 있는 여행' : '']
                 .filter(Boolean).join(', ');
     const cc = codeChars(t.country);
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button"
@@ -704,13 +707,7 @@
       <span class="ttop" aria-hidden="true">
         <span class="tg">${row([[0, t.start_on
           ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt']], DATE_COLS)}</span>
-        <!-- ★★상태가 있는 줄은 **빈 코드 칸을 안 깐다**(2026-09-07). CC_COLS 는 나라가
-             셋까지 오는 것에 맞춰 잡아 둔 자리라 나라 하나짜리 줄에는 빈 칸이 둘 남는데,
-             그 자리가 곧 상태 조각이 설 자리다. 안 걷었더니 '지금' 줄이 21px 넘쳐
-             PLACES 가 화면 밖으로 잘렸다(실측). 며칠·몇 곳은 margin-left:auto 로
-             오른쪽에 붙으므로, 이 칸이 좁아져도 그 둘은 제 기둥에 그대로 선다. -->
-        <span class="tg tcc">${row([[0, cc, 'cc']], st ? Math.max(1, cc.length) : CC_COLS)}</span>
-        ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
+        <span class="tg tcc">${row([[0, cc, 'cc']], CC_COLS)}</span>
         <span class="tnum">${row([['r', nDays || '', 'dy']], 2)}<em>days</em></span>
         <span class="tnum">${row([['r', stops.length || '', 'st']], 3)}<em>places</em></span>
       </span>
