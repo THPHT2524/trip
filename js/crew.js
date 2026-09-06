@@ -67,7 +67,6 @@ const Crew = (function () {
       .forEach(id => { $(id).disabled = !owner; });
     SETPICK.disable(!owner);
     $('set-del').hidden = !owner;
-    $('set-danger').hidden = !owner;
     $('set-note').textContent = owner ? '' : '여행을 만든 사람만 고칠 수 있습니다.';
 
     /* 서식 번호 자리 — 나라와 떠난 해. 안내판이 날짜 옆에 다는 항공사 코드와 같은 것이다. */
@@ -144,7 +143,10 @@ const Crew = (function () {
   });
 
   $('set-del').addEventListener('click', async () => {
-    if (!confirm(`'${trip.name}' 여행을 지울까요?\n일정과 비용이 전부 함께 지워지고 되돌릴 수 없습니다.`)) return;
+    /* ★★경고문을 **단추 밑에서 걷어 확인 창으로 옮겼다**(2026-09-06). 늘 떠 있을
+       때는 아무도 안 지우는 동안에도 '되돌릴 수 없습니다' 가 판 발치에 상주했는데,
+       그 말이 필요한 순간은 누른 뒤 한 번뿐이다. 여기서는 안 읽고 지나갈 수 없다. */
+    if (!confirm(`'${trip.name}' 여행을 지울까요?\n\n여행을 지우면 일정과 비용이 전부 함께 지워지고 되돌릴 수 없습니다.`)) return;
     try {
       await DB.trips.remove(trip.id);
       document.dispatchEvent(new CustomEvent('trip:deleted'));
