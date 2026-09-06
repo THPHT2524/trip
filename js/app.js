@@ -698,12 +698,18 @@
     const say = [esc(t.name), t.start_on ? U.md(t.start_on) + (t.end_on ? ' ~ ' + U.md(t.end_on) : '') : '',
                  nDays ? nDays + '일' : '', stops.length ? stops.length + '곳' : '', st]
                 .filter(Boolean).join(', ');
+    const cc = codeChars(t.country);
     return `<button class="trip${phase === 'now' ? ' is-now' : ''}" type="button"
       data-id="${esc(t.id)}" aria-label="${esc(say)}">
       <span class="ttop" aria-hidden="true">
         <span class="tg">${row([[0, t.start_on
           ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt']], DATE_COLS)}</span>
-        <span class="tg tcc">${row([[0, codeChars(t.country), 'cc']], CC_COLS)}</span>
+        <!-- ★★상태가 있는 줄은 **빈 코드 칸을 안 깐다**(2026-09-07). CC_COLS 는 나라가
+             셋까지 오는 것에 맞춰 잡아 둔 자리라 나라 하나짜리 줄에는 빈 칸이 둘 남는데,
+             그 자리가 곧 상태 조각이 설 자리다. 안 걷었더니 '지금' 줄이 21px 넘쳐
+             PLACES 가 화면 밖으로 잘렸다(실측). 며칠·몇 곳은 margin-left:auto 로
+             오른쪽에 붙으므로, 이 칸이 좁아져도 그 둘은 제 기둥에 그대로 선다. -->
+        <span class="tg tcc">${row([[0, cc, 'cc']], st ? Math.max(1, cc.length) : CC_COLS)}</span>
         ${st ? `<em class="tsx${stOn}">${esc(st)}</em>` : ''}
         <span class="tnum">${row([['r', nDays || '', 'dy']], 2)}<em>days</em></span>
         <span class="tnum">${row([['r', stops.length || '', 'st']], 3)}<em>places</em></span>

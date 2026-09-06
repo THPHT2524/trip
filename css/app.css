@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=427') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=430') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=427') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=430') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=427') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=430') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -814,8 +814,10 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* ★안내문도 지도 위로. 좌표 없는 일정이 있을 때만 뜨는 줄이라 늘 자리를 비워 둘 것이 없다. */
 /* ★안내문은 **조각**이다. 폭을 다 쓰는 띠였을 때는 늘 떠서 지도를 가렸다 —
    지도 위에 뜨는 것은 지도만큼 중요할 때만 그럴 자격이 있다.
-   카드 띠가 있으면 그 위, 없으면 바닥에 앉는다. */
-.mapwrap:has(#mstrip:not([hidden])) .note { bottom: 121px; }
+ ⚠ 자리는 **js 의 placeTabs 가 정한다**(띠·날짜탭·안내문을 아래에서부터 쌓는다).
+   여기 있던 `:has(#mstrip:not([hidden]))` 규칙이 그 셈을 두 곳으로 갈라 놓았고,
+   띠가 없는 여행에서 날짜탭과 안내문이 같은 자리에 앉아 겹쳤다(2026-09-07).
+   아래 bottom 은 js 가 재기 전 첫 페인트용 어림값이다. */
 .mapwrap .note {
   position: absolute; left: 10px; max-width: calc(100% - 20px); bottom: 10px; z-index: 2;
   margin: 0; padding: 5px 9px;
@@ -2198,13 +2200,16 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 .trip .ttop i.dy, .trip .ttop i.st { color: var(--ink-2); }
 /* 상태 — 안내판의 '지연 · 결항 · 도착' 자리. 지난 여행은 빈칸이다. */
 /* 떠날 때까지 며칠 · 며칠차 — 날짜 밑에 붙는다. 지난 여행에는 없다. */
+/* ⚠ flex: 0 0 100% 이었다. 이 줄은 **줄바꿈이 없는** flex 라(.ttop 은 nowrap)
+   100% 를 잡으면 남는 자리를 통째로 먹고 며칠·몇 곳을 화면 밖으로 밀어낸다 —
+   '예정' 줄에서 실제로 그 둘이 사라져 있었다(2026-09-07). 제 글자만큼만 든다. */
 .trip .tsx {
-  flex: 0 0 100%; font-style: normal; margin-top: 2px;
+  flex: 0 0 auto; font-style: normal;
   font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
-  letter-spacing: .04em; color: var(--route);
+  letter-spacing: .04em; color: var(--route); white-space: nowrap;
 }
 .trip .tsx.on { color: var(--paper); background: var(--route);
-  border-radius: var(--r-xs); padding: 1px 4px; flex: 0 0 auto; }
+  border-radius: var(--r-xs); padding: 1px 4px; }
 
 /* 나라 = 항공사 로고 자리. 이름 앞에 서서 그 여행의 표지가 된다.
    국기를 못 그리는 기계에서는 두 글자가 한 칸에 들어가므로 글자를 줄인다. */

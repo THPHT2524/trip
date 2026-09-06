@@ -366,13 +366,23 @@ const Maps = (function () {
      (실제로 겹쳤다). 띠의 높이를 재서 그 위에 올린다 — 카드가 어떻게 바뀌든 따라온다.
      ★fitPad 가 이 탭의 top 을 읽어 지도의 아래 여백을 낸다. 그래서 **자리를 잡은
        뒤에** 여백을 다시 재야 지도가 카드에 안 가린다. */
-  const STRIP_GAP = 6;             // 띠와 탭 사이
+  const STRIP_GAP = 6;             // 겹 사이
+  const EDGE = 4;                  // 지도 바닥에서 첫 겹까지
+  /* ★★지도 위에 뜨는 것 셋을 **한 곳에서 쌓는다**(2026-09-07). 띠·날짜탭·안내문이
+     저마다 제 bottom 을 갖고 있었는데, 띠가 없는 여행(좌표가 하나도 없는 여행)에서는
+     띠 높이가 0 이라 날짜탭과 안내문이 **둘 다 bottom:10px** 에 앉아 정확히 겹쳤다
+     (실측: 둘 다 741~786). 셋의 높이는 내용에 따라 달라지므로 css 로는 못 쌓는다 —
+     아래에서 위로 차례대로 올린다: 띠 → 날짜탭 → 안내문.
+   ⚠ 안내문의 bottom 을 css 가 아니라 여기서 정한다. css 에 남겨 두면 두 곳이 같은
+     값을 각자 셈하게 되고, 그래서 위 사고가 났다. */
   function placeTabs() {
     const st = $('mstrip'), nav = $('mapdays');
-    if (nav.hidden) return;
-    const h = st.hidden ? 0 : st.offsetHeight;
-    const bottom = parseFloat(getComputedStyle(st).bottom) || 0;
-    nav.style.bottom = (h + bottom + STRIP_GAP) + 'px';
+    const note = document.querySelector('.mapwrap .note');
+    let y = EDGE;
+    if (st && !st.hidden) { st.style.bottom = y + 'px'; y += st.offsetHeight + STRIP_GAP; }
+    if (nav && !nav.hidden) { nav.style.bottom = y + 'px'; y += nav.offsetHeight + STRIP_GAP; }
+    /* 빈 안내문은 css 가 display:none 으로 접는다 — 접힌 것에 자리를 주지 않는다 */
+    if (note && note.textContent.trim()) note.style.bottom = y + 'px';
   }
 
   function fitPad() {
@@ -450,6 +460,8 @@ const Maps = (function () {
       map.jumpTo({ center: [127.9, 36.5], zoom: 5 });      // 아무것도 없으면 한반도 전체
       note.textContent = '이 여행에는 좌표가 있는 일정이 없습니다 — 구글맵 링크를 붙이면 여기에 찍힙니다';
     }
+    /* 안내문이 생겼거나 사라졌으므로 위에 얹힌 것들을 다시 쌓는다 */
+    placeTabs();
     /* 탭이 숨어 있는 동안 만들어진 지도는 크기를 0 으로 안다.
        보이게 된 뒤에 한 번 알려 줘야 타일이 제자리에 깔린다. */
     setTimeout(() => map.resize(), 0);
