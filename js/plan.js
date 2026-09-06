@@ -87,6 +87,25 @@ const Plan = (function () {
     $('if-when-wrap').hidden = kid;
     $('if-name-lbl').textContent = kid ? '항목' : '장소명';
     $('if-name').placeholder = kid ? '술값' : '오사카성';
+
+    /* ★★환전에는 **적을 이름이 없다**(2026-09-06). 서른여덟 여행의 환전 넉 줄이 다
+       '환전' 이었다 — 늘 같은 말을 손으로 적게 하느니 칸을 걷고 저장할 때 넣는다.
+       비고 나면 맨 윗줄이 통째로 남으므로, 그 자리를 **제일 먼저 적을 값**에 준다:
+       받은 금액과 그 통화다. 둘은 한 짝이라 늘 붙어 다녀야 한다 — 통화를 아랫줄에
+       두면 원화로 고정인 지출금액 옆에 서서 그 칸의 통화처럼 읽힌다.
+     ⚠ required 도 같이 풀어야 한다. 감춘 칸이 required 로 남아 있으면 브라우저가
+       보이지도 않는 칸을 가리키며 submit 을 막는다(그리고 아무 말도 안 보인다). */
+    const tr = $('if-title-row'), mr = $('if-money-row');
+    $('if-name-wrap').hidden = ex;
+    $('if-name').required = !ex;
+    if (ex) {
+      tr.appendChild($('if-cost-wrap'));
+      tr.appendChild($('if-cur-wrap'));
+    } else if ($('if-cost-wrap').parentElement !== mr) {
+      /* 제자리로 — 차례가 곧 이 줄의 뼈대다(단가·갯수·통화·승인금액·지출금액) */
+      ['if-cost-wrap', 'if-qty-wrap', 'if-cur-wrap', 'if-apv-wrap', 'if-krw-wrap']
+        .forEach(id => mr.appendChild($(id)));
+    }
     /* ★★장소를 넣을 때는 돈을 묻지 않는다 — 결제는 저장한 뒤 따로 붙인다.
        한 자리에서 결제가 둘 이상인 일이 흔한데, 첫 결제만 장소 줄에 얹으면
        같은 것이 두 곳에 살게 된다. 옛 줄(금액이 얹힌 것)은 고칠 수 있어야 하므로 편다. */
@@ -288,32 +307,43 @@ const Plan = (function () {
     /* ★결제가 여럿인 자리는 **그 자리의 합**을 적는다. 공항에서 항공권과 환전을 따로
        넣었더니 장소 줄에는 아무 금액도 안 남았다 — ₩462,498 을 쓴 자리가 빈 줄로 보였다.
        (환전은 지출이 아니라 지갑에 넣는 것이라 합계에서 빠진다 — p.spend 가 가른다) */
-    /* ★★목록에는 **적은 그대로**만 보인다. 엔으로 넣었으면 엔만 — 원화 환산은
-       한 줄마다 붙으면 숫자가 두 배가 되는데, 그 자리에서 알고 싶은 것은 '얼마 냈나' 이지
-       '원으로 얼마인가' 가 아니다. 원화는 셈이 필요한 곳에만 둔다:
-       하루 띠·비용 탭·통화가 섞인 자리 합계. 시트의 계산 힌트에도 그대로 남는다. */
+    /* ★★**줄에는 적은 그대로, 발치 합계는 늘 원화.** 낱낱의 결제 줄은 엔으로 넣었으면
+       엔으로 선다 — 그 자리에서 알고 싶은 것은 '얼마 냈나' 이지 '원으로 얼마인가' 가
+       아니고, 줄마다 원화를 붙이면 숫자가 두 배가 된다.
+     ★★합계의 통화는 **더한 것들이 정한다**(2026-09-06). 그 자리에서 엔으로만 썼으면
+       합계도 엔이다 — 낱낱이 다 ¥ 인데 합만 ₩ 로 서면, 위의 수들과 견줄 수가 없어서
+       더한 값이 맞는지를 눈으로 못 짚는다. 통화가 섞였을 때만 원화로 모은다:
+       그때는 어느 통화로도 못 적으니 정산 통화가 유일한 공통분모다. */
     const cost = (() => {
       if (kids.length) {
-        /* 자리 합계 — 다 같은 통화면 **그 통화로** 낸다. 섞였을 때만 원화로 모은다. */
         const paid = [r, ...kids].filter(x => { const p = M.per.get(x.id); return p && p.spend; });
-        if (!paid.length) return '';
-        /* '합' 은 **둘 이상**일 때만 붙인다 — 결제가 하나뿐인데 '합' 이라고 하면
-           무엇을 더한 것인지 되묻게 된다. 그냥 그 자리에서 쓴 돈이다. */
+        /* ★★한 건이면 **아무것도 안 낸다**(2026-09-06). 합계는 더한 수인데 더할 것이
+           하나면 바로 위 줄을 옮겨 적는 일밖에 안 된다 — 이름표만 떼고 수를 남겨
+           두었더니 같은 금액이 한 자리에 두 번 섰다. 그 한 줄의 원화가 궁금하면
+           비용 탭이 그 일을 한다. */
+        if (paid.length < 2) return '';
         /* ⚠ 한글은 **고딕으로 싸서** 낸다. 이 칸은 등폭인데 Plex Mono 에는 한글이
            없어서 낱자만 대체 글꼴로 떨어지고 사이의 빈칸은 등폭 그대로였다 —
            600/1000 짜리 넓은 빈칸이 껴서 '합 계' 로 벌어졌다(.badge 와 같은 병). */
-        const lbl = paid.length > 1 ? '<i class="ko">합계</i> ' : '';
+        const lbl = '<i class="ko">합계</i> ';
+        /* 한 통화로만 썼으면 그 통화로 — 환산이 끼지 않으므로 '+n건' 도 없다 */
         const curs = new Set(paid.map(x => x.cost_cur));
         if (curs.size === 1 && paid.every(x => x.cost != null)) {
           const one = paid.reduce((a, x) => a + (+x.cost || 0), 0);
           return `<span class="money">${lbl}${esc(U.money(one, paid[0].cost_cur))}</span>`;
         }
+        /* 섞였다 — 원화로 모은다. 환율이 없어 못 옮긴 줄은 **빼고 세되 몇 건인지
+           말한다**: 조용히 빠지면 합계가 틀린 채로 맞아 보인다. */
         let sum = 0, miss = 0;
         paid.forEach(x => { const p = M.per.get(x.id);
           if (p.krw == null) miss += 1; else sum += p.krw; });
         return `<span class="money">${lbl}${esc(U.money(sum, U.SETTLE))}${
           miss ? ` <span class="warn">+${miss}건</span>` : ''}</span>`;
       }
+      /* 옛 줄 — 장소에 금액이 얹혀 있는 것(지금 방식으로는 안 생긴다. 서른여덟 여행에
+         한 줄도 없다). 딸린 결제 줄이 없어 **여기 말고는 그 돈이 설 자리가 없으므로**
+         한 건이어도 낸다 — 위의 '한 건이면 안 낸다' 는 옮겨 적기를 막는 규칙이지
+         돈을 감추는 규칙이 아니다. 한 건이니 통화도 적은 그대로다. */
       if (r.cost == null) return '';
       return `<span class="money">${esc(U.money(r.cost, r.cost_cur))}</span>`;
     })();
@@ -532,7 +562,8 @@ const Plan = (function () {
       on_date: par ? par.on_date : $('if-date').value,
       at_time: par ? par.at_time : ($('if-time').value || null),
       kind: par ? par.kind : $('if-kind').value,
-      name: $('if-name').value,
+      /* 환전은 이름 칸이 없다 — 늘 같은 말이라 여기서 넣는다(위 drawSettle 참고) */
+      name: settle === 'exchange' ? '환전' : $('if-name').value,
       memo: $('if-memo').value,
       map_url: $('if-link').value,
       lat: $('if-lat').value, lng: $('if-lng').value,

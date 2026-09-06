@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=406') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=411') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=406') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=411') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=406') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=411') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1674,8 +1674,9 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 /* ★이 앱에서 제일 많이 눌리는 것인데 75×34 였다(2026-09-02). 그런데 body 는 이미
    58px 을 비워 두고 있었다 — 바는 34px 이라 **24px 이 놀고 있었다.** 그 자리를 단추에
    준다. 비워 둔 넓이도, 화면에 보이는 바의 자리도 그대로다(48 < 58). */
-/* ★두 줄이다: 한글이 크고 라틴이 작다 — 신고서 칸 이름표와 같은 어법.
-   48px 안에 12 + 3(틈) + 8 = 23px 이라 위아래로 12px 씩 남는다. */
+/* ★두 층이다: 그림 위에 한글. 48px 안에 20 + 3(틈) + 12 = 35px 이라
+   위아래로 6px 남는다. 그림과 글자가 **같은 색**을 타므로(currentColor)
+   고른 칸 규칙 하나가 둘을 같이 올린다. */
 .tabs button {
   flex: 1; appearance: none; border: 0; background: none; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1687,18 +1688,12 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 .tabs button > span {
   font-size: var(--t-cap); font-weight: 700; letter-spacing: 0; line-height: 1;
 }
-/* ⚠ 자간은 **라틴에만**. 한글에 주면 낱자가 흩어진다(이 앱이 여러 번 밟은 함정) */
-.tabs button > em {
-  font-style: normal; font-family: var(--mono);
-  font-size: var(--t-unit); font-weight: 500; letter-spacing: .12em; line-height: 1;
-  text-transform: uppercase; color: var(--ink-3);
-}
+/* ★정거장 줄의 그림(15px)보다 크다 — 저건 줄에 곁들이는 것이고 이건 이 칸의 얼굴이다 */
+.tabs .ic { width: 20px; height: 20px; display: block; }
 .tabs button[aria-selected="true"] {
   color: var(--ink);
   border-top-color: var(--route);
 }
-/* 고른 칸에서는 라틴도 한 단 올라온다 — 안 그러면 아랫줄만 남의 것처럼 흐리다 */
-.tabs button[aria-selected="true"] > em { color: var(--ink-2); }
 
 /* Day 탭 — 일정 화면에서만. 트리플처럼 날짜를 빠르게 옮긴다 */
 .daytabs {

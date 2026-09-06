@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=406">
+<link rel="stylesheet" href="/css/app.css?v=411">
 </head>
 <body>
 
@@ -323,8 +323,12 @@
             <p class="hint" id="if-geo">좌표 없음 — 지도와 거리 표시에서 빠집니다</p>
           </div>
 
-          <div class="row">
-            <div class="field"><label for="if-name" id="if-name-lbl">장소명</label>
+          <!-- ★★환전일 때는 이 줄에 **받은 금액과 통화**가 들어온다(js/plan.js 의
+               drawSettle 이 옮긴다). 환전에는 적을 이름이 없다 — 서른여덟 여행의
+               환전 넉 줄이 다 '환전' 이었다. 이름 칸을 비워 두느니 그 자리를
+               제일 먼저 적을 값에 준다. -->
+          <div class="row" id="if-title-row">
+            <div class="field" id="if-name-wrap"><label for="if-name" id="if-name-lbl">장소명</label>
               <input id="if-name" type="text" required maxlength="80" placeholder="오사카성"></div>
             <div class="field kind" id="if-kind-wrap"><label for="if-kind">구분</label>
               <select id="if-kind"></select></div>
@@ -354,8 +358,8 @@
             </div>
           </div>
 
-          <div class="row tight">
-            <div class="field"><label for="if-cost" id="if-cost-lbl">단가</label>
+          <div class="row tight" id="if-money-row">
+            <div class="field" id="if-cost-wrap"><label for="if-cost" id="if-cost-lbl">단가</label>
               <input id="if-cost" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
             <div class="field unit" id="if-qty-wrap"><label for="if-qty" id="if-qty-lbl">갯수</label>
               <input id="if-qty" type="number" inputmode="numeric" step="1" min="1" class="mono" placeholder="1"></div>
@@ -370,7 +374,8 @@
                  사람이 아는 것은 비율이 아니라 결제 알림에 찍힌 그 금액이다. -->
             <div class="field unit" id="if-apv-wrap"><label for="if-apv">승인금액</label>
               <input id="if-apv" type="number" inputmode="numeric" step="1" min="0" class="mono"></div>
-            <div class="field unit" id="if-krw-wrap" hidden><label for="if-krw">낸 원화</label>
+            <!-- 이 칸은 환전에서만 뜬다 — 지갑에 넣느라 실제로 나간 원화다 -->
+            <div class="field unit" id="if-krw-wrap" hidden><label for="if-krw">지출금액</label>
               <input id="if-krw" type="number" inputmode="decimal" step="any" min="0" class="mono"></div>
           </div>
 
@@ -414,45 +419,41 @@
 
 
 <!-- ── 아래 탭 ────────────────────────────────────────────────────────────
-     ★★한글 아래 라틴을 작게 단다(2026-09-06) — 신고서 칸 이름표·시트 머리말과
-       **같은 어법**이다. 이 앱은 그림이 아니라 글자로 말하는 물건이라(안내판·
-       영수증·서식이 다 활자다) 여기에 그림 넷을 새로 들이면 다섯째 언어가 된다.
-     ★라틴은 앱 용어가 아니라 **그 화면이 무슨 종이인지**를 적는다: 일정은 여정표,
-       비용은 영수증. 그래서 이 줄이 여행 지갑의 간지 이름표처럼 읽힌다.
-     ★지도만 MAP 이다 — 카드는 티켓 꼴이지만 화면 자체는 지도다. 컨셉에 맞추자고
-       ROUTE 라 적으면 없는 것을 가리키게 된다.
-     ★설정은 TRIP — 나머지 셋이 '여행에 대한 것' 이라면 여기는 여행 그 자체
-       (이름·나라·기간·동행)를 적는 자리다. 종이 이름은 그 판의 머리가 말한다. -->
+     ★★그림 위에 한글(2026-09-06). 라틴 이름표를 달았다가 걷었다 — 글자로 두면
+       이름을 **지어내야** 하는데, 지도는 티켓 꼴이면서 화면은 지도이고 설정은
+       신고서라 어느 낱말도 딱 맞지 않아서 넷 다 어정쩡한 이름이 됐다.
+     ★그림은 **그 화면이 무슨 종이인지**를 그린다: 노선도 · 접힌 지도 · 영수증 ·
+       신고서. 이름을 안 지어도 되고, 마침 이 앱의 네 컨셉이 다 모양이 뚜렷한
+       물건이라 그릴 것이 있다.
+     ★그림은 js/util.js 의 U.ICON 이 갖고 app.js 가 넣는다 — 정거장 줄의 그림 여섯과
+       **같은 자리에 모아 둔다**(같은 규격, 같은 currentColor). 여기 인라인으로 적으면
+       그림 언어가 두 곳으로 갈린다. -->
 <nav class="tabs" id="tabs" role="tablist" aria-label="화면" hidden>
-  <button type="button" role="tab" data-tab="plan" aria-selected="true"
-    ><span>일정</span><em>Itinerary</em></button>
-  <button type="button" role="tab" data-tab="map"  aria-selected="false"
-    ><span>지도</span><em>Map</em></button>
-  <button type="button" role="tab" data-tab="cost" aria-selected="false"
-    ><span>비용</span><em>Receipt</em></button>
-  <button type="button" role="tab" data-tab="info" aria-selected="false"
-    ><span>설정</span><em>Trip</em></button>
+  <button type="button" role="tab" data-tab="plan" aria-selected="true"><span>일정</span></button>
+  <button type="button" role="tab" data-tab="map"  aria-selected="false"><span>지도</span></button>
+  <button type="button" role="tab" data-tab="cost" aria-selected="false"><span>비용</span></button>
+  <button type="button" role="tab" data-tab="info" aria-selected="false"><span>설정</span></button>
 </nav>
 
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=406"></script>
-<script src="/js/map-config.js?v=406"></script>
-<script src="/js/money.js?v=406"></script>
-<script src="/js/util.js?v=406"></script>
-<script src="/js/worldmap.js?v=406"></script>
-<script src="/js/geo.js?v=406"></script>
-<script src="/js/gmaps.js?v=406"></script>
-<script src="/js/db.js?v=406"></script>
-<script src="/js/fx.js?v=406"></script>
-<script src="/js/outbox.js?v=406"></script>
+<script src="/js/supabase-config.js?v=411"></script>
+<script src="/js/map-config.js?v=411"></script>
+<script src="/js/money.js?v=411"></script>
+<script src="/js/util.js?v=411"></script>
+<script src="/js/worldmap.js?v=411"></script>
+<script src="/js/geo.js?v=411"></script>
+<script src="/js/gmaps.js?v=411"></script>
+<script src="/js/db.js?v=411"></script>
+<script src="/js/fx.js?v=411"></script>
+<script src="/js/outbox.js?v=411"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=406"></script>
-<script src="/js/plan.js?v=406"></script>
-<script src="/js/map.js?v=406"></script>
-<script src="/js/cost.js?v=406"></script>
-<script src="/js/app.js?v=406"></script>
+<script src="/js/crew.js?v=411"></script>
+<script src="/js/plan.js?v=411"></script>
+<script src="/js/map.js?v=411"></script>
+<script src="/js/cost.js?v=411"></script>
+<script src="/js/app.js?v=411"></script>
 
 </body>
 </html>

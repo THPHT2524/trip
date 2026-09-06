@@ -997,6 +997,11 @@
     });
   }
 
+  /* 아래 탭의 그림 — 한 번만 넣는다(탭 바는 다시 그리지 않는다).
+     그림은 U.ICON 에 산다: 정거장 줄의 여섯과 같은 규격이라 한 자리에 모아 둔다. */
+  document.querySelectorAll('#tabs button').forEach(b =>
+    b.insertAdjacentHTML('afterbegin', U.icon('tab-' + b.dataset.tab)));
+
   (async function boot() {
     await DB.initAuth();
     /* OAuth 로 돌아오면 주소에 code·state 가 붙어 있다. 세션을 잡은 뒤 지운다.
