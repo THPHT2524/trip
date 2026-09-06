@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=379') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=380') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=379') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=380') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=379') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=380') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -923,10 +923,11 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* ★인쇄물의 결. 표·상품권이 다른 종이와 갈리는 것은 모양보다 **바탕에 깔린
      잔무늬**다 — 아주 옅은 사선 해칭. 보인다기보다 느껴진다.
      ⚠ 이보다 진하면 무늬가 번호를 이긴다. 무늬는 배경이지 내용이 아니다. */
-  /* ⚠ 10% 는 어두운 스텁 위에서 줄무늬가 번호를 이겼다(실물 확인). 6% 로 낮춘다 —
-     무늬는 보이라고 있는 것이 아니라 종이의 결로 느끼라고 있는 것이다. */
+  /* ⚠ 10% 는 줄무늬가 번호를 이겼고 6% 는 거의 안 보였다 — 8.5% 에서 멈춘다.
+     무늬는 보이라고 있는 것이 아니라 종이의 결로 느끼라고 있는 것이지만,
+     안 느껴질 만큼 옅으면 그냥 없는 것이다(2026-09-06, 실물에서 두 번 재봄). */
   background-image: repeating-linear-gradient(-45deg,
-    rgba(128, 128, 128, .06) 0 1px, transparent 1px 5px);
+    rgba(128, 128, 128, .085) 0 1px, transparent 1px 5px);
 }
 /* ⚠ 구분은 한글 두 글자다 — 자간을 주면 '이 동' 으로 벌어진다. 색만 빌려 온다.
    ★칸마다 금을 긋는다 — 레퍼런스의 스텁이 DATE·VENUE·ADMISSION 을 그렇게 나눈다.
