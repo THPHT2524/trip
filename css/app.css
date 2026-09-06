@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=412') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=417') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=412') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=417') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=412') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=417') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -662,11 +662,14 @@ a { color: var(--route); text-underline-offset: 2px; }
 /* 수단 라벨은 줄 맨 앞. 폭을 고정해야 이름들이 세로로 한 기둥에 선다
    (현금·카드·환전 셋 다 두 글자라 자연히 같지만, 못 박아 두면 흔들릴 일이 없다) */
 .payrow .badge.way { min-width: 34px; padding-left: 3px; padding-right: 3px; text-align: center; }
-/* ★★금액 칸의 폭을 **못 박는다**(2026-09-06). 폭이 내용을 따라가면 그 왼쪽에 붙는
-   결제자 배지가 금액 자릿수마다 좌우로 밀려서, 세로로 훑을 때 배지가 층계처럼
-   어긋난다. 78px 은 ₩1,234,567(10자) 이 들어가는 폭이다 — 그보다 큰 수는
-   여행 하나에서 안 나온다. */
-.payrow .pm { flex: 0 0 78px; margin-left: auto; text-align: right;
+/* ★★금액 칸은 **최소폭**이다 — 못 박은 폭이 아니라(2026-09-06).
+   폭이 내용을 그대로 따라가면 왼쪽에 붙는 결제자 배지가 자릿수마다 밀려서 세로로
+   훑을 때 층계처럼 어긋난다. 그래서 78px 로 박아 두었는데, 이번엔 반대로 ¥970 같은
+   짧은 수 앞에 **빈자리가 57px** 씩 생겼다(실측) — 배지가 줄 한가운데 떠 보였다.
+   ★64px 은 ₩428,000(8자, 57.6px)이 넉넉히 드는 폭이고 이 여행들의 최대값이다.
+     그보다 긴 수(₩1,234,567 은 72px)는 칸을 밀어 넓히고, 그때만 배지가 왼쪽으로
+     비킨다 — 흔한 줄은 다 한 기둥에 서고 드문 줄만 양보한다. 잘리는 것보다 낫다. */
+.payrow .pm { flex: 0 0 auto; min-width: 64px; margin-left: auto; text-align: right;
   font-family: var(--mono); font-size: var(--t-cap); color: var(--ink);
   font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* ★★결제자는 수단과 **다른 물건**이다(2026-09-06). 수단(현금·카드·환전)은 이 앱이

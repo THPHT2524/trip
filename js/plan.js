@@ -316,12 +316,14 @@ const Plan = (function () {
        그때는 어느 통화로도 못 적으니 정산 통화가 유일한 공통분모다. */
     const cost = (() => {
       if (kids.length) {
+        /* ★★지출이 하나뿐이어도 **낸다**(2026-09-06). 한 건일 때 감춰 보기도 했는데
+           (같은 금액이 한 자리에 두 번 서니까), 그러면 발치 줄이 자리마다 있었다
+           없었다 해서 **눈이 세로로 훑을 기준선을 잃는다.** 스물아홉 줄짜리 날에서는
+           그 흔들림이 중복보다 비싸다. 늘 같은 자리에 같은 이름으로 선다.
+         ★환전은 여기 안 들어온다 — 지출이 아니라 지갑에 넣는 것이다(p.spend 가 가른다).
+           그래서 항공권+환전 자리의 합계는 항공권 하나만 센 값이고, 그것이 맞다. */
         const paid = [r, ...kids].filter(x => { const p = M.per.get(x.id); return p && p.spend; });
-        /* ★★한 건이면 **아무것도 안 낸다**(2026-09-06). 합계는 더한 수인데 더할 것이
-           하나면 바로 위 줄을 옮겨 적는 일밖에 안 된다 — 이름표만 떼고 수를 남겨
-           두었더니 같은 금액이 한 자리에 두 번 섰다. 그 한 줄의 원화가 궁금하면
-           비용 탭이 그 일을 한다. */
-        if (paid.length < 2) return '';
+        if (!paid.length) return '';
         /* ⚠ 한글은 **고딕으로 싸서** 낸다. 이 칸은 등폭인데 Plex Mono 에는 한글이
            없어서 낱자만 대체 글꼴로 떨어지고 사이의 빈칸은 등폭 그대로였다 —
            600/1000 짜리 넓은 빈칸이 껴서 '합 계' 로 벌어졌다(.badge 와 같은 병). */
@@ -362,6 +364,14 @@ const Plan = (function () {
          라벨이 이름 앞으로 오면서 그 자리가 비면 줄마다 이름 시작점이 달라진다 —
          기본값이라 안 적던 것이 이제는 기둥을 무너뜨린다. */
       const way = c.settle === 'cash' ? '현금' : c.settle === 'exchange' ? '환전' : '카드';
+      /* ★★환전 줄은 **금액 둘**로 적는다(2026-09-06). 이름 자리에 '환전' 이 서 있었는데
+         그 말은 바로 왼쪽 배지가 이미 하고 있었다 — 한 줄에서 같은 말을 두 번 했다.
+         환전이라는 사건은 '얼마 주고 얼마 받았나' 한 쌍이고, 그 두 수가 설 자리가
+         마침 비어 있다: 받은 것이 이름 자리, 낸 원화가 금액 자리.
+         ⚠ 낸 원화는 DB 에 없다 — fx 가 '낸 원화 ÷ 받은 금액' 이라 되짚어 낸다
+           (시트의 지출금액 칸도 같은 셈으로 값을 되돌린다). */
+      const ex = c.settle === 'exchange';
+      const gave = (ex && c.cost != null && c.fx != null) ? Math.round(+c.cost * +c.fx) : null;
       /* ★금액이 **맨 뒤**다. 앞에 두면 배지 개수에 따라 숫자가 좌우로 밀려서
          결제 줄이 둘만 돼도 자릿수가 안 맞는다 — 세로로 읽히라고 mono 를 쓰는 판에. */
       /* ★수단이 **맨 앞**이다. 무엇으로 냈는지가 줄의 성질이라 이름보다 먼저 온다 —
@@ -369,9 +379,12 @@ const Plan = (function () {
          세로로 한 기둥에 선다. 결제자는 뒤에 남는다(그건 줄의 성질이 아니다). */
       return `<button class="payrow" type="button" data-edit="${esc(c.id)}">
         <span class="badge way">${esc(way)}</span>
-        <span class="pn">${esc(c.name)}</span>
+        <span class="pn${ex ? ' mono' : ''}">${
+          ex ? esc(U.money(c.cost, c.cost_cur)) : esc(c.name)}</span>
         ${who}
-        <span class="pm">${esc(U.money(c.cost, c.cost_cur))}</span>
+        <span class="pm">${
+          ex ? (gave != null ? esc(U.money(gave, U.SETTLE)) : '')
+             : esc(U.money(c.cost, c.cost_cur))}</span>
       </button>`;
     }).join('');
     return `<div class="${cls}" style="--k: var(--${k})">
