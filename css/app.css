@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=449') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=451') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=449') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=451') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=449') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=451') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1983,51 +1983,41 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 /* ★네 칸이 줄을 **고르게 나눠 갖는다.** 전에는 내용만큼만 차지해서 왼쪽에 몰리고
    오른쪽이 비었는데, 여권의 인적사항 칸은 서식이 정해진 자리다 — 값이 짧다고
    칸이 좁아지지 않는다. 칸 수가 둘이든 넷이든 같은 규칙으로 나뉜다. */
-/* 여권의 머리 — 이름·종류가 왼쪽, 앱 표식이 오른쪽. 진짜 여권 인적사항면의 배치다. */
+/* ── 여권의 윗줄 ──────────────────────────────────────────────────────
+   ★실물 인적사항면의 세 토막: 서식 이름(작게) · 발행국(크게) · 칩 표식(오른쪽 끝).
+     오른쪽 그 자리를 다섯 번 채워 보고 실물을 보고서야 알았다 — 거기 있는 것은
+     사실도 무늬도 아니라 **작고 단순한 표식 하나**다(js/app.js 의 pheadHtml 참고). */
 .phead {
-  display: flex; align-items: center; gap: 12px;
-  /* ★여기가 **덩이가 갈리는 자리**다 — 위는 '어디를'(지도·국기), 아래는 '얼마나'(이름·격자).
+  display: flex; align-items: baseline; gap: 10px;
+  /* ★여기가 **덩이가 갈리는 자리**다 — 위는 '어디를'(지도·국기), 아래는 '얼마나'(격자).
      이 여백 하나만 넓히면 나머지는 저절로 묶여 읽힌다. */
   padding: 24px var(--pad-box) 0;
 }
-.pname { flex: 0 0 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.pname b {
-  font-size: var(--t-read); font-weight: 700; letter-spacing: .1em; color: var(--ink);
-}
-/* 종류 줄 — 아이콘 · PASSPORT. 이름보다 한 단 작고 흐리다. */
+/* 서식 이름 — 실물의 '여권 PASSPORT'. 발행국보다 한참 작고 흐리다 */
 .ptype {
-  display: flex; align-items: center; gap: 5px;
-  font-family: var(--mono); font-size: var(--t-micro); font-weight: 500;
-  letter-spacing: .16em; color: var(--ink-3);
+  flex: 0 0 auto;
+  font-size: var(--t-micro); font-weight: 700; letter-spacing: 0; color: var(--ink-3);
 }
-.ptype i { font-style: normal; opacity: .55; }
-.pico { width: 15px; height: 13px; flex: 0 0 auto; fill: none;
-  stroke: currentColor; stroke-width: 1.3; }
-.pico .f { fill: currentColor; stroke: none; }
-/* ── 기요셰 위의 값 ────────────────────────────────────────────────────
-   ★이름줄 오른쪽은 **무늬 위에 값**이다. 값만 두면 작은 글씨 하나가 뜬 것처럼
-     허전하고, 무늬만 두면 뜻이 없다 — 여권이 실제로 하는 일이 그 둘을 겹치는
-     것이다(보안 무늬 위에 인적사항을 인쇄한다).
-   ★기요셰는 여권·지폐가 백 년 넘게 두르는 그 얽힌 곡선이다(그리는 법은 js 쪽).
-   ⚠ 선은 얇고 옅다. 장식은 **읽히면 안 되고** 거기 있기만 하면 된다 — 진해지는
-     순간 무늬가 아니라 그림이 되어 위에 앉은 값과 다툰다. */
-.pmark { position: relative; margin-left: auto; flex: 0 0 auto; }
-.pguil {
-  position: absolute; right: -10px; top: 50%; transform: translateY(-50%);
-  width: 74px; height: 74px; pointer-events: none;
-  fill: none; stroke: var(--ink-3); stroke-width: .35; opacity: .42;
+/* 발행국 — 이 면에서 제일 큰 글자. 실물의 '대한민국 REPUBLIC OF KOREA' 자리다 */
+.pstate {
+  flex: 1 1 auto; min-width: 0;
+  font-size: var(--t-read); font-weight: 700; letter-spacing: 0; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* 값은 밑의 격자(.pgrid)와 **같은 자**다 — 한 카드에서 같은 물건은 같게 적는다.
-   곁글 크기로 적으면 오른쪽이 채워지지 않고 그냥 작은 글씨 하나가 뜬 것이 된다. */
-.pno { position: relative; margin: 0; text-align: right; }
-.pno dt {
-  font-size: var(--t-micro); font-weight: 600; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--ink-3); white-space: nowrap;
+/* 라틴은 한글 뒤에 작게 — 실물이 칸마다 쓰는 짝이다(종류/Type) */
+.ptype em, .pstate em {
+  font-style: normal; margin-left: 4px;
+  font-family: var(--mono); font-size: var(--t-unit); font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
 }
-.pno dd {
-  margin: 2px 0 0; font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: 19px; font-weight: 500; letter-spacing: -.02em; color: var(--ink);
+.pstate em { font-size: var(--t-micro); }
+/* 칩 표식 — 오른쪽 끝. 여태 이름 옆에 붙어 있던 것을 제자리로 보냈다 */
+.pico {
+  flex: 0 0 auto; align-self: center;
+  width: 20px; height: 17px; fill: none;
+  stroke: var(--ink-3); stroke-width: 1.3;
 }
+.pico .f { fill: var(--ink-3); stroke: none; }
 
 
 .pgrid {
@@ -2036,9 +2026,15 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
   display: flex; gap: 10px;
 }
 .pgrid > div { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+/* 이름표는 **한글/English** 짝이다 — 실물 여권이 칸마다 그렇게 적는다 */
 .pgrid dt {
-  font-size: var(--t-micro); font-weight: 600; letter-spacing: .06em;
+  font-size: var(--t-micro); font-weight: 700; letter-spacing: 0;
   color: var(--ink-3);
+}
+.pgrid dt em {
+  font-style: normal; margin-left: 4px;
+  font-family: var(--mono); font-size: var(--t-unit); font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase;
 }
 .pgrid dd {
   margin: 0; font-family: var(--mono); font-variant-numeric: tabular-nums;

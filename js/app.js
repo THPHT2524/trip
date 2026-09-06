@@ -281,49 +281,27 @@
      곧 범례다. 그래서 없었던 구분도 뺀 자리 없이 선다.
    ★레일은 양끝으로 삐져나온다 — 여행이 이 카드에서 끝나지 않는다는 뜻이고,
      카드의 미니 레일도 그렇게 생겼다. */
-  /* ── 기요셰 ────────────────────────────────────────────────────────────
-     ★★여권 이름줄의 오른쪽은 **비는 자리**다. 거기에 놓을 사실을 네 번 찾아봤고
-       네 번 다 틀렸다 — 구분 색 범례, 해마다의 막대, 종류·발행국·번호, 시작한 해.
-       사실이 아니어서가 아니라 **그 자리가 사실을 원하는 자리가 아니었다.**
-     ★여권에는 원래 장식이 가득하다: 기요셰·로제트·미세인쇄. 위조를 막으려고 넣지만
-       그것이 곧 여권의 얼굴이기도 하다. 뜻을 지어 붙이는 것보다 이 종이가 실제로
-       두르는 무늬를 두르는 편이 정직하다.
-     ★원 스물넷을 살짝 어긋난 중심에 겹쳐 그리면 그 얽힌 무늬가 나온다 —
-       지폐와 여권이 백 년 넘게 쓰는 그 도형이다. 선은 아주 얇고 옅다:
-       장식은 읽히면 안 되고 **거기 있기만** 하면 된다. */
-  function guilloche(n, R, r) {
-    let d = '';
-    for (let i = 0; i < n; i += 1) {
-      const a = (i / n) * Math.PI * 2;
-      d += `<circle cx="${(30 + r * Math.cos(a)).toFixed(2)}"`
-         + ` cy="${(30 + r * Math.sin(a)).toFixed(2)}" r="${R}"/>`;
-    }
-    return `<svg class="pguil" viewBox="0 0 60 60" aria-hidden="true">${d}</svg>`;
-  }
-
+  /* ── 여권의 윗줄 ──────────────────────────────────────────────────────
+     ★★실물 여권을 보고 다시 짰다(2026-09-07). 인적사항면의 윗줄은 **세 토막**이다:
+       왼쪽에 서식 이름이 작게(여권 PASSPORT), 그 옆에 발행국이 크게(대한민국
+       REPUBLIC OF KOREA), 오른쪽 끝에 **칩 표식**.
+     ★★오른쪽 그 자리를 다섯 번 채워 봤다 — 구분 색 점, 해마다의 막대, 종류·발행국·
+       번호, SINCE 2017, 기요셰. 다섯 다 틀렸고 답은 실물에 있었다: 거기 있는 것은
+       **작고 단순한 표식 하나**다. 사실도 무늬도 아니다.
+     ★그래서 여태 이름 옆에 붙어 있던 그 표식(.pico)을 오른쪽 끝으로 보낸다.
+       새로 만든 것이 아니라 **제자리를 찾아 준 것**이다. */
   function pheadHtml() {
-    /* ★★오른쪽 자리는 **무늬 위에 값**이다. 값만 두면 작은 글씨 하나가 뜬 것처럼
-       허전하고, 무늬만 두면 뜻이 없다 — 여권이 실제로 하는 일이 그 둘을 겹치는
-       것이다(보안 무늬 위에 인적사항을 인쇄한다).
-     ★값은 'SINCE 2017' — 이 기록이 언제부터인가. 이 화면 어디에도 없는 사실이고,
-       여행이 늘어도 안 바뀐다. 나머지 넷(종류·발행국·번호·해마다의 막대)을 왜
-       물렸는지는 위 guilloche 주석에 적어 두었다. */
-    const y0 = trips.map(t => (t.start_on || t.end_on || '').slice(0, 4))
-      .filter(Boolean).sort()[0] || '';
     return `<div class="phead">
-    <div class="pname">
-      <b>TRIPLOG</b>
-      <span class="ptype" aria-hidden="true"><svg viewBox="0 0 14 12" class="pico">
-        <rect x=".8" y=".8" width="12.4" height="10.4" rx="2.2"/>
-        <circle cx="4.9" cy="6" r="1.7" class="f"/>
-        <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg> <i>·</i> PASSPORT</span>
-    </div>
-    <div class="pmark">
-      ${guilloche(24, 17, 11)}
-      ${y0 ? `<dl class="pno"><div><dt>Since</dt><dd>${esc(y0)}</dd></div></dl>` : ''}
-    </div>
+    <span class="ptype">여행기록 <em>TRIPLOG</em></span>
+    <span class="pstate">대한민국 <em>Republic of Korea</em></span>
+    <svg viewBox="0 0 14 12" class="pico" aria-hidden="true">
+      <rect x=".8" y=".8" width="12.4" height="10.4" rx="2.2"/>
+      <circle cx="4.9" cy="6" r="1.7" class="f"/>
+      <path d="M8.6 4.5h2.6M8.6 7.5h2.6"/></svg>
   </div>`;
   }
+
+
 
 
 
@@ -445,13 +423,14 @@
   const pad = (t) => (t + '<'.repeat(MRZ)).slice(0, MRZ);
   const mrzSafe = (t) => String(t || '').toUpperCase().replace(/[^A-Z0-9]+/g, '<');
   /* ★격자 라벨과 **같은 열쇠**를 쓴다 — 라벨을 바꾸면 여기도 바꿔야 도장이 찍힌다. */
-  const MRZ_CODE = { COUNTRIES: 'C', CITIES: 'T', FLIGHTS: 'F', DAYS: 'D' };
+  const MRZ_CODE = { Countries: 'C', Cities: 'T', Flights: 'F', Days: 'D' };
   /* ★위 격자에 **선 칸만** 적는다. 전에는 0 도 그대로 찍어서, 셈을 못 받아 온 날
      '1C<0A<0P<3D' 라고 도장이 찍혔다 — 없는 것을 0 이라고 말한 셈이다(2026-09-02 폰). */
   function mrzLines(cells) {
     const who = mrzSafe((DB.email() || '').split('@')[0]) || 'TRAVELLER';
     return [pad('P<KOR<' + who),
-            pad(cells.filter(([k]) => MRZ_CODE[k]).map(([k, v]) => v + MRZ_CODE[k]).join('<'))];
+            pad(cells.filter(([, en]) => MRZ_CODE[en])
+              .map(([, en, v]) => v + MRZ_CODE[en]).join('<'))];
   }
 
   /* 국기 줄을 **판에 맞춘다.** 몇 장인지에 따라 겹치는 폭도 줄 수도 달라지므로 그려진 뒤에 잰다.
@@ -593,7 +572,10 @@
     /* 라벨은 영문이다 — 진짜 여권이 그렇다(한국 여권도 모든 칸이 국·영문 병기다).
        아래 MRZ 도 로마자라 둘이 한 덩어리로 읽힌다. */
     const cells = [
-      ['COUNTRIES', n.countries], ['CITIES', n.cities], ['FLIGHTS', n.flights], ['DAYS', n.days],
+      /* ★이름표는 **한글/English** 짝이다 — 실물 여권이 칸마다 그렇게 적는다
+         (종류/Type · 국가코드/Country code · 발급일/Date of issue). */
+      ['나라', 'Countries', n.countries], ['도시', 'Cities', n.cities],
+      ['비행', 'Flights', n.flights], ['일수', 'Days', n.days],
     ].filter(([, v]) => v);
     if (!cells.length) return '';
 
@@ -602,8 +584,8 @@
       ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
         flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
       ${pheadHtml()}
-      <dl class="pgrid">${cells.map(([k, v]) =>
-        `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
+      <dl class="pgrid">${cells.map(([ko, en, v]) =>
+        `<div><dt>${esc(ko)}<em>${esc(en)}</em></dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
       <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
     </section>`;
   }
