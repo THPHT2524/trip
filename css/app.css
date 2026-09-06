@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=361') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=364') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=361') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=364') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=361') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=364') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -863,6 +863,13 @@ a { color: var(--route); text-underline-offset: 2px; }
   /* ★모서리를 --r(10) 에서 --r-sm(8) 로 낮춘다 — 표는 담는 상자가 아니라 낱장이다.
      둥글수록 카드로, 각질수록 종이로 읽힌다. */
   border-radius: var(--r-sm); border: 1px solid var(--line);
+  /* ★★천공 자국을 **카드 안으로 가둔다**(2026-09-06). 영수증·일정에서는 그 반원이
+     종이 바탕 위에 얹혀 안 보였는데, 이 카드는 **지도 위에 떠 있어서** 밖으로 나간
+     반쪽이 까만 점이 되어 떠다녔다. 게다가 그만큼이 띠의 스크롤 높이가 되어
+     가로로만 넘겨야 할 띠가 **위아래로도 밀렸다**(overflow-x:auto 를 주면 y 는
+     visible 이 아니라 auto 가 된다 — css 규칙이 그렇다).
+     잘라 내면 반원이 모서리를 베어 문 자국으로 남는다 — 원래 그리려던 모양이다. */
+  overflow: hidden;
   background: var(--card); box-shadow: var(--sh-map);
 }
 /* 가운데 온 카드 — 조용히. 고른 것은 지도의 핀이 크게 말한다 */
@@ -875,10 +882,22 @@ a { color: var(--route); text-underline-offset: 2px; }
    ★천공은 **점선이 아니라 구멍**이다. 파선은 잉크로 그은 선이라 '뜯는 자리' 로 안
      읽힌다 — 종이 색 동그라미를 세로로 찍어야 뚫린 줄이 된다. */
 .mcard .mcs {
-  position: relative; flex: 0 0 52px; align-self: stretch;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  padding: 8px 4px;
+  position: relative; flex: 0 0 62px; align-self: stretch;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  padding: 7px 4px;
   background: var(--sunk); border-radius: var(--r-sm) 0 0 var(--r-sm);
+  /* ★★인쇄물의 결(2026-09-06). 표·상품권이 다른 종이와 갈리는 것은 모양보다 **바탕에
+     깔린 잔무늬**다 — 아주 옅은 사선 해칭. 5% 로 두면 보인다기보다 느껴진다.
+     ⚠ 이보다 진하면 무늬가 번호를 이긴다. 무늬는 배경이지 내용이 아니다. */
+  background-image: repeating-linear-gradient(-45deg,
+    rgba(255, 255, 255, .05) 0 1px, transparent 1px 5px);
+}
+/* ★'No.' — 표를 표로 만드는 것은 **작은 대문자 이름표**다. 값 위에 이름이 붙는 것이
+   인쇄된 증표의 어법이고, 이 앱은 홈의 판(DATE·TO·times)에서 이미 그 목소리를 쓴다.
+   라틴이라 자간을 줄 수 있다 — 한글이었으면 못 준다. */
+.mcard .mcl {
+  font-family: var(--mono); font-size: 8px; font-weight: 600; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--ink-3); line-height: 1;
 }
 /* ⚠ 구분은 한글 두 글자다 — 자간을 주면 '이 동' 으로 벌어진다. 색만 빌려 온다. */
 .mcard .mck {
@@ -887,13 +906,13 @@ a { color: var(--route); text-underline-offset: 2px; }
 }
 /* 구멍은 위아래 **끝까지** 뚫린다 — 모서리를 베어 문 반원과 이어져야 한 줄이 된다 */
 .mcard .mcs::after {
-  content: ''; position: absolute; right: -1.5px; top: 3px; bottom: 3px; width: 4px;
+  content: ''; position: absolute; right: -2px; top: 3px; bottom: 3px; width: 4px;
   background-image: radial-gradient(circle at 2px 3.5px, var(--paper) 1.7px, transparent 1.8px);
   background-size: 4px 7px; background-repeat: repeat-y; z-index: 2;
 }
 /* 카드 위아래 모서리를 반씩 베어 문 자국 — 천공선이 종이 끝까지 이어진다 */
 .mcard::before, .mcard::after {
-  content: ''; position: absolute; left: 52px; width: 11px; height: 11px;
+  content: ''; position: absolute; left: 62px; width: 11px; height: 11px;
   border-radius: 50%; background: var(--paper); transform: translateX(-50%); z-index: 2;
 }
 .mcard::before { top: -5.5px; }
@@ -908,22 +927,25 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--paper); border: 3px solid var(--k, var(--k-etc));
   color: var(--ink); font-family: var(--mono); font-size: var(--t-micro); font-weight: 600;
 }
-.mcard .mcb { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 1px; }
+.mcard .mcb { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column;
+  gap: 3px; padding: 11px 0 12px; }
+/* 윗줄 — 언제·얼마. 둘 다 수라서 mono 로 세우고, 금액은 줄 끝에 붙는다 */
 .mcard .mct {
-  display: flex; align-items: baseline; gap: 6px; min-width: 0;
-  font-size: var(--t-read); font-weight: 700; letter-spacing: -.01em; color: var(--ink);
+  display: flex; align-items: baseline; gap: 8px; min-width: 0;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
 }
 .mcard .mct em {
   flex: 0 0 auto; font-style: normal;
-  font-family: var(--mono); font-size: var(--t-cap); font-weight: 500; color: var(--route);
+  font-size: var(--t-cap); font-weight: 600; letter-spacing: .04em; color: var(--route);
 }
-.mcard .mct b { min-width: 0; font-weight: inherit;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* 구분이 스텁으로 갔으므로 이 줄에는 **금액만** 남는다 — 수라서 mono 로 세운다 */
-.mcard .mcm {
-  font-family: var(--mono); font-variant-numeric: tabular-nums;
-  font-size: var(--t-cap); color: var(--ink-2);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.mcard .mct i {
+  margin-left: auto; font-style: normal;
+  font-size: var(--t-meta); color: var(--ink-3); white-space: nowrap;
+}
+/* 아랫줄 — 어디. 이 카드에서 제일 큰 글자다 */
+.mcard .mcp {
+  min-width: 0; font-size: var(--t-read); font-weight: 700; letter-spacing: -.015em;
+  color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .mcard .mca { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; }
 

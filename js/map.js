@@ -244,12 +244,18 @@ const Maps = (function () {
            둘 다 지도에서 그대로 읽히는 것이라(핀의 수, 핀의 색) 뜯는 쪽에 같이 앉는다.
            몸통에는 언제·어디·얼마만 남는다. -->
       <span class="mcs" style="--k: var(--${U.kvar(r.kind)})">
+        <span class="mcl" aria-hidden="true">No.</span>
         <span class="mcn">${s2.n}</span>
         <span class="mck">${esc(r.kind)}</span>
       </span>
+      <!-- ★★몸통을 **두 줄**로 세운다(2026-09-06). 한 줄일 때 카드는 344×59, 5.8:1
+           짜리 조각이었다 — 표는 보통 2.5~3:1 이라 그 비율에서는 무엇을 얹어도
+           '구분선 있는 목록 줄' 로 읽힌다. 값 위에 값이 쌓이는 것이 인쇄된 증표의
+           짜임이기도 하다: 윗줄에 언제·얼마, 아랫줄에 어디. -->
       <span class="mcb">
-        <span class="mct">${t ? `<em>${esc(t)}</em>` : ''}<b>${esc(r.name)}</b></span>
-        ${cost ? `<span class="mcm">${esc(cost)}</span>` : ''}
+        <span class="mct">${t ? `<em>${esc(t)}</em>` : ''}${
+          cost ? `<i>${esc(cost)}</i>` : ''}</span>
+        <b class="mcp">${esc(r.name)}</b>
       </span>
       <!-- 일정 탭과 같은 어법: 동그란 판 위의 그림. 뜻은 aria-label 이 진다.
            🧭 는 길을 찾아 나가는 것, 🗓 는 이 앱 안의 일정으로 돌아가는 것이다. -->
