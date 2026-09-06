@@ -126,7 +126,7 @@ const Cost = (function () {
         </li>`;
       }).join('');
       return `<section class="cblock">
-        ${many ? `<h3 class="chd rday">${esc(U.md(d))} ${esc(U.dowOf(d))}</h3>` : ''}
+        ${many ? `<h3 class="chd rday">${esc(U.md(d))} <span class="dw">${esc(U.dowOf(d))}</span></h3>` : ''}
         <ul class="clist tight">${li}</ul></section>`;
     }).join('');
   }
@@ -207,6 +207,11 @@ const Cost = (function () {
   function strip(label, parts) {
     const sum = parts.reduce((a, p) => a + p.v, 0);
     if (!sum) return '';
+    /* ★★조각이 하나면 안 그린다(2026-09-06). 하루짜리 여행의 '날짜별', 혼자 낸
+       여행의 '사람별' 이 **폭 100% 짜리 한 조각**으로 서 있었다 — 비율을 말하는
+       그림인데 견줄 것이 없으니 아무 말도 안 하면서 종이만 한 줄 먹었다.
+       dayBars 가 days.length < 2 에서 물러나는 것과 같은 규칙이다. */
+    if (parts.filter(p => p.v > 0).length < 2) return '';
     return `<div class="rstrip"><span class="sl">${esc(label)}</span>
       <span class="sb">${parts.filter(p => p.v > 0).map(p => {
         const pct = p.v / sum * 100;

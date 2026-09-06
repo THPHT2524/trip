@@ -105,10 +105,8 @@
        줄이 세로로 맞아야 해서인데, 머리말은 한 줄뿐이라 맞출 상대가 없다. */
     const cc = t ? codeChars(t.country) : [];
     $('trip-cc').innerHTML = cc.length ? row([[0, cc, 'cc']], cc.length) : '';
-    const fl = t ? U.flags(t.country) : [];
-    $('trip-flag').textContent =
-      (canDrawFlags() ? fl : (t ? U.codeList(t.country) : [])).join(' ');
-    $('trip-flag').classList.toggle('ab', !canDrawFlags());
+    /* ★못 그리면 비운다 — 앞의 국가코드 뱃지가 같은 것을 이미 말했다(flagChars 참고) */
+    $('trip-flag').textContent = (t && canDrawFlags()) ? U.flags(t.country).join(' ') : '';
     if (t) {
       const mine = shape.filter(r => r.trip_id === t.id && !r.parent_id);
       const nd = U.tripDays(t);
@@ -624,10 +622,15 @@
        기계에서는 'KR' 이 K·R 두 칸으로 쪼개졌다(2026-09-04). 배열로 넘겨 칸을 못 박는다.
      ⚠ 자르는 수는 FLAG_COLS 에서 받는다. 3 으로 박아 뒀더니 판은 두 칸인데 셋째
        나라를 만들어 넘기고 row() 가 조용히 버렸다 — 어긋날 자리를 없앤다. */
+  /* ★★못 그리는 기계에서는 **칸을 비운다**(2026-09-06). 두 글자 코드를 대신 넣고
+     있었는데, 바로 윗줄 codeChars 가 같은 코드를 이미 적고 있어서 윈도우에서는 판이
+     줄마다 'CN … CN' 하고 더듬었다. 여기 칸은 **그림 자리**다 — 그림을 못 그리면
+     비는 것이 맞고, 나라가 무엇인지는 윗줄이 이미 말했다. 칸 수는 그대로라
+     이름이 서는 x 는 어느 기계에서나 같다. */
   function flagChars(country) {
-    const codes = U.codeList(country).filter(c => U.flag(c));
-    const draw = canDrawFlags();
-    return codes.slice(0, FLAG_COLS).map(c => (draw ? U.flag(c) : c));
+    if (!canDrawFlags()) return [];
+    return U.codeList(country).filter(c => U.flag(c))
+      .slice(0, FLAG_COLS).map(c => U.flag(c));
   }
 
   /* 국가코드 뱃지 — 국기와 **따로** 선다. 국기는 이름 앞에서 그림으로 알려 주고,
@@ -709,10 +712,9 @@
         /* ★국기를 **이름 앞**에 붙인다(2026-09-04). 윗줄 날짜 뒤에 뒀더니 '언제' 와
            '어디' 가 한 줄에서 붙어 버렸는데, 이름 앞에 오면 국기가 이름의 표지가 된다. */
         const fl = flagChars(t.country);
-        const cls = 'fl' + (canDrawFlags() ? '' : ' ab');
         /* 국기판과 이름판을 따로 건다 — 사이의 틈이 둘을 갈라 준다.
            국기판이 늘 두 장이라 이름은 나라가 몇이든 같은 데서 시작한다. */
-        return '<span class="tg tfl">' + row([[0, fl, cls]], FLAG_COLS) + '</span>'
+        return '<span class="tg tfl">' + row([[0, fl, 'fl']], FLAG_COLS) + '</span>'
              + '<span class="tg">' + row([[0, t.name, 'nm']], NAME_COLS) + '</span>';
       })()}</span>
       ${rail}
