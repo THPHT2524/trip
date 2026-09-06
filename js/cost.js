@@ -279,7 +279,12 @@ const Cost = (function () {
       ? `<span class="tl">합계</span>
          <span class="big">${esc(U.money(total, U.SETTLE))}</span>`
          + (miss.length ? `<span class="sub"><span class="warn">${miss.length}건 환율 없음</span></span>` : '')
-      : '<span class="sub">아직 비용을 적은 일정이 없습니다</span>';
+      /* ★★찍힌 것이 없어도 **종이는 종이다**(2026-09-06). 전에는 머리도 안 뜨고
+         가운데에 회색 한 줄만 남아, 영수증 컨셉이 정작 빈 여행에서 사라졌다.
+         머리와 바코드는 그대로 두고 가운데만 '아직 안 찍혔다' 로 둔다 —
+         빈 영수증도 가게 이름과 바코드는 찍혀 나온다. */
+      : '<span class="none"><b>아직 찍힌 것이 없습니다</b>'
+        + '일정에서 <b>＋ 결제 추가</b> 로 넣으면 여기 모입니다</span>';
 
     const byKind = U.KINDS.map(k => [k, group(r => r.kind).get(k)])
       .filter(e => e[1]).sort((a, b) => b[1].sum - a[1].sum);
@@ -327,10 +332,12 @@ const Cost = (function () {
          죄다 한글인 종이다 — 합계·현금·날짜별·구분별·사람별 로 다 옮긴다.
          ⚠ 이 라벨들은 자간이 벌어져 있었다(.12~.22em). 한글에 그 자간을 그대로
            두면 낱자가 흩어진다 — 옮기면서 자간을 같이 0 으로 푼다(css). */
-    $('cost-head').innerHTML = paid.length
-      ? `<span class="rnm">여행 영수증</span>
-         <span class="rsb">${esc(U.range(trip.start_on, trip.end_on))} · ${paid.length}항목 · 원화기준</span>`
-      : '';
+    /* ⚠ 머리는 **늘 뜬다**. 항목 수와 기준은 셀 것이 있을 때만 말한다 —
+       0항목이라고 적는 것은 없는 것을 세는 짓이고, 아무것도 안 환산했으면
+       '원화기준' 도 할 말이 아니다. */
+    $('cost-head').innerHTML = `<span class="rnm">여행 영수증</span>
+      <span class="rsb">${esc(U.range(trip.start_on, trip.end_on))}${
+        paid.length ? ` · ${paid.length}항목 · 원화기준` : ''}</span>`;
 
     /* 환율이 없어 합계에서 빠진 줄 — 감추지 않는다. 그 자리에서 채울 수 있게 한다. */
     /* 지갑에 남은 현금 — 환전을 적기 시작하면 제일 먼저 궁금해지는 숫자다 */

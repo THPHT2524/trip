@@ -187,9 +187,21 @@ const Plan = (function () {
   function drawDays() {
     const el = $('days');
     closeMemo();                          // 붙어 있던 단추가 곧 사라진다
-    if (!rows.length && !days.length) {
-      el.innerHTML = '<p class="empty"><strong>아직 일정이 없습니다</strong>'
-                   + '아래에서 첫 줄을 넣으세요. 구글맵 링크를 붙이면 장소가 채워집니다.</p>';
+    /* ⚠ 조건이 `!rows.length && !days.length` 였다 — 날짜를 적어 둔 여행은 이 갈래에
+       못 들어와서, 새로 만든 이레짜리 여행이 'Day 1 비어 있는 날' 을 일곱 줄
+       늘어놓았다(2026-09-06). **'비어 있는 날' 은 다른 날에 내용이 있을 때만 정보다** —
+       전부 비었으면 그건 정보가 아니라 아직 안 쓴 것이고, 그때 필요한 것은
+       일곱 번의 '없음' 이 아니라 한 번의 '여기서 시작한다' 다. */
+    if (!rows.length) {
+      /* ★★일정이 없어도 **레일은 있다**(2026-09-06). 전에는 가운데에 회색 두 줄만
+         남고 레일이 통째로 사라졌는데, 그러면 이 화면이 노선도라는 사실도 같이
+         사라진다 — 정거장이 없는 노선도는 빈 레일이지 빈 종이가 아니다.
+         비어 있는 핀 하나를 레일에 걸어 '여기서 시작한다' 를 자리로 말한다. */
+      el.innerHTML = '<div class="planempty">'
+        + '<span class="pin" aria-hidden="true"></span>'
+        + '<p><strong>아직 정거장이 없습니다</strong>'
+        + '<b>＋</b> 로 첫 곳을 놓으면 여기서 노선이 시작합니다.<br>'
+        + '구글맵 링크를 붙이면 장소와 좌표가 같이 채워집니다.</p></div>';
       return;
     }
     M = MONEY.total(rows, FXS.rateOf);        // 이번 그리기에서 쓸 셈 한 벌

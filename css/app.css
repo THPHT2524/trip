@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=353') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=359') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=353') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=359') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=353') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=359') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -2118,10 +2118,62 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 .btn.danger { color: var(--warn); border-color: var(--line); }
 .btn:active { opacity: .85; }
 
+/* ── 비어 있는 모습 ───────────────────────────────────────────────────────
+   ★★세 화면이 각자 **비어 있는 제 모습**을 갖는다(2026-09-06). 전에는 셋 다 이
+   .empty 회색 문단 하나로 무너졌는데, 그러면 내용이 없는 순간 그 화면이 무엇인지도
+   같이 사라진다 — 안내판은 뜰 편이 없어도 꺼지지 않고, 노선도는 정거장이 없어도
+   레일이 있고, 영수증은 찍히기 전에도 종이다.
+   .empty 는 이제 **오류·불러오는 중**에만 쓴다. 그건 진짜로 아무 모습도 없는 상태다. */
 .empty {
   padding: 40px var(--pad); text-align: center;
   color: var(--ink-3); font-size: var(--t-read);
 }
+/* ① 홈 — 안 뜬 판. 쪽자는 다 꺼져 있고 이름 자리만 '예정 없음' 을 문다 */
+.trip.is-none { cursor: default; opacity: .8; }
+/* ⚠ mono 로 뒀었다 — 판의 목소리를 빌리려던 것인데 한글이 '아 직  오 른' 으로
+   흩어졌다(2026-09-06). 판때기 위의 낱자는 원래 그렇게 서지만, 판 **밖의 문장**은
+   읽히라고 있는 것이다. 단추 이름만 mono 로 남겨 화면의 그 단추와 짝을 맞춘다. */
+.boardsay {
+  margin: 14px var(--pad) 0; text-align: center;
+  font-size: var(--t-body); line-height: 1.9; color: var(--ink-3);
+}
+/* ⚠ 여기에도 mono 를 줬다가 되물렀다. 단추 이름과 짝을 맞추려던 것인데 그 단추
+   이름이 **한글**이라 '새 여 행' 으로 흩어졌고, 정작 진짜 단추(.hbtn)는 sans 다 —
+   흉내 낸다면서 안 닮게 만든 셈이었다(2026-09-06). */
+.boardsay b { color: var(--route); font-weight: 600; }
+/* ② 일정 — 정거장 없는 레일. 핀은 **비어 있다**(점선), 그 자리에서 노선이 시작한다 */
+/* ⚠ 이 칸은 `.day` 안이 아니라 `#days` 바로 밑이라 --pad 만큼을 **못 물려받는다.**
+   왼쪽을 --gutter 로만 주면 글자가 38px 에서 시작해 핀(20~40px)을 물고 앉는다
+   (2026-09-06 실측). 정거장과 같은 자리에 서려면 둘을 더해야 한다. */
+.planempty {
+  position: relative; min-height: 160px;
+  padding: 26px var(--pad) 30px calc(var(--pad) + var(--gutter));
+}
+.planempty .pin {
+  position: absolute; left: calc(var(--pad) + var(--rail-x) - 9px); top: 28px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--paper); border: 2px dashed var(--rail);
+}
+.planempty p { margin: 0; font-size: var(--t-body); line-height: 1.85; color: var(--ink-3); }
+.planempty strong {
+  display: block; margin-bottom: 5px;
+  font-size: var(--t-read); font-weight: 600; color: var(--ink-2);
+}
+.planempty b { font-family: var(--mono); color: var(--route); }
+/* ③ 비용 — 안 찍힌 영수증. 머리와 바코드 사이가 비고, 위아래로 종이의 금이 남는다 */
+.ctotal .none {
+  /* ⚠ .ctotal 은 flex 다 — 폭을 안 박으면 이 칸이 **글자 폭만큼만** 늘어나서
+     제가 그은 금이 종이 한가운데서 끊긴다(2026-09-06 실측).
+   ⚠ 금도 제가 긋지 않는다. 위는 머리(.rhd)가, 아래는 바코드(.rbc)가 이미 긋는다 —
+     여기서 또 그으면 점선이 8px 사이로 둘씩 겹친다. 빈 자리는 **여백만** 낸다. */
+  flex: 1 1 100%; margin: 0; padding: 30px 0 34px;
+  text-align: center; font-size: var(--t-body); line-height: 1.9; color: var(--ink-3);
+}
+.ctotal .none > b:first-child {
+  display: block; margin-bottom: 3px;
+  font-size: var(--t-read); font-weight: 600; color: var(--ink-2);
+}
+.ctotal .none b { font-weight: 600; color: var(--ink-2); }
 .empty strong { display: block; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
 
 /* 좌표 없는 일정이 지도에서 빠졌다는 사실을 조용히 넘기지 않는다 */

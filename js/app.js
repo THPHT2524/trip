@@ -144,9 +144,28 @@
 
   function renderTrips() {
     const el = $('trips');
+    /* ★★여행이 없어도 **판은 켜져 있다**(2026-09-06). 전에는 판이 통째로 사라지고
+       가운데에 회색 두 줄만 남았는데, 그건 이 화면이 무엇인지 잊은 모습이다 —
+       공항 안내판은 뜰 편이 없어도 꺼지지 않는다. 머리와 칸 이름을 그대로 세우고
+       한 줄을 **빈 쪽자로** 남긴 뒤, 이름 자리에만 '예정 없음' 을 태운다.
+       ★안내는 판의 목소리(mono)로 판 밑에 붙인다. 동작 이름은 단추에 적힌 그대로
+         쓴다 — '＋ 새 여행' 을 눌러야 하는데 '여행 추가' 라고 적으면 못 찾는다. */
     if (!trips.length) {
-      el.innerHTML = '<p class="empty"><strong>아직 여행이 없습니다</strong>'
-                   + '새 여행을 만들거나, 받은 초대 링크를 여세요.</p>';
+      el.innerHTML = '<div class="tboard">'
+        + '<div class="tbtop"><span class="pl" aria-hidden="true">✈</span>'
+        + '<b>TRIPLIST</b><em>DEPARTURES</em>'
+        + `<span class="cnt">${cells(0, 2)}<em>times</em></span></div>`
+        + '<div class="tbhd" aria-hidden="true"><span>Date</span><span>To</span></div>'
+        + '<div class="trip is-none" aria-hidden="true">'
+        +   `<span class="ttop"><span class="tg">${row([], DATE_COLS)}</span>`
+        +   `<span class="tg tcc">${row([], CC_COLS)}</span></span>`
+        +   `<span class="tnm"><span class="tg tfl">${row([], FLAG_COLS)}</span>`
+        +   `<span class="tg">${row([[0, '예정 없음', 'nm']], NAME_COLS)}</span></span>`
+        + '</div></div>'
+        /* ⚠ '없다' 를 두 번 말하지 않는다 — 판이 이미 '예정 없음' 을 띄웠다.
+           여기 남는 것은 **무엇을 하면 되는지**뿐이다. */
+        + '<p class="boardsay"><b>＋ 새 여행</b> 으로 첫 줄을 올리세요.<br>'
+        + '받은 <b>초대 코드</b>로도 들어올 수 있습니다.</p>';
       return;
     }
     $('passport').innerHTML = passportHtml();
