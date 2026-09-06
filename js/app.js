@@ -903,7 +903,7 @@
   /* 나라 고르개 둘. crew.js 가 여행 설정 쪽을 쓰므로 전역에 얹어 준다. */
   /* 새 여행 폼에서도 같은 미리보기 — 비워 두면 도시가 이름이 된다(crew.js 와 같은 규칙) */
   $('new-cities').addEventListener('input', () => {
-    $('new-name').placeholder = U.tripName('', $('new-cities').value) || '포항';
+    $('new-name').placeholder = U.tripName('', $('new-cities').value) || '여행 이름';
   });
   const newPick = U.countryPicker($('new-country'), $('new-flags'));
   window.SETPICK = U.countryPicker($('set-country'), $('set-flags'));
