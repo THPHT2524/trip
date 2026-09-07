@@ -354,6 +354,15 @@ const Cost = (function () {
          이름표는 위, 값은 아래 — 그러면 이름표끼리 한 줄, 값끼리 한 줄이라
          왼오를 견주는 눈이 값 줄만 훑는다. 이름표가 빠진 만큼 값을 키운다.
        ⚠ '잔액' 이 아니라 '현금 잔액' 이다 — 이 칩만 보고도 무슨 잔액인지 알아야 한다.
+       ★★가운데 빈자리에 **쓴 현금을 점선 위에 얹는다**(2026-09-07). 위에서 '되짚을
+         수 있으니 뺐다' 고 적어 둔 그 수인데, 두 짝이 양 끝으로 갈라서고 나니 그
+         사이가 통째로 비었다 — 뺄셈이 일어나는 자리가 눈에 보이는데 답만 없었다.
+         영수증의 점선 리더(.clist .rd)와 같은 어법이라 종이가 하던 말투 그대로다.
+       ⚠⚠ 원화는 **이름표 줄로 올린다**(첫 시도는 접혔다: 293px 에 값 다섯이 안 들어가
+         현금 잔액이 둘째 줄로 떨어졌다). 올리고 나면 값 줄에 현지돈 셋만 남아
+         **20,000 − 10,170 = 9,830** 이 한 줄로 읽힌다 — 점선이 그 뺄셈의 부호다.
+       ⚠ 가운데만 원화가 없다. 이 수의 원화는 양옆 두 원화의 차라 종이에 이미 있고,
+         넣으면 점선이 다시 사라진다.
        ★원화는 그때그때의 환율이 아니라 **지갑의 평균 원가**로 낸다. 그래야 두 원화의
          차이가 실제로 쓴 원화가 된다(172,491 − 84,779 = 87,712). */
     const krw = v => esc(U.money(Math.round(v), U.SETTLE));
@@ -363,12 +372,14 @@ const Cost = (function () {
            남은 두 짝을 한쪽으로 밀어 두 값이 안 마주 보게 했다.
            이제 **두 영역뿐**이라 좌우 끝에 하나씩 서고 그 사이가 곧 뺄셈이다. -->
       <div class="wallet">
-        <div class="wc"><span class="wt">환전</span>
-          <span class="wv"><b class="wf">${esc(U.money(c.got, c.cur))}</b>
-            <span class="wk">${krw(c.gotKrw)}</span></span></div>
-        <div class="wc on"><span class="wt">현금 잔액</span>
-          <span class="wv"><b class="wf">${esc(U.money(c.bal, c.cur))}</b>
-            <span class="wk">${krw(c.paid)}</span></span></div>
+        <div class="wc"><span class="wt">환전<span class="wk">${krw(c.gotKrw)}</span></span>
+          <span class="wv"><b class="wf">${esc(U.money(c.got, c.cur))}</b></span></div>
+        <div class="wm"><span class="wt">쓴 현금</span>
+          <span class="wv"><i class="wd"></i>
+            <b class="wf">${esc(U.money(c.got - c.bal, c.cur))}</b>
+            <i class="wd"></i></span></div>
+        <div class="wc on"><span class="wt">현금 잔액<span class="wk">${krw(c.paid)}</span></span>
+          <span class="wv"><b class="wf">${esc(U.money(c.bal, c.cur))}</b></span></div>
       </div>` : '';
 
     /* ★★영수증 아랫단의 **깨알글씨**. 가게 영수증이 거기에 적는 것은 인사말이 아니라
