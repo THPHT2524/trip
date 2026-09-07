@@ -223,97 +223,21 @@
                  + '<div class="tbhd" aria-hidden="true">'
                  + '<span>Date</span><span>To</span></div>'
                  + html + '</div>';
-    armFlip(el);
   }
 
-  /* ── 쪽자 넘어가기 ─────────────────────────────────────────────────────
-     ★★안내판은 **움직이는 물건**이고 그게 그 물건의 전부다. 세 번 만들어 세 번 다
-       걷었던 것을 다시 넣는다(2026-09-07). 2026-09-04에 적어 둔 실패 원인 셋에
-       하나씩 답한다:
-       ① content: attr(data-c) 를 칸마다 다섯 번씩 갈아 끼워 칸마다 레이아웃이
-          다시 계산됐다 → **칸에 아무것도 안 쓴다.** 글자는 이미 DOM 에 박혀 있다.
-          여기서 도는 것은 transform 하나라 레이아웃도 페인트도 없이 합성만 한다.
-       ② 스크롤 한 번에 getBoundingClientRect() 를 서른여덟 번 돌았다
-          → **자리는 그릴 때 한 번만 잰다.** 이후 스크롤에서는 캐시한 수와 scrollY 를
-            견주는 산수뿐이고, 줄은 순서대로 서 있으므로 커서를 앞으로만 민다.
-            rAF 로 묶고, 다 켜지면 스스로 귀를 뗀다.
-       ③ 열 줄이 한꺼번에 켜지면 마지막 줄이 756ms 뒤에 시작해서, 그 전에 1.2초
-          안전줄이 먼저 걸려 애니메이션 없이 툭 나타났다
-          → **줄 사이 지연이 없고 안전줄도 없다.** 물결은 줄 안에서만 치고 그것도
-            열 칸에서 끊는다(최대 140ms + 이름줄 55ms) — 어느 줄이든 305ms 에 끝난다.
-     ★★그리고 기본 자세가 **이미 다 넘어간 것**이다. .flip 이 붙어야만 애니메이션이
-       생긴다 — 이 함수가 한 줄도 안 돌아도 판은 제대로 서 있다. 예전 것은 칸이
-       비어서 시작했기 때문에 판정 한 번을 놓치면 판이 빈 채로 남았다.
-     ⚠ IntersectionObserver 가 제 도구인데 **preview 브라우저에서 콜백이 안 온다**
-       (2026-09-07에 빈 옵저버로 다시 확인: 마흔 줄에 0회). 못 보고 내보내느니
-       재서 확인되는 것을 쓴다 — 이번 판정은 예전 것보다 오히려 싸다.
-     ⚠ 연도 띠는 안 넘긴다. position:sticky 라 붙어 있는 동안 rect 가 흐름상의 자리가
-       아니라 붙은 자리를 말해서, 한 번만 재는 이 방식과 안 맞는다. 판의 틀이지
-       행선지 줄도 아니다.
-     ★한 세션에 줄마다 한 번. 여행에서 돌아올 때마다 판이 다시 넘어가면 곧 거슬린다 —
-       목록은 그때마다 새로 그려지므로 여행 아이디로 기억한다.
-     ★움직임을 줄여 달라는 설정이면 전역 규칙이 통째로 끈다(css). */
-  const flipped = new Set();
-  let marks = [], cur = 0, ticking = false;
-
-  /* ★★한 번에 넘길 줄 수를 **묶는다**(2026-09-07 실측). 줄 하나에 .flip 을 붙이고
-     스타일까지 강제로 돌리면 3.4ms 인데, 마흔 줄을 한꺼번에 붙이면 109ms 다 — 예전에
-     '열 줄이 겹치면' 하고 적어 둔 그 구간이다. 던지듯 굴리면 한 판정에 서른 줄이
-     걸릴 수 있으므로 둘로 막는다:
-       · 이미 화면 위로 지나간 줄은 **넘길 것이 없다** — 표시만 하고 지나간다.
-       · 그러고도 남으면 여덟 줄에서 끊는다. 나머지는 그냥 선 채로 둔다.
-     못 본 애니메이션을 아까워할 이유가 없다. 끊기는 것이 훨씬 비싸다. */
-  const FLIP_TOP = 8;
-  function flipTick() {
-    ticking = false;
-    const y = window.scrollY;
-    const line = y + window.innerHeight * 0.86;
-    let n = 0;
-    while (cur < marks.length && marks[cur].top <= line) {
-      const m = marks[cur++];
-      flipped.add(m.id);
-      if (m.top >= y - 40 && n < FLIP_TOP && !document.hidden) { flip(m.n); n++; }
-    }
-    if (cur >= marks.length) {
-      window.removeEventListener('scroll', flipScroll);
-      window.removeEventListener('resize', flipMeasure);
-      marks = [];
-    }
-  }
-  /* ★★붙였으면 **떼어 준다**(2026-09-07). fill-mode 가 both 라 지연 동안 시작 자세
-     (접힌 것 = 높이 0)를 붙들고 있는데, 애니메이션 타임라인이 안 돌면 거기서 멈춘다 —
-     칸이 안 보인 채로 남는다(창이 숨겨진 상태에서 currentTime 0 으로 실측). 예전
-     실패와 같은 구멍이라, '기본 자세가 이미 넘어간 것' 이라는 말은 .flip 이 안 붙은
-     동안에만 참이었다. 붙인 뒤에도 참이게 만든다: 다 끝날 즈음 class 를 뗀다.
-     ⚠ 700ms 는 제일 늦은 칸이 끝나는 351ms(지연 181 + 170)의 갑절이다 — 도는
-       중이면 절대 못 자르고, 안 돌았으면 여기서 판이 제대로 선다.
-       예전 안전줄(1.2초)이 애니메이션을 잘랐던 것은 꼬리가 756ms 였기 때문이다. */
-  function flip(n) {
-    n.classList.add('flip');
-    setTimeout(() => n.classList.remove('flip'), 700);
-  }
-  function flipScroll() { if (!ticking) { ticking = true; requestAnimationFrame(flipTick); } }
-  /* 화면이 바뀌면 남은 줄의 자리도 바뀐다 — 아직 안 켜진 것만 다시 잰다 */
-  function flipMeasure() {
-    const y = window.scrollY;
-    for (let k = cur; k < marks.length; k++) marks[k].top = marks[k].n.getBoundingClientRect().top + y;
-    flipTick();
-  }
-  function armFlip(el) {
-    window.removeEventListener('scroll', flipScroll);
-    window.removeEventListener('resize', flipMeasure);
-    const list = [];
-    el.querySelectorAll('.trip').forEach(n => { if (!flipped.has(n.dataset.id)) list.push(n); });
-    if (!list.length) { marks = []; return; }
-    /* ★재는 것은 여기 한 번뿐이다. 읽기만 연달아 하므로 레이아웃도 한 번만 돈다. */
-    const y = window.scrollY;
-    marks = list.map(n => ({ n, id: n.dataset.id, top: n.getBoundingClientRect().top + y }));
-    cur = 0;
-    window.addEventListener('scroll', flipScroll, { passive: true });
-    window.addEventListener('resize', flipMeasure);
-    flipTick();                       // 이미 화면에 들어와 있는 줄부터
-  }
-
+  /* ★★쪽자 넘어가기(스플릿 플랩)를 **네 번 만들어 네 번 다 걷었다.**
+     ① ~ ③ (2026-09-04) 은 값이 너무 컸다:
+       · content: attr(data-c) 를 칸마다 다섯 번씩 갈아 끼우니 그때마다 그 칸의
+         레이아웃이 다시 계산됐다. 빠르게 훑으면 한 번에 수백 칸이 그 짓을 한다.
+       · 스크롤 한 번에 getBoundingClientRect() 를 서른여덟 번 돌았다.
+       · 한꺼번에 열 줄이 켜지면 마지막 줄은 756ms 뒤에나 시작해서, 그 전에 1.2초
+         안전줄이 먼저 걸려 애니메이션 없이 툭 나타났다.
+     ④ (2026-09-07) 은 그 셋을 다 고쳤다 — 칸에 아무것도 안 쓰고(transform 하나),
+       자리는 그릴 때 한 번만 재고, 물결을 열 칸에서 끊어 어느 줄이든 351ms 에
+       끝났다. 실측으로 줄 하나 3.4ms, 한 판정에 여덟 줄로 제한, 타임라인이 멈춰도
+       700ms 뒤 판이 제대로 서는 것까지 확인했다. **그런데도 폰에서 보니 별로였다.**
+     ★★그러니 이건 값의 문제가 아니다. 값을 다 맞춰도 안 예쁜 것이라, 다시 만들
+       이유가 없다. 판은 바로 서는 것이 낫다. */
  /* 머리띠 하나와 그 아래 카드들. 머리띠는 **그 묶음이 얼마였는지**까지 말한다 —
      연도만 적으면 눈금일 뿐이지만, 옆에 '7 times 41 days' 가 붙으면 그 해의 크기가 읽힌다. */
   /* ★한 해를 **한 상자**로 묶는다. 머리띠가 sticky 인데 상자가 없으면 형제끼리
