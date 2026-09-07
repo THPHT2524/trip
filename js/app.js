@@ -51,15 +51,30 @@
     return { tripId: p[1], tab: found || 'plan' };
   }
 
+  /* ★★판마다 **마지막으로 보던 자리**를 적어 둔다(2026-09-07).
+     전에는 판을 옮길 때 무조건 맨 위로 올렸다. 판을 갈아 끼우는 방식이라 스크롤이
+     문서에 남는 것을 막으려던 것인데, 그게 '내 자리' 까지 같이 지웠다 —
+     오사카·교토 일정은 문서가 10,070px 이라, 34번째 장소를 보다가 지도를 켰다
+     돌아오면 2,600px 을 다시 굴려야 했다(실측). 홈도 마찬가지여서 스물다섯 번째
+     여행에서 ← 를 누르면 2026년 맨 위로 돌아갔다.
+   ★뒤로가기(popstate)는 **안 건드린다.** 브라우저가 이미 제 자리를 되돌려 주고 있어서
+     (실측: 2,400px 그대로), 여기서 또 손대면 두 손이 같은 것을 잡는다. 자리를 적는
+     것만 거기서도 하고, 되돌리는 것은 화면 안에서 옮길 때(push)만 한다. */
+  const spot = new Map();
+  const spotKey = (t, b) => (t || '') + '|' + b;
+
   function go(nextTripId, nextTab, push) {
+    spot.set(spotKey(tripId, tab), window.scrollY);   // 떠나기 전에 자리를 적는다
     tripId = nextTripId || null;
     tab = nextTab || 'plan';
     if (push) {
       const want = tripId ? ('/t/' + tripId + (SEG[tab] ? '/' + SEG[tab] : '')) : '/';
       if (location.pathname !== want) history.pushState(null, '', want);
-      window.scrollTo(0, 0);     // 판을 갈아 끼우는 방식이라 스크롤이 문서에 남는다
     }
     render();
+    /* ⚠ render() 뒤라야 한다 — 판이 hidden 이면 높이가 0 이라 scrollTo 가 잘린다.
+       한 번도 안 가 본 판은 적어 둔 자리가 없으므로 0, 곧 예전과 같다. */
+    if (push) window.scrollTo(0, spot.get(spotKey(tripId, tab)) || 0);
   }
 
   // ── 그리기 ────────────────────────────────────────────────────────────

@@ -27,6 +27,21 @@ const Plan = (function () {
   let crew = [];        // 동행자 — '결제자' 를 사람 이름으로 고르게 한다
 
 
+  /* ★★**지금 보고 있는 날**을 돌려준다(2026-09-07). DAY 띠가 sticky 라 화면 머리에
+     붙어 있는 그것이 곧 '지금 보고 있는 날' 이다 — 날짜 탭을 걷으면서 없어졌다고 적어
+     둔 그 값이 사실은 화면에 계속 있었다(fillForm 의 날짜 기본값 주석 참고).
+     ★붙어 있는 띠 = 머리말 아래 선(--h-top)을 이미 지난 것 중 **마지막** 것.
+       아직 아무 띠도 안 지났으면(맨 위) 빈 값을 준다 — 없는 것을 지어내지 않는다. */
+  function dayOnScreen() {
+    const bands = document.querySelectorAll('#days .dayband');
+    if (!bands.length) return '';
+    const lim = (parseFloat(getComputedStyle(document.documentElement)
+                 .getPropertyValue('--h-top')) || 64) + 6;
+    let pick = '';
+    bands.forEach(b => { if (b.getBoundingClientRect().top <= lim) pick = b.dataset.d || pick; });
+    return pick;
+  }
+
   /* 세울 날짜를 정한다.
      ★여행 기간이 있으면 **비어 있는 날도 세운다** — 3일차가 비었다는 사실 자체가 정보다.
        (기간이 없으면 일정이 적힌 날만 세운다. 없는 날을 지어낼 근거가 없다.) */
@@ -246,7 +261,7 @@ const Plan = (function () {
 
     /* ★날 수도 쪽자에 앉는다 — 홈의 연도 띠(2026 · 4 TIMES 24 DAYS)와 같은 어법이다.
        두 화면이 같은 판때기를 쓰면 한 물건으로 읽힌다(2026-09-04). */
-    const band = `<div class="dayband">
+    const band = `<div class="dayband" data-d="${esc(d)}">
         <!-- ★★이 띠는 **레일 밖이다**(2026-09-06). 정거장이 아니라 구역 표시라
              레일을 물려받지 않는다 — 들여쓰기도 없고 선도 지나가지 않는다.
              날이 바뀌는 자리에서 레일이 끊기는 것이 곧 '여기서 하루가 끝났다' 다. -->
@@ -473,14 +488,20 @@ const Plan = (function () {
     $('if-id').value = r ? r.id : '';
     $('if-link').value = (r && r.map_url) || '';
     $('if-name').value = (r && r.name) || '';
-    /* ★날짜 기본값: 고르고 있는 날 → **오늘(여행 기간 안이면)** → 시작일.
+    /* ★날짜 기본값: 고치는 줄의 날 → **여행 중이면 오늘** → 보고 있는 날 → 시작일.
        '그때그때 추가' 는 대개 오늘 일이다. 전체 보기에서 시작일이 먼저 오면
-       3일차 저녁에 넣은 줄이 1일차로 들어간다. */
+       3일차 저녁에 넣은 줄이 1일차로 들어간다.
+     ★★'고르고 있는 날' 을 되찾았다(2026-09-07). 날짜 탭을 걷으면서 없어졌다고 적어
+       뒀었는데, sticky 로 머리에 붙어 있는 DAY 띠가 계속 그 값이었다(dayOnScreen).
+       미리 계획할 때 3일차를 보며 ＋ 를 누르면 1일차로 들어가던 것이 이걸로 풀린다.
+     ⚠ 순서는 주석이 처음 적어 둔 것과 **거꾸로**다: 여행 중에는 오늘이 이긴다.
+       일정 탭은 열면 늘 맨 위(1일차)라, 보고 있는 날을 먼저 두면 3일차 저녁에
+       ＋ 를 눌렀는데 1일차로 들어가는 그 사고가 그대로 되살아난다. 보고 있는 날은
+       **여행 중이 아닐 때만** 쓴다 — 고장난 경우만 고치고 되는 경우는 안 건드린다. */
     const today = U.todayISO();
     const inTrip = trip && trip.start_on && trip.end_on
                 && today >= trip.start_on && today <= trip.end_on;
-    /* 날짜 탭이 없어졌으므로 '고른 날' 도 없다 — 여행 중이면 오늘, 아니면 첫날 */
-    $('if-date').value = (r && r.on_date) || (inTrip ? today : '')
+    $('if-date').value = (r && r.on_date) || (inTrip ? today : dayOnScreen())
                       || (trip && trip.start_on) || today;
     $('if-time').value = (r && r.at_time) ? r.at_time.slice(0, 5) : '';
     $('if-kind').value = (r && r.kind) || '기타';
