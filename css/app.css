@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=464') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=467') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=464') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=467') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=464') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=467') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1222,22 +1222,6 @@ a { color: var(--route); text-underline-offset: 2px; }
   -webkit-mask-image: radial-gradient(circle 5px at 5px 7px, transparent 99%, #000 100%);
   mask-image: radial-gradient(circle 5px at 5px 7px, transparent 99%, #000 100%);
 }
-/* 머리 — **이름이 없는 머리**다(2026-09-07). '여행 비용 / TRIP EXPENSES' 를 걷었다:
-   넉 장 중 이 종이와 설정 판만 제 이름을 머리에 달고 있었는데, 아래 탭이 늘 떠
-   있고 지금 판이 굵게 켜져 있으니 어디 있는지를 세 번째로 말하는 줄이었다.
-   ★자리를 채울 것을 새로 그리지 않는다 — 이 종이는 **이미 뜯은 자국**이 있다
-     (.rcp::before). 영수증으로 읽히게 하는 일은 그 톱니가 하고 있었고, 이름은
-     그 위에 글자로 한 번 더 적은 것이었다. 하나 덜어내는 쪽이 낫다.
-   ★남는 줄은 곁말 하나 — 몇 항목을 무슨 돈으로 세었나. 이제 이 종이의 첫 줄이라
-     자간을 조금 벌린다(.07 → .11em): 제목이 되지 않으면서 **인쇄된 줄**로 읽힐 만큼만.
-   ⚠ 셀 것이 없으면 머리를 **통째로 비운다**(js). 빈 <span> 하나만 남겨 두면
-     :empty 가 안 맞아서 점선 한 줄이 허공에 그어진다. */
-.rhd { text-align: center; padding: 13px 0 11px; border-bottom: 1px dashed var(--line); }
-.rhd:empty { display: none; }
-.rhd .rsb {
-  display: block;
-  font-family: var(--mono); font-size: var(--t-micro); letter-spacing: .11em; color: var(--ink-3);
-}
 /* 더모아로 가는 길 — 영수증 밖, 점선 상자. 이 종이에 딸린 물건이지만 이 종이는 아니다 */
 .colink { margin: 13px var(--pad) 0; }
 .colink a {
@@ -1365,15 +1349,18 @@ a { color: var(--route); text-underline-offset: 2px; }
 .cbar.stack i { width: auto; }
 
 .ctotal {
-  /* 머리 밑에 바로 온다 — 머리가 이미 점선으로 끊었으므로 여기서 또 긋지 않는다 */
-  margin-top: 12px;
+  /* ★종이의 **첫 줄**이다(2026-09-07, 머리를 없앴다). 12px 이던 것을 18px 로 벌린다 —
+     머리가 주던 위 여백이 통째로 사라져서 큰 수가 뜯은 자국에 붙어 있었다. */
+  margin-top: 18px;
   display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 10px;
 }
 .ctotal:empty { display: none; }
 /* ⚠ 'TOTAL' 이던 시절의 자간 .22em 을 한글에 그대로 두면 '합 계' 로 흩어진다.
    sans 로 바꾸고 자간을 0 으로 푼다 — 이 앱이 .top .span.ko 에서 이미 겪은 함정이다. */
 .ctotal .tl {
-  font-family: var(--sans); font-size: var(--t-cap); font-weight: 700;
+  /* ★12px 이었다(2026-09-07). 28px 짜리 수와 마주 서기에는 너무 작아서 수만
+     혼자 서 있었다 — 이름표가 15px 이 되어야 한 쌍으로 읽힌다. */
+  font-family: var(--sans); font-size: var(--t-read); font-weight: 700;
   letter-spacing: 0; color: var(--ink-2);
 }
 .ctotal .big {
@@ -1382,8 +1369,16 @@ a { color: var(--route); text-underline-offset: 2px; }
   font-family: var(--mono); font-size: 28px; font-weight: 700;
   font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--ink); line-height: 1.1;
 }
-.ctotal .sub { flex: 0 0 100%; margin-top: 3px; text-align: right;
+/* 곁줄 — 이 수가 **무엇을 어떻게 센 것인가**. 못 센 줄도 여기 같이 서고 색으로 갈린다.
+   ★★**이름표 밑**에 붙는다(2026-09-07). 오른쪽 끝(큰 수 밑)에 맞춰 봤더니 이미
+     충분히 큰 수 밑에 한 줄이 더 붙어 자리만 먹었다 — 오른칸은 수 하나로 비우고,
+     왼칸이 '무엇을' 을 두 줄로 맡는다(총 지출 / 어떻게 센 것인가). */
+.ctotal .sub { flex: 0 0 100%; margin-top: 3px; text-align: left;
   font-size: var(--t-cap); color: var(--ink-3); }
+/* ⚠ 이 줄의 경고는 여태 **회색이었다**(2026-09-07 발견). .warn 은 이 앱에서 늘
+   스코프를 달고 쓰던 이름이라(.dayband .warn 등) 여기에는 색이 안 붙어 있었다.
+   갈라진 줄일 때는 자리로 구분됐는데 이제 한 줄에 서므로 색이 유일한 표시다. */
+.ctotal .sub .warn { color: var(--warn); font-weight: 600; }
 
 /* 내역은 요약 밑에 온다 — 그 경계에 겹줄을 긋는다(영수증의 '====' 자리) */
 /* ★★좌우 여백은 **여기가 준다**. 한때 0 으로 깎았었는데(영수증 안에서 종이의
@@ -2588,12 +2583,12 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
   font-size: var(--t-read); font-weight: 600; color: var(--ink-2);
 }
 .planempty b { font-family: var(--mono); color: var(--route); }
-/* ③ 비용 — 안 찍힌 영수증. 머리와 바코드 사이가 비고, 위아래로 종이의 금이 남는다 */
+/* ③ 비용 — 안 찍힌 영수증. 뜯은 자국과 바코드 사이가 빈다 */
 .ctotal .none {
   /* ⚠ .ctotal 은 flex 다 — 폭을 안 박으면 이 칸이 **글자 폭만큼만** 늘어나서
      제가 그은 금이 종이 한가운데서 끊긴다(2026-09-06 실측).
-   ⚠ 금도 제가 긋지 않는다. 위는 머리(.rhd)가, 아래는 바코드(.rbc)가 이미 긋는다 —
-     여기서 또 그으면 점선이 8px 사이로 둘씩 겹친다. 빈 자리는 **여백만** 낸다. */
+   ⚠ 금은 제가 긋지 않는다. 아래는 바코드(.rbc)가 이미 긋는다 — 여기서 또 그으면
+     점선이 둘씩 겹친다. 빈 자리는 **여백만** 낸다. */
   flex: 1 1 100%; margin: 0; padding: 30px 0 34px;
   text-align: center; font-size: var(--t-body); line-height: 1.9; color: var(--ink-3);
 }
@@ -2643,6 +2638,13 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 /* 지갑에 남은 현금 — 비용 탭 머리에 한 줄 */
 /* 영수증 안에서는 종이가 이미 여백을 주므로 상자를 바짝 좁힌다 */
 .rcp .wallet { margin: 11px 0 0; padding: 9px 11px; border-radius: var(--r-sm); }
+/* ★★띠 앞에서 종이가 한 번 끊긴다(2026-09-07). 위 둘은 수 하나짜리 **답**이고
+   (얼마 썼나 · 지갑이 어떤가), 띠는 그 답을 **쪼갠 것**이다 — 셋이 붙어 있으면
+   한 덩어리로 보여서 그 차이가 안 읽혔다. 영수증의 점선을 그 경계에 쓴다.
+   ⚠ 그릴 띠가 없으면(하루짜리·혼자 간 여행) 금도 없다 — :empty 가 걸러 준다. */
+#cost-strips:not(:empty) {
+  margin-top: 13px; padding-top: 2px; border-top: 1px dashed var(--line);
+}
 .clist .rq .rx { color: var(--ink-3); }
 /* ── 현금 칸 ──────────────────────────────────────────────────────────
    바꾼 것 − 쓴 것 = 남은 것. 셋을 나란히 세워야 그 뺄셈이 보인다.
