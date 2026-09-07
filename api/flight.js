@@ -178,10 +178,22 @@ module.exports = async (req, res) => {
   const f = pick(body, date);
   const from = f && side(f.departure);
   const to = f && side(f.arrival);
-  /* 좌표가 없으면 이 기능이 하려던 일의 절반이 없는 것이다 — 못 찾은 것으로 친다 */
+  /* 좌표가 없으면 이 기능이 하려던 일의 절반이 없는 것이다 — 못 찾은 것으로 친다.
+     ★★그런데 **왜** 비었는지가 둘이다: 정말 그 편 자료가 없거나, 공급자가 응답
+       형식을 바꿨거나. 뒤쪽이면 화면만 보고는 영영 모른다 — 그래서 **본 열쇠들을
+       같이 적어 준다.** 그 한 줄이면 side()/pick() 을 어디로 고칠지 바로 안다.
+       값은 안 싣는다: 고치는 데 필요한 것은 이름이지 내용이 아니다. */
   if (!from || !to || from.lat == null || to.lat == null) {
+    const f0 = Array.isArray(body) ? body[0] : body;
+    const ks = o => (o && typeof o === 'object' ? Object.keys(o).slice(0, 12).join(',') : '-');
+    const saw = f0 && typeof f0 === 'object'
+      ? `flight[${ks(f0)}] departure[${ks(f0.departure)}] airport[${ks((f0.departure || {}).airport)}]`
+      : `본문이 ${Array.isArray(body) ? '빈 배열' : typeof body}`;
     res.setHeader('Cache-Control', 'no-store');
-    res.status(404).json({ error: `${no} ${date} 편의 공항 정보가 비어 있습니다. 직접 적어 주세요.` });
+    res.status(404).json({
+      error: `${no} ${date} 편의 공항 정보가 비어 있습니다. 직접 적어 주세요. (받은 것: ${saw})`,
+      saw,
+    });
     return;
   }
 
