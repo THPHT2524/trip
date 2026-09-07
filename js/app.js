@@ -838,12 +838,19 @@
      나라도 기간도 통화도 공항 줄도 전부 편명에서 나오고, 셈 어디에도 그 구분이
      안 들어간다. 화면에만 있던 이름이라 사람에게 분류를 시키고 있었던 셈이다.
    ★순서도 안 묻는다. 받아 온 편을 **뜬 시각으로 정렬**하니 아무 데나 적어도 된다. */
+  /* ★★두 줄이 **바닥**이다(2026-09-07). 왕복이 예사고 편도는 드물다 — 두 줄일 때는
+     지우기를 아예 안 그린다. 안 채운 줄은 어차피 셈에서 빠지므로(filter) 편도라도
+     한 줄을 비워 두면 그만이고, 그러면 '지울 수 있는데 지우면 안 되는 줄' 이 없다.
+     ⚠ 지우기는 **모든 줄에서 같이** 사라진다. 한 줄만 빠지면 그 줄의 편명 칸만
+       넓어져 기둥이 어긋난다. */
   function drawLegs() {
+    const rm = legs.length > 2;
     $('new-fl-list').innerHTML = legs.map((g, i) => `<div class="flleg">
         <input class="flno" type="text" inputmode="latin" maxlength="8" autocomplete="off"
                spellcheck="false" placeholder="7C1301" aria-label="편명" value="${U.esc(g.no)}">
         <input class="fldt" type="date" aria-label="타는 날" value="${U.esc(g.on)}">
-        <button class="act" type="button" data-rm="${i}" aria-label="이 편 지우기">${U.icon('x')}</button>
+        ${rm ? `<button class="act" type="button" data-rm="${i}"
+           aria-label="이 편 지우기">${U.icon('x')}</button>` : ''}
       </div>`).join('');
   }
 
@@ -1099,8 +1106,7 @@
     const b = ev.target.closest('[data-rm]');
     if (!b) return;
     readLegs();
-    legs.splice(+b.dataset.rm, 1);
-    if (!legs.length) legs.push({ no: '', on: '' });   // 한 줄은 남긴다 — 빈 판은 쓸 데가 없다
+    if (legs.length > 2) legs.splice(+b.dataset.rm, 1);
     drawLegs();
   });
   drawLegs();
