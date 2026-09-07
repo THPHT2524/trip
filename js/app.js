@@ -825,8 +825,6 @@
   let flightRows = [];
   let legs = [{ no: '', on: '' }, { no: '', on: '' }];
 
-  function legLabel(i, n) { return i === 0 ? '가는 편' : (i === n - 1 ? '오는 편' : '경유'); }
-
   function readLegs() {
     const el = $('new-fl-list');
     [...el.querySelectorAll('.flleg')].forEach((r, i) => {
@@ -836,20 +834,17 @@
     });
   }
 
+  /* ★★이름표('가는 편·경유·오는 편')를 걷었다(2026-09-07). **쓰지 않는 말이었다** —
+     나라도 기간도 통화도 공항 줄도 전부 편명에서 나오고, 셈 어디에도 그 구분이
+     안 들어간다. 화면에만 있던 이름이라 사람에게 분류를 시키고 있었던 셈이다.
+   ★순서도 안 묻는다. 받아 온 편을 **뜬 시각으로 정렬**하니 아무 데나 적어도 된다. */
   function drawLegs() {
-    const n = legs.length;
-    $('new-fl-list').innerHTML = legs.map((g, i) => {
-      /* 가는 편·오는 편은 이 폼의 뼈대라 지울 것이 아니다 — 자리만 비워 기둥을 지킨다 */
-      const fixed = (i === 0 || i === n - 1) ? ' fixed' : '';
-      return `<div class="flleg${fixed}">
-        <span class="fll">${legLabel(i, n)}<button class="act" type="button" data-rm="${i}"
-          aria-label="이 경유 지우기">${U.icon('x')}</button></span>
+    $('new-fl-list').innerHTML = legs.map((g, i) => `<div class="flleg">
         <input class="flno" type="text" inputmode="latin" maxlength="8" autocomplete="off"
-               spellcheck="false" placeholder="7C1301" aria-label="${legLabel(i, n)} 편명"
-               value="${U.esc(g.no)}">
-        <input class="fldt" type="date" aria-label="${legLabel(i, n)} 타는 날" value="${U.esc(g.on)}">
-      </div>`;
-    }).join('');
+               spellcheck="false" placeholder="7C1301" aria-label="편명" value="${U.esc(g.no)}">
+        <input class="fldt" type="date" aria-label="타는 날" value="${U.esc(g.on)}">
+        <button class="act" type="button" data-rm="${i}" aria-label="이 편 지우기">${U.icon('x')}</button>
+      </div>`).join('');
   }
 
   /* 편명을 한 꼴로 편다. **칸에 되써 준다** — 서버도 같은 일을 하지만(api/flight.js),
@@ -883,6 +878,10 @@
     try {
       const got = [];
       for (const g of use) got.push(await DB.flight(g.no, g.on));
+      /* ★뜬 시각 순으로 세운다 — 적은 차례가 아니라 **탄 차례**가 이 여행의 순서다.
+         그러면 폼에서 위아래를 맞출 일이 없다(경유를 나중에 떠올려 밑에 적어도 된다). */
+      const at = a => (a.on || '') + 'T' + (a.time || '00:00');
+      got.sort((x, y) => (at(x.from) < at(y.from) ? -1 : 1));
 
       /* 공항 줄 — 같은 공항이 같은 날 두 번 나오면 한 줄로 친다(경유의 내림·뜸) */
       const byKey = new Map();
@@ -900,10 +899,12 @@
       }));
       if (ccs.length) newPick.set(ccs.join(','));
 
-      /* 기간 — 첫 편이 뜬 날부터 마지막 편이 내린 날까지 */
+      /* 기간 — 첫 편이 뜬 날부터 마지막 편이 내린 날까지.
+         ⚠ 끝은 **집에 닿았을 때만** 적는다. 가는 편만 적어 두었으면 언제 끝나는
+           여행인지 알 방법이 없고, 그때 도착일을 끝으로 박으면 하루짜리가 된다. */
       const first = got[0], last = got[got.length - 1];
       if (first.from.on) $('new-from').value = first.from.on;
-      if (got.length > 1 && last.to.on) $('new-to').value = last.to.on;
+      if (last.to.cc === HOME_CC && last.to.on) $('new-to').value = last.to.on;
 
       /* 통화 — **제일 오래 머문 나라**. 도하 두 시간과 바르셀로나 열흘을 가른다.
          ⚠ 머문 시간을 못 재는 경우(편이 하나)는 그 편의 도착지가 답이다. */
@@ -1087,10 +1088,9 @@
 
   $('new').addEventListener('submit', createTrip);
   $('new-fl-go').addEventListener('click', fillFromFlight);
-  /* 경유는 **끝 줄 앞에** 들어간다 — 오는 편은 언제나 마지막이다 */
   $('new-fl-add').addEventListener('click', () => {
     readLegs();
-    legs.splice(Math.max(1, legs.length - 1), 0, { no: '', on: '' });
+    legs.push({ no: '', on: '' });
     drawLegs();
   });
   $('new-fl-list').addEventListener('click', ev => {
@@ -1098,6 +1098,7 @@
     if (!b) return;
     readLegs();
     legs.splice(+b.dataset.rm, 1);
+    if (!legs.length) legs.push({ no: '', on: '' });   // 한 줄은 남긴다 — 빈 판은 쓸 데가 없다
     drawLegs();
   });
   drawLegs();
