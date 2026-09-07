@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=457') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=458') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=457') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=458') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=457') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=458') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1653,9 +1653,19 @@ a { color: var(--route); text-underline-offset: 2px; }
    좁은 칸에 두 나라 말을 다는 값을 여기서 치른다: 이름표가 드는 만큼 칸을 준다. */
 .acard .form > .row > .field.kind { flex: 0 0 132px; }
 .acard .field {
+  position: relative;
   display: block; gap: 0;
   padding: 7px 12px 9px;
   border-bottom: 1px solid var(--rule);
+}
+/* ★사람 수는 **값**이라 이름표 안에 안 넣는다 — 넣으면 이 칸만 다른 규칙이 된다
+   (다른 칸은 다 이름표 위·값 아래). 칸의 오른쪽 끝, 이름표와 같은 줄에 세운다:
+   서식이 '총 N명' 을 적는 그 자리다. 값이므로 등폭으로, 이름표보다 진하게. */
+.acard .field > .cn {
+  position: absolute; right: 12px; top: 7px;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: var(--t-micro); font-weight: 600; letter-spacing: .02em;
+  color: var(--ink-2); line-height: 1.35;
 }
 /* 이름표 — 칸 **안**의 작은 글씨. 번호가 앞에 선다 */
 .acard .field > label, .acard .field > .lbl {
