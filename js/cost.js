@@ -345,10 +345,15 @@ const Cost = (function () {
     const c = M.cash;
     /* ★영수증 안에서는 라벨이 먼저다 — TOTAL 과 같은 어법(작은 대문자 mono).
        '남은 현금' 을 뒤에 달면 값·라벨·곁말 셋이 한 줄에 안 들어가 접힌다. */
-    /* ★현금은 **한 줄짜리 칩**이다(2026-09-06). 환전·사용·남음 셋을 원화까지 붙여
-       세워 봤더니 108px 짜리 판때기가 되어 영수증 위쪽을 다 먹었다. 한 줄에
-       들어가는 것은 두 짝뿐이라(293px 중 273px) **바꾼 것과 남은 것**만 남긴다 —
-       쓴 것은 그 둘의 차이라 셋 중 유일하게 되짚을 수 있는 수다.
+    /* ★현금 칩에 담는 것은 **두 짝뿐**이다(2026-09-06). 환전·사용·남음 셋을
+       원화까지 붙여 세워 봤더니 108px 짜리 판때기가 되어 영수증 위쪽을 다 먹었다.
+       **바꾼 것과 남은 것**만 남긴다 — 쓴 것은 그 둘의 차이라 셋 중 유일하게
+       되짚을 수 있는 수다.
+       ★★한 줄이던 것을 **두 줄로 나눈다**(2026-09-07). 이름표까지 값과 한 줄에
+         세워 놓으니 조각 여섯이 나란히 서서 어디까지가 한 짝인지가 안 보였다.
+         이름표는 위, 값은 아래 — 그러면 이름표끼리 한 줄, 값끼리 한 줄이라
+         왼오를 견주는 눈이 값 줄만 훑는다. 이름표가 빠진 만큼 값을 키운다.
+       ⚠ '잔액' 이 아니라 '현금 잔액' 이다 — 이 칩만 보고도 무슨 잔액인지 알아야 한다.
        ★원화는 그때그때의 환율이 아니라 **지갑의 평균 원가**로 낸다. 그래야 두 원화의
          차이가 실제로 쓴 원화가 된다(172,491 − 84,779 = 87,712). */
     const krw = v => esc(U.money(Math.round(v), U.SETTLE));
@@ -359,11 +364,11 @@ const Cost = (function () {
            이제 **두 영역뿐**이라 좌우 끝에 하나씩 서고 그 사이가 곧 뺄셈이다. -->
       <div class="wallet">
         <div class="wc"><span class="wt">환전</span>
-          <b class="wf">${esc(U.money(c.got, c.cur))}</b>
-          <span class="wk">${krw(c.gotKrw)}</span></div>
-        <div class="wc on"><span class="wt">잔액</span>
-          <b class="wf">${esc(U.money(c.bal, c.cur))}</b>
-          <span class="wk">${krw(c.paid)}</span></div>
+          <span class="wv"><b class="wf">${esc(U.money(c.got, c.cur))}</b>
+            <span class="wk">${krw(c.gotKrw)}</span></span></div>
+        <div class="wc on"><span class="wt">현금 잔액</span>
+          <span class="wv"><b class="wf">${esc(U.money(c.bal, c.cur))}</b>
+            <span class="wk">${krw(c.paid)}</span></span></div>
       </div>` : '';
 
     /* ★★영수증 아랫단의 **깨알글씨**. 가게 영수증이 거기에 적는 것은 인사말이 아니라
