@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=458">
+<link rel="stylesheet" href="/css/app.css?v=460">
 </head>
 <body>
 
@@ -118,24 +118,25 @@
       <p class="colink"><a href="/themore">더모아 계산기 — 얼마를 긁어야 999원에 맞나 →</a></p>
     </div>
 
-    <!-- ── 설정 = 여행 신고서 ─────────────────────────────────────────────
+    <!-- ── 설정 = 서식 한 장 ───────────────────────────────────────────────
          js/crew.js. 여행 설정이 위, 동행자가 아래다:
          혼자 다니는 여행이 더 많아서 매번 보는 것은 설정 쪽이다.
        ★★이 화면만 **종이가 없었다**(2026-09-06). 홈은 여권·안내판, 일정은 노선도,
          지도는 티켓, 비용은 영수증인데 설정만 웹 폼이었다. 그런데 여기 담기는 것은
          이름·나라·머무는 기간·동행·참조번호 — **신고서의 칸 그대로**라 컨셉을
          억지로 씌울 것이 없었다. 종이 한 장을 깔고 서식 이름을 머리에 단다.
-       ★★이름은 '입국신고서' 가 아니라 **여행 신고서**다(2026-09-07). 실물이 아닌데
-         실물 이름을 쓰면 그건 컨셉이 아니라 사칭이고, 무엇보다 비용 탭이 이미
-         **여행 영수증**이라 '여행 + 서류이름' 이라는 짝이 생긴다 — 두 종이가
-         같은 집 물건으로 읽힌다.
+       ★★이름은 **여행 설정**이다(2026-09-07). '입국신고서' → '여행 신고서' 를 거쳐
+         여기로 왔다. 실물이 아닌데 실물 이름을 쓰면 컨셉이 아니라 사칭이고,
+         무엇보다 **쓰는 사람이 이 화면을 부르는 말**이 설정이다(탭 이름이 그렇다).
+         서식의 생김새는 그대로 두고 이름만 부르는 대로 적는다 — 관공서 서식이라고
+         이름까지 관공서 말을 쓸 이유는 없다.
        ★한글 이름표에 라틴을 작게 붙이는 것(data-en)이 이 서식의 어법이다 —
          실제 신고서가 그렇게 생겼다. ⚠ 두 나라 말은 **이 판에서만** 쓴다:
          팝업 셋(새 여행·참여·일정/결제)은 적어 넣는 자리라 한글만 세운다. -->
     <div class="pane" data-tab="info" hidden>
       <div class="acard">
         <div class="chead">
-          <span class="t">여행 신고서<em>Trip declaration</em></span>
+          <span class="t">여행 설정<em>Trip settings</em></span>
           <span class="cc" id="set-cc" aria-hidden="true"></span>
         </div>
       <section class="cblock">
@@ -457,22 +458,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=458"></script>
-<script src="/js/map-config.js?v=458"></script>
-<script src="/js/money.js?v=458"></script>
-<script src="/js/util.js?v=458"></script>
-<script src="/js/worldmap.js?v=458"></script>
-<script src="/js/geo.js?v=458"></script>
-<script src="/js/gmaps.js?v=458"></script>
-<script src="/js/db.js?v=458"></script>
-<script src="/js/fx.js?v=458"></script>
-<script src="/js/outbox.js?v=458"></script>
+<script src="/js/supabase-config.js?v=460"></script>
+<script src="/js/map-config.js?v=460"></script>
+<script src="/js/money.js?v=460"></script>
+<script src="/js/util.js?v=460"></script>
+<script src="/js/worldmap.js?v=460"></script>
+<script src="/js/geo.js?v=460"></script>
+<script src="/js/gmaps.js?v=460"></script>
+<script src="/js/db.js?v=460"></script>
+<script src="/js/fx.js?v=460"></script>
+<script src="/js/outbox.js?v=460"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=458"></script>
-<script src="/js/plan.js?v=458"></script>
-<script src="/js/map.js?v=458"></script>
-<script src="/js/cost.js?v=458"></script>
-<script src="/js/app.js?v=458"></script>
+<script src="/js/crew.js?v=460"></script>
+<script src="/js/plan.js?v=460"></script>
+<script src="/js/map.js?v=460"></script>
+<script src="/js/cost.js?v=460"></script>
+<script src="/js/app.js?v=460"></script>
 
 </body>
 </html>
