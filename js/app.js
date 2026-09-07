@@ -807,75 +807,123 @@
   }
 
   /* ── 항공편으로 채우기 ──────────────────────────────────────────────────
-     ★★여행은 대개 **표를 사면서** 세워진다. 그때 손에 있는 것은 편명과 날짜 둘뿐인데,
-       거기서 나라·기간·통화와 첫 줄·마지막 줄 공항이 다 나온다 — 손으로는 여덟 값이고,
-       좌표는 구글맵 링크를 따로 붙여야 겨우 들어온다.
-     ★★가는 편은 **도착지**를, 오는 편은 **출발지**를 쓴다. 들어간 곳과 나온 곳이
-       다른 여행이 실제로 있다(바르셀로나로 들어가 리스본에서 나왔다).
-     ★★공항 줄은 **여기서 안 만든다** — 여행이 아직 없어서 붙일 곳이 없다.
-       담아 두었다가 createTrip 이 여행을 만든 뒤에 넣는다.
-     ★못 찾아도 폼은 그대로다. 이건 빠른 길이지 문이 아니다 — 밑의 칸을 그냥 채우면 된다. */
+     ★★여행은 대개 **표를 사면서** 세워진다. 그때 손에 있는 것은 편명과 날짜뿐인데,
+       거기서 나라·기간·통화와 공항 줄이 다 나온다 — 손으로는 좌표까지 넣기 어렵다.
+     ★★편을 **차례로 적는다.** 이름표는 자리가 정한다: 첫 줄이 가는 편, 끝 줄이
+       오는 편, 사이가 경유. 무엇인지 고르게 하지 않는다 — 순서가 이미 말한다.
+     ★★공항 줄은 **집이 아닌 쪽**만 만든다. 인천은 일정 줄로 안 넣는다는 규칙이
+       이미 있고(worldHtml 의 HOME 주석), 지금 적힌 서른한 줄에도 인천이 없다.
+       한 편에서 뜬 곳·내린 곳 둘 다 보되, 같은 공항이 같은 날 두 번 나오면
+       한 줄로 친다(경유는 내린 시각으로 남긴다).
+     ★★나라는 **지나온 곳을 다 넣는다.** 바르셀로나 여행이 ES,PT,**QA** 로 적혀
+       있다 — 도하는 갈아탄 곳이지만 이 앱에서는 다녀온 곳이고 지도의 한 점이다.
+     ★통화는 **제일 오래 머문 나라**에서 온다. 도하 두 시간과 바르셀로나 열흘 중
+       어느 쪽이 이 여행의 돈인지는 머문 시간이 말한다.
+     ★공항 줄은 여기서 안 만든다 — 여행이 아직 없어서 붙일 곳이 없다. 담아 두었다가
+       createTrip 이 여행을 만든 뒤에 넣는다. */
+  const HOME_CC = 'KR';
   let flightRows = [];
+  let legs = [{ no: '', on: '' }, { no: '', on: '' }];
 
-  function flightRow(a) {
-    return {
-      on_date: a.on, at_time: a.time || null,
-      /* 공항은 지나온 문이라 '이동' 이다 — 지금 적혀 있는 서른한 줄이 다 그렇다 */
-      kind: '이동',
-      /* 피드는 영어로 준다. 코드로 한글 이름을 찾고, 없으면 영어 그대로 둔다(U.AIRPORT) */
-      name: U.airportName(a.iata, a.name),
-      lat: a.lat, lng: a.lng,
-    };
+  function legLabel(i, n) { return i === 0 ? '가는 편' : (i === n - 1 ? '오는 편' : '경유'); }
+
+  function readLegs() {
+    const el = $('new-fl-list');
+    [...el.querySelectorAll('.flleg')].forEach((r, i) => {
+      if (!legs[i]) return;
+      legs[i].no = r.querySelector('.flno').value;
+      legs[i].on = r.querySelector('.fldt').value;
+    });
+  }
+
+  function drawLegs() {
+    const n = legs.length;
+    $('new-fl-list').innerHTML = legs.map((g, i) => {
+      /* 가는 편·오는 편은 이 폼의 뼈대라 지울 것이 아니다 — 자리만 비워 기둥을 지킨다 */
+      const fixed = (i === 0 || i === n - 1) ? ' fixed' : '';
+      return `<div class="flleg${fixed}">
+        <span class="fll">${legLabel(i, n)}<button class="act" type="button" data-rm="${i}"
+          aria-label="이 경유 지우기">${U.icon('x')}</button></span>
+        <input class="flno" type="text" inputmode="latin" maxlength="8" autocomplete="off"
+               spellcheck="false" placeholder="7C1301" aria-label="${legLabel(i, n)} 편명"
+               value="${U.esc(g.no)}">
+        <input class="fldt" type="date" aria-label="${legLabel(i, n)} 타는 날" value="${U.esc(g.on)}">
+      </div>`;
+    }).join('');
   }
 
   /* 편명을 한 꼴로 편다. **칸에 되써 준다** — 서버도 같은 일을 하지만(api/flight.js),
      그러면 화면에는 'ke 123' 이 남아서 방금 무엇을 물어본 것인지가 안 보인다. */
-  function normNo(el) {
-    const v = String(el.value || '').toUpperCase().replace(/[\s-]/g, '');
-    el.value = v;
-    return v;
+  const normNo = v => String(v || '').toUpperCase().replace(/[\s-]/g, '');
+
+  /* 한 편에서 나오는 공항 줄. 집 쪽은 뺀다. */
+  function rowsOfLeg(f) {
+    return [f.to, f.from]
+      .filter(a => a && a.cc !== HOME_CC && a.on)
+      .map(a => ({
+        on_date: a.on, at_time: a.time || null,
+        /* 공항은 지나온 문이라 '이동' 이다 — 지금 적혀 있는 서른한 줄이 다 그렇다 */
+        kind: '이동',
+        /* 피드는 영어로 준다. 코드로 한글 이름을 찾고, 없으면 영어 그대로(U.AIRPORT) */
+        name: U.airportName(a.iata, a.name),
+        lat: a.lat, lng: a.lng,
+      }));
   }
 
   async function fillFromFlight() {
+    readLegs();
     const msg = $('new-fl-msg');
-    const outNo = normNo($('new-fl-out'));
-    const outOn = $('new-fl-outd').value;
-    const backNo = normNo($('new-fl-back'));
-    const backOn = $('new-fl-backd').value;
-    if (!outNo || !outOn) { msg.className = 'hint'; msg.textContent = '가는 편의 편명과 타는 날을 적으세요.'; return; }
+    const use = legs.map(g => ({ no: normNo(g.no), on: g.on })).filter(g => g.no && g.on);
+    if (!use.length) { msg.className = 'hint'; msg.textContent = '편명과 타는 날을 적으세요.'; return; }
 
     $('new-fl-go').disabled = true;
     msg.className = 'hint';
     msg.textContent = '찾는 중…';
     flightRows = [];
     try {
-      const out = await DB.flight(outNo, outOn);
-      newPick.set(out.to.cc || '');
-      const cur = U.curOf(out.to.cc);
-      if (cur) $('new-cur').value = cur;
-      $('new-from').value = out.from.on || outOn;
-      flightRows.push(flightRow(out.to));
+      const got = [];
+      for (const g of use) got.push(await DB.flight(g.no, g.on));
 
-      let back = null;
-      if (backNo && backOn) {
-        back = await DB.flight(backNo, backOn);
-        /* 여행이 끝나는 날은 **집에 닿는 날**이다 — 밤 비행기는 뜬 날과 다르다 */
-        $('new-to').value = back.to.on || back.from.on || backOn;
-        flightRows.push(flightRow(back.from));
-      }
+      /* 공항 줄 — 같은 공항이 같은 날 두 번 나오면 한 줄로 친다(경유의 내림·뜸) */
+      const byKey = new Map();
+      got.forEach(f => rowsOfLeg(f).forEach(r => {
+        const k = r.name + '|' + r.on_date;
+        if (!byKey.has(k)) byKey.set(k, r);
+      }));
+      flightRows = [...byKey.values()].sort((a, b) =>
+        (a.on_date + (a.at_time || '')) < (b.on_date + (b.at_time || '')) ? -1 : 1);
+
+      /* 나라 — 지나온 곳을 다 넣는다(바르셀로나 여행의 QA 가 그렇게 적혀 있다) */
+      const ccs = [];
+      got.forEach(f => [f.from, f.to].forEach(a => {
+        if (a && a.cc && a.cc !== HOME_CC && !ccs.includes(a.cc)) ccs.push(a.cc);
+      }));
+      if (ccs.length) newPick.set(ccs.join(','));
+
+      /* 기간 — 첫 편이 뜬 날부터 마지막 편이 내린 날까지 */
+      const first = got[0], last = got[got.length - 1];
+      if (first.from.on) $('new-from').value = first.from.on;
+      if (got.length > 1 && last.to.on) $('new-to').value = last.to.on;
+
+      /* 통화 — **제일 오래 머문 나라**. 도하 두 시간과 바르셀로나 열흘을 가른다.
+         ⚠ 머문 시간을 못 재는 경우(편이 하나)는 그 편의 도착지가 답이다. */
+      const stamp = (on, t) => Date.parse(`${on}T${t || '00:00'}:00Z`);
+      let bestCc = got[0].to.cc, best = -1;
+      got.forEach((f, i) => {
+        const nxt = got[i + 1];
+        const stay = nxt ? stamp(nxt.from.on, nxt.from.time) - stamp(f.to.on, f.to.time) : -1;
+        if (f.to.cc !== HOME_CC && stay > best) { best = stay; bestCc = f.to.cc; }
+      });
+      const cur = U.curOf(bestCc);
+      if (cur) $('new-cur').value = cur;
 
       /* ★무엇이 들어왔는지 **그대로 읽어 준다.** '채웠습니다' 만 적으면 무엇을
          확인해야 하는지 모른 채 저장하게 된다. */
-      const a = flightRows[0], b = flightRows[1];
-      const parts = [`도착 ${a.name}${a.at_time ? ' ' + a.at_time : ''}`];
-      /* 들어간 곳과 나온 곳이 같으면 이름을 두 번 적지 않는다 — 대개는 같다 */
-      if (b) parts.push(b.name === a.name ? `출발 ${b.at_time || ''}`.trim()
-                                          : `출발 ${b.name}${b.at_time ? ' ' + b.at_time : ''}`);
       const eng = flightRows.filter(r => !/공항$/.test(r.name));
       msg.className = 'hint ok';
-      msg.textContent = parts.join(' · ') + ' · 나라와 기간을 채웠습니다.'
-        + (eng.length ? ' 공항 이름이 영어로 들어왔습니다 — 만든 뒤 일정에서 고쳐 주세요.' : '')
-        + (backNo && backOn ? '' : ' 오는 편을 적으면 마지막 줄도 같이 들어갑니다.');
+      msg.textContent = flightRows.map(r => `${r.name}${r.at_time ? ' ' + r.at_time : ''}`).join(' · ')
+        + ' · 나라와 기간을 채웠습니다.'
+        + (eng.length ? ' 공항 이름이 영어로 들어왔습니다 — 만든 뒤 일정에서 고쳐 주세요.' : '');
     } catch (e) {
       flightRows = [];
       msg.className = 'hint';
@@ -883,6 +931,15 @@
     } finally {
       $('new-fl-go').disabled = false;
     }
+  }
+
+  function resetFlight() {
+    legs = [{ no: '', on: '' }, { no: '', on: '' }];
+    flightRows = [];
+    drawLegs();
+    $('new-fl-msg').textContent = '';
+    $('new-fl-msg').className = 'hint';
+    $('new-fl').open = false;
   }
 
   async function createTrip(ev) {
@@ -906,9 +963,7 @@
       }
       $('new').reset();
       newPick.set('');
-      $('new-fl-msg').textContent = '';
-      $('new-fl-msg').className = 'hint';
-      flightRows = [];
+      resetFlight();
       $('new-dlg').close();
       /* ★만든 사람은 트리거가 첫 멤버로 넣는다. 그게 없으면 방금 만든 여행이
          정책에 걸려 자기 눈에도 안 보인다 — 목록을 다시 받아 그 사실을 확인한다. */
@@ -1032,6 +1087,20 @@
 
   $('new').addEventListener('submit', createTrip);
   $('new-fl-go').addEventListener('click', fillFromFlight);
+  /* 경유는 **끝 줄 앞에** 들어간다 — 오는 편은 언제나 마지막이다 */
+  $('new-fl-add').addEventListener('click', () => {
+    readLegs();
+    legs.splice(Math.max(1, legs.length - 1), 0, { no: '', on: '' });
+    drawLegs();
+  });
+  $('new-fl-list').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-rm]');
+    if (!b) return;
+    readLegs();
+    legs.splice(+b.dataset.rm, 1);
+    drawLegs();
+  });
+  drawLegs();
   $('join').addEventListener('submit', joinTrip);
   $('back').addEventListener('click', () => go(null, 'plan', true));
 
