@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=505') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=507') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=505') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=507') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=505') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=507') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -2511,6 +2511,9 @@ details[open] > summary::after { content: '−'; }
 .fllegs { display: flex; flex-direction: column; gap: 8px; }
 .flleg { display: flex; align-items: center; gap: 6px; }
 .flleg > .act { flex: 0 0 auto; margin-left: 2px; background: none; }
+/* 두 줄일 때는 지우기를 **감추되 자리는 남긴다** — 없애면 줄을 더할 때마다
+   날짜 칸이 34px 씩 홱 줄어든다(줄 수가 바뀌었을 뿐인데 칸이 움직인다). */
+.fllegs.nodel .flleg > .act { visibility: hidden; }
 /* 편명은 길어야 여덟 자다(7C1301·QR859) — 늘어날 이유가 없어 폭을 못 박는다.
    남는 자리는 날짜가 갖는다: 잘리면 안 되는 쪽은 이쪽이다. */
 .flleg .flno { flex: 0 0 96px; min-width: 0; text-transform: uppercase; }
