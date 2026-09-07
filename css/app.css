@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=494') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=495') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=494') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=495') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=494') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=495') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -2504,6 +2504,10 @@ details[open] > summary::after { content: '−'; }
    ⚠ 날짜 칸은 **안 줄어든다.** flex:0 0 auto 로 두었더니 제 본디 너비(160px 넘는다)를
      그대로 쥐고 편명 칸을 25px 로 밀어낸 뒤 시트 밖으로 나갔다(2026-09-07 실측).
      폭을 못 박고 min-width:0 을 같이 줘야 안쪽 글자가 칸에 맞춰 준다. */
+/* ★★금은 **아래**에 긋는다(2026-09-07). .form details.more 의 윗금은 시트 **맨 아래**
+   접힘('메모')을 위한 것이라, 맨 위에 오니 시트 머리말이 이미 그은 선 한 뼘 밑에
+   같은 선이 한 번 더 그어졌다 — 가르는 일을 하는 것은 이 접힘과 **밑의 칸들** 사이다. */
+#new-fl { border-top: 0; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
 .fllegs { display: flex; flex-direction: column; gap: 8px; }
 .flleg { display: flex; align-items: center; gap: 6px; }
 .flleg > .act { flex: 0 0 auto; margin-left: 2px; background: none; }
