@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=454') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=455') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=454') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=455') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=454') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=455') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1152,9 +1152,17 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   cursor: pointer; line-height: 1;
 }
-/* ★이름표는 늘 켜 둔다 — 핀만 있으면 '1번이 어디였더라' 를 보러 일정 탭으로 돌아가게 된다.
+/* ★★이름표는 **고른 핀에만** 뜬다(2026-09-07). 늘 켜 두던 것을 껐다 —
+   난바에서 다섯 곳을 가면 이름 다섯이 서로를 덮어 아무것도 안 읽혔다(흔한 경우다).
+   ★늘 켜 두던 이유는 '핀만 있으면 1번이 어디였더라를 보러 일정 탭으로 돌아간다'
+     였는데, 그 일을 **아래 카드 띠가 이미 한다** — 이름·시각·구분·쓴 돈까지.
+     이름표는 값을 치르고 중복을 사고 있었다.
+   ★끄고 나면 지도가 **번호 붙은 점**만 남는다. 그것이 원래 노선도의 모습이고,
+     고른 하나만 이름을 다는 것이 아래 띠와 짝이 맞는다.
    ★위성 사진 위에서도 읽혀야 한다 — 짙은 바탕에 밝은 글자.
    ★긴 이름은 자른다. 이름표가 길어지면 옆 핀을 덮는다. */
+.mk .mlbl { display: none; }
+.mk.is-on .mlbl, .mk:hover .mlbl { display: block; }
 .mk .mlbl {
   background: color-mix(in srgb, var(--ink) 86%, transparent);
   color: var(--paper); border-radius: var(--r-sm);
