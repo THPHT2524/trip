@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=477') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=483') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=477') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=483') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=477') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=483') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -2215,6 +2215,47 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
 }
 
 .trip .ttop i, .trip .tnm i { position: relative; }
+
+/* ── 쪽자가 넘어간다 ───────────────────────────────────────────────────
+   ★★안내판은 **움직이는 물건**이고 그게 그 물건의 전부다. 세 번 만들어 세 번 다
+     걷었던 것을 다시 넣는다(2026-09-07) — 이번엔 칸에 **아무것도 안 쓴다.**
+     글자는 이미 DOM 에 있고 여기서 도는 것은 transform 하나라, 레이아웃도 페인트도
+     없이 합성만 한다(예전 실패의 원인은 content 를 칸마다 다섯 번씩 갈아 끼운 것).
+   ★쪽자는 **위 모서리에 매달려 떨어진다** — transform-origin 이 50% 0 인 이유다.
+     perspective 를 부모가 아니라 transform 안에 넣는다: 칸마다 제 소실점을 가지면
+     14×26 짜리에서는 차이가 안 보이는 대신, 부모 쪽 규칙을 하나도 안 건드린다.
+   ★물결은 **묶음 안에서만** 친다(nth-child 는 묶음마다 다시 센다). 그래서 날짜판·
+     항공사판·행선지판이 저마다 한 번씩 넘어간다 — 진짜 판이 그렇게 걸려 있다.
+   ★열 칸에서 끊는다. 안 끊으면 열여덟 칸짜리 이름줄의 끝이 250ms 뒤에나 시작해서
+     '기다리는 것' 이 된다. 끊으면 어느 줄이든 305ms 안에 끝난다.
+   ⚠ .flip 이 붙어야만 애니메이션이 생긴다 — 자바스크립트가 한 줄도 안 돌아도
+     판은 제대로 서 있다.
+   ⚠⚠ 다만 **붙은 뒤**에는 얘기가 다르다. fill-mode 가 both 라 지연 동안 시작 자세를
+     붙드는데, 그 자세는 rotateX(-90deg) = **높이 0**, 곧 안 보이는 칸이다. 타임라인이
+     안 돌면 거기서 멈춘다(2026-09-07, 창이 숨겨진 채로 currentTime 0 을 실측했고
+     화면도 실제로 비었다 — 예전 실패와 같은 그림이었다). 그래서 js 가 700ms 뒤에
+     class 를 떼어 준다: 도는 중이면 못 자르고(제일 늦은 칸이 351ms), 안 돌았으면
+     거기서 판이 선다. **이 규칙만 보고 안전하다고 읽지 말 것.** */
+@keyframes flap {
+  from { transform: perspective(200px) rotateX(-90deg); }
+  to   { transform: perspective(200px) rotateX(0deg); }
+}
+.trip.flip i {
+  --i: 0; transform-origin: 50% 0;
+  animation: flap 170ms cubic-bezier(.2, .85, .35, 1) both;
+  animation-delay: calc(var(--i) * 14ms + var(--rw, 0ms));
+}
+.trip.flip i:nth-child(2) { --i: 1; }
+.trip.flip i:nth-child(3) { --i: 2; }
+.trip.flip i:nth-child(4) { --i: 3; }
+.trip.flip i:nth-child(5) { --i: 4; }
+.trip.flip i:nth-child(6) { --i: 5; }
+.trip.flip i:nth-child(7) { --i: 6; }
+.trip.flip i:nth-child(8) { --i: 7; }
+.trip.flip i:nth-child(9) { --i: 8; }
+.trip.flip i:nth-child(n+10) { --i: 9; }
+/* 이름줄은 윗줄이 다 넘어갈 즈음 시작한다 — 두 줄이 한 줄처럼 붙어 떨어진다 */
+.trip.flip .tnm i { --rw: 55ms; }
 /* ★가운데 이음매를 뺐다(2026-09-04). 라틴 글자는 선이 지나가도 읽히는데 **한글은
    음절 한가운데를 가로줄이 관통하면 글자가 깨져 보인다** — 제 주 · 도 쿄 가 특히 그랬다.
    판때기의 위·아래 명암만으로도 칸은 충분히 칸으로 읽힌다. */
