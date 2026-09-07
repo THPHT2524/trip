@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=485">
+<link rel="stylesheet" href="/css/app.css?v=488">
 </head>
 <body>
 
@@ -254,6 +254,30 @@
     </header>
     <div class="sheetbody">
       <form id="new" class="form">
+        <!-- ★★항공편으로 시작한다(2026-09-07). 여행은 대개 **표를 사면서** 세워지고,
+             그때 손에 있는 것은 편명과 날짜 둘뿐이다. 거기서 나라·기간·통화와
+             **첫 줄·마지막 줄 공항**(이름·시각·좌표)이 다 나온다.
+           ★안 적어도 된다 — 밑의 칸을 그냥 채우면 된다. 이건 **빠른 길**이지 문이 아니다.
+           ★오는 편은 출발지를 쓴다: 바르셀로나로 들어가 리스본에서 나오는 여행이 있다. -->
+        <div class="row tight" id="new-fl">
+          <div class="field"><label for="new-fl-out">가는 편</label>
+            <input id="new-fl-out" type="text" autocomplete="off" spellcheck="false"
+                   inputmode="latin" maxlength="8" placeholder="7C1301"></div>
+          <div class="field"><label for="new-fl-outd">타는 날</label>
+            <input id="new-fl-outd" type="date" class="mono"></div>
+        </div>
+        <div class="row tight">
+          <div class="field"><label for="new-fl-back">오는 편</label>
+            <input id="new-fl-back" type="text" autocomplete="off" spellcheck="false"
+                   inputmode="latin" maxlength="8" placeholder="7C1302"></div>
+          <div class="field"><label for="new-fl-backd">타는 날</label>
+            <input id="new-fl-backd" type="date" class="mono"></div>
+        </div>
+        <div class="row btns">
+          <button class="btn ghost" id="new-fl-go" type="button">항공편으로 채우기</button>
+        </div>
+        <p class="hint" id="new-fl-msg"></p>
+
         <div class="row">
           <div class="field">
             <label for="new-name">여행 이름</label>
@@ -460,22 +484,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=485"></script>
-<script src="/js/map-config.js?v=485"></script>
-<script src="/js/money.js?v=485"></script>
-<script src="/js/util.js?v=485"></script>
-<script src="/js/worldmap.js?v=485"></script>
-<script src="/js/geo.js?v=485"></script>
-<script src="/js/gmaps.js?v=485"></script>
-<script src="/js/db.js?v=485"></script>
-<script src="/js/fx.js?v=485"></script>
-<script src="/js/outbox.js?v=485"></script>
+<script src="/js/supabase-config.js?v=488"></script>
+<script src="/js/map-config.js?v=488"></script>
+<script src="/js/money.js?v=488"></script>
+<script src="/js/util.js?v=488"></script>
+<script src="/js/worldmap.js?v=488"></script>
+<script src="/js/geo.js?v=488"></script>
+<script src="/js/gmaps.js?v=488"></script>
+<script src="/js/db.js?v=488"></script>
+<script src="/js/fx.js?v=488"></script>
+<script src="/js/outbox.js?v=488"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=485"></script>
-<script src="/js/plan.js?v=485"></script>
-<script src="/js/map.js?v=485"></script>
-<script src="/js/cost.js?v=485"></script>
-<script src="/js/app.js?v=485"></script>
+<script src="/js/crew.js?v=488"></script>
+<script src="/js/plan.js?v=488"></script>
+<script src="/js/map.js?v=488"></script>
+<script src="/js/cost.js?v=488"></script>
+<script src="/js/app.js?v=488"></script>
 
 </body>
 </html>

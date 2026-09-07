@@ -351,9 +351,67 @@ const U = (function () {
        비워 둘 수 있게만 하고, 적으면 적은 것이 이긴다. */
   const tripName = (name, cities) => String(name || '').trim() || cityList(cities).join('·');
 
+  /* ── 공항 이름 ─────────────────────────────────────────────────────────
+     ★★**번역을 앱 안에 둔다**(2026-09-07). 항공편 조회(api/flight.js)가 주는 공항
+       이름은 영어다 — 피드는 번역을 안 한다. 그런데 이 앱의 공항 줄은 서른한 개가
+       전부 한글이고, 여권 지도가 점을 찍는 규칙도 **이름이 '공항' 으로 끝나는 것**이라
+       영어가 들어오면 그 줄이 조용히 지도에서 빠진다.
+     ★표기는 **쓰던 그대로** 심는다. '간사이 국제공항' 은 띄고 '나리타국제공항' 은
+       붙어 있는데, 그건 흔들린 것이 아니라 그때그때 그렇게 적으신 것이다 —
+       여기서 가지런히 고치면 지난 서른한 줄과 새 줄이 서로 다른 이름이 된다.
+     ★없는 공항은 **영어 그대로 둔다.** 지어내지 않는다 — 화면에서 한 번 고치면
+       되고, 지금도 그렇게 적고 계신다. 자주 가게 되면 여기 한 줄 넣으면 된다. */
+  const AIRPORT = {
+    /* 한국 */
+    ICN: '인천국제공항', GMP: '김포국제공항', CJU: '제주국제공항',
+    PUS: '김해국제공항', TAE: '대구국제공항', CJJ: '청주국제공항', KPO: '포항경주공항',
+    /* 일본 */
+    NRT: '나리타국제공항', HND: '하네다공항', KIX: '간사이 국제공항', ITM: '오사카 이타미공항',
+    CTS: '신치토세공항', FUK: '후쿠오카공항', OKA: '나하공항', NGO: '주부 센트레아국제공항',
+    /* 중화권 */
+    PEK: '베이징 서우두국제공항', PKX: '베이징 다싱국제공항', PVG: '상하이 푸둥국제공항',
+    SHA: '상하이 훙차오국제공항', HRB: '하얼빈 타이핑국제공항', CAN: '광저우 바이윈국제공항',
+    HKG: '홍콩국제공항', MFM: '마카오국제공항', TPE: '타오위안국제공항', TSA: '타이베이 쑹산공항',
+    /* 동남아 */
+    BKK: '수완나품공항', DMK: '돈므앙국제공항', CNX: '치앙마이국제공항', HKT: '푸껫국제공항',
+    SIN: '싱가포르 창이공항', KUL: '쿠알라룸푸르국제공항', CGK: '수카르노하타국제공항',
+    DPS: '응우라라이국제공항', MNL: '니노이아키노국제공항', CEB: '막탄 세부국제공항',
+    SGN: '떤선녓국제공항', HAN: '노이바이국제공항', DAD: '다낭국제공항',
+    /* 태평양 */
+    GUM: '괌국제공항', SPN: '사이판국제공항', HNL: '호놀룰루국제공항',
+    /* 중동·인도양 */
+    DXB: '두바이국제공항', AUH: '아부다비국제공항', DOH: '도하 하마드국제공항',
+    MLE: '벨라나국제공항', IST: '이스탄불공항',
+    /* 유럽 */
+    LHR: '히스로공항', CDG: '샤를드골공항', FRA: '프랑크푸르트공항', AMS: '스히폴공항',
+    BCN: '바르셀로나 엘프라트공항', MAD: '마드리드 바라하스공항', LIS: '리스본공항',
+    OPO: '포르투공항', FCO: '피우미치노공항', MXP: '말펜사공항', ZRH: '취리히공항',
+    VIE: '빈국제공항', PRG: '프라하공항',
+    /* 미주·오세아니아 */
+    LAX: '로스앤젤레스국제공항', SFO: '샌프란시스코국제공항', LAS: '해리 리드 국제공항',
+    SEA: '시애틀 터코마국제공항', JFK: '존에프케네디국제공항', EWR: '뉴어크국제공항',
+    ORD: '오헤어국제공항', YVR: '밴쿠버국제공항', SYD: '시드니국제공항', AKL: '오클랜드공항',
+  };
+  /* 나라 → 현지통화. **새 여행 폼의 고르개에 있는 열여섯 개만** 담는다 —
+     여기 없는 나라(카타르 QAR 처럼 경유만 하는 곳)는 고르개를 안 건드린다.
+     지어내서 넣으면 사람이 안 보고 지나가고, 그러면 모든 금액이 틀린다. */
+  const CUR_OF = {
+    KR: 'KRW', JP: 'JPY', US: 'USD', GU: 'USD', MP: 'USD',
+    CN: 'CNY', TW: 'TWD', HK: 'HKD', MO: 'MOP',
+    TH: 'THB', VN: 'VND', SG: 'SGD', MY: 'MYR', ID: 'IDR', PH: 'PHP',
+    AE: 'AED', MV: 'MVR',
+    ES: 'EUR', PT: 'EUR', FR: 'EUR', DE: 'EUR', IT: 'EUR', NL: 'EUR',
+    AT: 'EUR', BE: 'EUR', IE: 'EUR', FI: 'EUR', GR: 'EUR',
+  };
+  const curOf = cc => CUR_OF[String(cc || '').toUpperCase()] || '';
+
+  /* 코드로 한글 이름을 찾는다. 없으면 피드가 준 영어를 그대로 돌려준다. */
+  const airportName = (iata, fallback) => AIRPORT[String(iata || '').toUpperCase()] || fallback || '';
+
   return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
-           cityList, countryPicker, SETTLE, icon, hue, tripName, countryNameEn, ink };
+           cityList, countryPicker, SETTLE, icon, hue, tripName, countryNameEn, ink,
+           AIRPORT, airportName, curOf };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용

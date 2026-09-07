@@ -806,6 +806,85 @@
     $('new-err').textContent = msg || '';
   }
 
+  /* ── 항공편으로 채우기 ──────────────────────────────────────────────────
+     ★★여행은 대개 **표를 사면서** 세워진다. 그때 손에 있는 것은 편명과 날짜 둘뿐인데,
+       거기서 나라·기간·통화와 첫 줄·마지막 줄 공항이 다 나온다 — 손으로는 여덟 값이고,
+       좌표는 구글맵 링크를 따로 붙여야 겨우 들어온다.
+     ★★가는 편은 **도착지**를, 오는 편은 **출발지**를 쓴다. 들어간 곳과 나온 곳이
+       다른 여행이 실제로 있다(바르셀로나로 들어가 리스본에서 나왔다).
+     ★★공항 줄은 **여기서 안 만든다** — 여행이 아직 없어서 붙일 곳이 없다.
+       담아 두었다가 createTrip 이 여행을 만든 뒤에 넣는다.
+     ★못 찾아도 폼은 그대로다. 이건 빠른 길이지 문이 아니다 — 밑의 칸을 그냥 채우면 된다. */
+  let flightRows = [];
+
+  function flightRow(a) {
+    return {
+      on_date: a.on, at_time: a.time || null,
+      /* 공항은 지나온 문이라 '이동' 이다 — 지금 적혀 있는 서른한 줄이 다 그렇다 */
+      kind: '이동',
+      /* 피드는 영어로 준다. 코드로 한글 이름을 찾고, 없으면 영어 그대로 둔다(U.AIRPORT) */
+      name: U.airportName(a.iata, a.name),
+      lat: a.lat, lng: a.lng,
+    };
+  }
+
+  /* 편명을 한 꼴로 편다. **칸에 되써 준다** — 서버도 같은 일을 하지만(api/flight.js),
+     그러면 화면에는 'ke 123' 이 남아서 방금 무엇을 물어본 것인지가 안 보인다. */
+  function normNo(el) {
+    const v = String(el.value || '').toUpperCase().replace(/[\s-]/g, '');
+    el.value = v;
+    return v;
+  }
+
+  async function fillFromFlight() {
+    const msg = $('new-fl-msg');
+    const outNo = normNo($('new-fl-out'));
+    const outOn = $('new-fl-outd').value;
+    const backNo = normNo($('new-fl-back'));
+    const backOn = $('new-fl-backd').value;
+    if (!outNo || !outOn) { msg.className = 'hint'; msg.textContent = '가는 편의 편명과 타는 날을 적으세요.'; return; }
+
+    $('new-fl-go').disabled = true;
+    msg.className = 'hint';
+    msg.textContent = '찾는 중…';
+    flightRows = [];
+    try {
+      const out = await DB.flight(outNo, outOn);
+      newPick.set(out.to.cc || '');
+      const cur = U.curOf(out.to.cc);
+      if (cur) $('new-cur').value = cur;
+      $('new-from').value = out.from.on || outOn;
+      flightRows.push(flightRow(out.to));
+
+      let back = null;
+      if (backNo && backOn) {
+        back = await DB.flight(backNo, backOn);
+        /* 여행이 끝나는 날은 **집에 닿는 날**이다 — 밤 비행기는 뜬 날과 다르다 */
+        $('new-to').value = back.to.on || back.from.on || backOn;
+        flightRows.push(flightRow(back.from));
+      }
+
+      /* ★무엇이 들어왔는지 **그대로 읽어 준다.** '채웠습니다' 만 적으면 무엇을
+         확인해야 하는지 모른 채 저장하게 된다. */
+      const a = flightRows[0], b = flightRows[1];
+      const parts = [`도착 ${a.name}${a.at_time ? ' ' + a.at_time : ''}`];
+      /* 들어간 곳과 나온 곳이 같으면 이름을 두 번 적지 않는다 — 대개는 같다 */
+      if (b) parts.push(b.name === a.name ? `출발 ${b.at_time || ''}`.trim()
+                                          : `출발 ${b.name}${b.at_time ? ' ' + b.at_time : ''}`);
+      const eng = flightRows.filter(r => !/공항$/.test(r.name));
+      msg.className = 'hint ok';
+      msg.textContent = parts.join(' · ') + ' · 나라와 기간을 채웠습니다.'
+        + (eng.length ? ' 공항 이름이 영어로 들어왔습니다 — 만든 뒤 일정에서 고쳐 주세요.' : '')
+        + (backNo && backOn ? '' : ' 오는 편을 적으면 마지막 줄도 같이 들어갑니다.');
+    } catch (e) {
+      flightRows = [];
+      msg.className = 'hint';
+      msg.textContent = e.message;
+    } finally {
+      $('new-fl-go').disabled = false;
+    }
+  }
+
   async function createTrip(ev) {
     ev.preventDefault();
     busy(true, '');
@@ -819,8 +898,17 @@
         country: newPick.get(),
         cities: $('new-cities').value,
       });
+      /* ★공항 줄은 여행이 생긴 뒤에 붙인다. **하나가 실패해도 여행은 남긴다** —
+         여행을 되돌리면 사람이 방금 적은 것이 통째로 사라진다. 못 넣은 것만 말한다. */
+      let failed = 0;
+      for (const r of flightRows) {
+        try { await DB.items.create(t.id, r); } catch (err) { failed += 1; }
+      }
       $('new').reset();
       newPick.set('');
+      $('new-fl-msg').textContent = '';
+      $('new-fl-msg').className = 'hint';
+      flightRows = [];
       $('new-dlg').close();
       /* ★만든 사람은 트리거가 첫 멤버로 넣는다. 그게 없으면 방금 만든 여행이
          정책에 걸려 자기 눈에도 안 보인다 — 목록을 다시 받아 그 사실을 확인한다. */
@@ -943,6 +1031,7 @@
   });
 
   $('new').addEventListener('submit', createTrip);
+  $('new-fl-go').addEventListener('click', fillFromFlight);
   $('join').addEventListener('submit', joinTrip);
   $('back').addEventListener('click', () => go(null, 'plan', true));
 

@@ -274,6 +274,19 @@ const DB = (function () {
     return body.url;
   }
 
+  /* 항공편 조회 — api/flight.js 가 편명·날짜로 두 공항을 찾아 준다.
+     ★여기서도 **뜻은 안 붙인다.** 어느 쪽이 첫 줄이고 어느 쪽이 마지막 줄인지는
+       부르는 쪽(새 여행 폼)이 정한다 — gmaps 프록시와 같은 규칙이다. */
+  async function flight(no, date) {
+    const tok = await accessToken();
+    if (!tok) throw new Error('로그인이 필요합니다.');
+    const r = await fetch(`/api/flight?no=${encodeURIComponent(no)}&date=${encodeURIComponent(date)}`,
+                          { headers: { Authorization: 'Bearer ' + tok } });
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(body.error || `항공편을 가져오지 못했습니다 (${r.status})`);
+    return body;
+  }
+
   // ── 동행자 ──────────────────────────────────────────────────────────
   /* trip_members 를 직접 읽으면 uuid 뿐이라 화면에 쓸 이름이 없다.
      auth.users 는 클라이언트가 못 읽는다(읽히면 이 프로젝트의 남의 계정까지 노출된다 —
@@ -324,5 +337,5 @@ const DB = (function () {
 
   return { mode, email, uid,
            onAuth, onError, initAuth, signIn, signOut,
-           trips, items, crew, removeMember, fx, join, expandMapUrl };
+           trips, items, crew, removeMember, fx, join, expandMapUrl, flight };
 })();
