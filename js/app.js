@@ -848,7 +848,7 @@
     $('new-fl-list').innerHTML = legs.map((g, i) => `<div class="flleg">
         <input class="flno" type="text" inputmode="latin" maxlength="8" autocomplete="off"
                spellcheck="false" placeholder="편명" aria-label="편명" value="${U.esc(g.no)}">
-        <input class="fldt" type="date" aria-label="타는 날" value="${U.esc(g.on)}">
+        <input class="fldt" type="date" aria-label="탑승일" value="${U.esc(g.on)}">
         ${rm ? `<button class="act" type="button" data-rm="${i}"
            aria-label="이 편 지우기">${U.icon('x')}</button>` : ''}
       </div>`).join('');
