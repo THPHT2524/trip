@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=507">
+<link rel="stylesheet" href="/css/app.css?v=509">
 </head>
 <body>
 
@@ -323,8 +323,16 @@
           <div class="field"><label for="new-to">끝</label>
             <input id="new-to" name="to" type="date" class="mono"></div>
         </div>
-        <p class="hint">날짜는 나중에 정해도 됩니다. 나라와 도시는 홈의 국기와 '몇 개국 몇 개 도시'가 됩니다 —
-          나라는 여럿 고를 수 있고, 도시는 쉼표로 나눠 적으세요. 정산은 늘 원화로 합니다.</p>
+        <!-- ★★안내가 **기능보다 낡아 있었다**(2026-09-08). 넉 줄로 날짜·나라·도시·정산을
+             다 설명하고 있었는데, 항공편 채우기가 생긴 뒤로 날짜·나라·통화는 저절로
+             들어온다 — 이미 채워진 칸을 설명하는 글이 폼에서 제일 긴 글이었다.
+           ★남는 것은 **도시 하나**다. 그것만 사람이 적고, 그 말이 문장 한가운데
+             묻혀 있었다 — 맨 앞으로 낸다.
+           ★★이름 되물림을 여기서 처음 말한다. 서른여덟 중 서른넷이 이름 = 도시인데
+             폼은 그 사실을 어디서도 안 알려 줬다(플레이스홀더가 도시를 친 **뒤에야**
+             보여 준다). 짧게 줄이면서 오히려 한 가지를 더 말하게 됐다. -->
+        <p class="hint">도시는 쉼표로 나눠 적으세요 — 홈의 '몇 개 도시'가 되고,
+          이름을 비우면 그대로 여행 이름이 됩니다. 정산은 늘 원화로 합니다.</p>
         <button class="btn" id="new-save" type="submit">만들기</button>
         <p class="err" id="new-err"></p>
       </form>
@@ -488,22 +496,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=507"></script>
-<script src="/js/map-config.js?v=507"></script>
-<script src="/js/money.js?v=507"></script>
-<script src="/js/util.js?v=507"></script>
-<script src="/js/worldmap.js?v=507"></script>
-<script src="/js/geo.js?v=507"></script>
-<script src="/js/gmaps.js?v=507"></script>
-<script src="/js/db.js?v=507"></script>
-<script src="/js/fx.js?v=507"></script>
-<script src="/js/outbox.js?v=507"></script>
+<script src="/js/supabase-config.js?v=509"></script>
+<script src="/js/map-config.js?v=509"></script>
+<script src="/js/money.js?v=509"></script>
+<script src="/js/util.js?v=509"></script>
+<script src="/js/worldmap.js?v=509"></script>
+<script src="/js/geo.js?v=509"></script>
+<script src="/js/gmaps.js?v=509"></script>
+<script src="/js/db.js?v=509"></script>
+<script src="/js/fx.js?v=509"></script>
+<script src="/js/outbox.js?v=509"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=507"></script>
-<script src="/js/plan.js?v=507"></script>
-<script src="/js/map.js?v=507"></script>
-<script src="/js/cost.js?v=507"></script>
-<script src="/js/app.js?v=507"></script>
+<script src="/js/crew.js?v=509"></script>
+<script src="/js/plan.js?v=509"></script>
+<script src="/js/map.js?v=509"></script>
+<script src="/js/cost.js?v=509"></script>
+<script src="/js/app.js?v=509"></script>
 
 </body>
 </html>
