@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=473') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=477') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=473') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=477') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=473') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=477') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -85,6 +85,11 @@
      여덟 색이 다 같은 톤으로 앉는다 — 밝은 판에서는 짙게 칠하고 글자를 종이색으로 판다. */
   --pc-s: 40%;
   --pc-l: 38%;
+  /* ★★칠은 **옅게, 글자는 그 색으로**(2026-09-07). 20px 짜리 꽉 찬 원(5.84:1)이
+     12px 짜리 금액(12.71:1)보다 먼저 읽혔다 — 대비는 금액이 높은데 **면이 글자를
+     이긴다**. 이 줄에서 먼저 읽혀야 하는 것은 금액이다. 색상(--pc)은 그대로 두므로
+     사람은 여전히 제 색으로 알아본다: 무게만 내려놓고 색은 살린다. */
+  --pc-bg: 91%;
   /* 레일 — 지나온 구간. ★★#C4D0CB 였다(2026-09-07). 종이 위 **1.46:1** 이라 화면에서
      제일 희미한 선이었는데, 이 앱은 '화면의 중심은 카드가 아니라 레일' 이라고 적어
      놓았다 — 눈이 따라갈 축이 없으니 정거장 스물아홉이 그냥 목록으로 보였다.
@@ -223,6 +228,7 @@
     /* 어두운 판에서는 뒤집는다 — 밝게 칠하고 글자를 종이색(어두움)으로 판다 */
     --pc-s: 44%;
     --pc-l: 64%;
+    --pc-bg: 25%;
     --rail:    #354A42;   /* 어두운 판도 같은 대비로 — 1.64 → 1.87 */
     --stripe:  rgba(255, 255, 255, .05);
     --dots:    #3A4A44;
@@ -625,7 +631,7 @@ a { color: var(--route); text-underline-offset: 2px; }
   color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent);
 }
 /* 코드 칸과 그림 단추가 한 줄에 — 단추는 24px 이라 늘어나지 않게 가운데로 맞춘다 */
-.acard .field > .row { align-items: center; }
+:is(.acard, .sheetbody) .field > .row { align-items: center; }
 /* 카드 안이라 --sunk 이 스텁과 같은 색이 된다 — 한 켜 더 눌러 판을 갈라 준다 */
 .mca .act { background: var(--paper); }
 
@@ -703,8 +709,8 @@ a { color: var(--route); text-underline-offset: 2px; }
   display: inline-flex; align-items: center; justify-content: center;
   border-radius: 50%; letter-spacing: 0;
   font-size: var(--t-micro); font-weight: 700;
-  background: hsl(var(--pc, 200) var(--pc-s) var(--pc-l));
-  color: var(--paper);
+  background: hsl(var(--pc, 200) var(--pc-s) var(--pc-bg));
+  color: hsl(var(--pc, 200) var(--pc-s) var(--pc-l));
 }
 .payrow:active, .payadd:active { background: var(--sunk); }
 /* ★★결제 목록은 **선 둘 사이에 갇힌다**(2026-09-06). 위는 실선(장소에서 내역으로
@@ -1632,6 +1638,16 @@ a { color: var(--route); text-underline-offset: 2px; }
   background: var(--route); color: #fff; font-size: 11px; letter-spacing: .04em;
 }
 /* ── 칸 ────────────────────────────────────────────────────────────────
+   ★★★이 어법을 **설정 판과 팝업 셋이 같이 쓴다**(2026-09-07). 값을 적는 자리가
+     한 앱에 두 가지였다 — 설정은 서식(이름표가 칸 안, 칸끼리 금 공유), 팝업은
+     웹 폼(이름표가 칸 위, 떨어진 둥근 상자). '팝업은 한글만' 이라고 정한 것은
+     **말** 얘기였지 **짜임**까지 갈릴 이유는 아니었다. 선택자를 :is() 로 넓힌다.
+   ⚠ 시트에서는 종이가 시트 자신이라 칸을 또 상자에 담지 않는다 — 금이 시트 폭을
+     가로지르고, 칸이 아닌 것(안내·단추·오류)만 여백을 되찾는다(아래 .sheetbody 블록).
+   ⚠⚠ **입력칸 껍데기는 시트에만 남긴다**(2026-09-07). 아래 '값은 종이에 바로 적는다'
+     규칙은 .acard 전용이다 — 설정 판은 이미 정해 둔 값을 **읽는** 자리라 껍데기를
+     벗겨도 되지만, 팝업 셋은 **적어 넣는** 자리다. 적을 곳이 상자로 안 보이면
+     어디에 손을 대야 하는지가 안 보인다. 격자는 같이 쓰고 입력칸만 갈라진다.
    ★★**이름표가 칸 안으로 들어간다**(2026-09-06). 이것 하나가 서식과 웹 폼을 가른다:
      실물 신고서는 이름표가 칸 위에 떠 있지 않고 **칸 왼쪽 위 구석에 작게 인쇄**되어
      있고, 그 밑 빈자리에 손으로 적는다. 이름표와 값이 한 상자에 든다.
@@ -1644,17 +1660,20 @@ a { color: var(--route); text-underline-offset: 2px; }
    (2026-09-07). 이 판에서 칸을 가르는 것은 칸 자신의 border-bottom 하나뿐이다. */
 .acard > .cblock + .cblock { border-top: 0; }
 .acard .form { padding: 0; display: block; }
-.acard .form > .row { display: flex; flex-wrap: nowrap; gap: 0; }
+:is(.acard, .sheetbody) .form .row:not(.btns) { display: flex; flex-wrap: nowrap; gap: 0; }
 /* ★금은 **--line 보다 진하다**. --line 은 목록을 끊는 줄이고 이것은 **인쇄된 괘선**이다 —
    같은 굵기라도 서식의 금이 더 또렷해야 격자가 격자로 읽힌다(실측 --line 은 종이 위
    1.1:1 이라 칸이 서로 붙은 것처럼 뭉갰다). */
-.acard { --rule: color-mix(in srgb, var(--ink-3) 32%, transparent); }
-.acard .form > .row > .field { flex: 1 1 0; min-width: 0; border-left: 1px solid var(--rule); }
-.acard .form > .row > .field:first-child { border-left: 0; }
+.acard, .sheetbody { --rule: color-mix(in srgb, var(--ink-3) 32%, transparent); }
+:is(.acard, .sheetbody) .form .row:not(.btns) > .field { border-left: 1px solid var(--rule); }
+:is(.acard, .sheetbody) .form .row:not(.btns) > .field:first-child { border-left: 0; }
+/* ⚠ 폭 배분은 **설정 판만**. 시트의 결제 줄은 #if-qty-wrap 같은 id 로 이미 비율이
+   잡혀 있어서(단가 대 승인금액), 여기서 1 1 0 을 걸면 그 비율이 통째로 뭉개진다. */
+.acard .form > .row > .field { flex: 1 1 0; min-width: 0; }
 /* ⚠ 112px 이었다 — '2. 현지통화 CURRENCY' 가 106px 이라 이름표가 칸 밖으로 흘렀다.
    좁은 칸에 두 나라 말을 다는 값을 여기서 치른다: 이름표가 드는 만큼 칸을 준다. */
 .acard .form > .row > .field.kind { flex: 0 0 132px; }
-.acard .field {
+:is(.acard, .sheetbody) .field {
   position: relative;
   display: block; gap: 0;
   padding: 7px 12px 9px;
@@ -1670,11 +1689,12 @@ a { color: var(--route); text-underline-offset: 2px; }
   color: var(--ink-2); line-height: 1.35;
 }
 /* 이름표 — 칸 **안**의 작은 글씨. 번호가 앞에 선다 */
-.acard .field > label, .acard .field > .lbl {
+:is(.acard, .sheetbody) .field > label, :is(.acard, .sheetbody) .field > .lbl {
   display: block; margin: 0 0 1px;
   font-size: var(--t-micro); font-weight: 700; letter-spacing: 0; color: var(--ink-2);
 }
-.acard .field label[data-en]::after, .acard .field .lbl[data-en]::after {
+:is(.acard, .sheetbody) .field label[data-en]::after,
+:is(.acard, .sheetbody) .field .lbl[data-en]::after {
   content: ' ' attr(data-en);
   font-family: var(--mono); font-size: 8.5px; font-weight: 500; letter-spacing: .12em;
   color: var(--ink-3); text-transform: uppercase;
@@ -1700,11 +1720,11 @@ a { color: var(--route); text-underline-offset: 2px; }
 .acard .pick, .acard .btn { border-radius: var(--r-xs); }
 .acard input:focus-visible, .acard select:focus-visible { outline-offset: 3px; }
 /* 초대 코드 — 서식 안에서는 가운데로 몰지 않는다. 다른 값들과 같은 왼쪽 기둥에 선다 */
-.acard input.code { text-align: left; font-size: 15px; letter-spacing: .12em; }
-.acard .field > .row { gap: 8px; margin-top: 2px; }
+:is(.acard, .sheetbody) input.code { text-align: left; font-size: 15px; letter-spacing: .12em; }
+:is(.acard, .sheetbody) .field > .row { gap: 8px; margin-top: 2px; }
 /* 서식의 깨알글씨 — 이름표(10px)보다 크면 안내가 이름표를 이긴다 */
-.acard .field > .hint { margin: 6px 0 0; font-size: var(--t-micro); line-height: 1.65; }
-.acard .picks { margin-top: 6px; }
+:is(.acard, .sheetbody) .field > .hint { margin: 6px 0 0; font-size: var(--t-micro); line-height: 1.65; }
+:is(.acard, .sheetbody) .picks { margin-top: 6px; }
 
 /* ── 관공서 칸 ─────────────────────────────────────────────────────────
    실물 신고서 아래의 **직원이 쓰는 칸**이다. 빗금은 '여기는 당신이 쓰는 데가
@@ -2840,6 +2860,31 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
    overscroll-behavior: contain — 시트 안을 끝까지 굴려도 그 스크롤이 뒤 페이지로 안 넘어간다 */
 .sheetbody { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 
+/* ── 시트 안의 서식 ────────────────────────────────────────────────────
+   칸은 위 '칸' 블록이 설정 판과 함께 그린다. 여기서는 **칸이 아닌 것**만 다룬다:
+   폼의 여백을 걷어 금이 시트 폭을 가로지르게 하고, 안내·접힘·단추·오류에만
+   여백을 돌려준다. 종이는 시트 자신이라 안에 상자를 또 그리지 않는다. */
+.sheetbody .form { padding: 0 0 16px; display: block; }
+.sheetbody .form > .hint, .sheetbody #if-pay > .hint {
+  margin: 8px 14px 0; font-size: var(--t-micro); line-height: 1.65;
+}
+.sheetbody .form > .err { margin: 8px 14px 0; }
+.sheetbody .form > .row.btns { margin: 16px 14px 0; }
+.sheetbody .form > .btn { margin: 16px 14px 0; }
+/* ⚠ 접힘의 border-top 을 **끈다**. 바로 위 칸이 이미 제 border-bottom 을 긋고
+   있어서 금이 두 줄로 겹쳤다(2026-09-07 실측). 격자에서 칸을 가르는 것은
+   칸 자신의 아랫금 하나뿐이다 — 설정 판에서 같은 함정을 이미 밟았다. */
+.sheetbody .form details.more { border-top: 0; }
+.sheetbody .form details.more > summary { padding: 10px 14px; }
+.sheetbody .form details.more[open] > summary { border-bottom: 1px solid var(--rule); }
+.sheetbody .form details.more .morebody { padding-top: 0; gap: 0; }
+/* 결제 묶음은 통로일 뿐 — 칸이 여백을 댄다 */
+.sheetbody #if-pay { display: block; }
+/* ⚠ 42px 이던 것을 36px 로 낮춘다. 이름표가 칸 안으로 들어오면서 칸 높이가 이미
+   이름표 몫만큼 늘었는데, 고르개까지 그대로면 이 칸 하나가 다른 칸 둘만 해진다. */
+.sheetbody .seg3 { margin-top: 3px; }
+.sheetbody .seg3 button { min-height: 36px; }
+
 /* ── 홈의 떠다니는 두 동작 ─────────────────────────────────────────────
    ★떠다니는 주 동작은 코발트 — 일정 추가(＋)와 같은 규칙이다. 곁 동작은 카드 바탕.
    ★자리는 오른쪽 아래. 여행 안의 일정 추가(＋)와 같은 쪽이라 엄지가 한 곳만 기억하면 된다
@@ -2876,12 +2921,15 @@ body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
    ★JS 로 클래스를 붙였다 떼는 대신 :has() 로 DOM 상태를 직접 읽는다 — 여닫는 길이
      넷(단추·✕·백드롭·Esc)이라 한 곳이라도 빠뜨리면 화면이 잠긴 채로 남는다. */
 html:has(dialog[open]), html:has(dialog[open]) body { overflow: hidden; overscroll-behavior: none; }
-#if-dlg .form { padding: 14px 14px 18px; }
-/* 저장 줄은 시트 바닥에 붙는다 — 열두 칸을 지나 내려가지 않아도 닿는다 */
+#if-dlg .form { padding: 0 0 18px; }
+/* 저장 줄은 시트 바닥에 붙는다 — 열두 칸을 지나 내려가지 않아도 닿는다.
+   ⚠ margin 이 `4px -14px -18px` 였다 — 폼이 좌우 14px 을 쥐고 있던 시절 그 여백을
+     되무는 값이다. 서식으로 바꾸면서 폼 여백이 0 이 됐으니(칸이 제 여백을 댄다)
+     음수 좌우를 걷지 않으면 줄이 시트 밖으로 14px 씩 삐져나간다(2026-09-07). */
 #if-dlg .form .row.btns {
   position: sticky; bottom: 0; z-index: 1;
-  margin: 4px -14px -18px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
-  background: var(--card); border-top: 1px solid var(--line);
+  margin: 4px 0 -18px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom));
+  background: var(--card); border-top: 1px solid var(--rule);
 }
 /* 지우기 홀로 왼쪽 끝, 저장은 오른쪽 끝. 가운데의 빈 곳이 곧 안전거리다. */
 #if-dlg .form .row.btns { flex-wrap: nowrap; }
