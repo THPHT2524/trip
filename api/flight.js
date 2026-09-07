@@ -151,9 +151,11 @@ module.exports = async (req, res) => {
       signal: ctl.signal,
       headers: { 'X-RapidAPI-Key': KEY, 'X-RapidAPI-Host': HOST, Accept: 'application/json' },
     });
-    /* ★못 찾은 것(404)은 고장이 아니다 — 편명이 틀렸거나 아직 시간표에 없다.
-       502 로 뭉뚱그리면 화면이 '다시 해보라' 고 하는데, 다시 해도 같다. */
-    if (r.status === 404) {
+    /* ★★없는 편은 **204** 로 온다(2026-09-07, KE001 로 실측). 404 가 아니다 —
+       그리고 204 는 r.ok 가 참이라 그대로 두면 밑에서 json() 이 빈 몸통에 걸려
+       502 '가져오지 못했습니다' 가 된다. 다시 해보라는 말인데 다시 해도 같다.
+     ★못 찾은 것은 고장이 아니다: 편명이 틀렸거나 아직 시간표에 없는 것이다. */
+    if (r.status === 204 || r.status === 404) {
       res.setHeader('Cache-Control', 'no-store');
       res.status(404).json({ error: `${no} ${date} 편을 못 찾았습니다. 편명과 날짜를 확인하세요.` });
       return;
