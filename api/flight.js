@@ -7,7 +7,9 @@
 
    호출 규약:  GET /api/flight?no=7C1301&date=2026-08-29
    응답:       { no, date, from:{...}, to:{...} }
-               from/to = { iata, name, city, cc, lat, lng, on, time }
+               from/to = { iata, icao, name, city, cc, lat, lng, on, time }
+               name 은 **한글**이다 — 피드는 영어로 주므로 api/_wikidata.js 가
+               코드로 다시 찾아 덮는다. 못 찾으면 영문이 그대로 남는다.
                on·time 은 **그 공항에서 보는 시계**의 날짜와 시각(YYYY-MM-DD / HH:MM).
                ★밤 비행기는 뜬 날과 내린 날이 다르다 — 날짜를 같이 주지 않으면
                  화면이 출발일에 도착 줄을 적는다.
@@ -22,6 +24,8 @@
 
    ★★공급자는 **한 함수 뒤에 둔다**(pick 아래 shape). 무료 한도나 응답 형식이 바뀌면
      그 함수만 갈아 끼우면 된다 — 값을 쓰는 쪽은 위의 규약만 안다. */
+
+const WD = require('./_wikidata');
 
 const HOST = 'aerodatabox.p.rapidapi.com';
 const KEY = process.env.AERODATABOX_KEY || '';
@@ -90,7 +94,8 @@ function side(x) {
   const lat = Number(loc.lat), lng = Number(loc.lon != null ? loc.lon : loc.lng);
   const t = local(x && (x.scheduledTime || x.revisedTime));
   return {
-    iata: a.iata || a.icao || '',
+    iata: a.iata || '',
+    icao: a.icao || '',
     name: a.name || a.shortName || '',
     city: a.municipalityName || '',
     cc: a.countryCode || '',
@@ -198,6 +203,16 @@ module.exports = async (req, res) => {
     });
     return;
   }
+
+  /* 영어 이름을 한글로 바꾼다. ★막지 않는다 — 못 바꾸면 영문이 그대로 남고,
+     그건 좌표가 없는 것과 달리 사람이 화면에서 한 번 고치면 되는 일이다. */
+  try {
+    const found = await WD.lookup([from.icao, from.iata, to.icao, to.iata]);
+    const ko1 = WD.pick(found, from.icao, from.iata);
+    const ko2 = WD.pick(found, to.icao, to.iata);
+    if (ko1) from.name = ko1;
+    if (ko2) to.name = ko2;
+  } catch (e) { /* 영문으로 간다 */ }
 
   /* 시간표는 잘 안 바뀐다. 오타로 같은 편을 두 번 물어도 한 번만 나가게 한다. */
   res.setHeader('Cache-Control', 'private, max-age=3600');

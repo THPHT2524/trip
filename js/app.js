@@ -866,8 +866,8 @@
         on_date: a.on, at_time: a.time || null,
         /* 공항은 지나온 문이라 '이동' 이다 — 지금 적혀 있는 서른한 줄이 다 그렇다 */
         kind: '이동',
-        /* 피드는 영어로 준다. 코드로 한글 이름을 찾고, 없으면 영어 그대로(U.AIRPORT) */
-        name: U.airportName(a.iata, a.name),
+        /* 이름은 이미 한글이다 — api/_wikidata.js 가 코드로 찾아 붙여 보낸다 */
+        name: a.name,
         lat: a.lat, lng: a.lng,
       }));
   }
