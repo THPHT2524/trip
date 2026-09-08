@@ -24,8 +24,9 @@
    ★후보가 **정확히 하나일 때만** 쓴다. 김해(RKPK)·떤선녓(VVTS)처럼 군 비행장이
      같은 코드를 달고 있는 곳이 있다. 이름이 '공항' 으로 끝나는 것만 남기면
      '김해공군기지' 와 '…국제공항역' 이 함께 걸러진다 — 마침 여권 지도가 점을
-     찍는 규칙과 같은 잣대다. 그러고도 둘이면 **포기한다**: 잘못 고른 이름은
-     못 고른 이름보다 나쁘다. 화면에서 한 번 고치시면 그만이다. */
+     찍는 규칙과 같은 잣대다. 문 닫은 공항도 질의에서 뺀다(아래 주석). 그러고도
+     둘이면 **포기한다**: 잘못 고른 이름은 못 고른 이름보다 나쁘다. 화면에서 한 번
+     고치시면 그만이다. */
 
 const SPARQL = 'https://query.wikidata.org/sparql';
 
@@ -61,9 +62,20 @@ async function lookup(codes) {
   const ask = want.filter(c => !memo.has(c));
 
   if (ask.length) {
+    /* ★★**문 닫은 공항을 뺀다**(2026-09-08). 도시가 공항을 새로 지어 옮기면 코드가
+         그대로 넘어가서 **같은 코드에 항목이 둘**이 된다 — 칭다오가 2021년에 류팅을
+         닫고 자오둥을 열었고, TAO·ZSQD 가 둘 다에 걸려 있어 못 정하고 있었다.
+       ⚠ 폐항 날짜(P576)만 보면 안 걸린다 — 류팅에는 그 칸이 비어 있고, 대신
+         '이곳의 개방 상태(P5817) = 폐쇄됨(Q11639308)' 으로 적혀 있다. 둘 다 본다.
+       ⚠ '다음으로 이어짐(P1366)' 도 써 봤다가 걷었다. 리스본·돈므앙이 통째로
+         사라진다 — 새 공항 계획이 있거나 한때 주공항 자리를 넘긴 것뿐인데
+         **멀쩡히 살아 있는** 공항이다. 죽은 것만 빼야지 밀려난 것까지 빼면 안 된다.
+       ★코드 74개로 재 보니 TAO 만 풀리고 나머지는 하나도 안 바뀌었다. */
     const q = `SELECT ?code ?ko WHERE {
       VALUES ?code { ${ask.map(c => `"${c}"`).join(' ')} }
       { ?a wdt:P239 ?code } UNION { ?a wdt:P238 ?code }
+      FILTER NOT EXISTS { ?a wdt:P576 ?gone }
+      FILTER NOT EXISTS { ?a wdt:P5817/wdt:P279* wd:Q11639308 }
       ?a rdfs:label ?ko . FILTER(lang(?ko) = "ko") }`;
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 4000);
