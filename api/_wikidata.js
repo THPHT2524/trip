@@ -39,6 +39,20 @@ const memo = new Map();
 
 const isAirport = s => /공항$/.test(s);          // 공군기지·…역을 함께 걸러낸다
 
+/* ★위키데이터의 한국어 **라벨이 낡은** 곳. 공항이 개명했는데 라벨이 안 따라온 것들이라
+   이건 취향이 아니라 **틀린 이름**이다 — 그래서 여기서 덮는다.
+   ⚠ 이 목록에 '그냥 다르게 부르고 싶은 이름' 을 넣지 않는다. 그러면 걷어낸 일흔 줄짜리
+     표가 이름만 바꿔 되살아난다. 들어올 자격은 하나다: **지금 그 이름이 아니다.**
+   ★한국어 문서 제목(schema:about)은 둘 다 이미 맞다. 그럼 제목을 먼저 보면 되지
+     않느냐 — 70곳으로 재 보니 열여덟이 갈리는데 이득이 고르지 않았다(2026-09-08).
+     PQC 는 제목이 '즈엉동 공항' 과 '푸꾸옥 국제공항' 둘이라 못 정하게 되고,
+     BCN 은 '주제프 타라델랴스 바르셀로나 엘프라트 공항' 이 된다. 둘을 적는 편이 싸다.
+   ★IATA·ICAO 를 둘 다 담는다 — 세 글자와 네 글자는 섞일 일이 없다. */
+const FIX = {
+  KLAS: '해리 리드 국제공항', LAS: '해리 리드 국제공항',   // 2021 개명, 라벨은 '매캐런'
+  OTHH: '하마드 국제공항', DOH: '하마드 국제공항',        // 2014 개항, 라벨은 '뉴도하'
+};
+
 /* 코드 여럿을 한 번에 묻는다. 돌려주는 것은 **하나로 정해진 것만** 담은 Map 이다.
    ★네 글자면 ICAO, 세 글자면 IATA — 길이로 갈리므로 어느 쪽으로 걸렸는지
      따로 물을 필요가 없다. */
@@ -83,11 +97,11 @@ async function lookup(codes) {
   return out;
 }
 
-/* ICAO 먼저, 그 다음 IATA. 둘 다 못 정하면 빈 문자열(= 부르는 쪽이 영문을 쓴다). */
+/* ICAO 먼저, 그 다음 IATA. 둘 다 못 정하면 빈 문자열(= 부르는 쪽이 영문을 쓴다).
+   ★낡은 라벨을 덮는 FIX 가 무엇보다 먼저다. */
 function pick(found, icao, iata) {
-  return found.get(String(icao || '').toUpperCase())
-      || found.get(String(iata || '').toUpperCase())
-      || '';
+  const I = String(icao || '').toUpperCase(), A = String(iata || '').toUpperCase();
+  return FIX[I] || FIX[A] || found.get(I) || found.get(A) || '';
 }
 
 module.exports = { lookup, pick };
