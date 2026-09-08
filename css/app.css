@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=514') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=515') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=514') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=515') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=514') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=515') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1288,12 +1288,6 @@ a { color: var(--route); text-underline-offset: 2px; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* 곁말 — 무엇에 썼는지. 이름 뒤에 붙는다 */
-.clist .rl em {
-  flex: 0 0 auto; font-style: normal; margin-left: 7px;
-  font-family: var(--sans); font-size: var(--t-cap); color: var(--ink-3);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
-}
 .clist .ru { flex: 0 0 auto; font-size: var(--t-meta); color: var(--ink-3); }
 .clist .rx { flex: 0 0 auto; margin-left: 6px; font-size: var(--t-meta); color: var(--ink-3); }
 .clist .rq .rv { font-size: var(--t-cap); }
@@ -1340,11 +1334,6 @@ a { color: var(--route); text-underline-offset: 2px; }
   min-width: 0; flex: 0 1 auto; color: var(--ink); font-weight: 600;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.clist .rl em {
-  flex: 0 0 auto; font-style: normal; margin-left: 7px;
-  font-family: var(--mono); font-size: var(--t-meta); color: var(--ink-3);
-}
-.clist .rl em.dt { font-size: var(--t-meta); }
 .clist .rd {
   flex: 1 1 auto; min-width: 14px; margin: 0 8px;
   border-bottom: 1px dotted var(--dots); transform: translateY(-3px);
@@ -1353,9 +1342,6 @@ a { color: var(--route); text-underline-offset: 2px; }
   flex: 0 0 auto; font-family: var(--mono); font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
-/* 쌓은 막대 — 그날 얼마(길이)와 무엇에(색)를 한 그림이 같이 말한다 */
-.cbar.stack { display: flex; }
-.cbar.stack i { width: auto; }
 
 .ctotal {
   margin-top: 0;      /* 위 여백은 종이(.rcp)가 준다 */
@@ -1428,53 +1414,9 @@ a { color: var(--route); text-underline-offset: 2px; }
 .clist .ck { color: var(--ink); font-weight: 500; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   display: flex; align-items: baseline; gap: 5px; }
-/* 건수는 제 줄을 갖지 않는다 — 작은 수 하나 때문에 줄이 하나 더 생기면 목록이 두 배로 길어진다 */
-.clist .ck em {
-  font-style: normal; font-family: var(--mono); font-size: var(--t-micro); color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-}
 .clist .cv { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink); }
-.clist .cn { grid-column: 2 / -1; font-size: var(--t-meta); color: var(--ink-3); }
-/* 막대는 크기를 눈으로 견주게 해 준다 — 숫자만으로는 '많다' 가 안 읽힌다 */
-.cbar { display: block; height: 6px; background: var(--sunk); border-radius: var(--r-xs); overflow: hidden; }
-/* ★기본값이 **정의되지 않은 토큰**이라 '결제자' 막대가 통째로 안 보였다(2026-09-01).
-   사람은 장소구분이 아니라 범례색이 없다 — 구조색(코발트)을 쓴다. */
-.cbar i { display: block; height: 100%; background: var(--k, var(--route)); }
 .warnblock .chd { color: var(--warn); }
 
-/* ── 하루에 얼마씩 ──────────────────────────────────────────────────────
-   ★가로축이 여행 카드의 미니 레일·일정 탭의 Day 탭과 **같은 것**이다.
-     같은 날이 늘 같은 자리에 선다 — 화면을 옮겨도 '3일차' 를 다시 찾지 않는다.
-   높이는 그날 쓴 돈, 색은 무엇에 썼는지. 둘을 한 그림에 담는다. */
-.daybars {
-  display: flex; align-items: flex-end; gap: 6px;
-  padding-top: 4px;
-}
-.dbar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.dbar .col {
-  /* ★폭을 묶는다. 사흘짜리 여행이면 칸이 110px 씩인데 그만한 막대는 **덩어리로 읽힌다** —
-     막대는 길이로 말하는 것이지 면적으로 말하는 것이 아니다. */
-  width: 100%; max-width: 52px; height: 96px;
-  display: flex; flex-direction: column-reverse;   /* 큰 것이 아래에 깔린다 */
-  justify-content: flex-start;
-  border-radius: var(--r-xs) var(--r-xs) 0 0; overflow: hidden;
-}
-.dbar .col i { display: block; width: 100%; background: var(--k, var(--k-etc)); min-height: 2px; }
-/* 안 쓴 날은 바닥에 가는 선만 — 미니 레일에서 빈 날을 그리는 방식과 같다 */
-.dbar .col em { display: block; margin-top: auto; width: 100%; height: 2px; background: var(--rail); }
-.dbar .lb {
-  font-family: var(--mono); font-size: var(--t-micro); font-weight: 600; color: var(--ink-3);
-  letter-spacing: .04em;
-}
-/* ★빈 칸도 자리를 지킨다. 금액이 있는 칸만 키가 커지면 기둥들이 바닥에 정렬되면서
-   **라벨 높이가 칸마다 달라진다**(2026-09-01: D1 라벨만 위에 떠 있었다). */
-.dbar .amt {
-  /* ★눈금(--t-micro 10px) 밖이다. 12일 여행이면 기둥 칸이 24px 이라 10px 로는
-     '₩620,741' 이 통째로 잘린다 — 여기서만 한 단 더 내린다. */
-  font-family: var(--mono); font-size: 9px; color: var(--ink-3);
-  font-variant-numeric: tabular-nums; line-height: 1; min-height: 10px;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
-}
 .clist .act { justify-self: end; }
 
 /* ── 더모아 계산기 (/themore) ──────────────────────────────────────────────

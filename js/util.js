@@ -236,6 +236,21 @@ const U = (function () {
     };
   }
 
+  /* ── 고르개에 세우는 통화 ────────────────────────────────────────────────
+     ★★세 고르개(새 여행·여행 설정·일정 결제)가 **같은 열여섯**을 쓴다. 셋 다 index.html 에
+       <option> 열여섯 줄씩 적혀 있었다(2026-09-08에 걷었다) — 통화를 하나 더하려면 세
+       곳을 고쳐야 하고, 두 곳만 고치면 새 여행에서는 고를 수 있는데 결제에서는 못 고른다.
+       구분 여섯(KINDS)을 여기 모아 둔 것과 같은 이유다.
+     ⚠ 아래 SIGN·CENTS 와는 **다른 목록**이다. 저 둘은 '들어온 값을 어떻게 찍나' 라
+       옛 줄에 남아 있는 통화까지 알아야 하고(GBP·AUD·CAD), 이건 '지금 고를 수 있는
+       것' 이다. 여기 있는 열여섯은 SIGN 에 전부 있어야 한다 — test-pure 가 지킨다. */
+  const CURS = ['KRW', 'JPY', 'USD', 'EUR', 'CNY', 'TWD', 'HKD', 'MOP',
+                'THB', 'VND', 'SGD', 'MYR', 'IDR', 'PHP', 'AED', 'MVR'];
+  /* 고르개 하나를 채운다. 셋이 같은 자리에서 같은 모양으로 선다. */
+  const fillCurs = (sel) => {
+    if (sel) sel.innerHTML = CURS.map(c => `<option value="${c}">${c}</option>`).join('');
+  };
+
   /* 통화 기호. 없는 통화는 코드를 그대로 앞에 붙인다(추측하지 않는다). */
   const SIGN = {
     KRW: '₩', JPY: '¥', USD: '$', EUR: '€', TWD: 'NT$', THB: '฿', VND: '₫',
@@ -375,7 +390,7 @@ const U = (function () {
   return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
            cityList, countryPicker, SETTLE, icon, hue, tripName, countryNameEn, ink,
-           curOf };
+           curOf, CURS, fillCurs };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용

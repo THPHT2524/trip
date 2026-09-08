@@ -54,60 +54,11 @@ const MAX_HOPS = 5;
    ★이건 '봇 탐지 우회' 의 반대다 — 원래 우리는 봇이고, 봇인 척을 그만두는 것이다. */
 const UA = 'trip-app/1.0 (+https://thpht-trip.vercel.app)';
 
-/* 인증 — 로그인한 사용자만 이 프록시를 쓸 수 있다.
-   값은 js/supabase-config.js 와 같은 공개 값이다(anon 키는 브라우저에 노출되도록 설계된 키).
-   환경변수가 있으면 그쪽을 먼저 쓴다. */
-const SB_URL = process.env.SUPABASE_URL || 'https://slakyumsnufoywxrdhhx.supabase.co';
-const SB_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_5xTTEUeViqzY1JgFLv0z6A_NAVJZcUz';
-
-/* 검증한 토큰은 잠시 기억한다 — 링크를 붙일 때마다 Supabase 왕복을 붙이지 않기 위해서.
-   서버리스 인스턴스가 재사용될 때만 살아 있고, 안 살아 있어도 한 번 더 물어볼 뿐이다. */
-const TOKEN_TTL = 5 * 60 * 1000;
-const seen = new Map();
-
-async function authorized(req) {
-  const raw = req.headers['authorization'] || '';
-  const token = /^Bearer\s+(.+)$/i.test(raw) ? raw.replace(/^Bearer\s+/i, '').trim() : '';
-  if (!token) return false;
-
-  const hit = seen.get(token);
-  if (hit && hit > Date.now()) return true;
-
-  try {
-    const r = await fetch(`${SB_URL}/auth/v1/user`, {
-      headers: { apikey: SB_ANON, Authorization: `Bearer ${token}` },
-    });
-    if (!r.ok) { seen.delete(token); return false; }
-    if (seen.size > 200) seen.clear();
-    seen.set(token, Date.now() + TOKEN_TTL);
-    return true;
-  } catch (e) {
-    return false;               // Supabase 에 못 물어보면 통과시키지 않는다(fail closed)
-  }
-}
-
-/* 토큰당 요청 상한.
-   ★이 프로젝트는 신규 가입이 **열려 있다**(동행자 때문에). 내 데이터는 RLS 가 막지만
-     Vercel 함수 실행량은 막지 못한다 — 그 울타리가 이것이다.
-   ★서버리스라 인스턴스마다 따로 센다. 완벽한 상한이 아니라 '한 사람이 한 인스턴스를
-     끝없이 두드리는 것' 을 막는 정도다.
-   ★상한이 stock(600)보다 낮은 이유: 이 프록시는 **사람이 링크를 붙일 때만** 불린다.
-     폴링이 없으므로 분당 60 이면 손으로 붙일 수 있는 속도를 한참 넘는다. */
-const RATE_MAX = 60;
-const RATE_WIN = 60 * 1000;
-const rate = new Map();
-
-function overLimit(token) {
-  const now = Date.now();
-  const hit = rate.get(token);
-  if (!hit || hit.until <= now) {
-    if (rate.size > 500) rate.clear();
-    rate.set(token, { n: 1, until: now + RATE_WIN });
-    return 0;
-  }
-  hit.n += 1;
-  return hit.n > RATE_MAX ? Math.ceil((hit.until - now) / 1000) : 0;
-}
+/* 인증과 요청 상한은 api/_auth.js 한 곳에 있다 — 넷이 똑같이 하던 일이라 모았다.
+   ★분당 60. 이 프록시는 **사람이 링크를 붙일 때만** 불리고 폴링이 없다 —
+     손으로 붙여넣을 수 있는 속도를 한참 넘는 수다. */
+const AUTH = require('./_auth');
+const overLimit = AUTH.limiter(60);
 
 /* 리다이렉트를 손으로 따라간다.
    ★fetch 의 자동 추적(redirect:'follow')을 쓰지 않는 이유: 중간에 어디를 거쳤는지 볼 수 없어
@@ -147,12 +98,12 @@ module.exports = async (req, res) => {
     res.status(405).json({ error: 'GET 만 받습니다.' });
     return;
   }
-  if (!(await authorized(req))) {
+  if (!(await AUTH.authorized(req))) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(401).json({ error: '로그인이 필요합니다.' });
     return;
   }
-  const wait = overLimit(String(req.headers['authorization'] || ''));
+  const wait = overLimit(AUTH.tokenOf(req));
   if (wait) {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Retry-After', String(wait));

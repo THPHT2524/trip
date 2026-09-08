@@ -366,13 +366,21 @@ eq(MORE.solve(5999, JPY, TT, 'JPY', 3).foreign < MORE.solve(5999, JPY, TT, 'JPY'
 
 /* ★★util.js 가 화면에 찍는 자릿수와 어긋나면 계산기가 제 답과 다른 금액을 보여준다.
    (MORE 가 NT$132.45 를 답으로 내도 U.money 는 NT$132 로 찍는다) */
+/* ★고르개에 실제로 서는 열여섯을 그대로 훑는다(U.CURS) — 손으로 베껴 두면
+   통화를 하나 더할 때 목록만 늘고 이 검사는 옛 열여섯을 계속 본다. */
 let dz = [];
-['KRW','JPY','VND','TWD','IDR','USD','EUR','THB','HKD','SGD','MOP','MYR','PHP','AED','MVR','CNY']
-  .forEach(c => {
-    const shown = /[.]/.test(U.money(1.25, c));
-    if (shown !== (MORE.digits(c) > 0)) dz.push(c);
-  });
+U.CURS.forEach(c => {
+  const shown = /[.]/.test(U.money(1.25, c));
+  if (shown !== (MORE.digits(c) > 0)) dz.push(c);
+});
 eq(dz, [], '★MORE.digits 와 U.money 의 소수 자릿수가 통화마다 일치한다');
+
+/* ★★고를 수 있는 통화는 **기호를 안다.** SIGN 에 없으면 U.money 가 'NT$1,200' 대신
+   '1,200 XXX' 로 코드를 뒤에 붙이는데, 고르개에 세워 놓고 그렇게 찍을 이유가 없다.
+   (반대는 괜찮다 — SIGN 은 옛 줄에 남은 GBP·AUD·CAD 까지 알아야 한다.) */
+eq(U.CURS.filter(c => /[0-9,]\s[A-Z]{3}$/.test(U.money(1200, c))), [],
+   '★고르개의 열여섯은 전부 통화 기호를 갖는다');
+eq(U.CURS.length, new Set(U.CURS).size, 'U.CURS 에 같은 통화가 두 번 서지 않는다');
 
 /* 날짜 칸 — 폰이 방콕·하와이 시각이어도 기준은 서울의 아침 고시다. */
 const kst = h => Date.UTC(2026, 8, 3, h - 9, 30);      // 한국시간 h시 30분

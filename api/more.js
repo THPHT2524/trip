@@ -37,24 +37,10 @@ const FLOOR = '2000-01-01';
        ① IP 별 분당 상한 — 사람 한 명에게는 넉넉하고 긁어 가기에는 좁다
        ② 응답에 s-maxage — 같은 날짜는 Vercel 가장자리가 대신 내주고 함수는 안 깨어난다
    ★공개라고 해서 아무 말이나 내보내지 않는다. 응답에 사용자와 관련된 것은 한 칸도 없다. */
-const RATE_MAX = 20;
-const RATE_WIN = 60 * 1000;
-const rate = new Map();
-
-const ipOf = (req) => String(req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || '')
-  .split(',')[0].trim() || 'unknown';
-
-function overLimit(who) {
-  const now = Date.now();
-  const hit = rate.get(who);
-  if (!hit || hit.until <= now) {
-    if (rate.size > 500) rate.clear();
-    rate.set(who, { n: 1, until: now + RATE_WIN });
-    return 0;
-  }
-  hit.n += 1;
-  return hit.n > RATE_MAX ? Math.ceil((hit.until - now) / 1000) : 0;
-}
+/* 그 ①. 상한은 api/_auth.js 에 있다(넷이 같은 것을 쓴다) — 다만 여기만 셀 열쇠가
+   토큰이 아니라 **IP** 다. 로그인을 안 받으니 그 말고는 셀 것이 없다. */
+const AUTH = require('./_auth');
+const overLimit = AUTH.limiter(20);
 
 /* ★★신한 응답을 우리 모양으로. **여기만 순수 함수라** tools/test-pure.js 가 검증한다.
    ★단위가 통화마다 다르다 — '일본 100엔' · '베트남 100동' 처럼 표시 이름에 배수가
@@ -135,7 +121,7 @@ const dayBefore = (d) => new Date(Date.parse(`${d}T00:00:00Z`) - 864e5).toISOStr
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') { res.status(405).json({ error: 'GET 만 받습니다.' }); return; }
-  const wait = overLimit(ipOf(req));
+  const wait = overLimit(AUTH.ipOf(req));
   if (wait) {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Retry-After', String(wait));

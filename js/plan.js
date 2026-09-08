@@ -485,7 +485,6 @@ const Plan = (function () {
     editing = r ? r.id : null;
     if (r) parentOf = r.parent_id || null;      // 고치기로 열면 그 줄의 소속을 따른다
     hasOwnCost = !!(r && !r.parent_id && r.cost != null);
-    $('if-id').value = r ? r.id : '';
     $('if-link').value = (r && r.map_url) || '';
     $('if-name').value = (r && r.name) || '';
     /* ★날짜 기본값: 고치는 줄의 날 → **여행 중이면 오늘** → 보고 있는 날 → 시작일.
@@ -770,6 +769,7 @@ const Plan = (function () {
   $('if-dlg').addEventListener('click', e => { if (e.target === $('if-dlg')) closeSheet(); });
 
   $('if-kind').innerHTML = U.KINDS.map(k => `<option value="${k}">${k}</option>`).join('');
+  U.fillCurs($('if-cur'));      // 목록은 util.js 에 한 벌 — index.html 에 세 벌 적혀 있었다
 
   return {
     /* ★탭을 옮길 때마다 불린다(지도·비용도 같은 rows 를 쓴다).

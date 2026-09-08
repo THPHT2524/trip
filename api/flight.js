@@ -30,47 +30,11 @@ const WD = require('./_wikidata');
 const HOST = 'aerodatabox.p.rapidapi.com';
 const KEY = process.env.AERODATABOX_KEY || '';
 
-const SB_URL = process.env.SUPABASE_URL || 'https://slakyumsnufoywxrdhhx.supabase.co';
-const SB_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_5xTTEUeViqzY1JgFLv0z6A_NAVJZcUz';
-
-/* 인증·속도제한은 api/fx.js 와 같은 몸짓이다 — 두 함수가 다르게 굴면 한쪽만 고쳐진다 */
-const TOKEN_TTL = 5 * 60 * 1000;
-const seen = new Map();
-
-async function authorized(req) {
-  const raw = req.headers['authorization'] || '';
-  const token = /^Bearer\s+(.+)$/i.test(raw) ? raw.replace(/^Bearer\s+/i, '').trim() : '';
-  if (!token) return false;
-  const hit = seen.get(token);
-  if (hit && hit > Date.now()) return true;
-  try {
-    const r = await fetch(`${SB_URL}/auth/v1/user`, {
-      headers: { apikey: SB_ANON, Authorization: `Bearer ${token}` },
-    });
-    if (!r.ok) { seen.delete(token); return false; }
-    if (seen.size > 200) seen.clear();
-    seen.set(token, Date.now() + TOKEN_TTL);
-    return true;
-  } catch (e) { return false; }        // 못 물어보면 통과시키지 않는다(fail closed)
-}
-
-/* ★환율(120/분)보다 훨씬 좁게 잡는다. 이건 **여행을 만들 때 두 번** 불리는 것이고,
-   무료 한도가 달 단위로 걸려 있어서 오타 반복이 곧 한 달치를 태운다. */
-const RATE_MAX = 10;
-const RATE_WIN = 60 * 1000;
-const rate = new Map();
-
-function overLimit(token) {
-  const now = Date.now();
-  const hit = rate.get(token);
-  if (!hit || hit.until <= now) {
-    if (rate.size > 500) rate.clear();
-    rate.set(token, { n: 1, until: now + RATE_WIN });
-    return 0;
-  }
-  hit.n += 1;
-  return hit.n > RATE_MAX ? Math.ceil((hit.until - now) / 1000) : 0;
-}
+/* 인증과 요청 상한은 api/_auth.js 한 곳에 있다 — 넷이 똑같이 하던 일이라 모았다.
+   ★분당 10 — 환율(120)보다 훨씬 좁다. 이건 **여행을 만들 때 두어 번** 불리는 것이고,
+     무료 한도가 달 단위로 걸려 있어서 오타 반복이 곧 한 달치를 태운다. */
+const AUTH = require('./_auth');
+const overLimit = AUTH.limiter(10);
 
 /* 편명 — 'KE 123', 'ke123', '7C1301' 을 한 꼴로 편다.
    ★공백을 지우고 대문자로. 항공사 코드는 두 자(7C·KE)거나 세 자(ANA 같은 ICAO)다. */
@@ -119,9 +83,8 @@ function pick(body, date) {
 module.exports = async (req, res) => {
   if (req.method !== 'GET') { res.status(405).json({ error: 'GET 만 받습니다.' }); return; }
 
-  const raw = req.headers['authorization'] || '';
-  const token = raw.replace(/^Bearer\s+/i, '').trim();
-  if (!(await authorized(req))) {
+  const token = AUTH.tokenOf(req);
+  if (!(await AUTH.authorized(req))) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(401).json({ error: '로그인이 필요합니다.' });
     return;

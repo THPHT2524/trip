@@ -232,7 +232,11 @@ const Maps = (function () {
     const r = s2.r;
     const t = r.at_time ? String(r.at_time).slice(0, 5) : '';
     const cost = (r.cost != null) ? U.money(r.cost, r.cost_cur || (trip && trip.base_cur)) : '';
-    const url = r.map_url || GM.placeUrl(r.name);
+    /* ★placeUrl 은 **줄을 통째로** 받는다(2026-09-08 고침). 이름 문자열을 넘기고 있었는데
+       그러면 GEO.ok('오사카성') 이 거짓이라 늘 null 이 돌아왔다 — 링크를 안 붙인 줄은
+       길찾기 단추가 href="null" 이었다. 여기 오는 줄은 전부 좌표가 있으므로(withGeo)
+       줄을 주면 좌표 검색 URL 이 나온다. (r.map_url 을 먼저 보는 것도 placeUrl 이 한다) */
+    const url = GM.placeUrl(r);
     /* ★★카드는 **입장권 스텁**이다(2026-09-06). 일정 탭에서는 이 컨셉을 물렸다 —
        스물아홉 장이 세로로 동시에 서면 라멘집까지 탑승권이 되어 단위가 안 맞았다.
        여기서는 셋 다 뒤집힌다: 한 번에 **한 장**이고, 옆으로 넘기는 그 몸짓이 곧

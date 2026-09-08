@@ -558,8 +558,8 @@
        ★여행마다 서울 오가는 두 번 + 여행 안에서 갈아탄 것. 우리 기록으로 셀 수 있는
          구간이라, 경유가 있었으면 그건 한 번으로 센다. */
     const air = shape.filter(r => /공항$/.test(String(r.name || '')) && WORLD.at(r.lat, r.lng));
-    const legs = legsOf(air);
-    n.flights = legs.flown;
+    const paths = legsOf(air);
+    n.flights = paths.flown;
     /* 값이 0 인 칸은 세우지 않는다 — 빈 칸의 이름을 읽히게 두지 않는다 */
     /* ★나라와 도시는 **적힌 대로**다. 전에는 통화에서 유추하고 좌표를 15km 로 묶어
        어림했는데, 간사이공항이 오사카·교토와 나란히 '한 지역' 으로 섰다 — 공항은
@@ -568,19 +568,19 @@
        **여권에 설명이 필요한 칸을 두지 않는다** — 사람이 한 번 적는 편이 낫다. */
     /* 라벨은 영문이다 — 진짜 여권이 그렇다(한국 여권도 모든 칸이 국·영문 병기다).
        아래 MRZ 도 로마자라 둘이 한 덩어리로 읽힌다. */
-    const cells = [
+    const grid = [
       ['COUNTRIES', n.countries], ['CITIES', n.cities], ['FLIGHTS', n.flights], ['DAYS', n.days],
     ].filter(([, v]) => v);
-    if (!cells.length) return '';
+    if (!grid.length) return '';
 
     return `<section class="pass">
-      ${worldHtml(air, legs)}
+      ${worldHtml(air, paths)}
       ${flags.length ? `<div class="pflagwrap" aria-hidden="true"><div class="pflags">${
         flags.map(f => `<span><b>${f}</b></span>`).join('')}</div></div>` : ''}
       ${pheadHtml()}
-      <dl class="pgrid">${cells.map(([k, v]) =>
+      <dl class="pgrid">${grid.map(([k, v]) =>
         `<div><dt>${esc(k)}</dt><dd>${esc(String(v))}</dd></div>`).join('')}</dl>
-      <p class="pmrz" aria-hidden="true">${mrzLines(cells).map(esc).join('<br>')}</p>
+      <p class="pmrz" aria-hidden="true">${mrzLines(grid).map(esc).join('<br>')}</p>
     </section>`;
   }
 
@@ -1069,6 +1069,7 @@
   $('new-cities').addEventListener('input', () => {
     $('new-name').placeholder = U.tripName('', $('new-cities').value) || '여행 이름';
   });
+  U.fillCurs($('new-cur'));     // 목록은 util.js 에 한 벌(U.CURS)
   const newPick = U.countryPicker($('new-country'), $('new-flags'));
   window.SETPICK = U.countryPicker($('set-country'), $('set-flags'));
   /* 통화를 고르면 나라도 대개 정해진다 — 아직 아무것도 안 골랐을 때만 미리 골라 준다.

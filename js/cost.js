@@ -41,34 +41,13 @@ const Cost = (function () {
     return m;
   }
 
-  const bar = (v, max, k) =>
-    `<span class="cbar"><i style="width:${max > 0 ? Math.round(v / max * 100) : 0}%${
-      k ? `;--k: var(--${k})` : ''}"></i></span>`;
-
-  /* ★★영수증의 줄. **점선이 이름과 금액을 잇는다** — 목록이 길어질수록 그 선이 값을 한다.
-     수는 오른쪽에서 자릿수를 맞춰 세로로 읽히고(tabular-nums), 막대는 그 밑에 깔려
-     비율을 말한다. 정확한 수는 정렬이, 비율은 막대가 맡는다 — 둘이 안 싸운다. */
-  /* ★묶음 줄의 금액에는 **기호를 안 찍는다.** 여기 오는 수는 전부 원화로 환산된
-     것이고, 통화는 맨 아래 TOTAL 이 한 번 말한다 — 영수증도 한 종이에 기호를
-     스무 번 찍지 않는다(항목 목록은 다르다: 거기는 엔·달러가 섞여 있어 기호가 정보다). */
-  function line(name, sub, sum, max, kv, miss, bars) {
-    return `<li${kv ? ` style="--k: var(--${kv})"` : ''}>
-      <span class="rl">
-        ${kv ? '<span class="rk"></span>' : ''}
-        <span class="rn">${esc(name)}</span>
-        ${sub ? `<em>${esc(sub)}</em>` : ''}
-        <span class="rd"></span>
-        <span class="rv">${sum ? esc(plain(sum, U.SETTLE)) : '—'}</span>
-      </span>
-      ${bars || bar(sum, max, kv)}
-      ${miss ? `<span class="cn">${miss}건 환율 없음</span>` : ''}
-    </li>`;
-  }
-
-  /* 단가는 **기호 없이** 숫자만. 통화는 오른쪽 금액이 한 번 말한다 —
-     영수증도 한 줄에 기호를 두 번 찍지 않는다. */
-  const plain = (v, cur) => (v == null || !Number.isFinite(+v)) ? ''
-    : (+v).toLocaleString('ko-KR', { maximumFractionDigits: (cur === 'KRW' || cur === 'JPY') ? 0 : 2 });
+  /* ★★막대 목록(line·bar·table·dayBars)을 **걷었다**(2026-09-08). '무엇에·누가·하루에
+     얼마씩' 을 목록 세 벌로 세우던 코드인데, 그 일은 2026-09-06·07에 **합계 밑의 띠
+     셋**(strip)이 넘겨받았다 — 같은 돈을 세 각도로 한 줄씩만 말한다. 그 뒤로 draw()
+     에서 부르는 곳이 하나도 없는 채로 남아 있었다. css 의 .cbar·.daybars 도 같이 걷는다.
+     ⚠ 되살릴 일이 있으면 되살리는 것은 목록이 아니라 **띠에 없는 물음**이어야 한다.
+       띠는 비율만 말하고 정확한 수는 항목 목록이 말한다 — 그 둘 사이에 빈 물음이
+       없어서 걷은 것이다. */
 
   /* 항목 — 결제 줄 하나가 한 줄. 어디서 쓴 것인지(부모 장소)가 이름이고,
      무엇에 쓴 것인지(줄 이름)가 곁말이다. 영수증에서 품명과 규격의 사이다. */
@@ -135,56 +114,7 @@ const Cost = (function () {
      길어지기만 하고, 거기서 알게 되는 것이 위 현금 칸의 '환전 ¥20,000 ₩172,491'
      한 줄과 같았다. 언제 바꿨는지는 일정에 그 줄이 그대로 서 있다. */
 
-  function table(title, entries, colorOf) {
-    if (!entries.length) return '';
-    const max = Math.max(...entries.map(e => e[1].sum));
-    return `<section class="cblock">
-      <h3 class="chd">${esc(title)}</h3>
-      <ul class="clist">${entries.map(([k, v]) =>
-        line(k, v.n ? v.n + '건' : '', v.sum, max, colorOf ? colorOf(k) : null, v.miss)).join('')}</ul>
-    </section>`;
-  }
-
-  /* ── 하루에 얼마씩 ──────────────────────────────────────────────────────
-     ★가로축이 **여행 카드의 미니 레일·일정 탭의 Day 탭과 같은 것**이다. 같은 날이 같은
-       자리에 선다 — 화면을 옮겨 다녀도 '3일차' 가 늘 같은 칸이다.
-     ★기둥 높이는 그날 쓴 돈, 색은 무엇에 썼는지. 둘을 한 그림에 담으므로
-       '날짜별' 과 '구분별' 목록을 따로 세울 필요가 없다(전에는 둘 다 있었고,
-       하루짜리 여행에서는 날짜별 막대가 자기 자신과 100% 비교라 아무 말도 안 했다).
-     ★빈 날은 바닥에 가는 선만 남긴다 — 미니 레일과 같은 어법이다. */
-  function dayBars() {
-    const days = dayList();
-    if (days.length < 2) return '';        // 하루뿐이면 견줄 것이 없다
-    const per = days.map(d => {
-      const list = rows.filter(r => r.on_date === d && has(r));
-      let sum = 0, n = 0; const byK = {};
-      list.forEach(r => {
-        const v = inBase(r); n += 1; if (v == null) return;
-        sum += v; byK[r.kind] = (byK[r.kind] || 0) + v;
-      });
-      return { d, sum, n, byK };
-    });
-    const max = Math.max(...per.map(x => x.sum));
-    if (!max) return '';
-
-    return `<section class="cblock">
-      <h3 class="chd">By day</h3>
-      <ul class="clist">${per.map((x, i) => {
-        /* ★막대는 **쌓아서** 그린다. 세로 기둥이던 시절부터 지켜 온 것이다 —
-           그날 얼마 썼는지(길이)와 무엇에 썼는지(색)를 한 그림이 같이 말한다.
-           가로로 눕히면서 그 성질을 잃으면 줄만 늘고 정보는 준다. */
-        const seg = U.KINDS.filter(k => x.byK[k]).map(k =>
-          `<i style="width:${(x.byK[k] / max * 100).toFixed(1)}%;--k: var(--${U.kvar(k)})"></i>`
-        ).join('');
-        /* 곁말은 그 날의 날짜다 — 'D1' 만으로는 며칟날인지 모른다(일정 탭의 띠는
-           'DAY 1 08.29 토' 라고 말한다). 같은 물음에 같은 답을 준다. */
-        return line(`Day ${i + 1}`, U.md(x.d), x.sum, max, null, 0,
-          `<span class="cbar stack">${seg}</span>`);
-      }).join('')}</ul>
-    </section>`;
-  }
-
-  /* 여행 기간이 있으면 빈 날도 센다 — 안 쓴 날도 '하루에 얼마씩' 의 일부다.
+  /* 여행 기간이 있으면 빈 날도 센다 — 안 쓴 날도 '날짜별' 띠의 일부다.
      ★이름이 U.tripDays 와 같았다. 그쪽은 **일수(숫자)** 를 주고 이쪽은 **날짜 목록**이라,
        한 글자도 안 겹치는 두 가지가 같은 이름을 쓰고 있었다(2026-09-03).
      ★app.js 의 dayList 와는 사촌이지만 규칙이 다르다 — 저쪽은 21일에서 자르고 기간
@@ -209,8 +139,7 @@ const Cost = (function () {
     if (!sum) return '';
     /* ★★조각이 하나면 안 그린다(2026-09-06). 하루짜리 여행의 '날짜별', 혼자 낸
        여행의 '사람별' 이 **폭 100% 짜리 한 조각**으로 서 있었다 — 비율을 말하는
-       그림인데 견줄 것이 없으니 아무 말도 안 하면서 종이만 한 줄 먹었다.
-       dayBars 가 days.length < 2 에서 물러나는 것과 같은 규칙이다. */
+       그림인데 견줄 것이 없으니 아무 말도 안 하면서 종이만 한 줄 먹었다. */
     if (parts.filter(p => p.v > 0).length < 2) return '';
     return `<div class="rstrip"><span class="sl">${esc(label)}</span>
       <span class="sb">${parts.filter(p => p.v > 0).map(p => {
@@ -295,7 +224,10 @@ const Cost = (function () {
       : '<span class="none"><b>아직 찍힌 것이 없습니다</b>'
         + '일정에서 <b>＋ 결제 추가</b> 로 넣으면 여기 모입니다</span>';
 
-    const byKind = U.KINDS.map(k => [k, group(r => r.kind).get(k)])
+    /* ⚠ group() 을 **한 번만** 부른다. `U.KINDS.map(k => group(…).get(k))` 였는데
+       그러면 구분 여섯마다 전체 줄을 다시 훑었다 — 같은 표를 여섯 번 짓는다. */
+    const kindSum = group(r => r.kind);
+    const byKind = U.KINDS.map(k => [k, kindSum.get(k)])
       .filter(e => e[1]).sort((a, b) => b[1].sum - a[1].sum);
     /* ★'각자 냄' 은 한 사람에게 몰지 않는다 — 교통카드처럼 각자 자기 걸로 찍은 줄이라
        동행자 수로 나눠 각자에게 붙인다. 동행자를 모르면(혼자거나 못 받았으면) 나눌 곳이
@@ -462,10 +394,19 @@ const Cost = (function () {
   /* ★여러 줄을 한 번에. 정산 통화를 원화로 바꾸면서 현지통화로 적어 둔 줄이 한꺼번에
      환율을 필요로 하게 됐다 — 하나씩 누르게 두면 그건 우리가 만든 일거리다.
      한 줄씩 순서대로 부른다(동시에 던지면 환율 프록시의 분당 상한에 걸린다). */
+  /* ★★고르는 규칙이 **위 목록과 같아야 한다**(2026-09-08 고침). 전에는 '값이 있고
+     원화가 아니고 fx 가 빈 줄' 을 다시 세고 있었는데, 그 그물에는 화면에 안 뜬 줄이
+     둘 더 걸렸다:
+       · **현금 줄** — 지갑 평균으로 이미 제대로 세고 있어서 목록에 없는데, 여기에
+         그날 전신환매도율을 박아 넣으면 그 값이 이겨서(money.js 의 'fx 가 이긴다')
+         합계가 조용히 바뀐다. 채우기 전에는 맞던 수다.
+       · **환전 줄** — 지출이 아니라 목록에 없다. 게다가 fillFx 는 늘 tts 로 묻는데
+         환전에 필요한 것은 현찰 살 때(cash)라 종류부터 틀린다.
+     '빠진 N건' 아래의 단추는 **그 N건**을 채우는 것이다. 세는 자리를 하나로 둔다. */
   async function fillAll() {
     const btn = document.querySelector('[data-fxall]');
     if (btn) { btn.disabled = true; btn.textContent = '가져오는 중…'; }
-    const ids = rows.filter(r => r.cost != null && r.cost_cur !== U.SETTLE && !r.fx).map(r => r.id);
+    const ids = rows.filter(r => has(r) && inBase(r) == null).map(r => r.id);
     for (const id of ids) { await fillFx(id, true); }
     document.dispatchEvent(new CustomEvent('items:changed'));
   }

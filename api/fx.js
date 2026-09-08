@@ -48,44 +48,11 @@ const PER100 = { JPY: true, VND: true, IDR: true };
    base 매매기준율    : 은행 기준값. 실제로 내는 돈은 아니다 */
 const FIELD = { tts: 'sendValue', cash: 'cashBuyValue', base: 'closePrice' };
 
-const SB_URL = process.env.SUPABASE_URL || 'https://slakyumsnufoywxrdhhx.supabase.co';
-const SB_ANON = process.env.SUPABASE_ANON_KEY || 'sb_publishable_5xTTEUeViqzY1JgFLv0z6A_NAVJZcUz';
-
-const TOKEN_TTL = 5 * 60 * 1000;
-const seen = new Map();
-
-async function authorized(req) {
-  const raw = req.headers['authorization'] || '';
-  const token = /^Bearer\s+(.+)$/i.test(raw) ? raw.replace(/^Bearer\s+/i, '').trim() : '';
-  if (!token) return false;
-  const hit = seen.get(token);
-  if (hit && hit > Date.now()) return true;
-  try {
-    const r = await fetch(`${SB_URL}/auth/v1/user`, {
-      headers: { apikey: SB_ANON, Authorization: `Bearer ${token}` },
-    });
-    if (!r.ok) { seen.delete(token); return false; }
-    if (seen.size > 200) seen.clear();
-    seen.set(token, Date.now() + TOKEN_TTL);
-    return true;
-  } catch (e) { return false; }        // 못 물어보면 통과시키지 않는다(fail closed)
-}
-
-const RATE_MAX = 120;                  // 사람이 비용을 적을 때만 불린다. 폴링이 없다
-const RATE_WIN = 60 * 1000;
-const rate = new Map();
-
-function overLimit(token) {
-  const now = Date.now();
-  const hit = rate.get(token);
-  if (!hit || hit.until <= now) {
-    if (rate.size > 500) rate.clear();
-    rate.set(token, { n: 1, until: now + RATE_WIN });
-    return 0;
-  }
-  hit.n += 1;
-  return hit.n > RATE_MAX ? Math.ceil((hit.until - now) / 1000) : 0;
-}
+/* 인증과 요청 상한은 api/_auth.js 한 곳에 있다 — 넷이 똑같이 하던 일이라 모았다.
+   ★분당 120. 사람이 비용을 적을 때만 불린다 — 폴링이 없다. '모두 채우기' 가
+     빠진 줄을 한 줄씩 순서대로 부르므로 그 한 번이 제일 몰리는 자리다. */
+const AUTH = require('./_auth');
+const overLimit = AUTH.limiter(120);
 
 /* 그 통화의 '원화 대비' 종가를 날짜에 맞춰 찾는다.
    ★주말·공휴일에는 고시가 없다. 그래서 **그 날짜 이하에서 가장 가까운 거래일**을 쓰고,
@@ -139,12 +106,12 @@ async function krwPer(cur, date, kind) {
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') { res.status(405).json({ error: 'GET 만 받습니다.' }); return; }
-  if (!(await authorized(req))) {
+  if (!(await AUTH.authorized(req))) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(401).json({ error: '로그인이 필요합니다.' });
     return;
   }
-  const wait = overLimit(String(req.headers['authorization'] || ''));
+  const wait = overLimit(AUTH.tokenOf(req));
   if (wait) {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Retry-After', String(wait));
