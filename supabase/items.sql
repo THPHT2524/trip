@@ -40,14 +40,6 @@ create table if not exists trip.items (
   fx         numeric,                     -- ★원화 환산율(1 단위당 원). 그 날짜 종가를 채우고 사람이 고친다
   payer_id   uuid        references auth.users(id) on delete set null,   -- 누가 냈나
 
-  -- ── 예약 ────────────────────────────────────────────────
-  -- ⚠ 이 둘은 **앱이 안 쓴다**(2026-09-10 확인). 적는 칸도 화면에 나오는 자리도 없어서
-  --    js/db.js 에서 골라 오지도, 실어 보내지도 않게 걷었다. 표에는 남긴다 — 칸을
-  --    지우는 것은 되돌릴 수 없고, 예약번호는 언젠가 적고 싶어질 값이다(메모 칸이
-  --    지금 그 일을 대신한다). 되살릴 때는 시트에 칸 둘과 db.js 의 COLS·shape 을 함께.
-  ref_code   text,                        -- 예약번호·확인코드 — 현지에서 실제로 꺼내 보는 값
-  book_url   text,                        -- 예약 사이트 링크 (map_url 과 성격이 다르다)
-
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
@@ -60,6 +52,21 @@ create table if not exists trip.items (
   -- 비용이 있으면 통화가 있어야 한다. 없으면 합계에서 그 줄이 조용히 빠진다.
   constraint items_cost_chk check (cost is null or cost_cur is not null)
 );
+
+-- ── 걷어낸 칸 ────────────────────────────────────────────────────────────
+-- ★★ref_code(예약번호)·book_url(예약 링크)을 **지웠다**(2026-09-10).
+--   2026-09-01 에 폼에 칸 둘로 태어났다가 하루 만에 걷혔고(v=60 '예약번호·링크 제거'),
+--   그 뒤로는 적는 칸도 보이는 자리도 없이 표에만 남아 있었다. 더 나빴던 것은
+--   js/db.js 의 shape() 가 **늘 null 을 실어 보내고 있었다**는 점이다 — 옛날에 적어 둔
+--   값이 있었더라도 그 줄을 한 번 고치는 순간 지워졌다. 살아 있지도, 지켜지지도
+--   않는 칸이었다. 적어 둘 것은 지금 memo 가 받는다.
+-- ⚠ `create table if not exists` 는 이미 있는 표의 칸을 **안 고친다.** 그래서 위에서
+--   줄을 지우는 것만으로는 라이브가 안 바뀐다 — 이 alter 가 그 몫이다. 새로 까는
+--   자리에서는 애초에 없으니 아무 일도 안 한다(양쪽이 같은 모양으로 만난다).
+-- ⚠ 되살릴 일이 생기면 칸만 되살리면 안 된다: 시트의 입력 칸 둘과 db.js 의
+--   COLS·shape() 이 함께 와야 한다. 셋 중 하나만 있으면 또 이 자리로 돌아온다.
+alter table trip.items drop column if exists ref_code;
+alter table trip.items drop column if exists book_url;
 
 -- 화면이 늘 이 순서로 읽는다: 이 여행의, 날짜 순, 그날 안에서는 시각→순번.
 create index if not exists items_trip_idx on trip.items (trip_id, on_date, at_time nulls last, seq);
