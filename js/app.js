@@ -140,8 +140,13 @@
       $('trip-span').textContent = '';
       $('trip-flag').textContent = '';
     }
-    document.querySelectorAll('#tabs button').forEach(b =>
-      b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+    /* ★tabindex 도 같이 옮긴다(2026-09-10). tablist 안에서는 **고른 하나만** 탭 순서에
+       남고 나머지는 화살표로 간다 — 안 그러면 탭 키가 넷을 다 훑고서야 판에 닿는다. */
+    document.querySelectorAll('#tabs button').forEach(b => {
+      const on = b.dataset.tab === tab;
+      b.setAttribute('aria-selected', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
     document.querySelectorAll('.pane').forEach(p =>
       p.hidden = p.dataset.tab !== tab);
 
@@ -1121,6 +1126,22 @@
   $('tabs').addEventListener('click', e => {
     const b = e.target.closest('button');
     if (b) go(tripId, b.dataset.tab, true);
+  });
+  /* ★★tablist 의 규약: 탭 **사이**는 탭 키가 아니라 화살표로 옮긴다(2026-09-10).
+     탭 키는 '탭줄에서 판으로' 를 뜻하고, 넷 중 어느 것을 고를지는 ←→ 가 맡는다.
+     ⚠ 옮기면 그 자리에서 **판까지 바뀐다**(자동 활성화). 판 넷이 이미 다 만들어져
+       있어서 옮기는 값이 없기 때문이다 — 무거운 판이면 Enter 를 기다려야 한다.
+     ★go() 가 tabindex 를 다시 걸어 주므로(render) 여기서는 focus 만 옮기면 된다. */
+  $('tabs').addEventListener('keydown', e => {
+    const step = { ArrowRight: 1, ArrowLeft: -1, Home: 'first', End: 'last' }[e.key];
+    if (step === undefined) return;
+    e.preventDefault();
+    const at = TABS.indexOf(tab);
+    const to = step === 'first' ? 0 : step === 'last' ? TABS.length - 1
+             : (at + step + TABS.length) % TABS.length;
+    go(tripId, TABS[to], true);
+    const b = document.querySelector(`#tabs button[data-tab="${TABS[to]}"]`);
+    if (b) b.focus();
   });
 
   /* 지도의 마커를 누르면 그 일정 줄로 데려간다 — 지도에서 '이게 뭐였지' 가 생기면

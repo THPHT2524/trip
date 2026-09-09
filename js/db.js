@@ -180,8 +180,14 @@ const DB = (function () {
   // ── 일정 ────────────────────────────────────────────────────────────
   /* 화면이 늘 이 순서로 읽는다: 날짜 → 시각(없으면 뒤) → 순번.
      ★정렬을 서버에 맡긴다. 클라이언트에서 또 정렬하면 두 규칙이 생기고 언젠가 갈린다. */
+  /* ⚠ ref_code·book_url 을 뺐다(2026-09-10). 표에는 남아 있지만 **앱이 안 쓴다** —
+       적는 칸도 없고 화면 어디에도 안 나온다. 골라 와도 쓰는 데가 없었다.
+     ★★shape() 에서 빼는 것이 더 중요하다. 거기서는 늘 null 을 실어 보내고 있었으므로,
+       무슨 수로든(옛 앱·직접 입력) 값이 들어 있었다면 **줄을 고칠 때마다 지워졌다.**
+       안 보내면 그 칸은 건드리지 않는다 — 안 쓰는 칸을 지우는 것보다 낫다.
+     ⚠ 칸 자체를 없애는 것은 스키마를 바꾸는 일이라 여기서 안 한다(supabase/items.sql). */
   const COLS = 'id,trip_id,author_id,on_date,at_time,seq,kind,name,memo,done,' +
-               'map_url,lat,lng,cost,cost_cur,qty,fx,settle,split,payer_id,ref_code,book_url,parent_id';
+               'map_url,lat,lng,cost,cost_cur,qty,fx,settle,split,payer_id,parent_id';
 
   const num = v => (v === '' || v == null) ? null : (Number.isFinite(+v) ? +v : null);
 
@@ -221,8 +227,6 @@ const DB = (function () {
       /* 각자 냄(더치) — 교통카드처럼 각자 자기 걸로 찍은 줄. 한 사람에게 몰지 않는다 */
       split: !!v.split,
       payer_id: v.split ? null : (v.payer_id || null),
-      ref_code: (v.ref_code || '').trim() || null,
-      book_url: (v.book_url || '').trim() || null,
     }),
 
     create: async (tripId, v) => {

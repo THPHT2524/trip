@@ -141,8 +141,9 @@ const Maps = (function () {
     if (map && u !== curStyle) { curStyle = u; styleReady = false; original.clear(); map.setStyle(u); }
     $('lblbtn').setAttribute('aria-pressed', String(labels));
     $('lblbtn').hidden = base !== 'sat';     // '지도' 에는 원래 라벨이 있다
+    /* ★aria-pressed 다 — 탭이 아니라 하나 고르는 단추떼다(index.html 주석 참고) */
     document.querySelectorAll('#basepick button[data-base]').forEach(x =>
-      x.setAttribute('aria-selected', String(x.dataset.base === base)));
+      x.setAttribute('aria-pressed', String(x.dataset.base === base)));
   }
 
   function ensureMap() {
@@ -201,7 +202,7 @@ const Maps = (function () {
        하루 동선이 다른 날 동선과 엉킨다 — 지도는 **하루씩** 보는 물건이다.
        그리고 아래 카드 띠도 하루치여야 넘기는 일이 끝이 있다. */
     el.innerHTML = days.map((d, i) =>
-      `<button type="button" role="tab" data-day="${esc(d)}" aria-selected="${String(pick === d)}">Day ${i + 1}</button>`
+      `<button type="button" data-day="${esc(d)}" aria-pressed="${String(pick === d)}">Day ${i + 1}</button>`
     ).join('');
     placeTabs();
   }

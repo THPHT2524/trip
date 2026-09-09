@@ -41,6 +41,10 @@ create table if not exists trip.items (
   payer_id   uuid        references auth.users(id) on delete set null,   -- 누가 냈나
 
   -- ── 예약 ────────────────────────────────────────────────
+  -- ⚠ 이 둘은 **앱이 안 쓴다**(2026-09-10 확인). 적는 칸도 화면에 나오는 자리도 없어서
+  --    js/db.js 에서 골라 오지도, 실어 보내지도 않게 걷었다. 표에는 남긴다 — 칸을
+  --    지우는 것은 되돌릴 수 없고, 예약번호는 언젠가 적고 싶어질 값이다(메모 칸이
+  --    지금 그 일을 대신한다). 되살릴 때는 시트에 칸 둘과 db.js 의 COLS·shape 을 함께.
   ref_code   text,                        -- 예약번호·확인코드 — 현지에서 실제로 꺼내 보는 값
   book_url   text,                        -- 예약 사이트 링크 (map_url 과 성격이 다르다)
 

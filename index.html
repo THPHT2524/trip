@@ -8,7 +8,7 @@
 <title>여행 일정표</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=517">
+<link rel="stylesheet" href="/css/app.css?v=518">
 </head>
 <body>
 
@@ -62,8 +62,14 @@
       <span class="tflag" id="trip-flag" aria-hidden="true"></span>
     </header>
 
+    <!-- ── 판 넷 ──────────────────────────────────────────────────────────
+         ★★아래 탭이 role="tablist" 라고 말하는데 **갈 판이 없었다**(2026-09-10에 이었다).
+           낭독기는 '탭, 4개 중 1' 이라 읽고는 그 탭이 무엇을 여는지 몰랐다 — 탭은
+           본디 **판을 가리키는 손가락**이라, 가리킬 것이 없으면 역할만 적어 둔 셈이다.
+           id 로 서로를 가리키게 한다: 단추는 aria-controls 로 판을, 판은
+           aria-labelledby 로 제 단추를 본다. 화면은 한 픽셀도 안 바뀐다. -->
     <!-- 일정 — js/plan.js 가 채운다 -->
-    <div class="pane" data-tab="plan">
+    <div class="pane" id="pane-plan" role="tabpanel" aria-labelledby="tab-plan" data-tab="plan">
       <div id="days"></div>
 
       <!-- 떠다니는 추가 단추. 판이 hidden 이면 같이 사라진다 —
@@ -71,18 +77,23 @@
       <button class="fab" id="fab" type="button" aria-label="일정 추가"><span aria-hidden="true">＋</span></button>
     </div>
 
-    <div class="pane" data-tab="map" hidden>
+    <div class="pane" id="pane-map" role="tabpanel" aria-labelledby="tab-map" data-tab="map" hidden>
       <!-- 지도는 가장자리까지 찬다. 컨트롤·날짜 탭·안내문은 그 **위에 뜬다** —
            지도 밖에 두면 볼 면적을 그만큼 깎아먹는다. 날짜 탭은 카드 띠 바로 위에
            둔다: 날을 고르는 일과 그 날의 곳을 넘기는 일이 한자리에 있어야 한다. -->
       <div class="mapwrap">
         <div id="map"></div>
-        <nav class="daytabs onmap" id="mapdays" role="tablist" aria-label="날짜" hidden></nav>
+        <!-- ★★탭이 아니다(2026-09-10). role="tablist" 였는데 **열리는 판이 없다** — 날을
+             고르면 같은 지도의 내용이 갈릴 뿐이다. 없는 판을 가리키게 두느니 생긴 대로
+             말한다: 하나를 고르는 단추떼(group + aria-pressed). js/map.js 가 채운다. -->
+        <nav class="daytabs onmap" id="mapdays" role="group" aria-label="날짜" hidden></nav>
         <div class="basepick" id="basepick">
           <button type="button" id="lblbtn" class="tog" aria-pressed="false">길 이름</button>
-          <span class="seg2" role="tablist" aria-label="밑그림">
-            <button type="button" role="tab" data-base="sat" aria-selected="true">위성</button>
-            <button type="button" role="tab" data-base="map" aria-selected="false">지도</button>
+          <!-- 위와 같다 — 밑그림을 고르는 것이지 판을 여는 것이 아니다.
+               옆의 '길 이름' 단추가 이미 aria-pressed 를 쓰므로 셋이 한 어법으로 선다. -->
+          <span class="seg2" role="group" aria-label="밑그림">
+            <button type="button" data-base="sat" aria-pressed="true">위성</button>
+            <button type="button" data-base="map" aria-pressed="false">지도</button>
           </span>
         </div>
         <p class="note" id="map-note"></p>
@@ -91,7 +102,7 @@
       </div>
     </div>
     <!-- 비용 — js/cost.js -->
-    <div class="pane" data-tab="cost" hidden>
+    <div class="pane" id="pane-cost" role="tabpanel" aria-labelledby="tab-cost" data-tab="cost" hidden>
       <!-- 비용 = 영수증 한 장. 합계·항목·바코드가 한 종이 위에 있다.
            ★머리가 없다(2026-09-07). '여행 비용' 이라는 이름을 걷고 나니 남은 줄이
              '몇 항목 · 무슨 돈' 하나였는데, 그건 제목이 아니라 합계의 각주라
@@ -136,7 +147,7 @@
        ★한글 이름표에 라틴을 작게 붙이는 것(data-en)이 이 서식의 어법이다 —
          실제 신고서가 그렇게 생겼다. ⚠ 두 나라 말은 **이 판에서만** 쓴다:
          팝업 셋(새 여행·참여·일정/결제)은 적어 넣는 자리라 한글만 세운다. -->
-    <div class="pane" data-tab="info" hidden>
+    <div class="pane" id="pane-info" role="tabpanel" aria-labelledby="tab-info" data-tab="info" hidden>
       <div class="acard">
         <div class="chead">
           <span class="cc" id="set-cc" aria-hidden="true"></span>
@@ -458,32 +469,36 @@
      ★그림은 js/util.js 의 U.ICON 이 갖고 app.js 가 넣는다 — 정거장 줄의 그림 여섯과
        **같은 자리에 모아 둔다**(같은 규격, 같은 currentColor). 여기 인라인으로 적으면
        그림 언어가 두 곳으로 갈린다. -->
+<!-- ⚠ id·aria-controls 는 위 네 판과 **짝**이다(tab-plan ↔ pane-plan). 한쪽만 고치면
+     낭독기가 없는 것을 가리킨다 — 이름 규칙을 'tab-N ↔ pane-N' 으로 못 박아 둔다.
+   ★고른 탭 하나만 탭 순서에 남는다(tabindex). 탭들 사이는 ←→·Home·End 로 옮긴다 —
+     tablist 의 규약이고 app.js 가 그 일을 한다. -->
 <nav class="tabs" id="tabs" role="tablist" aria-label="화면" hidden>
-  <button type="button" role="tab" data-tab="plan" aria-selected="true"><span>일정</span></button>
-  <button type="button" role="tab" data-tab="map"  aria-selected="false"><span>지도</span></button>
-  <button type="button" role="tab" data-tab="cost" aria-selected="false"><span>비용</span></button>
-  <button type="button" role="tab" data-tab="info" aria-selected="false"><span>설정</span></button>
+  <button type="button" role="tab" id="tab-plan" aria-controls="pane-plan" data-tab="plan" aria-selected="true"><span>일정</span></button>
+  <button type="button" role="tab" id="tab-map"  aria-controls="pane-map"  data-tab="map"  aria-selected="false" tabindex="-1"><span>지도</span></button>
+  <button type="button" role="tab" id="tab-cost" aria-controls="pane-cost" data-tab="cost" aria-selected="false" tabindex="-1"><span>비용</span></button>
+  <button type="button" role="tab" id="tab-info" aria-controls="pane-info" data-tab="info" aria-selected="false" tabindex="-1"><span>설정</span></button>
 </nav>
 
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=517"></script>
-<script src="/js/map-config.js?v=517"></script>
-<script src="/js/money.js?v=517"></script>
-<script src="/js/util.js?v=517"></script>
-<script src="/js/worldmap.js?v=517"></script>
-<script src="/js/geo.js?v=517"></script>
-<script src="/js/gmaps.js?v=517"></script>
-<script src="/js/db.js?v=517"></script>
-<script src="/js/fx.js?v=517"></script>
-<script src="/js/outbox.js?v=517"></script>
+<script src="/js/supabase-config.js?v=518"></script>
+<script src="/js/map-config.js?v=518"></script>
+<script src="/js/money.js?v=518"></script>
+<script src="/js/util.js?v=518"></script>
+<script src="/js/worldmap.js?v=518"></script>
+<script src="/js/geo.js?v=518"></script>
+<script src="/js/gmaps.js?v=518"></script>
+<script src="/js/db.js?v=518"></script>
+<script src="/js/fx.js?v=518"></script>
+<script src="/js/outbox.js?v=518"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=517"></script>
-<script src="/js/plan.js?v=517"></script>
-<script src="/js/map.js?v=517"></script>
-<script src="/js/cost.js?v=517"></script>
-<script src="/js/app.js?v=517"></script>
+<script src="/js/crew.js?v=518"></script>
+<script src="/js/plan.js?v=518"></script>
+<script src="/js/map.js?v=518"></script>
+<script src="/js/cost.js?v=518"></script>
+<script src="/js/app.js?v=518"></script>
 
 </body>
 </html>

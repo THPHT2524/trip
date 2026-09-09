@@ -382,7 +382,10 @@ v1 은 "나중에 도착한 쓰기가 이긴다", 지운 것은 되살리지 않
 | `js/vendor/` | `supabase-js` · `maplibre-gl`(csp 빌드 + 워커) (파일명에 버전 고정 — CDN 의존 없이 커밋) |
 | `css/maplibre-gl-5.24.0.css` | MapLibre 스타일. 자체 호스팅이라 CDN 을 타지 않는다 |
 | `js/supabase-config.js` | 접속 URL · 공개 키 |
-| `js/util.js` | 이스케이프·날짜·금액 서식 — 화면 여러 곳이 같이 쓴다 |
+| `js/map-config.js` | 지도 타일 키 — **출처 제한**이 유일한 방어선이다(주석 참고) |
+| `js/util.js` | 이스케이프·날짜·금액 서식·나라·통화 목록 — 화면 여러 곳이 같이 쓴다 |
+| `js/money.js` | **이 줄이 원화로 얼마인가** — 현금 지갑의 가중평균까지. 화면 없이 도는 순수 계산 |
+| `js/fx.js` | 날짜별 환율을 받아 두고 셈에 먹인다(localStorage). 줄의 `fx` 는 덮어쓰기 |
 | `js/worldmap.js` | 여권 위의 세계지도 외곽선 + 위경도→화면 투영 (`tools/worldmap.js` 가 만든다) |
 | `js/db.js` | 인증 + trips·items·members CRUD |
 | `js/gmaps.js` | 구글맵 링크 파싱 (전체 URL 은 여기서 끝난다) |
@@ -390,18 +393,24 @@ v1 은 "나중에 도착한 쓰기가 이긴다", 지운 것은 되살리지 않
 | `js/outbox.js` | 오프라인 쓰기 큐 + 로컬 사본 |
 | `js/plan.js` | Day 구획 · 일정 목록 · 거리 표기 · 추가 폼 |
 | `js/map.js` | 마커 · 하루치 동선 · 날짜 고르기 |
+| `js/crew.js` | 설정 탭 — 여행 설정 · 동행자 · 초대 코드 · 여권 도장 |
 | `js/cost.js` | 비용 합계 · 환율 환산 · 사람별 낸 돈 |
 | `js/more.js` | 더모아 셈 — 화면 없이 도는 순수 계산 (`money.js` 와 같은 규칙) |
 | `themore.html` · `js/themore.js` | `/themore` 한 장짜리 계산기 화면 |
-| `js/app.js` | 부팅 · 경로 라우팅 · 탭 |
+| `js/app.js` | 부팅 · 경로 라우팅 · 탭 · 여권(세계지도·격자·MRZ) |
+| `sw.js` | 오프라인 껍데기. **SHELL 이 페이지의 자산을 다 담아야 한다** — bump 가 지킨다 |
 | `api/gmaps.js` | 단축 링크 펼치기 — 호스트 허용목록 + 로그인 확인 |
 | `api/fx.js` | 날짜별 환율 (stock 의 `api/naver.js` 에서 이식) |
 | `api/more.js` | 신한은행 **1회차** 고시 — 일별 종가(api/fx)로는 못 하는 셈. 앱에서 **유일하게 로그인 없이** 열린 창구 |
+| `api/flight.js` | 편명·날짜 → 두 공항(이름·좌표·시각). 새 여행 폼의 '항공편으로 채우기' |
+| `api/_auth.js` | 로그인 확인과 요청 상한 — 프록시 넷이 나눠 쓴다. `_` 는 **함수로 안 만든다**는 뜻 |
+| `api/_wikidata.js` | 공항 코드 → 한글 이름. 손으로 들던 IATA 표 일흔 줄을 없앤 자리 |
 | `supabase/*.sql` | 표·RLS·함수 (멱등) · `SETUP.md` 설치 런북 |
 | `supabase/crew.sql` | 같은 여행 멤버끼리만 서로를 보게 하는 `security definer` 함수 |
 | `tools/test-pure.js` | `geo`·`gmaps`·`util`·`more` 회귀 — `node tools/test-pure.js` |
 | `tools/worldmap.js` | 세계지도 길 생성기 — Natural Earth 110m → 밀러 도법 → 정수·상대좌표. 빌드 때 한 번 |
-| `tools/bump.py` | 캐시버스팅 — `?v` 를 네 곳(index·themore·sw·SHELL)에서 한 번에 올린다 |
+| `tools/bump.py` | 캐시버스팅 — `?v` 를 네 곳(index·themore·sw·SHELL)에서 한 번에 올리고, SHELL 에 빠진 자산이 있으면 멈춘다 |
+| `tools/subset-font.py` | Plex Mono 서브셋 — 통화 기호를 더하면 여기 `ADD` 에 넣고 다시 돌린다 |
 | `vercel.json` | 보안 헤더 · 캐시 정책 · `/t/(.*)`·`/themore` 리라이트 (`connect-src` 에 비자 포함) |
 
 ---

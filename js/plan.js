@@ -200,10 +200,17 @@ const Plan = (function () {
     return { sum, miss };
   }
 
-  /* '다음 갈 곳' — 오늘 이후로 아직 안 다녀온 첫 줄. 현지에서 이 앱을 여는 이유다. */
+  /* '다음 갈 곳' — 오늘 이후로 아직 안 다녀온 첫 **정거장**. 현지에서 이 앱을 여는 이유다.
+     ★★결제 줄을 뺀다(2026-09-10). 결제 줄은 부모의 날짜·시각을 물려받는데 seq 까지
+       같은 짝이 실제 데이터에 **서른 중 여섯** 있다 — 세 열쇠가 다 비면 부모와 자식의
+       차례가 정해지지 않고, 자식이 앞서면 그 id 가 여기서 뽑힌다. 그런데 결제 줄은
+       화면에 .stop 으로 서지 않으므로(kidsOf 가 따로 뽑는다) **어느 줄에도 표가 안
+       붙는다** — '다음 갈 곳' 이 통째로 사라진다.
+     ⚠ 지금 데이터로 돌려 보면 한 번도 안 걸린다(그 여섯이 하루의 첫 줄인 적이 없다).
+       고장이 난 적은 없고, 날 뿐이었다 — 정거장을 묻는 자리이니 정거장만 본다. */
   function nextId() {
     const t = U.todayISO();
-    const cand = rows.filter(r => !r.done && r.on_date >= t);
+    const cand = rows.filter(r => !r.parent_id && !r.done && r.on_date >= t);
     return cand.length ? cand[0].id : null;
   }
 
@@ -621,9 +628,14 @@ const Plan = (function () {
       parent_id: parentOf,
       payer_id: $('if-payer').value || null,
       done: editing ? !!(rows.find(r => r.id === editing) || {}).done : false,
-      /* 시각이 없는 줄은 그날 맨 뒤에 붙인다. 시각이 있으면 서버 정렬이 시각을 먼저 본다. */
+      /* 시각이 없는 줄은 그날 맨 뒤에 붙인다. 시각이 있으면 서버 정렬이 시각을 먼저 본다.
+         ★★결제 줄은 **부모의 날**로 센다(2026-09-10). `$('if-date')` 를 보고 있었는데
+           결제 폼에서는 그 칸이 감춰져 있어(drawSettle) 값이 부모의 날이 아니라 '오늘'
+           이거나 '보고 있던 날' 이다 — 엉뚱한 날의 seq 를 세니 부모보다 작은 수가
+           나올 수 있었다. 부모의 날에서 세면 자식은 늘 그 날 정거장들 **뒤**에 선다. */
       seq: editing ? (rows.find(r => r.id === editing) || {}).seq || 0
-                   : ofDay($('if-date').value).reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1,
+                   : ofDay(par ? par.on_date : $('if-date').value)
+                       .reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1,
     };
   }
 
