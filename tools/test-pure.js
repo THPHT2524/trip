@@ -300,6 +300,22 @@ eq(GM.placeUrl({ map_url: 'https://maps.app.goo.gl/Z', lat: 1, lng: 2 }),
 eq(GM.placeUrl({ lat: 34.6873, lng: 135.5259 }),
    'https://www.google.com/maps/search/?api=1&query=34.6873%2C135.5259', '원본이 없으면 좌표로 연다');
 eq(GM.placeUrl({}), null, '좌표도 링크도 없으면 열 곳이 없다');
+/* ★★href 로 나가는 값이라 **웹 주소만** 통과한다(2026-09-10). map_url 은 사람이 적은
+   것을 그대로 담는 자리이고, 여행은 동행자와 같은 표를 본다 — 적은 사람이 내가
+   아닐 수 있다. 막되 버리지 않는다: 좌표가 있으면 좌표 검색으로 떨어진다. */
+eq(GM.placeUrl({ map_url: 'javascript:alert(1)', lat: 34.6873, lng: 135.5259 }),
+   'https://www.google.com/maps/search/?api=1&query=34.6873%2C135.5259',
+   '★javascript: 는 href 로 안 나간다 — 좌표 검색으로 떨어진다');
+eq(GM.placeUrl({ map_url: 'javascript:alert(1)' }), null,
+   '★좌표도 없으면 링크 자체가 없다 — 위험한 주소를 그대로 내주느니 단추를 안 단다');
+eq(GM.placeUrl({ map_url: ' data:text/html,<script>x</script> ', lat: 1, lng: 2 }),
+   'https://www.google.com/maps/search/?api=1&query=1%2C2', 'data: 도 막는다');
+eq(GM.placeUrl({ map_url: 'http://maps.google.com/?q=1,2', lat: 9, lng: 9 }),
+   'http://maps.google.com/?q=1,2', 'http 는 통과한다 — 옛 줄에 그대로 남아 있다');
+eq(GM.webUrl('  https://maps.app.goo.gl/Z  '), 'https://maps.app.goo.gl/Z',
+   '앞뒤 공백은 걷는다');
+eq(GM.webUrl('오사카성'), null, '주소가 아닌 글자는 주소가 아니다');
+eq(GM.webUrl('/t/abc'), null, '상대 주소도 막는다 — 여기 오는 것은 늘 남의 사이트다');
 
 /* ── MORE: 더모아 ──────────────────────────────────────────────────────
    ★★기대값을 **손으로 짓지 않았다.** 2026-09-03 themore.app 이 화면에 띄운 표를 그대로

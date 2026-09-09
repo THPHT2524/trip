@@ -11,6 +11,9 @@
 #   ③ sw.js 의 const V = N      (캐시 이름)
 #   ④ sw.js 의 SHELL 목록 ?v=N  (프리캐시할 URL)
 #
+# ★★그리고 SHELL 에 **줄이 있는지**까지 본다(2026-09-10, shell_gap 참고). ④는 적혀
+#   있는 줄의 번호만 갈아 끼우므로, 자산을 하나 더하면서 SHELL 에 안 적으면 잡히지 않는다.
+#
 # ★★②는 뒤늦게 들어왔다(2026-09-04). 글꼴 URL 에만 버전이 없어서, **글꼴을 고쳐도
 #   이미 앱을 연 적 있는 브라우저에는 1년 동안 안 갔다** — 위 머리말이 경고하는 바로
 #   그 사고가 글꼴에서 나 있었다. 서브셋에 ₩ 를 넣고 나서야 드러났다.
@@ -49,6 +52,27 @@ def versioned():
     return sorted(set(out))
 
 
+def shell_gap():
+    """페이지가 싣는데 SHELL 에 없는 자산. **비어 있어야 한다.**
+
+    ★★이 검사가 없어서 `/js/fx.js` 가 열 달 넘게 빠져 있었다(2026-09-10 발견).
+      위 ④는 SHELL 에 **이미 적힌** 줄의 ?v 만 갈아 끼운다 — 줄이 아예 없으면
+      갈아 끼울 것도 없으니 아무도 안 막았다. 자산을 하나 더할 때 index.html 과
+      sw.js 두 곳을 고쳐야 하는데, 손으로 하는 두 곳은 반드시 하나가 빠진다.
+    ★조용히 지나가는 것이 이 사고의 성질이다: fetch 핸들러가 받아온 것을 캐시에
+      넣어 주므로 온라인으로 한 번만 열면 채워진다. 드러나는 자리는 **버전을 올린
+      직후 처음 여는 곳이 오프라인일 때**뿐이라, 정작 서비스워커를 둔 이유인
+      그 상황에서만 깨진다.
+    ★버전이 없는 것(vendor·maplibre css)도 센다. 오프라인에서 없으면 똑같이 죽는다."""
+    want = []
+    for page in PAGES:
+        for m in re.finditer(r'(?:src|href)="(/(?:js|css|fonts)/[^"]+)"', read(page)):
+            want.append(m.group(1))
+    body = read(SW).split("const SHELL")[1].split("];")[0]
+    have = set(re.findall(r"'(/[^']+)'", body))
+    return [u for u in sorted(set(want)) if u not in have]
+
+
 def assets_sha():
     h = hashlib.sha256()
     for p in versioned():
@@ -69,6 +93,15 @@ def main():
         print("FAIL - HTML·CSS 의 ?v 가 서로 다릅니다: %s" % cur)
         print("       (부분 범프 사고다 — 손으로 맞춘 뒤 다시 돌리세요)")
         return 1
+    # ★올리기 **전에** 본다 — 여기서 막히면 파일이 하나도 안 바뀐 채로 끝난다.
+    gap = shell_gap()
+    if gap:
+        print("FAIL - 페이지가 싣는데 sw.js 의 SHELL 에 없는 자산:")
+        for u in gap:
+            print("         %s" % u)
+        print("       (오프라인에서 이 파일만 안 옵니다 — SHELL 에 줄을 넣고 다시 돌리세요)")
+        return 1
+
     old = cur[0]
     new = old + 1
 

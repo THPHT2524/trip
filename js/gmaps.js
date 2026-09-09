@@ -116,16 +116,35 @@ const GM = (function () {
          + '&destination=' + b.lat + ',' + b.lng;
   }
 
+  /* ★★href 로 나가도 되는 주소인가. **웹 주소만** 통과시킨다.
+     map_url 은 사람이 칸에 적은 것을 그대로 담는 자리다(plan.js 의 valueOf 는 parse 가
+     실패해도 원문을 저장한다 — 우리 파서가 못 읽는 링크도 사람에게는 쓸모가 있어서다).
+     그런데 그 값이 아래 placeUrl 을 거쳐 일정 줄의 지도 단추와 지도 탭 카드의 길찾기
+     **href 에 그대로 실린다.** `javascript:` 를 적어 두면 누르는 순간 그 자리에서 돈다.
+   ★지금은 vercel.json 의 CSP(script-src 'self')가 실행을 막는다. 그래도 여기서 막는다:
+     방어가 **헤더 하나뿐**이면 그 헤더가 흔들리는 날 통째로 열리고, 여행은 동행자와
+     같은 표를 보는 물건이라 그 값을 적은 사람이 내가 아닐 수 있다.
+   ★막되 **버리지 않는다** — 아래에서 좌표 검색 URL 로 떨어지므로 링크는 살아 있다.
+   ⚠ 상대 주소도 막힌다(new URL 이 던진다). 여기 오는 것은 늘 남의 사이트 절대주소다. */
+  function webUrl(u) {
+    if (!u) return null;
+    try {
+      const p = new URL(String(u).trim()).protocol;
+      return (p === 'https:' || p === 'http:') ? String(u).trim() : null;
+    } catch (e) { return null; }
+  }
+
   /* 한 지점 열기. 저장해 둔 원본 링크가 있으면 **그것을 쓴다** —
      파싱이 틀렸어도 사람이 붙여넣은 것은 맞는 곳을 가리키기 때문이다. */
   function placeUrl(item) {
-    if (item && item.map_url) return item.map_url;
+    const saved = webUrl(item && item.map_url);
+    if (saved) return saved;
     if (!GEO.ok(item)) return null;
     const q = item.lat + ',' + item.lng;
     return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
   }
 
-  return { needsServer, parse, dirUrl, placeUrl };
+  return { needsServer, parse, dirUrl, placeUrl, webUrl };
 })();
 
 if (typeof module !== 'undefined') {                      // tools/test-pure.js 용

@@ -9,8 +9,18 @@
         어제 고시로 오늘 999 를 맞추면 조용히 틀린다.)
 
    ★V 를 올려야 새 파일이 나간다. index.html 의 ?v=N 과 함께 올린다.
-     안 올리면 이미 받아 간 브라우저가 옛 앱을 계속 쓴다(card-dashboard 에서 실제로 겪은 사고다). */
-const V = 516;   // assets-sha:474335f5f916
+     안 올리면 이미 받아 간 브라우저가 옛 앱을 계속 쓴다(card-dashboard 에서 실제로 겪은 사고다).
+
+   ★★아래 SHELL 은 **index.html·themore.html 이 싣는 것을 하나도 빠짐없이** 담아야 한다.
+     `/js/fx.js` 가 빠져 있었다(2026-09-10에 찾았다). 빠져도 평소에는 안 드러난다 —
+     아래 fetch 핸들러가 받아온 것을 캐시에 넣어 주므로 온라인으로 한 번만 열면 채워진다.
+     드러나는 자리는 **버전을 올린 직후 처음 여는 곳이 오프라인일 때** 하나뿐이다:
+     `?v=` 가 바뀌면 새 URL 이라 캐시에 없는데 install 이 미리 받는 목록에도 없으니
+     그 파일만 못 온다. FXS 가 없으면 plan.js 의 reload() 가 거기서 죽어 일정 탭이
+     통째로 안 뜬다 — 이 서비스워커를 둔 이유가 그 상황 하나인데 그 상황에서만 깨졌다.
+   ★손으로 지키지 않는다. tools/bump.py 의 shell_gap() 이 페이지와 이 목록을 맞대 보고
+     빠진 것이 있으면 **아무것도 안 고치고 멈춘다.** */
+const V = 517;   // assets-sha:077c39033138
 const CACHE = `trip-shell-v${V}`;
 
 const SHELL = [
@@ -18,30 +28,31 @@ const SHELL = [
   '/index.html',
   '/themore',
   '/themore.html',
-  '/css/app.css?v=516',
+  '/css/app.css?v=517',
   '/css/maplibre-gl-5.24.0.css',
   '/js/vendor/supabase-js-2.111.0.js',
   '/js/vendor/maplibre-gl-csp-5.24.0.js',
   '/js/vendor/maplibre-gl-csp-worker-5.24.0.js',
-  '/js/supabase-config.js?v=516',
-  '/js/map-config.js?v=516',
-  '/js/money.js?v=516',
-  '/js/more.js?v=516',
-  '/js/themore.js?v=516',
-  '/js/util.js?v=516',
-  '/js/worldmap.js?v=516',
-  '/js/geo.js?v=516',
-  '/js/gmaps.js?v=516',
-  '/js/db.js?v=516',
-  '/js/outbox.js?v=516',
-  '/js/plan.js?v=516',
-  '/js/map.js?v=516',
-  '/js/crew.js?v=516',
-  '/js/cost.js?v=516',
-  '/js/app.js?v=516',
-  '/fonts/ibm-plex-mono-400.woff2?v=516',
-  '/fonts/ibm-plex-mono-500.woff2?v=516',
-  '/fonts/ibm-plex-mono-600.woff2?v=516',
+  '/js/supabase-config.js?v=517',
+  '/js/map-config.js?v=517',
+  '/js/money.js?v=517',
+  '/js/more.js?v=517',
+  '/js/themore.js?v=517',
+  '/js/util.js?v=517',
+  '/js/worldmap.js?v=517',
+  '/js/geo.js?v=517',
+  '/js/gmaps.js?v=517',
+  '/js/db.js?v=517',
+  '/js/fx.js?v=517',
+  '/js/outbox.js?v=517',
+  '/js/plan.js?v=517',
+  '/js/map.js?v=517',
+  '/js/crew.js?v=517',
+  '/js/cost.js?v=517',
+  '/js/app.js?v=517',
+  '/fonts/ibm-plex-mono-400.woff2?v=517',
+  '/fonts/ibm-plex-mono-500.woff2?v=517',
+  '/fonts/ibm-plex-mono-600.woff2?v=517',
 ];
 
 self.addEventListener('install', e => {
