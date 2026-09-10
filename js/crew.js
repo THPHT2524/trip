@@ -9,6 +9,8 @@ const Crew = (function () {
   const esc = U.esc;
 
   let trip = null, list = [];
+  /* 저장 직후의 다시 그리기에서만 참 — 그 한 번은 안내를 안 지운다(save·open 참고) */
+  let keepMsg = false;
   const memo = new Map();          // tripId → 멤버 목록
 
   /* 비용 탭이 '결제자' 를 사람 이름으로 적으려면 이 목록이 필요하다. */
@@ -155,6 +157,15 @@ const Crew = (function () {
       await DB.trips.update(trip.id, patch);
       Object.assign(trip, patch);
       $('crew-msg').textContent = '저장했습니다.';
+      /* ★★이 줄이 **제가 띄운 안내를 지우러 간다**(2026-09-10에 찾았다). trip:changed →
+         app.js 의 render() → Crew.open() 이고, open() 은 판을 새로 여는 자리라 안내를
+         비운다 — 그래서 '저장했습니다' 가 여행 목록을 다시 받아 오는 동안만 떴다가
+         사라졌다(실측: 1ms 에 뜨고 229ms 에 지워졌다). 저장은 됐는데 됐다는 말을
+         읽을 새가 없다. 이 한 번의 다시 그리기에서만 안내를 지키라고 표를 세운다.
+       ★js/cost.js 가 환율을 채운 뒤에 쓰는 keepMsg 와 **같은 수**다. 저쪽은 부르는
+         쪽이 인자로 넘기지만(Cost.open(t, rows, true)) 여기는 부르는 쪽이 일반
+         render() 라 그럴 자리가 없다 — 그래서 표를 이 파일 안에 둔다. */
+      keepMsg = true;
       document.dispatchEvent(new CustomEvent('trip:changed'));
     } catch (e) {
       $('set-err').textContent = e.message;
@@ -198,7 +209,11 @@ const Crew = (function () {
     of, nameOf,
     async open(t) {
       trip = t;
-      $('crew-msg').textContent = '';
+      /* ⚠ 표는 **한 번만 쓴다**(consume-once). 세워 둔 채로 남으면 다음에 이 판을 열
+         때까지 옛 안내가 따라온다 — 저장 직후의 그 한 번만 지키는 것이 뜻이다. */
+      const keep = keepMsg;
+      keepMsg = false;
+      if (!keep) $('crew-msg').textContent = '';
       $('set-err').textContent = '';
       try {
         list = await of(t.id);
