@@ -790,7 +790,11 @@
       if (sh) shape = sh; else retryShape();
     } catch (e) {
       trips = [];
-      $('trips').innerHTML = `<p class="empty"><strong>불러오지 못했습니다</strong>${esc(e.message)}</p>`;
+      /* 같은 말을 두 번 하지 않고, 끊긴 것은 사람 말로, 나갈 단추를 단다 — util.js 참고.
+         ⚠ 여권도 같이 비운다. 목록이 없는데 '16개국 204일' 만 남아 있으면
+           불러온 것처럼 보인다(passportHtml 은 trips 로 세므로 낡은 값이 남는다). */
+      $('passport').innerHTML = '';
+      $('trips').innerHTML = U.loadFail('여행을 못 불러왔습니다', e, Outbox.isOffline(e));
       return;
     } finally { loading = false; }
     /* 주소에 여행이 적혀 있으면 그것이 이긴다. 아무것도 안 적혀 있을 때만
@@ -1119,7 +1123,14 @@
   $('join').addEventListener('submit', joinTrip);
   $('back').addEventListener('click', () => go(null, 'plan', true));
 
-  $('trips').addEventListener('click', e => {
+  $('trips').addEventListener('click', async e => {
+    const retry = e.target.closest('[data-retry]');
+    if (retry) {
+      retry.disabled = true;
+      retry.textContent = '불러오는 중…';
+      await load(false);
+      return;
+    }
     const b = e.target.closest('.trip');
     if (b) go(b.dataset.id, 'plan', true);
   });
@@ -1164,9 +1175,24 @@
        클래스를 켜지 않아서** 못 보낸 것이 있을 때 ＋ 가 띠 위에 얹혔다(2026-09-03).
        하필 끊긴 곳에서만 겹치는 자리라 여기서 걸리지 않았다. */
     document.body.classList.toggle('has-obox', !!n);
-    if (!n) return;
-    el.innerHTML = `<span>못 보낸 변경 ${n}건</span>`
-      + `<button class="act" type="button" id="obox-send">${navigator.onLine ? '지금 보내기' : '연결되면 보냅니다'}</button>`;
+    if (!n) { document.documentElement.style.removeProperty('--h-obox'); return; }
+    /* ★★**무엇이** 안 갔는지 적는다(2026-09-10). 개수만으로는 방금 적은 그 줄이
+       안전한지 알 수가 없는데, 이 띠가 뜨는 순간이 바로 그것이 궁금한 순간이다.
+     ★맨 뒤엣것 하나만 이름을 대고 나머지는 수로 센다 — 띠 한 줄에 들어가야 한다.
+     ★띠도 이 앱의 목소리로 말한다: 작은 이름표(mono)와 값. 지갑 칩·영수증이 쓰는
+       그 어법이다. 종이 흉내를 내지는 않는다 — 이건 문서가 아니라 **상태**다. */
+    const s = Outbox.summary();
+    const rest = s.n > 1 ? ` 외 ${s.n - 1}건` : '';
+    el.innerHTML = `<span class="ob-l">못 보냄</span>`
+      + `<span class="ob-w">${esc(s.what)}${rest}</span>`
+      + `<button class="btn ghost sm" type="button" id="obox-send"${navigator.onLine ? '' : ' disabled'}>`
+      + `${navigator.onLine ? '지금 보내기' : '연결되면 보냅니다'}</button>`;
+    /* ★★높이를 **잰다**(2026-09-10). 판의 아래 여백은 24px 그대로여서 띠(43px)가
+       마지막 줄을 13px 잘라먹고 있었다(실측) — css 에 값을 박으면 글자 크기가
+       바뀔 때마다 또 어긋난다. 머리말 높이(--h-top)와 같은 수를 쓴다.
+     ⚠ ＋ 를 올리던 `+62px` 도 이 값으로 바꿨다. 두 곳이 같은 것을 따로 셈하면
+       언젠가 갈린다 — 지도 위의 띠 셋에서 이미 겪었다(placeTabs 주석). */
+    shellSet('--h-obox', el);
     if (justOnline) sendOutbox();
   }
   async function sendOutbox() {

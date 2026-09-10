@@ -324,6 +324,31 @@ const U = (function () {
       stroke-linecap="round" stroke-linejoin="round">${ICON[name] || ''}</svg>`;
   }
 
+  /* ── 못 불러왔을 때 ──────────────────────────────────────────────────
+     ★★같은 말을 두 번 하고 있었다(2026-09-10). 화면이 `<strong>불러오지 못했습니다</strong>`
+       를 얹고, 그 아래에 db.js 의 say() 가 만든 '일정을 불러오지 못했습니다: …' 이
+       통째로 또 왔다. 머리가 이미 말한 것은 몸에서 뺀다 — say() 는 `머리말: 원문` 꼴이라
+       **첫 콜론 앞을 버리면** 남는 것이 원문이다(원문 안의 콜론은 건드리지 않는다).
+   ★★그리고 **끊긴 것은 사람 말로 바꾼다.** 현지에서 제일 흔한 실패가 이것인데
+     화면에 뜨던 것은 `TypeError: Failed to fetch` 였다 — 여행자에게 아무 뜻이 없다.
+     ⚠ 그 밖의 오류는 **원문을 그대로 둔다.** db.js 의 say() 가 원문을 남기는 이유와
+       같다(2026-09-01에 지웠다가 디버깅이 막혔다) — RLS·스키마 오류는 고치는 사람이
+       읽을 글이고, 그 사람도 이 화면으로 본다.
+   ★★나갈 길을 준다. 전에는 단추가 없어서 ← 로 나갔다 다시 들어오는 것이 유일한
+     복구였다 — 신호가 오락가락하는 자리에서 그건 길이 아니다.
+     ⚠ 부르는 쪽이 `[data-retry]` 를 받아 다시 부른다. 여기서는 모양만 만든다. */
+  function loadFail(what, err, offline) {
+    const raw = String((err && err.message) || err || '');
+    const body = offline
+      ? '연결이 없습니다 — 신호가 잡히면 다시 눌러 보세요.'
+      : (raw.includes(': ') ? raw.slice(raw.indexOf(': ') + 2) : raw);
+    return `<div class="loadfail">
+      <p class="lf-head">${esc(what)}</p>
+      <p class="lf-why">${esc(body)}</p>
+      <button class="btn ghost sm" type="button" data-retry>다시 시도</button>
+    </div>`;
+  }
+
   /* ── 사람의 색 ────────────────────────────────────────────────────────
      ★★일정 탭의 결제자 동그라미가 쓰던 것을 여기로 옮겼다(2026-09-06) —
        설정 탭의 동행자 줄도 같은 색을 써야 **같은 사람이 어느 화면에서나
@@ -390,7 +415,7 @@ const U = (function () {
   return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
            cityList, countryPicker, SETTLE, icon, hue, tripName, countryNameEn, ink,
-           curOf, CURS, fillCurs };
+           curOf, CURS, fillCurs, loadFail };
 })();
 
 if (typeof module !== 'undefined') module.exports = U;   // tools/test-pure.js 용

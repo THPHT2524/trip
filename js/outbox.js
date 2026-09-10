@@ -117,8 +117,22 @@ const Outbox = (function () {
 
   addEventListener('online', () => { subs.forEach(f => { try { f(q.length, true); } catch (e) {} }); });
 
+  /* ★★**무엇이 안 갔는지** 말할 수 있게 한 줄 요약을 준다(2026-09-10). 띠가 '못 보낸
+     변경 2건' 만 적고 있었는데, 그 띠가 뜨는 순간이 하필 '방금 적은 그게 갔나' 가
+     제일 궁금한 순간이다 — 개수는 그 물음에 답하지 않는다.
+   ★맨 **뒤엣것**을 든다. 방금 한 일이 큐의 끝이고, 사람이 확인하고 싶은 것도 그것이다.
+   ★지우기는 이름이 없다(id 만 큐에 넣는다) — 그때는 '지운 것' 이라고만 한다.
+     없는 이름을 지어내지 않는다. */
+  function summary() {
+    const last = q[q.length - 1];
+    if (!last) return { n: 0, what: '' };
+    const nm = String((last.row && last.row.name) || '').trim();
+    const what = last.kind === 'delete' ? '지운 것' : (nm || '이름 없는 줄');
+    return { n: q.length, what };
+  }
+
   return {
-    isOffline, cacheSet, cacheGet, queue, apply, flush, tmpId,
+    isOffline, cacheSet, cacheGet, queue, apply, flush, tmpId, summary,
     count: () => q.length,
     onChange: fn => subs.push(fn),
   };

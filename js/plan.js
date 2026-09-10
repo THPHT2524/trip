@@ -225,6 +225,8 @@ const Plan = (function () {
   function drawDays() {
     const el = $('days');
     closeMemo();                          // 붙어 있던 단추가 곧 사라진다
+    /* 다시 불러오는 데 성공했으면 ＋ 를 되돌린다(showFail 이 감춘다) */
+    if (failed) { failed = false; $('fab').hidden = false; }
     /* ⚠ 조건이 `!rows.length && !days.length` 였다 — 날짜를 적어 둔 여행은 이 갈래에
        못 들어와서, 새로 만든 이레짜리 여행이 'Day 1 비어 있는 날' 을 일곱 줄
        늘어놓았다(2026-09-06). **'비어 있는 날' 은 다른 날에 내용이 있을 때만 정보다** —
@@ -319,7 +321,11 @@ const Plan = (function () {
 
   function stopHtml(r, nid, num) {
     const k = U.kvar(r.kind);
+    /* ⚠ is-pending 은 **줄에도** 단다(2026-09-10). 전에는 안쪽 단추(.item)에만 있었는데
+       '아직 못 보냈다' 를 그리는 자리는 레일 위의 핀이고, 핀은 .stop 의 자식이라
+       .item 에서는 닿지 않는다(css 에는 부모를 고르는 수가 없다). */
     const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : '',
+                 r._pending ? 'is-pending' : '',
                  ].filter(Boolean).join(' ');
     const time = r.at_time ? r.at_time.slice(0, 5) : '';
     /* ★비용이 없으면 **아무 말도 하지 않는다.** 전에는 '비용 미정' 을 적었는데,
@@ -687,6 +693,19 @@ const Plan = (function () {
     }
   }
 
+  /* ── 못 불러왔을 때 ──────────────────────────────────────────────────
+     ★★**＋ 를 감춘다**(2026-09-10). 못 불러온 여행 위에 떠 있는 ＋ 는 '여기 넣으세요'
+       라고 권하는 것인데, 정작 누르면 폼은 열리고 저장은 안 된다(무엇에 붙일지 모른다).
+       판이 실패한 상태에서 할 수 있는 일은 **다시 불러오는 것 하나뿐**이라 그것만 둔다.
+     ★말은 U.loadFail 이 짓는다 — 같은 말을 두 번 하지 않고, 끊긴 것은 사람 말로 바꾸고,
+       나갈 단추를 단다(왜 그렇게 하는지는 util.js 주석에 있다). */
+  let failed = false;
+  function showFail(e) {
+    failed = true;
+    $('days').innerHTML = U.loadFail('일정을 못 불러왔습니다', e, Outbox.isOffline(e));
+    $('fab').hidden = true;
+  }
+
   /* 서버에서 받고, 못 받으면 **마지막으로 받아 둔 것**을 쓴다.
      그 위에 아직 못 보낸 것을 얹는다 — 적었는데 사라진 것처럼 보이면 안 된다. */
   async function reload() {
@@ -709,6 +728,15 @@ const Plan = (function () {
 
   // ── 붙이기 ────────────────────────────────────────────────────────────
   $('days').addEventListener('click', async e => {
+    /* 못 불러온 판의 '다시 시도' — 여기 말고는 나갈 길이 없다 */
+    const retry = e.target.closest('[data-retry]');
+    if (retry) {
+      retry.disabled = true;
+      retry.textContent = '불러오는 중…';
+      try { await reload(); loaded = true; }
+      catch (err) { showFail(err); }
+      return;
+    }
     const done = e.target.closest('[data-done]');
     if (done) {
       const r = rows.find(x => x.id === done.dataset.done);
@@ -793,7 +821,19 @@ const Plan = (function () {
       if (same && loaded) { render(); return; }
       rows = []; editing = null; loaded = false;
       fillForm(null);
-      $('days').innerHTML = '<p class="empty">불러오는 중…</p>';
+      /* ★★불러오는 동안에도 **노선도는 노선도다**(2026-09-10). 회색 글자 한 줄만
+         띄우고 있었는데, 그러면 `#days::before` 의 레일이 그 문단 높이만큼(110~160px)만
+         자라서 왼쪽에 **토막 난 선**이 남는다 — 레일이 아니라 렌더 찌꺼기로 보였다.
+         2026-09-06에 홈·일정·비용이 '비어 있는 제 모습' 을 갖게 해 놓고 정작 **제일
+         자주 보는 이 화면**만 빠져 있었다(여행을 열 때마다 지나간다).
+       ★빈 상태(.planempty)와 **같은 물건**을 쓴다: 레일에 걸린 점선 핀 하나.
+         새 어법을 만들지 않는다 — 둘 다 '정거장이 아직 없는 노선도' 다.
+       ⚠ 정거장을 **지어내지 않는다.** 몇 곳인지 아는 것은 홈의 shape 이지 여기가 아니고,
+         모르는 수만큼 회색 칸을 늘어놓는 것은 이 앱이 미니 레일에서 한 번 걷어낸
+         짓이다('로딩 스켈레톤처럼 보였다', 2026-09-01). 핀 하나가 자리를 말한다. */
+      $('days').innerHTML = '<div class="planempty is-loading">'
+        + '<span class="pin" aria-hidden="true"></span>'
+        + '<p role="status">불러오는 중…</p></div>';
       /* 동행자 목록을 미리 받아 '결제자' 를 채운다.
          못 받아도(끊겼거나 혼자거나) 폼은 그대로 쓴다 — '안 적음' 만 남는다.
        ★★'각자 냄' 을 걷었다(2026-09-06). 한 결제를 여럿이 나눠 낸 일을 적는 값이었는데
@@ -807,8 +847,8 @@ const Plan = (function () {
         $('if-payer').innerHTML = '<option value="">안 적음</option>'
           + crew.map(m => `<option value="${esc(m.user_id)}">${esc(String(m.email || '').split('@')[0])}</option>`).join('');
       } catch (e) { crew = []; }
-      try { await reload(); loaded = true; }
-      catch (e) { $('days').innerHTML = `<p class="empty"><strong>불러오지 못했습니다</strong>${esc(e.message)}</p>`; }
+      try { await reload(); loaded = true; failed = false; }
+      catch (e) { showFail(e); }
     },
     rows: () => rows,
     /* ★다른 모듈(cost.js 가 환율을 채우는 것처럼)이 DB 를 고쳤을 때 쓴다.

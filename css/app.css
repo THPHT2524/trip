@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=521') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=523') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=521') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=523') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=521') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=523') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1185,21 +1185,69 @@ a { color: var(--route); text-underline-offset: 2px; }
 
 /* ── 아웃박스 ─────────────────────────────────────────────────────────── */
 /* 못 보낸 것이 있으면 어느 화면에 있든 보인다. 조용히 쌓이면 한참 뒤에야 안다. */
+/* ★★띠도 **이 앱의 목소리로** 말한다(2026-09-10). 그전에는 가운데 정렬된 문장 하나에
+   코발트 바탕 위 코발트 링크였다 — 이 앱에서 유일하게 아무 어법도 없는 면이었고,
+   '지금 보내기' 는 바탕과 같은 색이라 단추로 안 보였다.
+ ★쓰는 어법은 **작은 이름표 + 값**이다(지갑 칩·영수증의 그것). 종이 흉내는 안 낸다 —
+   이건 문서가 아니라 **상태**라서, 문서인 척하면 오히려 거짓말이 된다.
+ ★왼쪽에 이름표와 무엇이, 오른쪽 끝에 할 일. 가운데 정렬을 걷으면 이름이 길어져도
+   단추 자리가 안 움직인다. */
 .obox {
   position: fixed; left: 0; right: 0; bottom: calc(58px + env(safe-area-inset-bottom));
   z-index: 45;
-  display: flex; align-items: center; justify-content: center; gap: 12px;
+  display: flex; align-items: center; gap: 8px;
   padding: 8px var(--pad);
   background: var(--route-w); border-top: 1px solid var(--route);
-  font-size: var(--t-cap); font-weight: 600; color: var(--ink);
+  font-size: var(--t-cap); color: var(--ink);
 }
-.obox .act { color: var(--route); }
+/* 이름표 — 지갑 칩의 '환전' 과 **똑같이** 짠다(.wallet .wt).
+   ⚠ 처음에 mono 에 자간 .06em 을 줬다가 '못  보냄' 으로 벌어졌다. 이 앱의 등폭에는
+     한글이 없어서 낱자만 대체 글꼴로 떨어지고 사이의 빈칸은 600/1000 짜리 등폭 그대로
+     남는다 — 자간까지 주면 낱자가 더 흩어진다. 이 앱이 여러 번 밟은 함정이고,
+     그래서 **한글 이름표는 고딕에 자간 0** 이 규칙이다(등폭은 라틴 이름표의 것). */
+.obox .ob-l {
+  flex: 0 0 auto;
+  font-family: var(--sans); font-size: var(--t-micro); font-weight: 700;
+  letter-spacing: 0; color: var(--route);
+}
+/* 무엇이 안 갔나 — 이름이 길면 여기서 줄인다(단추 자리는 안 내준다) */
+.obox .ob-w {
+  flex: 1 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 600;
+}
+.obox .btn { flex: 0 0 auto; }
+/* 연결이 없으면 누를 것이 없다 — 눌리지 않는 단추는 그렇게 보여야 한다 */
+.obox .btn[disabled] { border-color: transparent; font-weight: 500; }
 
-/* 아직 못 보낸 줄 — 있는 척하지 않는다 */
-.item.is-pending { border-style: dashed; }
+/* ★★띠가 뜨면 **판의 발치도 그만큼 물러난다**(2026-09-10). ＋ 만 올리고 있어서
+   띠(43px)가 마지막 줄을 13px 잘라먹었다(실측) — 규칙이 ＋ 에만 있었다.
+   높이는 js 가 재서 --h-obox 로 준다(글자 크기가 바뀌면 띠도 바뀐다).
+   ⚠ 지도 판은 제외한다 — 가장자리까지 차는 것이 그 판의 규칙이고, 그 위에 뜨는
+     것들은 placeTabs 가 따로 쌓는다. */
+body.has-obox .pane:not([data-tab="map"]) {
+  padding-bottom: calc(24px + var(--h-obox, 44px));
+}
+body.has-obox #view-trips { padding-bottom: var(--h-obox, 44px); }
+
+/* 아직 못 보낸 줄 — 있는 척하지 않는다.
+   ⚠ 여기 `.item.is-pending { border-style: dashed }` 가 있었다(2026-09-10에 걷었다).
+     카드를 걷으면서 `.item` 의 테두리가 없어졌는데 style 만 남아 **border-width 가 0**
+     이라 아무것도 안 그렸다(실측) — 의도는 적혀 있고 화면에는 없던 규칙이다.
+   ★대신 **핀**에 건다. 이 화면에서 줄의 신원은 레일 위의 핀이고, '아직 실체가 아니다'
+     를 점선으로 말하는 어법이 이미 있다(.planempty .pin). 같은 말은 같은 모양으로. */
+.stop.is-pending > .pin {
+  border-style: dashed; background: var(--paper); border-color: var(--rail); color: var(--ink-3);
+}
+/* ★★'보내는 중' 이 아니라 '못 보냄' 이다(2026-09-10). 끊겨서 큐에 쌓인 줄인데 띠는
+   '연결되면 보냅니다' 라고 하고 이 줄만 '보내는 중' 이라고 해서, **같은 상태를 두
+   이름으로** 부르고 있었다. 보내고 있지 않다 — 못 보낸 것이다(띠의 '못 보냄' 과 맞춘다). */
+/* ⚠ 여기도 등폭이었다 — '보 내 는  중' 으로 벌어지고 있었다(2026-09-10에 같이 고쳤다).
+   content 는 감쌀 요소가 없어 `<i class="ko">` 수를 못 쓰니 칸째로 고딕이다. */
 .item.is-pending .name::after {
-  content: '보내는 중'; margin-left: 6px;
-  font-family: var(--mono); font-size: var(--t-micro); font-weight: 500; color: var(--ink-3);
+  content: '못 보냄'; margin-left: 6px;
+  font-family: var(--sans); font-size: var(--t-micro); font-weight: 500;
+  letter-spacing: 0; color: var(--ink-3);
 }
 
 /* ── 비용 ─────────────────────────────────────────────────────────────── */
@@ -2572,6 +2620,11 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
   background: var(--paper); border: 2px dashed var(--rail);
 }
 .planempty p { margin: 0; font-size: var(--t-body); line-height: 1.85; color: var(--ink-3); }
+/* ★불러오는 중 — 빈 노선도와 **같은 물건**이다(2026-09-10). 전에는 회색 글자 한 줄이라
+   레일이 그 문단 높이만큼만 자라 토막으로 남았다. 핀 하나가 레일을 세워 준다.
+   ★움직이지 않는다. 첫 화면에서 움직이는 것은 소음이라고 게이트에서 이미 정했고,
+     이 판은 대개 한 호흡 만에 채워진다 — 깜빡이는 것이 기다림보다 오래 남는다. */
+.planempty.is-loading { min-height: 200px; }
 .planempty strong {
   display: block; margin-bottom: 5px;
   font-size: var(--t-read); font-weight: 600; color: var(--ink-2);
@@ -2592,6 +2645,28 @@ textarea { resize: vertical; min-height: 44px; line-height: 1.5; }
 }
 .ctotal .none b { font-weight: 600; color: var(--ink-2); }
 .empty strong { display: block; color: var(--ink-2); font-weight: 600; margin-bottom: 4px; }
+
+/* ── 못 불러왔을 때 ────────────────────────────────────────────────────
+   ★★이 화면은 **제일 곤란할 때** 보는 것인데 제일 말을 안 했다(2026-09-10):
+     같은 문장을 굵게 한 번 · 그냥 한 번, 그 뒤에 `TypeError: Failed to fetch`,
+     그리고 나갈 단추가 없었다. 무엇을 적을지는 js/util.js 의 loadFail 이 정한다.
+   ★빈 상태(.planempty·안 뜬 판)와 **다르게 생겨야 한다.** 저쪽은 '아직 없다' 이고
+     여기는 '못 가져왔다' 다 — 하나는 기다리면 되고 하나는 뭔가 해야 한다.
+     그래서 여기만 단추를 들고, 그 단추가 이 블록의 유일한 색이다. */
+.loadfail {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 44px var(--pad) 40px; text-align: center;
+}
+.loadfail .lf-head {
+  margin: 0; font-size: var(--t-read); font-weight: 600; color: var(--ink-2);
+}
+/* 원문이 올 수 있는 자리다 — 긴 영어 한 줄이 판을 밀지 않게 접는다 */
+.loadfail .lf-why {
+  margin: 0; max-width: 30em;
+  font-size: var(--t-body); line-height: 1.7; color: var(--ink-3);
+  overflow-wrap: anywhere;
+}
+.loadfail .btn { margin-top: 2px; }
 
 /* 좌표 없는 일정이 지도에서 빠졌다는 사실을 조용히 넘기지 않는다.
    ⚠ 여기 오는 것은 **한글 문장**이다 — 등폭이었는데 낱말 사이가 전부 벌어져
@@ -2772,7 +2847,12 @@ input.mono { font-family: var(--mono); }
 /* 아웃박스 띠가 뜨면 ＋ 를 그 위로 올린다(js/app.js 의 drawObox 가 켠다).
    띠는 51px(12px 글자 + 44px 단추) 이라 52 면 딱 1px 스친다 — 동그란 단추라
    그 1px 은 눈에 붙어 보인다. 10px 을 더 준다. */
-body.has-obox .fab { bottom: calc(58px + env(safe-area-inset-bottom) + 62px); }
+/* ⚠ 62px 을 박아 두었었다(2026-09-10에 걷었다). 띠 높이를 손으로 적은 값인데, 판의
+   여백도 같은 것을 알아야 해서 **두 곳이 같은 수를 따로 셈하는** 꼴이 됐다 — 지도 위의
+   띠 셋에서 이미 겪은 병이다(placeTabs 주석). js 가 재는 --h-obox 하나를 둘이 나눠 쓴다. */
+body.has-obox .fab {
+  bottom: calc(58px + env(safe-area-inset-bottom) + var(--h-obox, 44px) + 10px);
+}
 
 /* ── 입력 시트 ─────────────────────────────────────────────────────────
    폰에서는 **아래에서 올라오는 시트**다. 화면 가운데 뜬 상자보다 엄지에 가깝고,
