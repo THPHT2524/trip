@@ -20,7 +20,7 @@
      통째로 안 뜬다 — 이 서비스워커를 둔 이유가 그 상황 하나인데 그 상황에서만 깨졌다.
    ★손으로 지키지 않는다. tools/bump.py 의 shell_gap() 이 페이지와 이 목록을 맞대 보고
      빠진 것이 있으면 **아무것도 안 고치고 멈춘다.** */
-const V = 523;   // assets-sha:160d20911657
+const V = 524;   // assets-sha:f3d3ea845546
 const CACHE = `trip-shell-v${V}`;
 
 const SHELL = [
@@ -28,31 +28,31 @@ const SHELL = [
   '/index.html',
   '/themore',
   '/themore.html',
-  '/css/app.css?v=523',
+  '/css/app.css?v=524',
   '/css/maplibre-gl-5.24.0.css',
   '/js/vendor/supabase-js-2.111.0.js',
   '/js/vendor/maplibre-gl-csp-5.24.0.js',
   '/js/vendor/maplibre-gl-csp-worker-5.24.0.js',
-  '/js/supabase-config.js?v=523',
-  '/js/map-config.js?v=523',
-  '/js/money.js?v=523',
-  '/js/more.js?v=523',
-  '/js/themore.js?v=523',
-  '/js/util.js?v=523',
-  '/js/worldmap.js?v=523',
-  '/js/geo.js?v=523',
-  '/js/gmaps.js?v=523',
-  '/js/db.js?v=523',
-  '/js/fx.js?v=523',
-  '/js/outbox.js?v=523',
-  '/js/plan.js?v=523',
-  '/js/map.js?v=523',
-  '/js/crew.js?v=523',
-  '/js/cost.js?v=523',
-  '/js/app.js?v=523',
-  '/fonts/ibm-plex-mono-400.woff2?v=523',
-  '/fonts/ibm-plex-mono-500.woff2?v=523',
-  '/fonts/ibm-plex-mono-600.woff2?v=523',
+  '/js/supabase-config.js?v=524',
+  '/js/map-config.js?v=524',
+  '/js/money.js?v=524',
+  '/js/more.js?v=524',
+  '/js/themore.js?v=524',
+  '/js/util.js?v=524',
+  '/js/worldmap.js?v=524',
+  '/js/geo.js?v=524',
+  '/js/gmaps.js?v=524',
+  '/js/db.js?v=524',
+  '/js/fx.js?v=524',
+  '/js/outbox.js?v=524',
+  '/js/plan.js?v=524',
+  '/js/map.js?v=524',
+  '/js/crew.js?v=524',
+  '/js/cost.js?v=524',
+  '/js/app.js?v=524',
+  '/fonts/ibm-plex-mono-400.woff2?v=524',
+  '/fonts/ibm-plex-mono-500.woff2?v=524',
+  '/fonts/ibm-plex-mono-600.woff2?v=524',
 ];
 
 self.addEventListener('install', e => {
