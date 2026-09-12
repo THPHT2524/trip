@@ -372,12 +372,19 @@ const Maps = (function () {
      ★fitPad 가 이 탭의 top 을 읽어 지도의 아래 여백을 낸다. 그래서 **자리를 잡은
        뒤에** 여백을 다시 재야 지도가 카드에 안 가린다. */
   const STRIP_GAP = 6;             // 겹 사이
-  /* ★4 였다(2026-09-12에 14 로). 하단 탭이 화면에 붙은 띠에서 **떠 있는 알약**이
-     되면서 그 윗선이 10px 올라갔다 — 지도는 여전히 48px 을 빼고 그리므로, 지도 바닥
-     10px 이 알약 밑으로 들어간다. 거기 앉아 있던 날짜 탭이 6px 잘렸다(실측).
-     지도 높이를 건드리는 대신 **이 한 값만** 올린다: 띠·날짜탭·안내문이 전부 여기서
-     쌓이므로 셋이 같이 따라 올라간다. */
-  const EDGE = 14;                 // 지도 바닥에서 첫 겹까지
+  /* ★★**상수였다(4px). 이제 잰다**(2026-09-12). 지도가 화면 바닥까지 차고 하단 탭이
+     그 위에 뜨는 알약이 되면서, '지도 바닥에서 첫 겹까지' 는 곧 **알약 높이**가 됐다 —
+     그런데 그 값은 기기마다 다르다(홈 인디케이터만큼 알약이 더 올라간다). 손으로 적으면
+     안전영역이 있는 기기에서 날짜 탭이 알약 밑에 깔린다.
+   ★이 앱은 이미 같은 이유로 머리말 높이를 잰다(js/app.js 의 measureShell → --h-top).
+     같은 방법을 쓴다: 알약의 윗선을 재서 그 위 4px 부터 쌓는다.
+   ★탭이 없으면 4 로 떨어진다 — 알약이 뜨기 전의 값이고, 지도만 있는 순간의 값이다. */
+  function edge() {
+    const bar = $('tabs'), m = $('map');
+    if (!bar || bar.hidden || !m) return 4;
+    const gap = Math.round(m.getBoundingClientRect().bottom - bar.getBoundingClientRect().top);
+    return Math.max(4, gap + 4);
+  }
   /* ★★지도 위에 뜨는 것 셋을 **한 곳에서 쌓는다**(2026-09-07). 띠·날짜탭·안내문이
      저마다 제 bottom 을 갖고 있었는데, 띠가 없는 여행(좌표가 하나도 없는 여행)에서는
      띠 높이가 0 이라 날짜탭과 안내문이 **둘 다 bottom:10px** 에 앉아 정확히 겹쳤다
@@ -388,7 +395,7 @@ const Maps = (function () {
   function placeTabs() {
     const st = $('mstrip'), nav = $('mapdays');
     const note = document.querySelector('.mapwrap .note');
-    let y = EDGE;
+    let y = edge();
     if (st && !st.hidden) { st.style.bottom = y + 'px'; y += st.offsetHeight + STRIP_GAP; }
     if (nav && !nav.hidden) { nav.style.bottom = y + 'px'; y += nav.offsetHeight + STRIP_GAP; }
     /* 빈 안내문은 css 가 display:none 으로 접는다 — 접힌 것에 자리를 주지 않는다 */
