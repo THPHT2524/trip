@@ -178,8 +178,16 @@ const DB = (function () {
   };
 
   // ── 일정 ────────────────────────────────────────────────────────────
-  /* 화면이 늘 이 순서로 읽는다: 날짜 → 시각(없으면 뒤) → 순번.
-     ★정렬을 서버에 맡긴다. 클라이언트에서 또 정렬하면 두 규칙이 생기고 언젠가 갈린다. */
+  /* 화면이 늘 이 순서로 읽는다: 날짜 → **차례(seq)** → 시각.
+     ★정렬을 서버에 맡긴다. 클라이언트에서 또 정렬하면 두 규칙이 생기고 언젠가 갈린다.
+     ★★**시각이 먼저 이기던 것을 뒤집었다**(2026-09-17, supabase/seq.sql 참고).
+       시각이 이기면 seq 는 시각 없는 줄들 사이에서만 뜻이 있고, 그래서 시각이 적힌 줄은
+       **끌어서 옮길 수가 없었다** — 바꿔 놔도 서버가 도로 제자리로 세웠다.
+       이제 시각은 적히는 값이고, 줄 세우는 값은 seq 다. 새 줄은 시각을 보고 제자리에
+       끼우므로(util.js 의 seqAt) '적으면 제 시각 자리로 간다' 는 그대로다.
+     ⚠ 셋째 열쇠로 시각을 남겨 둔다. 같은 seq 가 둘이면 차례가 흔들리는데(그릴 때마다
+       달라진다), 그때 가르는 것이 시각이다 — seqAt 이 사이가 없을 때 일부러
+       같은 수를 주고 이 열쇠에 맡긴다. */
   /* ⚠ ref_code·book_url 이 여기 있었다(2026-09-10에 걷었다). 2026-09-01 에 폼에 칸 둘로
        태어났다가 하루 만에 걷혔고(v=60), 그 뒤로는 적는 칸도 보이는 자리도 없이
        골라 오기만 했다. 표의 칸도 같은 날 지웠다 — supabase/items.sql 참고.
@@ -198,8 +206,8 @@ const DB = (function () {
         .select(COLS)
         .eq('trip_id', tripId)
         .order('on_date', { ascending: true })
-        .order('at_time', { ascending: true, nullsFirst: false })
-        .order('seq', { ascending: true });
+        .order('seq', { ascending: true })
+        .order('at_time', { ascending: true, nullsFirst: false });
       if (error) throw new Error(say('일정을 불러오지 못했습니다', error));
       return data || [];
     },

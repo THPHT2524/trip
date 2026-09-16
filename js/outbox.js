@@ -157,12 +157,14 @@ const Outbox = (function () {
       }
     });
     /* 서버가 하던 정렬을 여기서 되풀이한다 — 새로 얹은 줄이 제자리에 들어가야 한다.
-       규칙은 db.js 의 order 와 같다: 날짜 → 시각(없으면 뒤) → 순번. */
+       ⚠ 규칙은 db.js 의 order 와 **같아야 한다**: 날짜 → 차례(seq) → 시각.
+         2026-09-17에 시각과 seq 의 앞뒤가 바뀌었다 — 한쪽만 고치면 끊긴 동안 넣은 줄이
+         연결되는 순간 자리를 옮긴다(같은 목록이 두 규칙으로 두 번 서는 셈이다). */
+    const hm = r => (r.at_time ? String(r.at_time).slice(0, 5) : '99:99');
     return out.sort((a, b) =>
       (a.on_date < b.on_date ? -1 : a.on_date > b.on_date ? 1 :
-       (a.at_time || '99:99') < (b.at_time || '99:99') ? -1 :
-       (a.at_time || '99:99') > (b.at_time || '99:99') ? 1 :
-       (a.seq || 0) - (b.seq || 0)));
+       (+a.seq || 0) - (+b.seq || 0) ||
+       (hm(a) < hm(b) ? -1 : hm(a) > hm(b) ? 1 : 0)));
   }
 
   /* 쌓인 것을 순서대로 보낸다. 하나라도 네트워크로 실패하면 **거기서 멈춘다** —

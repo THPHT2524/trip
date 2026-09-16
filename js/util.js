@@ -412,7 +412,46 @@ const U = (function () {
   };
   const curOf = cc => CUR_OF[String(cc || '').toUpperCase()] || '';
 
+  /* ── 그날 안의 차례 ──────────────────────────────────────────────────
+     ★★차례를 정하는 것은 **seq 하나**다(2026-09-17, supabase/seq.sql 참고). 전에는
+       시각이 먼저 이겨서, 시각이 적힌 줄은 seq 를 바꿔도 제자리로 돌아갔다 —
+       끌어서 옮길 수가 없었다.
+     ★**열 칸씩 띄워** 매긴다. 이웃 사이의 가운데 수를 쓰면 끌어 옮길 때 **한 줄만**
+       고치면 된다 — 1·2·3 으로 붙여 두면 사이가 없어 그날 전체를 다시 매겨야 하고,
+       스물아홉 줄짜리 날에서 그것은 스물아홉 번의 왕복이다.
+     ★두 화면이 같은 셈을 쓴다(새 줄 끼우기·끌어 옮기기). 여기 한 벌만 둔다. */
+  const SEQ_GAP = 10;
+  /* 두 수 사이. 사이가 없으면 **null 로 말한다** — 지어내지 않고, 다시 매기는 일은
+     부르는 쪽이 한다(드물게 일어나고, 일어날 때는 그날 전체를 봐야 하는 일이다). */
+  function seqBetween(a, b) {
+    if (a == null && b == null) return SEQ_GAP;
+    if (a == null) return b - SEQ_GAP;
+    if (b == null) return a + SEQ_GAP;
+    return (b - a >= 2) ? Math.floor((a + b) / 2) : null;
+  }
+  /* 이 시각이 앉을 자리의 seq. rows 는 그날의 줄들.
+     ★시각이 없는 줄은 맨 뒤로 친다 — 서버 정렬이 그랬고 사람도 그렇게 적는다
+       ('3일차 점심' 까지만 정한 줄은 정한 줄들 뒤에 선다).
+     ★★사이가 없으면 **앞 줄 바로 다음 수**를 준다. 같은 수가 되어도 괜찮다 — 그때는
+       시각이 가르고(서버 정렬의 둘째 열쇠), 여기서 하는 일이 바로 '시각 자리에 끼우기'
+       이므로 시각이 가르는 것이 곧 맞는 답이다.
+     ⚠ 끌어 옮기는 쪽은 이럴 수 없다. 거기서는 **시각을 거스르는 것이 요점**이라
+       같은 수가 되면 시각이 도로 이긴다 — 그래서 그쪽은 null 을 받으면 다시 매긴다. */
+  function seqAt(rows, at) {
+    const key = r => (r && r.at_time ? String(r.at_time).slice(0, 5) : '99:99');
+    const t = at ? String(at).slice(0, 5) : '99:99';
+    const list = (rows || []).slice().sort((x, y) => (+x.seq || 0) - (+y.seq || 0));
+    let i = list.findIndex(r => key(r) > t);
+    if (i < 0) i = list.length;
+    const a = i > 0 ? +list[i - 1].seq : null;
+    const b = i < list.length ? +list[i].seq : null;
+    const mid = seqBetween(a, b);
+    if (mid != null) return mid;
+    return a != null ? a + 1 : (b != null ? b - 1 : SEQ_GAP);
+  }
+
   return { esc, todayISO, addDays, dowOf, md, span, range, money, KINDS, kvar,
+           seqBetween, seqAt,
            COUNTRY, flag, flags, codeList, countryName, guessCountry, tripDays,
            cityList, countryPicker, SETTLE, icon, hue, tripName, countryNameEn, ink,
            curOf, CURS, fillCurs, loadFail };

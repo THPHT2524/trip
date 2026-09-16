@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=530') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=531') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=530') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=531') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=530') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=531') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -453,6 +453,28 @@ a { color: var(--route); text-underline-offset: 2px; }
 .stop > .pin:empty {
   left: calc(var(--rail-x) - 5px); top: 16px;
   width: 12px; height: 12px; border-width: 3px;
+}
+/* ★★번호가 곧 **손잡이**다(2026-09-17). 그 동그라미가 '몇 번째' 를 말하는 물건이라,
+     자리를 바꾸려고 자리를 잡는 것이 된다 — 줄마다 손잡이를 따로 그리면 이 화면은
+     한 줄에 물건이 일곱이 된다.
+   ★touch-action 을 끊어야 한다. 안 그러면 세로로 끄는 동안 브라우저가 그것을
+     스크롤로 먼저 채 가서 줄이 안 따라온다.
+   ★20px 은 손가락에 좁다. 보이지 않는 자리를 둘레로 12px 씩 넓혀 44px 을 만든다 —
+     절대 위치라 안의 숫자가 앉은 자리는 안 건드린다. */
+.stop > .pin { touch-action: none; cursor: grab; }
+.stop > .pin::after { content: ''; position: absolute; inset: -12px; border-radius: 50%; }
+#days.is-drag { cursor: grabbing; }
+/* ★끄는 동안 구간은 **값을 감추되 자리는 지킨다**. 거리는 이웃이 정하는 값이라 옮기는
+   중에는 맞을 수가 없는데, 통째로 걷으면 줄들이 위로 밀려 잰 자리가 무효가 된다. */
+#days.is-drag .seg { visibility: hidden; }
+/* 들린 줄 — 그림자로 떠 있다고 말한다. 종이 한 장이 들린 만큼만. */
+.stop.is-held { z-index: 30; }
+.stop.is-held .stopcard { box-shadow: var(--sh-lift); }
+.stop.is-held .pin { cursor: grabbing; }
+/* 놓일 자리 — 고른 것을 말하는 그 코발트다(날짜 탭·탭 알약과 한 벌) */
+.dropline {
+  position: absolute; left: var(--pad); right: var(--pad); height: 2px;
+  background: var(--route); border-radius: 2px; pointer-events: none; z-index: 29;
 }
 /* ★못 간 곳. **채우지 않는다** — 채운 점은 '다녀왔다' 로 읽힌다.
    구분 색을 걷고 레일 색으로 되돌려 노선에서 빠진 정거장으로 보이게 한다. */

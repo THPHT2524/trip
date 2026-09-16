@@ -415,8 +415,8 @@ const Plan = (function () {
              : esc(U.money(c.cost, c.cost_cur))}</span>
       </button>`;
     }).join('');
-    return `<div class="${cls}" style="--k: var(--${k})">
-      <span class="pin">${num || ''}</span>
+    return `<div class="${cls}" style="--k: var(--${k})" data-id="${esc(r.id)}">
+      <span class="pin" aria-hidden="true">${num || ''}</span>
       <span class="stopcard">
         <!-- ★★머리가 먼저다(2026-09-06). 항공사 여정표의 짜임을 빌려 왔다: **구분이
              머리로 올라가고 시각+이름이 그 밑에 선다.** 훑을 때 눈이 먼저 잡는 것은
@@ -600,6 +600,25 @@ const Plan = (function () {
   /* 화면의 단가 × 갯수. cost 칸과 fx 칸이 **같은 총액**을 봐야 해서 한 곳에 둔다. */
   const tot = () => (+$('if-cost').value || 0) * Math.max(1, +$('if-qty').value || 1);
 
+  /* 이 줄이 그날 어디에 앉나(seq). 셈은 U.seqAt 한 곳에 있다.
+     ★새 줄은 **적은 시각 자리에** 끼운다. 차례를 seq 로 옮기면서 '10:30 인천공항 집합'
+       을 나중에 적어도 10:30 자리로 들어가는 것까지 잃으면 안 된다.
+     ★★고치는 중이면 **시각이(또는 날이) 바뀐 때만** 다시 앉힌다. 끌어서 옮겨 둔 자리를
+       메모 한 줄 고쳤다고 흩뜨리지 않는다 — 옮긴 것은 사람이 한 일이고, 그 일을
+       말없이 되돌리면 두 번 다시 안 믿게 된다.
+     ★결제 줄은 화면에서 부모 밑에 붙으므로 차례가 안 보인다 — 그날 맨 뒤에 둔다. */
+  function seqFor(par) {
+    const was = editing ? rows.find(r => r.id === editing) : null;
+    const d = par ? par.on_date : $('if-date').value;
+    if (par) return was ? (+was.seq || 0) : U.seqAt(rows.filter(r => r.on_date === d), null);
+    const at = $('if-time').value || null;
+    const before = was && was.on_date === d
+                && (was.at_time ? String(was.at_time).slice(0, 5) : null) === at;
+    if (before) return +was.seq || 0;
+    /* 제 자신은 빼고 센다 — 안 그러면 제 옛 자리 옆에 다시 앉는다 */
+    return U.seqAt(ofDay(d).filter(r => !was || r.id !== was.id), at);
+  }
+
   function valueOf() {
     /* 결제 줄은 **부모의 날짜·구분을 물려받는다** — 따로 적게 두면 어긋난 채 저장되고
        그러면 그 결제가 다른 날 합계에 들어간다. */
@@ -634,14 +653,12 @@ const Plan = (function () {
       parent_id: parentOf,
       payer_id: $('if-payer').value || null,
       done: editing ? !!(rows.find(r => r.id === editing) || {}).done : false,
-      /* 시각이 없는 줄은 그날 맨 뒤에 붙인다. 시각이 있으면 서버 정렬이 시각을 먼저 본다.
+      /* 자리는 seqFor 가 정한다(위 참고). 시각을 보고 끼우고, 끌어 옮긴 자리는 지킨다.
          ★★결제 줄은 **부모의 날**로 센다(2026-09-10). `$('if-date')` 를 보고 있었는데
            결제 폼에서는 그 칸이 감춰져 있어(drawSettle) 값이 부모의 날이 아니라 '오늘'
            이거나 '보고 있던 날' 이다 — 엉뚱한 날의 seq 를 세니 부모보다 작은 수가
            나올 수 있었다. 부모의 날에서 세면 자식은 늘 그 날 정거장들 **뒤**에 선다. */
-      seq: editing ? (rows.find(r => r.id === editing) || {}).seq || 0
-                   : ofDay(par ? par.on_date : $('if-date').value)
-                       .reduce((m, r) => Math.max(m, r.seq || 0), 0) + 1,
+      seq: seqFor(par),
     };
   }
 
@@ -817,6 +834,119 @@ const Plan = (function () {
   });
   /* 목록을 다시 그리면 붙어 있던 단추가 사라진다 — 떠 있는 쪽지도 같이 걷는다 */
   function closeMemo() { if (POP.matches(':popover-open')) POP.hidePopover(); }
+
+  /* ── 끌어서 차례 바꾸기 ────────────────────────────────────────────────
+     ★★시각이 적힌 줄도 옮길 수 있게 된 것이 이 기능의 전부다. 그 전에는 seq 를 고쳐도
+       서버가 시각으로 도로 세웠다 — 오사카 일정은 예순여섯 줄이 전부 시각을 달고 있어서
+       '순서 바꾸기' 라는 말 자체가 성립하지 않았다(supabase/seq.sql 참고).
+     ★손잡이는 **번호 그 자체**다. 그 동그라미가 곧 '몇 번째' 를 말하는 물건이라,
+       자리를 바꾸려고 자리를 잡는 것이 된다. 새 손잡이를 하나 더 그리면 줄마다 물건이
+       하나 늘고, 이 화면은 이미 한 줄에 물건이 여섯이다.
+     ★★끄는 동안 **아무것도 옮기지 않는다.** 들린 줄만 손가락을 따라가고, 놓일 자리는
+       선 하나로 말한다. DOM 을 실시간으로 옮기면 사이의 구간(.seg)들이 함께 밀려서
+       거리 값이 잘못된 채로 춤춘다 — 게다가 옮길 때마다 잰 자리가 무효가 되어
+       손가락과 화면이 어긋나기 시작한다. 구간은 끄는 동안 값을 감추고 자리만 지킨다.
+     ★키보드로는 못 옮긴다. 옮기려면 핀 예순여섯 개가 전부 탭 순서에 들어와야 하는데,
+       이 앱은 바로 그 이유로 탭 줄의 탭 순서도 하나로 줄였다(app.js) — 한 사람의
+       옮기기를 위해 모두의 탭질을 예순여섯 번 늘리지 않는다. 차례는 시각을 적는
+       것으로도 바뀌고, 그 길은 키보드로 열려 있다. */
+  let drag = null;
+  let dropline = null;
+
+  /* 바뀐 자리를 적는다. 끊겨 있으면 쌓아 둔다 — '못 감' 과 같은 길이다. */
+  async function writeSeq(pairs) {
+    for (const [id, seq] of pairs) {
+      const r = rows.find(x => x.id === id);
+      try { await DB.items.patch(id, { seq }); }
+      catch (e) {
+        if (!Outbox.isOffline(e)) { alert(e.message); return; }
+        Outbox.queue({ kind: 'update', id, tripId: trip.id,
+                       row: { seq }, name: r ? r.name : '' });
+      }
+    }
+  }
+
+  /* id 를 beforeId 앞으로(없으면 그날 맨 뒤로) 옮긴다. */
+  async function moveStop(id, beforeId) {
+    const r = rows.find(x => x.id === id);
+    if (!r) return;
+    const day = ofDay(r.on_date).filter(x => x.id !== id);
+    const at = beforeId ? day.findIndex(x => x.id === beforeId) : day.length;
+    if (at < 0) return;
+    const one = U.seqBetween(at > 0 ? +day[at - 1].seq : null,
+                             at < day.length ? +day[at].seq : null);
+    let pairs;
+    if (one != null) {
+      if (one === (+r.seq)) return;                    // 제자리다 — 왕복도 없다
+      pairs = [[id, one]];
+    } else {
+      /* ★사이가 없다. 그날을 열 칸씩 다시 매기고 **바뀐 줄만** 적는다 — 드물게
+         일어나지만(같은 자리에 네 번쯤 끼워 넣어야 한다) 일어나면 그날 전체를 봐야 한다. */
+      const order = day.slice();
+      order.splice(at, 0, r);
+      pairs = order.map((x, i) => [x.id, (i + 1) * 10])
+                   .filter(([xid, sq]) => (+((rows.find(y => y.id === xid) || {}).seq) || 0) !== sq);
+    }
+    await writeSeq(pairs);
+    await reload();
+  }
+
+  $('days').addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const pin = e.target.closest('.stop > .pin');
+    if (!pin) return;
+    const el = pin.parentElement;
+    const day = el.parentElement;
+    const sibs = [...day.children].filter(x => x.classList.contains('stop'));
+    if (sibs.length < 2) return;                       // 혼자면 옮길 자리가 없다
+    e.preventDefault();
+    try { pin.setPointerCapture(e.pointerId); } catch (err) {}
+    /* 자리를 **여기서 한 번만** 잰다. 끄는 동안 아무것도 안 움직이므로 끝까지 유효하다. */
+    drag = {
+      pid: e.pointerId, el, day, id: el.dataset.id, y0: e.clientY, moved: false, before: null,
+      mids: sibs.map(x => {
+        const b = x.getBoundingClientRect();
+        return { el: x, mid: b.top + b.height / 2, bottom: b.bottom };
+      }),
+    };
+  });
+
+  $('days').addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const dy = e.clientY - drag.y0;
+    if (!drag.moved) {
+      if (Math.abs(dy) < 5) return;                    // 누르기와 끌기를 가르는 문턱
+      drag.moved = true;
+      $('days').classList.add('is-drag');
+      drag.el.classList.add('is-held');
+      if (!dropline) { dropline = document.createElement('div'); dropline.className = 'dropline'; }
+      drag.day.appendChild(dropline);
+    }
+    drag.el.style.transform = `translateY(${dy}px)`;
+    /* 손가락이 어느 줄의 가운뎃선을 넘었나 — 넘은 첫 줄 **앞**에 놓인다 */
+    const hit = drag.mids.find(x => x.el !== drag.el && e.clientY < x.mid);
+    drag.before = hit ? hit.el : null;
+    const box = drag.day.getBoundingClientRect();
+    const y = hit ? hit.el.getBoundingClientRect().top
+                  : drag.mids[drag.mids.length - 1].bottom;
+    dropline.style.top = (y - box.top) + 'px';
+  });
+
+  async function endDrag(e) {
+    if (!drag || (e && e.pointerId !== drag.pid)) return;
+    const d = drag;
+    drag = null;
+    d.el.style.transform = '';
+    d.el.classList.remove('is-held');
+    $('days').classList.remove('is-drag');
+    if (dropline && dropline.parentElement) dropline.remove();
+    if (!d.moved) return;
+    const beforeId = d.before ? d.before.dataset.id : null;
+    if (beforeId === d.id) return;
+    await moveStop(d.id, beforeId);
+  }
+  $('days').addEventListener('pointerup', endDrag);
+  $('days').addEventListener('pointercancel', endDrag);
 
   $('if-form').addEventListener('submit', save);
   $('if-del').addEventListener('click', del);
