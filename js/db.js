@@ -348,6 +348,36 @@ const DB = (function () {
     return body;
   }
 
+  /* ── 동행자가 고친 것 ────────────────────────────────────────────────
+     ★★상대가 고친 것이 **새로고침 전까지 안 보였다**(2026-09-17에 고쳤다). 같은 표를
+       본다는 것이 이 앱의 전제인데, 실제로는 각자 제가 받아 둔 사본을 보고 있었다.
+     ★RLS 가 구독에도 그대로 걸린다 — 남의 여행의 변경은 애초에 오지 않는다.
+       표를 여는 것이 아니라 '내가 이미 읽을 수 있는 것' 에 알림을 받는 것이다.
+     ★한 여행만 듣는다. 다른 여행으로 옮기면 먼저 끊는다 — 안 끊으면 채널이 쌓이고,
+       보고 있지도 않은 여행 때문에 화면이 다시 그려진다.
+     ★**무엇이 바뀌었는지는 안 본다.** 알림에 실린 행을 화면에 꿰매 넣는 대신 그냥
+       다시 받는다 — 꿰매려면 정렬·아웃박스·셈이 얹힌 그 길을 여기서 또 한 벌 만들어야
+       하고, 두 벌이 되는 순간 갈린다. 왕복 하나가 훨씬 싸다.
+     ★못 붙어도 앱은 그대로 돈다(표가 publication 에 없으면 조용히 아무것도 안 온다) —
+       supabase/realtime.sql 을 안 돌린 상태가 곧 예전과 같은 상태다. */
+  let channel = null;
+  function unwatch() {
+    if (!channel) return;
+    try { sb.removeChannel(channel); } catch (e) {}
+    channel = null;
+  }
+  function watch(tripId, fn) {
+    unwatch();
+    if (!sb || mode() !== 'cloud' || !tripId) return;
+    try {
+      channel = sb.channel('items-' + tripId)
+        .on('postgres_changes',
+            { event: '*', schema: 'trip', table: 'items', filter: 'trip_id=eq.' + tripId },
+            () => { try { fn(); } catch (e) {} })
+        .subscribe();
+    } catch (e) { channel = null; }
+  }
+
   /* 초대 코드로 들어가기. 표에 직접 쓰지 않고 RPC 하나로만 통과한다 —
      클라이언트에 trip_members insert 를 열어 주면 남의 여행에 자기를 밀어 넣을 수 있다. */
   async function join(code) {
@@ -361,5 +391,6 @@ const DB = (function () {
 
   return { mode, email, uid,
            onAuth, onError, initAuth, signIn, signOut,
-           trips, items, crew, removeMember, fx, join, expandMapUrl, flight };
+           trips, items, crew, removeMember, fx, join, expandMapUrl, flight,
+           watch, unwatch };
 })();

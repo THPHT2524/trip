@@ -114,6 +114,7 @@
     $('tabs').hidden = !inTrip;
     document.body.dataset.view = inTrip ? 'trip' : 'trips';
 
+    syncWatch();
     if (!inTrip) { renderTrips(); measureShell(); return; }
 
     /* ★머리말에는 국기를 안 단다. 작게 달면 윈도우에서 'JP' 두 글자로 떨어져
@@ -1105,7 +1106,7 @@
 
   // ── 붙이기 ────────────────────────────────────────────────────────────
   $('signin').addEventListener('click', () => DB.signIn());
-  $('signout').addEventListener('click', async () => { await DB.signOut(); trips = []; showGate(); });
+  $('signout').addEventListener('click', async () => { await DB.signOut(); trips = []; DB.unwatch(); showGate(); });
   /* 떠다니는 두 단추 ↔ 가운데 팝업. 폼은 팝업 안에 하나씩만 있고 여기서 문을 연다.
      닫기는 ✕·백드롭·Esc 셋 — 뒤 화면 잠금은 CSS(html:has(dialog[open]))가 맡는다. */
   const openDlg = (id, focusId) => {
@@ -1261,6 +1262,29 @@
       if (tab === 'map') Maps.open(t, Plan.rows());
     });
   });
+  /* ── 동행자가 고친 것 ────────────────────────────────────────────────
+     ★★한 박자 묶는다(500ms). 한 번의 저장이 변경 알림 여럿으로 쪼개져 오는 일이 흔하고
+       (장소 줄 하나에 결제 줄 둘), 그때마다 받으면 왕복이 그만큼 는다.
+     ★내가 쓴 것도 되돌아온다. 걸러 내지 않는다 — 누가 썼는지로 가르려면 행을 들여다봐야
+       하고, 그러느니 한 번 더 받는 편이 싸고 틀릴 일이 없다(이미 내 화면에 있는 값이다).
+     ★끌고 있는 동안에는 미룬다 — 손가락 밑에서 목록이 다시 그려지면 잡고 있던 줄이
+       사라진다. 놓으면 그때 그린다. */
+  let rt = 0;
+  function onRemote() {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      if (Plan.busy()) { onRemote(); return; }
+      document.dispatchEvent(new CustomEvent('items:changed'));
+    }, 500);
+  }
+  /* 지금 열어 둔 여행만 듣는다. render 가 자주 불리므로 바뀐 때만 갈아 끼운다. */
+  let watched;
+  function syncWatch() {
+    if (watched === tripId) return;
+    watched = tripId;
+    if (tripId) DB.watch(tripId, onRemote); else DB.unwatch();
+  }
+
   document.addEventListener('trip:changed', async () => { trips = await DB.trips.list(); render(); });
   document.addEventListener('trip:deleted', async () => {
     /* 사본도 같이 지운다 — 다시 볼 일이 없는데 자리를 잡고 있다.
