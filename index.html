@@ -6,9 +6,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <title>여행 일정표</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M11 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='11' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='11' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2316302B'/><path d='M16 6v20' stroke='%23C4D0CB' stroke-width='2.5' stroke-linecap='round'/><circle cx='16' cy='11' r='3.6' fill='%232E7D5B'/><circle cx='16' cy='22' r='3.6' fill='%233B6EA5'/></svg>">
+<!-- ★★**홈 화면에 앉는다**(2026-09-17). 서비스워커도 로컬 사본도 안전영역(viewport-fit)도
+     이미 갖춰 놓고, **주소창 없는 앱으로 서는 마지막 한 조각**만 없었다 — 현지에서 앱을
+     여는 것이 이 앱의 존재 이유인데 그러려면 사파리 탭을 찾아 들어가야 했다.
+   ⚠ start_url 이 '/' 다. 그래서 **끊긴 곳에서 목록이 열려야** 이것이 뜻을 갖는다 —
+     그 고침이 먼저 들어갔다(js/app.js 의 load 가 사본으로 물러난다). 순서가 거꾸로였으면
+     비행기에서 아이콘을 눌렀을 때 빈 화면을 봤을 것이다.
+   ★ios 는 manifest 의 icons 를 안 본다 — apple-touch-icon 을 따로 줘야 한다.
+     그 장만 모서리를 안 둥글린다(ios 가 제 스퀘어클로 자른다. tools/icons.py 참고). -->
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<!-- 상태막대 색. manifest 의 theme_color 는 **한 벌뿐이라 테마를 못 따라간다** —
+     여기서 둘로 나눠 준다(css 의 --paper 밝은 값·어두운 값 그대로). -->
+<meta name="theme-color" content="#F1F4F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1A17" media="(prefers-color-scheme: dark)">
 <link rel="stylesheet" href="/css/maplibre-gl-5.24.0.css">
-<link rel="stylesheet" href="/css/app.css?v=527">
+<link rel="stylesheet" href="/css/app.css?v=529">
 </head>
 <body>
 
@@ -506,22 +520,22 @@
 <!-- 로드 순서가 곧 의존성이다. 클래식 스크립트라 전역 스코프를 공유한다 — 순서를 바꾸면 안 된다.
      gmaps.js 는 geo.js 의 GEO 를 쓰고, app.js 는 DB 를 쓴다. -->
 <script src="/js/vendor/supabase-js-2.111.0.js"></script>
-<script src="/js/supabase-config.js?v=527"></script>
-<script src="/js/map-config.js?v=527"></script>
-<script src="/js/money.js?v=527"></script>
-<script src="/js/util.js?v=527"></script>
-<script src="/js/worldmap.js?v=527"></script>
-<script src="/js/geo.js?v=527"></script>
-<script src="/js/gmaps.js?v=527"></script>
-<script src="/js/db.js?v=527"></script>
-<script src="/js/fx.js?v=527"></script>
-<script src="/js/outbox.js?v=527"></script>
+<script src="/js/supabase-config.js?v=529"></script>
+<script src="/js/map-config.js?v=529"></script>
+<script src="/js/money.js?v=529"></script>
+<script src="/js/util.js?v=529"></script>
+<script src="/js/worldmap.js?v=529"></script>
+<script src="/js/geo.js?v=529"></script>
+<script src="/js/gmaps.js?v=529"></script>
+<script src="/js/db.js?v=529"></script>
+<script src="/js/fx.js?v=529"></script>
+<script src="/js/outbox.js?v=529"></script>
 <script src="/js/vendor/maplibre-gl-csp-5.24.0.js"></script>
-<script src="/js/crew.js?v=527"></script>
-<script src="/js/plan.js?v=527"></script>
-<script src="/js/map.js?v=527"></script>
-<script src="/js/cost.js?v=527"></script>
-<script src="/js/app.js?v=527"></script>
+<script src="/js/crew.js?v=529"></script>
+<script src="/js/plan.js?v=529"></script>
+<script src="/js/map.js?v=529"></script>
+<script src="/js/cost.js?v=529"></script>
+<script src="/js/app.js?v=529"></script>
 
 </body>
 </html>

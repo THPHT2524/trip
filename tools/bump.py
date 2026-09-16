@@ -63,11 +63,19 @@ def shell_gap():
       넣어 주므로 온라인으로 한 번만 열면 채워진다. 드러나는 자리는 **버전을 올린
       직후 처음 여는 곳이 오프라인일 때**뿐이라, 정작 서비스워커를 둔 이유인
       그 상황에서만 깨진다.
-    ★버전이 없는 것(vendor·maplibre css)도 센다. 오프라인에서 없으면 똑같이 죽는다."""
+    ★버전이 없는 것(vendor·maplibre css)도 센다. 오프라인에서 없으면 똑같이 죽는다.
+    ★아이콘과 manifest 도 센다(2026-09-17). 홈 화면에서 여는 앱이 되면서 늘었는데,
+      그중 아이콘 셋은 **페이지가 아니라 manifest 가** 가리킨다 — 페이지만 훑으면
+      절반을 놓치므로 manifest 안의 icons 도 같이 읽는다."""
     want = []
     for page in PAGES:
-        for m in re.finditer(r'(?:src|href)="(/(?:js|css|fonts)/[^"]+)"', read(page)):
+        for m in re.finditer(r'(?:src|href)="(/(?:js|css|fonts|icons)/[^"]+|/manifest\.json)"',
+                             read(page)):
             want.append(m.group(1))
+    # ★manifest 가 가리키는 아이콘은 페이지에 안 적힌다 — 여기서만 나온다
+    mf = os.path.join(ROOT, "manifest.json")
+    if os.path.exists(mf):
+        want += re.findall(r'"src"\s*:\s*"(/[^"]+)"', read(mf))
     body = read(SW).split("const SHELL")[1].split("];")[0]
     have = set(re.findall(r"'(/[^']+)'", body))
     return [u for u in sorted(set(want)) if u not in have]
