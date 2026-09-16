@@ -524,8 +524,128 @@ eq(bare > 0, true, '★여유를 빼면 목표를 넘는 줄이 실제로 생긴
   eq(WORLD.d.length > 4000 && WORLD.d.startsWith('M'), true, '지도 길이 비어 있지 않다');
 }
 
-// ── ───────────────────────────────────────────────────────────────────
-console.log(fail
-  ? `\nFAIL - ${pass} 통과 / ${fail} 실패`
-  : `PASS - ${pass}개 전부 통과`);
-process.exit(fail ? 1 : 0);
+/* ── 아웃박스 ─────────────────────────────────────────────────────────
+   ★★**데이터를 잃을 수 있는 유일한 모듈**인데 여기 한 줄도 없었다(2026-09-17에 넣었다).
+     끊긴 곳에서 적은 것이 이 큐에만 있으므로, 여기가 조용히 틀리면 사람은 적었다고
+     믿고 앱은 갖고 있지 않다 — 화면에는 아무 표도 안 난다.
+   ★js/outbox.js 는 DOM 을 안 만진다. 만지는 것은 localStorage·navigator·DB 셋뿐이라
+     그 셋만 가짜로 세우면 화면 없이 돌릴 수 있다 — geo·money 와 같은 방법이다.
+   ⚠ flush 가 비동기라 이 묶음만 async 다. 그래서 **맺음말도 이 안에서** 낸다 —
+     위 묶음들은 전부 동기라 여기 닿기 전에 이미 다 돌았다. */
+(async function outbox() {
+  /* 가짜 localStorage. limit 을 주면 그 수를 넘을 때 던진다 — 한도를 흉내 내는 것이
+     이 묶음의 절반이다(진짜 한도는 5MB 라 테스트에서 채울 수 없다). */
+  function store(limit) {
+    const m = new Map();
+    return {
+      get length() { return m.size; },
+      key: i => [...m.keys()][i],
+      getItem: k => (m.has(k) ? m.get(k) : null),
+      setItem: (k, v) => {
+        if (limit && !m.has(k) && m.size >= limit) throw new Error('QuotaExceededError');
+        m.set(k, String(v));
+      },
+      removeItem: k => { m.delete(k); },
+      _m: m,
+    };
+  }
+  const put = (obj) => { Object.defineProperty(global, 'localStorage', { value: obj, configurable: true }); };
+  /* node 의 navigator 는 접근자라 대입이 안 먹는다 — defineProperty 로 덮는다 */
+  const online = (v) => Object.defineProperty(global, 'navigator', { value: { onLine: v }, configurable: true });
+
+  put(store());
+  online(true);
+  global.addEventListener = () => {};
+  const Outbox = require('../js/outbox.js');
+
+  // ── 큐 접기: 아직 못 보낸 줄을 또 고치면 쌓인 create 를 고친다 ──────────
+  const tmp = Outbox.tmpId();
+  Outbox.queue({ kind: 'create', tempId: tmp, tripId: 'T', row: { name: '난바', on_date: '2026-08-29', seq: 1 } });
+  Outbox.queue({ kind: 'update', id: tmp, tripId: 'T', row: { name: '난바 쵸우츠가히', on_date: '2026-08-29', seq: 1 } });
+  eq(Outbox.count(), 1, '★못 보낸 줄을 고치면 큐가 안 늘어난다');
+  eq(Outbox.apply('T', [])[0].name, '난바 쵸우츠가히', '  고친 값이 얹힌다');
+  eq(Outbox.apply('T', [])[0]._pending, true, '  아직 못 보냈다고 표가 붙는다');
+  Outbox.queue({ kind: 'delete', id: tmp, tripId: 'T' });
+  eq(Outbox.count(), 0, '★못 보낸 줄을 지우면 큐에서 통째로 빠진다(없는 행을 지우러 가지 않는다)');
+
+  // ── apply: 서버 목록 위에 얹고 **서버와 같은 규칙으로** 정렬한다 ────────
+  const base = [
+    { id: 'a', on_date: '2026-08-29', at_time: '11:00', seq: 1, name: '규카츠' },
+    { id: 'b', on_date: '2026-08-29', at_time: null, seq: 9, name: '시각 없는 줄' },
+    { id: 'c', on_date: '2026-08-30', at_time: '09:00', seq: 1, name: '이튿날' },
+  ];
+  const t2 = Outbox.tmpId();
+  Outbox.queue({ kind: 'create', tempId: t2, tripId: 'T', row: { on_date: '2026-08-29', at_time: '10:00', seq: 1, name: '새 줄' } });
+  Outbox.queue({ kind: 'delete', id: 'c', tripId: 'T' });
+  Outbox.queue({ kind: 'create', tempId: Outbox.tmpId(), tripId: 'X', row: { on_date: '2026-08-29', name: '남의 여행' } });
+  const merged = Outbox.apply('T', base);
+  eq(merged.map(r => r.name), ['새 줄', '규카츠', '시각 없는 줄'],
+     '★시각 순으로 끼어들고 · 시각 없는 줄은 뒤 · 지운 줄은 빠지고 · 남의 여행은 안 섞인다');
+
+  // ── flush: 순서대로 보내고, 끊기면 **거기서 멈춘다** ────────────────────
+  const sentLog = [];
+  global.DB = { items: {
+    create: async (tripId, row) => { sentLog.push('c:' + row.name); },
+    update: async (id, row) => { sentLog.push('u:' + id); },
+    remove: async (id) => {
+      sentLog.push('d:' + id);
+      if (id === 'c') throw new Error('Failed to fetch');     // 여기서 끊긴다
+    },
+  } };
+  let r = await Outbox.flush();
+  eq(sentLog, ['c:새 줄', 'd:c'], '★끊기면 그 자리에서 멈춘다(뒤엣것을 먼저 보내지 않는다)');
+  eq([r.sent, r.failed, r.dropped.length], [1, 2, 0], '  보낸 하나 · 남은 둘 · 버린 것 없음');
+  eq(Outbox.count(), 2, '  실패한 것은 큐에 그대로 남는다');
+
+  // ── 서버가 거절한 것은 다시 보내도 같다 — 빼고 알린다 ──────────────────
+  global.DB.items.remove = async () => { throw new Error('violates row-level security policy'); };
+  r = await Outbox.flush();
+  eq([Outbox.count(), r.dropped.length], [0, 1], '★서버가 거절한 것은 큐에서 빼고 무엇이 버려졌는지 알린다');
+
+  // ── 요약: 맨 뒤엣것의 이름을 댄다 ───────────────────────────────────────
+  Outbox.queue({ kind: 'create', tempId: Outbox.tmpId(), tripId: 'T', row: { name: '첫 줄' } });
+  Outbox.queue({ kind: 'create', tempId: Outbox.tmpId(), tripId: 'T', row: { name: '마지막 줄' } });
+  eq(Outbox.summary(), { n: 2, what: '마지막 줄' }, '★방금 한 일이 큐의 끝이고 사람이 궁금한 것도 그것이다');
+  Outbox.queue({ kind: 'delete', id: 'zz', tripId: 'T' });
+  eq(Outbox.summary().what, '지운 것', '  지우기는 이름이 없다 — 지어내지 않는다');
+
+  // ── 로컬 사본: 오가고, 옛 형식도 읽고, 지우면 없다 ──────────────────────
+  put(store());
+  Outbox.cacheSet('T1', [{ id: 'x' }]);
+  eq(Outbox.cacheGet('T1'), [{ id: 'x' }], '사본이 오간다');
+  localStorage.setItem('trip_cache_items_OLD', JSON.stringify([{ id: 'y' }]));
+  eq(Outbox.cacheGet('OLD'), [{ id: 'y' }], '★옛 형식(배열 그대로)도 읽는다 — 이미 깔린 브라우저에 그 꼴로 남아 있다');
+  Outbox.cacheDrop('T1');
+  eq(Outbox.cacheGet('T1'), null, '지운 사본은 없다');
+
+  // ── ★사본은 쌓이지 않는다 — 최근 것만 남는다 ────────────────────────────
+  put(store());
+  for (let i = 0; i < 20; i += 1) Outbox.cacheSet('T' + i, [{ i }]);
+  const left = [...localStorage._m.keys()].filter(k => k.startsWith('trip_cache_items_'));
+  eq(left.length, 12, '★스무 여행을 열어도 사본은 열두 벌만 남는다(한도에 닿기 전에 스스로 턴다)');
+  eq(Outbox.cacheGet('T19') != null, true, '  제일 최근에 연 여행은 남아 있다');
+
+  // ── 한도에 걸리면 버리고 다시 해 본다 — 조용히 포기하지 않는다 ──────────
+  put(store(3));
+  eq(Outbox.cacheSet('A', [{ i: 1 }]), true, '  자리가 있으면 그냥 쓴다');
+  Outbox.cacheSet('B', [{ i: 2 }]);
+  Outbox.cacheSet('C', [{ i: 3 }]);
+  eq(Outbox.cacheSet('D', [{ i: 4 }]), true, '★한도에 걸려도 오래된 것을 버리고 결국 쓴다');
+  eq(Outbox.cacheGet('D'), [{ i: 4 }], '  방금 적은 것이 들어 있다');
+
+  // ── 홈의 사본: 목록과 모양을 한 덩이로, 모양만 못 받으면 옛것을 지킨다 ──
+  put(store());
+  eq(Outbox.homeGet(), null, '아직 아무것도 안 받았으면 없다');
+  Outbox.homeSet([{ id: 'T' }], [{ id: 'i1', trip_id: 'T' }]);
+  eq(Outbox.homeGet().trips, [{ id: 'T' }], '목록이 남는다');
+  Outbox.homeSet([{ id: 'T' }, { id: 'U' }], null);
+  eq(Outbox.homeGet().shape, [{ id: 'i1', trip_id: 'T' }],
+     '★모양만 못 받았으면(null) 갖고 있던 것을 지우지 않는다 — 화면이 하는 판단과 같다');
+  eq(Outbox.homeGet().trips.length, 2, '  목록은 새것으로 바뀐다');
+
+  // ── ───────────────────────────────────────────────────────────────────
+  console.log(fail
+    ? `\nFAIL - ${pass} 통과 / ${fail} 실패`
+    : `PASS - ${pass}개 전부 통과`);
+  process.exit(fail ? 1 : 0);
+})();

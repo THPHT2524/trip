@@ -34,12 +34,93 @@ const Outbox = (function () {
   }
 
   // ── 로컬 사본 ─────────────────────────────────────────────────────────
+  /* ★★사본이 **쌓이기만 했다**(2026-09-17에 고쳤다). 여는 여행마다 한 벌씩 남고 지우는
+     코드가 없어서 서른여덟 여행이면 1MB 가까이 된다. 한도(보통 5MB)에 닿으면 setItem 이
+     던지는데 그것을 catch 가 조용히 삼키므로 **그때부터 사본이 갱신을 멈춘다** —
+     끊긴 곳에서 믿고 있는 것이 그 사본인데, 낡았다는 말도 없이 낡는다.
+   ★최근 KEEP 개만 남긴다. 지난 여행의 사본을 들고 있을 이유가 없다 — 오프라인으로
+     여는 것은 지금 가 있는 여행이다.
+   ★언제 쓴 것인지를 같이 적는다(at). 그게 있어야 무엇이 오래된 것인지 알 수 있다.
+     옛 형식(배열 그대로)도 읽는다 — 이미 깔린 브라우저에 그 꼴로 남아 있다. */
+  const KEEP = 12;
+
+  function cacheKeys() {
+    const out = [];
+    try {
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('trip_cache_items_')) out.push(k);
+      }
+    } catch (e) {}
+    return out;
+  }
+
+  /* 오래된 것부터 버린다. 남길 수를 받는다 — 한도에 걸렸을 때는 더 세게 부른다.
+     ★★**방금 적은 것(mine)은 세지도 버리지도 않는다.** at 이 밀리초라 한 틱에 여러 벌을
+       쓰면 값이 전부 같아지고, 그러면 '오래된 순' 이 사실은 아무 순서도 아니게 되어
+       **방금 적은 그것이 버려질 수 있다**(테스트가 잡았다). 지킬 것을 수로 고르지 말고
+       이름으로 뺀다 — 셈이 흔들려도 이 한 줄은 안 흔들린다. */
+  function prune(keep, mine) {
+    const aged = cacheKeys().filter(k => k !== mine).map(k => {
+      let at = 0;
+      try { const v = JSON.parse(localStorage.getItem(k) || 'null'); at = (v && v.at) || 0; } catch (e) {}
+      return { k, at };
+    }).sort((x, y) => y.at - x.at);
+    /* mine 이 이미 한 자리를 차지하고 있으면 남길 자리가 그만큼 줄어든다 */
+    aged.slice(Math.max(0, keep - (mine && localStorage.getItem(mine) != null ? 1 : 0)))
+        .forEach(x => { try { localStorage.removeItem(x.k); } catch (e) {} });
+  }
+
   function cacheSet(tripId, rows) {
-    try { localStorage.setItem(CKEY(tripId), JSON.stringify(rows)); } catch (e) {}
+    const body = JSON.stringify({ at: Date.now(), rows });
+    try { localStorage.setItem(CKEY(tripId), body); }
+    catch (e) {
+      /* 한도다 — 오래된 것을 거의 다 버리고 한 번만 다시 해 본다. */
+      prune(1, CKEY(tripId));
+      try { localStorage.setItem(CKEY(tripId), body); } catch (e2) { return false; }
+    }
+    /* ★셀 때만 훑는다. 여기는 저장할 때마다 지나가는 자리라, 열세 벌을 매번 펴 보면
+       그것대로 낭비다 — 열쇠 수는 파싱 없이 셀 수 있다. */
+    if (cacheKeys().length > KEEP) prune(KEEP, CKEY(tripId));
+    return true;
   }
   function cacheGet(tripId) {
-    try { const v = JSON.parse(localStorage.getItem(CKEY(tripId)) || 'null'); return Array.isArray(v) ? v : null; }
-    catch (e) { return null; }
+    try {
+      const v = JSON.parse(localStorage.getItem(CKEY(tripId)) || 'null');
+      if (Array.isArray(v)) return v;                       // 옛 형식
+      return (v && Array.isArray(v.rows)) ? v.rows : null;
+    } catch (e) { return null; }
+  }
+  /* 여행을 지우면 사본도 지운다 — 다시 볼 일이 없는데 자리를 잡고 있다. */
+  function cacheDrop(tripId) {
+    try { localStorage.removeItem(CKEY(tripId)); } catch (e) {}
+  }
+
+  /* ── 홈의 사본 ────────────────────────────────────────────────────────
+     ★★여행 목록에는 사본이 **없었다**(2026-09-17에 넣었다). 일정은 위 사본이 받쳐
+       주는데 정작 그 일정으로 가는 길인 목록이 없어서, 끊긴 곳에서 앱을 열면 목록을
+       못 받고 거기서 끝났다 — README 가 '일정 보기 · 된다' 라고 적어 둔 그 칸이
+       실은 **주소창에 /t/<id> 가 남아 있을 때만** 됐다.
+   ★둘을 한 덩이로 둔다(목록 + 모양). 홈은 둘이 다 있어야 그려지고, 받는 것도
+     app.js 가 한 번에 받는다. */
+  const HKEY = 'trip_cache_home';
+  function homeSet(trips, shape) {
+    try {
+      const old = homeGet() || {};
+      localStorage.setItem(HKEY, JSON.stringify({
+        at: Date.now(),
+        trips: trips || old.trips || [],
+        /* ★모양만 못 받는 일이 있다(db.js 의 shape 는 실패를 null 로 준다) — 그때
+           갖고 있던 것을 지우지 않는다. 화면이 하는 판단과 같은 판단이다. */
+        shape: shape || old.shape || [],
+      }));
+    } catch (e) { /* 한도·시크릿 모드 */ }
+  }
+  function homeGet() {
+    try {
+      const v = JSON.parse(localStorage.getItem(HKEY) || 'null');
+      return (v && Array.isArray(v.trips)) ? v : null;
+    } catch (e) { return null; }
   }
 
   // ── 큐 ────────────────────────────────────────────────────────────────
@@ -132,8 +213,13 @@ const Outbox = (function () {
   }
 
   return {
-    isOffline, cacheSet, cacheGet, queue, apply, flush, tmpId, summary,
+    isOffline, cacheSet, cacheGet, cacheDrop, homeSet, homeGet,
+    queue, apply, flush, tmpId, summary,
     count: () => q.length,
     onChange: fn => subs.push(fn),
   };
 })();
+
+/* tools/test-pure.js 용. 이 파일은 DOM 을 안 만지므로 화면 없이 확인할 수 있고,
+   **데이터를 잃을 수 있는 유일한 모듈**이라 확인해 두는 값이 크다. */
+if (typeof module !== 'undefined') module.exports = Outbox;

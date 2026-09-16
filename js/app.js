@@ -19,6 +19,8 @@
 
   let trips = [];          // 마지막으로 받은 여행 목록
   let shape = [];          // 카드에 그릴 '여행의 모양' (일정의 날짜·구분·비용만)
+  let offlineHome = false; // 지금 보고 있는 목록이 로컬 사본인가
+  let homeErr = null;      // 목록을 못 받았다(사본도 없다). 있으면 판 대신 안내가 선다
   let tripId = null;       // 지금 열어 둔 여행
   let tab = 'plan';
 
@@ -99,7 +101,14 @@
   addEventListener('resize', measureShell);
 
   function render() {
-    const inTrip = !!tripId;
+    /* ★★목록에 **없는 여행은 열지 않는다**(2026-09-17). 못 불러왔거나 지워졌거나
+       내보내진 여행이면 t 가 없는데, 그래도 판을 켜면 머리말만 '여행' 이라고 적힌
+       빈 화면이 선다 — 게다가 '다시 시도' 단추는 목록 판 안에 있어서 그 상태에서는
+       닿을 수가 없다. 목록으로 떨어뜨린다.
+     ★tripId 는 **그대로 둔다.** 다시 받아 오면 그 여행이 목록에 들어오고 이 줄이
+       저절로 참이 되어 돌아간다 — 주소를 고쳐서 링크를 버리지 않는다. */
+    const t = trips.find(x => x.id === tripId);
+    const inTrip = !!t;
     $('view-trips').hidden = inTrip;
     $('view-trip').hidden = !inTrip;
     $('tabs').hidden = !inTrip;
@@ -107,7 +116,6 @@
 
     if (!inTrip) { renderTrips(); measureShell(); return; }
 
-    const t = trips.find(x => x.id === tripId);
     /* ★머리말에는 국기를 안 단다. 작게 달면 윈도우에서 'JP' 두 글자로 떨어져
        글꼴이 깨진 것처럼 보인다 — 그래서 카드에서는 **크게 바탕에** 깔았다.
        그리고 여행 안에 들어와 있는 사람은 이미 어느 여행인지 안다(홈의 여권과
@@ -164,6 +172,21 @@
 
   function renderTrips() {
     const el = $('trips');
+    /* 일정 탭이 쓰는 그 말과 같은 말이다(plan.js 의 drawDays) — 두 화면이 같은 일을
+       같은 문장으로 알린다. */
+    const stale = offlineHome
+      ? '<p class="note">연결이 없어 마지막으로 받아 둔 목록을 보여줍니다</p>' : '';
+    /* ★★못 받았으면 **판을 세우지 않는다**(2026-09-17). 아래 빈 판은 '예정 없음' 이라고
+       적는데, 그건 여행이 없다는 말이지 못 받았다는 말이 아니다 — 서른여덟 여행을
+       가진 사람에게 그렇게 말하면 거짓말이다.
+     ⚠ 여권도 같이 비운다. 목록이 없는데 '16개국 204일' 만 남아 있으면 불러온 것처럼
+       보인다(passportHtml 은 trips 로 세므로 낡은 값이 그대로 남는다).
+     ★말은 U.loadFail 이 짓는다 — 끊긴 것은 사람 말로 바꾸고 나갈 단추를 단다. */
+    if (homeErr) {
+      $('passport').innerHTML = '';
+      el.innerHTML = U.loadFail('여행을 못 불러왔습니다', homeErr, Outbox.isOffline(homeErr));
+      return;
+    }
     /* ★★여행이 없어도 **판은 켜져 있다**(2026-09-06). 전에는 판이 통째로 사라지고
        가운데에 회색 두 줄만 남았는데, 그건 이 화면이 무엇인지 잊은 모습이다 —
        공항 안내판은 뜰 편이 없어도 꺼지지 않는다. 머리와 칸 이름을 그대로 세우고
@@ -171,7 +194,7 @@
        ★안내는 판의 목소리(mono)로 판 밑에 붙인다. 동작 이름은 단추에 적힌 그대로
          쓴다 — '＋ 새 여행' 을 눌러야 하는데 '여행 추가' 라고 적으면 못 찾는다. */
     if (!trips.length) {
-      el.innerHTML = '<div class="tboard">'
+      el.innerHTML = stale + '<div class="tboard">'
         + '<div class="tbtop"><span class="pl" aria-hidden="true">✈</span>'
         + '<b>TRIPLIST</b><em>DEPARTURES</em>'
         + `<span class="cnt">${cells(0, 2)}<em>times</em></span></div>`
@@ -230,7 +253,7 @@
      ★오른쪽 끝은 시계 자리인데, 이 판에는 **몇 번 다녀왔는지**를 놓는다. 시계는 폰이
        이미 위에 달고 있고, 이 목록에서 궁금한 것은 시각이 아니라 여행 수다.
      ★그 수도 쪽자에 앉는다 — 판 위에서 숫자는 다 그렇게 선다. */
-    el.innerHTML = '<div class="tboard">'
+    el.innerHTML = stale + '<div class="tboard">'
                  + '<div class="tbtop"><span class="pl" aria-hidden="true">✈</span>'
                  + '<b>TRIPLIST</b><em>DEPARTURES</em>'
                  + `<span class="cnt">${cells(trips.length)}<em>times</em></span></div>`
@@ -788,14 +811,32 @@
          '일정 N'과 합계를 잃고 통화 코드만 남는데, 화면은 아무 말도 안 하므로
          돈을 안 쓴 여행처럼 보인다. 목록 자체는 list 로 이미 그릴 수 있다. */
       if (sh) shape = sh; else retryShape();
+      offlineHome = false; homeErr = null;
+      /* 끊긴 곳에서 열 수 있게 사본을 남긴다 — 일정이 이미 하는 일을 목록에도 한다 */
+      Outbox.homeSet(trips, sh);
     } catch (e) {
-      trips = [];
-      /* 같은 말을 두 번 하지 않고, 끊긴 것은 사람 말로, 나갈 단추를 단다 — util.js 참고.
-         ⚠ 여권도 같이 비운다. 목록이 없는데 '16개국 204일' 만 남아 있으면
-           불러온 것처럼 보인다(passportHtml 은 trips 로 세므로 낡은 값이 남는다). */
-      $('passport').innerHTML = '';
-      $('trips').innerHTML = U.loadFail('여행을 못 불러왔습니다', e, Outbox.isOffline(e));
-      return;
+      /* ★★**마지막으로 받아 둔 목록으로 연다**(2026-09-17). 전에는 여기서 곧장
+         물러났고, 그래서 끊긴 곳에서 앱을 처음 열면 목록도 없고 진행 중인 여행으로
+         들어가지도 못했다 — 이 앱이 오프라인을 위해 만든 것이 전부 여기서 막혔다.
+         일정 탭은 진작 이렇게 하고 있었다(plan.js 의 reload). */
+      const c = Outbox.isOffline(e) ? Outbox.homeGet() : null;
+      if (c) {
+        trips = c.trips || [];
+        shape = c.shape || [];
+        offlineHome = true;
+      } else {
+        trips = [];
+        homeErr = e;
+        /* ★★**여기서 그려야 한다**(2026-09-17). 전에는 안내를 #trips 에 직접 써 넣고
+           곧장 돌아갔는데, 그 판은 아직 hidden 이라 첫 진입이면 화면이 통째로 빈다
+           (실측: app 은 켜졌는데 높이 0, body.innerText 가 빈 문자열). '다시 시도'
+           단추까지 그 숨은 판 안이라 나갈 길이 아예 없었다.
+         ★안내를 **여기서 쓰지 않는다.** 써 봐야 바로 아래 render→renderTrips 가
+           '예정 없음' 판으로 덮어쓴다 — 못 받은 것을 없는 것이라고 말하는 셈이다.
+           홈이 어떤 얼굴을 할지는 renderTrips 한 곳에서만 정한다. */
+        render();
+        return;
+      }
     } finally { loading = false; }
     /* 주소에 여행이 적혀 있으면 그것이 이긴다. 아무것도 안 적혀 있을 때만
        진행 중인 여행으로 바로 들어간다 — 목록을 보러 온 사람을 끌고 가지 않는다. */
@@ -1222,6 +1263,9 @@
   });
   document.addEventListener('trip:changed', async () => { trips = await DB.trips.list(); render(); });
   document.addEventListener('trip:deleted', async () => {
+    /* 사본도 같이 지운다 — 다시 볼 일이 없는데 자리를 잡고 있다.
+       ⚠ go() 앞이라야 한다. 그 뒤로는 tripId 가 null 이라 무엇을 지울지 알 수 없다. */
+    Outbox.cacheDrop(tripId);
     trips = await DB.trips.list();
     go(null, 'plan', true);
   });
