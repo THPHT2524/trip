@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=525') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=526') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=525') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=526') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=525') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=526') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -1896,9 +1896,19 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
    둥글어지면 첫 칸·끝 칸의 줄이 테 밖으로 삐져나온다. 날짜 탭(.daytabs)이 이미 같은
    어법으로 '고름' 을 말하므로 한 벌로 맞춰진다 — 한 화면에서 같은 것을 두 문법으로
    말하지 않는다. */
+/* ★★가운데 세우는 법을 바꿨다 — **left:50% 로 세우면 마지막 칸이 테 밖으로 나간다**
+     (2026-09-14, 375px 에서 실측: 상자 260px 인데 칸 넷은 271px). 뜬 상자는 제 폭을
+     '쓸 수 있는 폭' 안에서 정하는데, left:50% 면 그 폭이 **화면의 오른쪽 절반(187px)**
+     뿐이다. 모자라니 브라우저는 상자를 **가장 좁게 접었을 때의 폭**으로 잡는다 —
+     그런데 한글은 글자 사이에서 줄이 바뀌므로 '설정' 의 가장 좁은 폭은 한 글자고,
+     칸은 min-width 62px 까지 접힌다(62×4=260). 칸은 실제로 66px 이라 접히지 않고,
+     넷째 칸이 12px 밖으로 삐져나온다.
+   ★left/right 를 양쪽 다 0 으로 두면 쓸 수 있는 폭이 화면 전체가 되고, margin:auto 가
+     가운데로 민다 — 상자는 제 내용만큼(fit-content) 넓어진다. 자리는 그대로고 셈만
+     바르게 된다. */
 .tabs {
   position: fixed; z-index: 40;
-  left: 50%; transform: translateX(-50%);
+  left: 0; right: 0; margin-inline: auto; width: fit-content;
   bottom: calc(10px + env(safe-area-inset-bottom));
   display: flex; gap: 2px;
   max-width: calc(100% - var(--pad) * 2);
@@ -1918,8 +1928,12 @@ input.code { font-size: 17px; letter-spacing: .14em; text-align: center; }
   border-radius: var(--r-pill);
   font-family: inherit; color: var(--ink-3);
 }
+/* ★두 글자짜리 이름이 **한 글자씩 끊기지 않게** 못 박는다. 폭이 모자라면 한글은
+     글자 사이에서 접히는데, 그러면 칸이 두 줄이 되어 알약 높이 48px 이 무너진다 —
+     그 숫자는 다섯 군데에 박혀 있다(위 참고). 접히느니 삐져나오는 편이 낫다. */
 .tabs button > span {
   font-size: var(--t-cap); font-weight: 700; letter-spacing: 0; line-height: 1;
+  white-space: nowrap;
 }
 /* 그림은 index.html 에 없다 — js/app.js 가 U.icon 으로 한 번 넣는다(afterbegin).
    ★두 층(그림 위에 한글)이었는데 **한 줄(그림 옆에 한글)**로 눕혔다. 알약은 높이가
