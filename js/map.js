@@ -538,6 +538,9 @@ const Maps = (function () {
     onPick(fn) { onPick = fn; },
     /* plan.js 가 이미 받아 둔 rows 를 그대로 쓴다 — 탭을 옮겼다고 다시 받지 않는다. */
     open(t, list, day) {
+      /* ★여행이 바뀌면 고른 날을 버린다 — 날짜가 겹치면(같은 날 다른 여행) 앞 여행에서
+         보던 날이 그대로 따라온다. 아래 '오늘' 판정도 그래야 새 여행에서 다시 돈다. */
+      if (!trip || trip.id !== t.id) pick = null;
       trip = t;
       rows = list || [];
       days = [...new Set(rows.map(r => r.on_date))].sort();
@@ -552,7 +555,14 @@ const Maps = (function () {
         /* 하루만 보는 화면이라 빈 값이 없다. 일정이 있는 첫날로 연다 —
            빈 날로 열면 지도가 아무것도 없는 채로 뜬다. */
         const has = days.filter(d => withGeo(rows.filter(r => r.on_date === d)).length);
-        pick = has[0] || days[0] || null;
+        /* ★★**여행 중이면 오늘이 이긴다**(2026-09-17). 늘 첫날로 열고 있었는데, 지도를
+           켜는 까닭은 대개 오늘 어디로 가느냐다 — 사흘째 아침마다 Day 1 을 지나 손으로
+           옮겨야 했다. 이 판단은 이 앱에 이미 있다(plan.js 의 fillForm 날짜 기본값).
+           같은 물음에 두 화면이 다르게 답하지 않는다.
+         ★오늘에 **찍을 것이 있을 때만**이다. 오늘이 비어 있으면 빈 지도가 뜨는데,
+           그건 첫날로 여는 것보다 나쁘다 — 없는 날을 골라 주지 않는다. */
+        const today = U.todayISO();
+        pick = (has.includes(today) ? today : null) || has[0] || days[0] || null;
       }
       drawTabs();
       setBasemap();

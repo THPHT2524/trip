@@ -184,7 +184,7 @@ const Outbox = (function () {
       const op = q[0];
       try {
         if (op.kind === 'create') await DB.items.create(op.tripId, op.row);
-        else if (op.kind === 'update') await DB.items.update(op.id, op.row);
+        else if (op.kind === 'update') await DB.items.patch(op.id, op.row);
         else if (op.kind === 'delete') await DB.items.remove(op.id);
         q.shift(); sent += 1; write();
       } catch (e) {
@@ -207,7 +207,10 @@ const Outbox = (function () {
   function summary() {
     const last = q[q.length - 1];
     if (!last) return { n: 0, what: '' };
-    const nm = String((last.row && last.row.name) || '').trim();
+    /* ★이름을 op 에서 먼저 찾는다. row 가 이제 **바뀐 칸만** 들고 있어서, 금액만
+       고친 줄에는 이름이 없다 — 그래도 띠는 그 줄을 이름으로 불러야 한다(부르는 쪽이
+       op.name 으로 함께 넘긴다). */
+    const nm = String(last.name || (last.row && last.row.name) || '').trim();
     const what = last.kind === 'delete' ? '지운 것' : (nm || '이름 없는 줄');
     return { n: q.length, what };
   }

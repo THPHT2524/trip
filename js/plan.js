@@ -651,16 +651,32 @@ const Plan = (function () {
     $('if-err').textContent = '';
     try {
       const v = valueOf();
+      /* ★★**고친 칸만 추린다**(2026-09-17). 양쪽을 같은 shape() 에 통과시켜 맞대 본다 —
+         그래야 '11:00' 과 '11:00:00', '' 과 null 처럼 **꼴만 다른 것**이 바뀐 것으로
+         잡히지 않는다. 옛 줄이 없으면(새 줄이면) 추릴 것도 없다. */
+      const was = editing ? rows.find(r => r.id === editing) : null;
+      const next = DB.items.shape(v);
+      const diff = was
+        ? Object.keys(next).reduce((o, k) => {
+            const prev = DB.items.shape(was);
+            if (JSON.stringify(next[k]) !== JSON.stringify(prev[k])) o[k] = next[k];
+            return o;
+          }, {})
+        : next;
+      /* 아무것도 안 고쳤으면 보내지 않는다 — 시트를 열었다 그냥 닫는 일이 흔하다 */
+      if (editing && !Object.keys(diff).length) { closeSheet(); return; }
       try {
-        if (editing) await DB.items.update(editing, v);
+        if (editing) await DB.items.patch(editing, diff);
         else await DB.items.create(trip.id, v);
       } catch (e) {
-        /* 서버가 거절한 것(검증·권한)은 그대로 보여 준다 — 다시 보내도 같다.
+        /* 서버가 거절한 것(검증·권한)은 그대로 보여 준다 — 다시 보내다 같은 말을 듣는다.
            끊겨서 못 보낸 것만 쌓아 둔다. */
         if (!Outbox.isOffline(e)) throw e;
         Outbox.queue(editing
-          ? { kind: 'update', id: editing, tripId: trip.id, row: DB.items.shape(v) }
-          : { kind: 'create', tempId: Outbox.tmpId(), tripId: trip.id, row: DB.items.shape(v) });
+          /* ★이름을 따로 얹는다 — row 에는 바뀐 칸만 있어서 금액만 고친 줄에는
+             이름이 없는데, 못 보낸 띠는 그 줄을 이름으로 불러야 한다. */
+          ? { kind: 'update', id: editing, tripId: trip.id, row: diff, name: next.name }
+          : { kind: 'create', tempId: Outbox.tmpId(), tripId: trip.id, row: next });
       }
       await reload();
       fillForm(null);
@@ -743,8 +759,11 @@ const Plan = (function () {
       try { await DB.items.setDone(r.id, !r.done); }
       catch (err) {
         if (!Outbox.isOffline(err)) { alert(err.message); return; }
+        /* ★한 칸만 쌓는다(2026-09-17). 통째로 쌓고 있었는데, 그러면 끊긴 동안 동행자가
+           고친 것이 나중에 이 줄이 올라가면서 옛 값으로 되돌아간다 — '못 감' 한 칸을
+           눌렀을 뿐인데. */
         Outbox.queue({ kind: 'update', id: r.id, tripId: trip.id,
-                       row: { ...DB.items.shape(r), done: !r.done } });
+                       row: { done: !r.done }, name: r.name });
       }
       await reload();
       return;

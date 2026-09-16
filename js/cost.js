@@ -386,7 +386,10 @@ const Cost = (function () {
          잡히지만 며칠 뒤인지는 알 수 없고, 최근 결제면 그 날짜 고시가 아직 없다.
          알 수 없는 날짜를 지어내느니 아는 날짜를 쓴다 — 어차피 fx 칸을 고치면 그게 이긴다. */
       const got = await DB.fx(r.on_date, r.cost_cur, U.SETTLE, 'tts');
-      await DB.items.update(id, { ...DB.items.shape(r), fx: got.rate });
+      /* ★★한 칸만 보낸다(2026-09-17). 줄을 통째로 실어 보내고 있었는데, 환율을
+         채우는 일이 **그 줄의 다른 칸까지 내가 받아 온 값으로 되돌리는 일**이었다 —
+         동행자가 그새 메모나 금액을 고쳤으면 그것이 함께 지워졌다. 채우려는 것은 fx 다. */
+      await DB.items.patch(id, { fx: got.rate });
       $('cost-msg').textContent = got.exact
         ? `${r.cost_cur} → ${U.SETTLE} ${got.rate} — ${got.on} 전신환매도율`
         : `${r.cost_cur} → ${U.SETTLE} ${got.rate} — ${r.on_date} 고시가 없어 ${got.on} 값을 썼습니다`;

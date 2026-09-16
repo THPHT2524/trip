@@ -207,7 +207,11 @@ const DB = (function () {
     /* 넣는 값을 한 곳에서 다듬는다. 화면이 준 것을 그대로 보내면 빈 문자열이 숫자 칸에 들어간다. */
     shape: (v) => ({
       on_date: v.on_date,
-      at_time: v.at_time || null,
+      /* ★★**HH:MM 으로 못 박는다**(2026-09-17). 표는 time 이라 '11:00:00' 으로 돌아오고
+         폼은 '11:00' 을 준다 — 그냥 두면 아무것도 안 고쳤는데도 두 값이 달라서,
+         아래 patch 가 '시각이 바뀌었다' 고 판정한다. 자릿수를 한쪽으로 맞춘다
+         (Postgres 는 'HH:MM' 을 그대로 받는다). */
+      at_time: v.at_time ? String(v.at_time).slice(0, 5) : null,
       seq: Number.isFinite(+v.seq) ? +v.seq : 0,
       kind: v.kind || '기타',
       name: String(v.name || '').trim(),
@@ -241,10 +245,22 @@ const DB = (function () {
       if (error) throw new Error(say('일정을 추가하지 못했습니다', error));
     },
 
-    update: async (id, v) => {
+    /* ★★**바뀐 칸만 보낸다**(2026-09-17). 전에는 update 가 shape() 로 만든 **모든 칸**을
+       실어 보냈다 — 동행자가 메모를 고치는 동안 내가 금액을 고치면, 나중에 저장한 쪽이
+       상대의 메모까지 제가 받아 온 옛 값으로 되돌렸다. 둘이 같은 표를 보는 앱에서
+       '한 줄을 고친다' 는 곧 '내가 안 본 칸까지 덮는다' 였다.
+     ★'나중에 도착한 쓰기가 이긴다' 는 규칙은 그대로다. 다만 **이긴 쪽이 덮는 범위**가
+       그 사람이 실제로 고친 칸으로 좁아진다 — 같은 칸을 동시에 고쳤을 때만 부딪친다.
+     ★무엇이 바뀌었는지는 부르는 쪽이 정한다(plan.js 가 옛 줄과 맞대 본다). 여기서는
+       받은 것만 보내되, 줄을 **남의 여행으로 옮기는 길**은 막는다.
+     ⚠ 아웃박스에 쌓여 있던 옛 op 은 칸을 통째로 들고 있다 — 그것도 그냥 patch 로
+       나간다(칸이 많은 patch 일 뿐이다). 그래서 갈아타는 자리에 끊긴 데가 없다. */
+    patch: async (id, fields) => {
       if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
-      const row = items.shape(v);
-      if (!row.name) throw new Error('장소명을 입력하세요.');
+      const row = { ...(fields || {}) };
+      delete row.id; delete row.trip_id;
+      if ('name' in row && !String(row.name || '').trim()) throw new Error('장소명을 입력하세요.');
+      if (!Object.keys(row).length) return;          // 바뀐 것이 없으면 왕복도 없다
       const { error } = await sb.from('items').update(row).eq('id', id);
       if (error) throw new Error(say('일정을 수정하지 못했습니다', error));
     },
@@ -252,11 +268,7 @@ const DB = (function () {
     /* '못 감' 만 토글한다 — 한 칸이라 폼을 열 필요가 없다.
        ★컬럼 이름은 done 이지만 뜻은 **못 갔다** 다. 계획한 곳 중 실제로는 빠진 곳을 표시한다
          (2026-09-01에 뜻을 그렇게 정했다 — 갔다 온 것을 지우는 쓰임이 아니었다). */
-    setDone: async (id, done) => {
-      if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
-      const { error } = await sb.from('items').update({ done: !!done }).eq('id', id);
-      if (error) throw new Error(say('표시를 바꾸지 못했습니다', error));
-    },
+    setDone: async (id, done) => items.patch(id, { done: !!done }),
 
     remove: async (id) => {
       if (mode() !== 'cloud') throw new Error('로그인이 필요합니다.');
