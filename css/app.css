@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-400.woff2?v=533') format('woff2');
+  src: url('../fonts/ibm-plex-mono-400.woff2?v=534') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -37,7 +37,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-500.woff2?v=533') format('woff2');
+  src: url('../fonts/ibm-plex-mono-500.woff2?v=534') format('woff2');
   font-weight: 500; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -47,7 +47,7 @@
 }
 @font-face {
   font-family: 'Plex Mono';
-  src: url('../fonts/ibm-plex-mono-600.woff2?v=533') format('woff2');
+  src: url('../fonts/ibm-plex-mono-600.woff2?v=534') format('woff2');
   font-weight: 600; font-style: normal; font-display: swap;
   unicode-range: U+0000, U+000D, U+0020-007E, U+00A0-00FF, U+0131, U+0152-0153,
     U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309,
@@ -463,6 +463,11 @@ a { color: var(--route); text-underline-offset: 2px; }
      절대 위치라 안의 숫자가 앉은 자리는 안 건드린다. */
 .stop > .pin { touch-action: none; cursor: grab; }
 .stop > .pin::after { content: ''; position: absolute; inset: -12px; border-radius: 50%; }
+/* ★끄는 동안 **글자가 잡힌다**(2026-09-18). 손잡이에서 preventDefault 를 해도 한 번
+   시작된 선택은 안 멈추고, 손가락이면 길게 누른 것으로 쳐서 선택 메뉴까지 뜬다.
+   목록 전체에서 선택을 끈다 — 여기 글자는 훑는 것이고, 옮겨 적을 것(메모)은
+   시트에 따로 있다. iOS 는 접두사 붙은 쪽만 본다. */
+#days { -webkit-user-select: none; user-select: none; }
 #days.is-drag { cursor: grabbing; }
 /* ★끄는 동안 구간은 **값을 감추되 자리는 지킨다**. 거리는 이웃이 정하는 값이라 옮기는
    중에는 맞을 수가 없는데, 통째로 걷으면 줄들이 위로 밀려 잰 자리가 무효가 된다. */
