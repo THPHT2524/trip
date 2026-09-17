@@ -18,7 +18,17 @@
   const SEG = { plan: '', map: 'map', cost: 'cost', info: 'info' };
 
   let trips = [];          // 마지막으로 받은 여행 목록
-  let shape = [];          // 카드에 그릴 '여행의 모양' (일정의 날짜·구분·비용만)
+  /* 카드에 그릴 '여행의 모양' — 여행당 한 줄과 공항 줄들(db.js 의 shape 참고).
+     ★두 벌로 들고 있다: 받은 그대로(사본에 그대로 넣어야 한다)와 찾기 좋은 꼴. */
+  let shape = { trips: [], air: [] };
+  let sby = new Map();     // trip_id → 그 여행의 모양
+  function setShape(raw) {
+    /* ⚠ 옛 사본은 **줄 배열**이다(2026-09-17 이전에 받아 둔 것). 그 꼴이 오면 버린다 —
+       다음에 제대로 받은 것이 덮어 준다. 안 버리면 카드가 없는 칸을 읽는다. */
+    shape = (raw && !Array.isArray(raw) && Array.isArray(raw.trips))
+      ? { trips: raw.trips, air: raw.air || [] } : { trips: [], air: [] };
+    sby = new Map(shape.trips.map(x => [x.trip_id, x]));
+  }
   let offlineHome = false; // 지금 보고 있는 목록이 로컬 사본인가
   let homeErr = null;      // 목록을 못 받았다(사본도 없다). 있으면 판 대신 안내가 선다
   let tripId = null;       // 지금 열어 둔 여행
@@ -134,7 +144,7 @@
     /* ★못 그리면 비운다 — 앞의 국가코드 뱃지가 같은 것을 이미 말했다(flagChars 참고) */
     $('trip-flag').textContent = (t && canDrawFlags()) ? U.flags(t.country).join(' ') : '';
     if (t) {
-      const mine = shape.filter(r => r.trip_id === t.id && !r.parent_id);
+      const stops = (sby.get(t.id) || {}).stops || 0;
       const nd = U.tripDays(t);
       /* 2026.08.29 – 08.31 — 연도를 접지 않는다. 홈의 목록은 연도 띠가 이미
          말해 주지만 여행 하나만 열려 있는 여기에는 말해 줄 띠가 없다. */
@@ -144,7 +154,7 @@
       $('trip-span').innerHTML =
         (dt ? `<span class="dt">${U.esc(dt)}</span>` : '')
         + (nd ? `<em>${nd}</em><b>days</b>` : '')
-        + (mine.length ? `<em>${mine.length}</em><b>places</b>` : '');
+        + (stops ? `<em>${stops}</em><b>places</b>` : '');
     } else {
       $('trip-span').textContent = '';
       $('trip-flag').textContent = '';
@@ -586,7 +596,9 @@
        센 것이다 — 그림과 숫자가 같은 것을 말한다.
        ★여행마다 서울 오가는 두 번 + 여행 안에서 갈아탄 것. 우리 기록으로 셀 수 있는
          구간이라, 경유가 있었으면 그건 한 번으로 센다. */
-    const air = shape.filter(r => /공항$/.test(String(r.name || '')) && WORLD.at(r.lat, r.lng));
+    /* 이름으로 가려내는 일은 이제 서버가 한다(supabase/home.sql) — 여기서는 창 밖으로
+       나가는 점만 걷는다. 규칙을 두 곳에 두지 않는다. */
+    const air = shape.air.filter(r => WORLD.at(r.lat, r.lng));
     const paths = legsOf(air);
     n.flights = paths.flown;
     /* 값이 0 인 칸은 세우지 않는다 — 빈 칸의 이름을 읽히게 두지 않는다 */
@@ -704,26 +716,26 @@
      줄이 41px 이 되면서 들어갈 자리가 없다. 그 일은 이제 '기간' 과 '기록' 이 맡는다.
    ★바탕의 큰 국기도 뺐다. 국기가 제 칸을 얻었으니 바탕에 또 깔면 같은 말을 두 번 한다. */
   function card(t, phase) {
-    const mine = shape.filter(r => r.trip_id === t.id);
-    /* 장소 줄만 센다 — 결제 줄(parent_id)은 부모 날짜를 물려받아 두 번 세어진다.
-       (합계는 mine 전체로 낸다 — 결제 줄에도 돈이 붙어 있다) */
-    const stops = mine.filter(r => !r.parent_id);
+    /* 결제 줄을 빼고 세는 일은 서버가 한다(supabase/home.sql) — 부모의 날짜를
+       물려받아 두 번 세어지던 그 줄들이다. 여기 오는 stops 는 이미 장소 줄만이다. */
+    const info = sby.get(t.id) || { stops: 0, days: [] };
+    const kindsOf = new Map(info.days || []);      // 날짜 → 그날의 구분들(앞 넷)
     const nDays = U.tripDays(t);
 
     /* ★★미니 레일을 되살렸다(2026-09-04). 안내판으로 바꾸면서 뺐다가, 줄 **밑에
        한 줄로 길게** 까니 자리를 다투지 않고 들어간다 — 항공편 스트립처럼 읽힌다.
        칸 셋 아래를 통째로 가로지르므로 카드 시절보다 오히려 길다. */
-    const days = dayList(t, stops);
+    const days = dayList(t, (info.days || []).map(x => x[0]));
     /* 칸이 좁아지면 점을 줄인다. 21일 여행이면 칸이 13px 인데 점 넷은 26px 라 넘친다 —
        그때는 '무엇이 있나' 대신 '있나 없나' 까지만 말한다. */
     const maxDots = days.length > 12 ? 1 : days.length > 7 ? 2 : 4;
     /* 일정이 하나도 없으면 레일을 세우지 않는다 — 빈 칸만 늘어선 회색 선이 스무 줄
        서면 고장 난 것처럼 보인다. 레일이 뜬다는 것 자체가 '계획이 있다' 는 뜻이 된다. */
-    const rail = (days.length && stops.length) ? `<span class="mrail" aria-hidden="true">${days.map(d => {
-      const on = stops.filter(r => r.on_date === d);
-      return on.length
-        ? `<span class="md">${on.slice(0, maxDots).map(r =>
-            `<i style="--k: var(--${U.kvar(r.kind)})"></i>`).join('')}</span>`
+    const rail = (days.length && info.stops) ? `<span class="mrail" aria-hidden="true">${days.map(d => {
+      const ks = kindsOf.get(d) || [];
+      return ks.length
+        ? `<span class="md">${ks.slice(0, maxDots).map(k =>
+            `<i style="--k: var(--${U.kvar(k)})"></i>`).join('')}</span>`
         : '<span class="md is-empty"></span>';
     }).join('')}</span>` : '';
 
@@ -735,7 +747,7 @@
        '02.14-02.21US8days2places US하와이' 로 읽는다 — 판은 눈으로 보는 물건이고,
        귀로 듣는 사람에게는 한 문장이어야 한다. 칸들은 통째로 감춘다(aria-hidden). */
     const say = [esc(t.name), t.start_on ? U.md(t.start_on) + (t.end_on ? ' ~ ' + U.md(t.end_on) : '') : '',
-                 nDays ? nDays + '일' : '', stops.length ? stops.length + '곳' : '',
+                 nDays ? nDays + '일' : '', info.stops ? info.stops + '곳' : '',
                  phase === 'now' ? '지금 가 있는 여행' : '']
                 .filter(Boolean).join(', ');
     const cc = codeChars(t.country);
@@ -746,7 +758,7 @@
           ? U.md(t.start_on) + (t.end_on ? '-' + U.md(t.end_on) : '') : '', 'dt']], DATE_COLS)}</span>
         <span class="tg tcc">${row([[0, cc, 'cc']], CC_COLS)}</span>
         <span class="tnum">${row([['r', nDays || '', 'dy']], 2)}<em>days</em></span>
-        <span class="tnum">${row([['r', stops.length || '', 'st']], 3)}<em>places</em></span>
+        <span class="tnum">${row([['r', info.stops || '', 'st']], 3)}<em>places</em></span>
       </span>
       <span class="tnm" aria-hidden="true">${(() => {
         /* ★국기를 **이름 앞**에 붙인다(2026-09-04). 윗줄 날짜 뒤에 뒀더니 '언제' 와
@@ -765,8 +777,8 @@
 
   /* 카드에 세울 날짜. 기간이 있으면 **빈 날도 센다** — 비었다는 것도 여행의 모양이다.
      기간이 없으면 일정이 적힌 날만(없는 날을 지어낼 근거가 없다). 너무 길면 접는다. */
-  function dayList(t, mine) {
-    const has = [...new Set(mine.map(r => r.on_date))].sort();
+  function dayList(t, dates) {
+    const has = [...new Set(dates)].sort();
     if (!t.start_on || !t.end_on) return has.slice(0, 21);
     const out = [];
     for (let d = t.start_on; d <= t.end_on && out.length < 21; d = U.addDays(d, 1)) out.push(d);
@@ -783,8 +795,8 @@
     shapeTries += 1;
     setTimeout(async () => {
       const again = await DB.trips.shape().catch(() => null);
-      if (again && again.length) {
-        shape = again; shapeTries = 0; render();
+      if (again && again.trips && again.trips.length) {
+        setShape(again); shapeTries = 0; render();
       } else if (!again) {
         retryShape();
       }
@@ -811,7 +823,7 @@
       /* ★못 받았으면(null) **갖고 있던 것을 지우지 않는다.** 빈 배열로 덮으면 카드가
          '일정 N'과 합계를 잃고 통화 코드만 남는데, 화면은 아무 말도 안 하므로
          돈을 안 쓴 여행처럼 보인다. 목록 자체는 list 로 이미 그릴 수 있다. */
-      if (sh) shape = sh; else retryShape();
+      if (sh) setShape(sh); else retryShape();
       offlineHome = false; homeErr = null;
       /* 끊긴 곳에서 열 수 있게 사본을 남긴다 — 일정이 이미 하는 일을 목록에도 한다 */
       Outbox.homeSet(trips, sh);
@@ -823,7 +835,7 @@
       const c = Outbox.isOffline(e) ? Outbox.homeGet() : null;
       if (c) {
         trips = c.trips || [];
-        shape = c.shape || [];
+        setShape(c.shape);
         offlineHome = true;
       } else {
         trips = [];
