@@ -35,17 +35,30 @@ Supabase 무료 플랜은 **프로젝트를 둘까지만** 준다. card-dashboar
 
 ## 1. 표 만들기
 
-card-dashboard 프로젝트의 **SQL Editor** 에서 **반드시 이 순서로** 실행한다 (넷 다 멱등).
+card-dashboard 프로젝트의 **SQL Editor** 에서 **반드시 이 순서로** 실행한다 (전부 멱등).
 
 | 순서 | 파일 | 이유 |
 |---|---|---|
 | 1 | `supabase/trips.sql` | 스키마·권한·그릇. 이 시점엔 정책이 없어 아무도 못 읽는다(정상) |
 | 2 | `supabase/members.sql` | `trip.is_trip_member()` 를 만들고 **trips 의 정책도 여기서 만든다** |
 | 3 | `supabase/items.sql` | 일정 |
-| 4 | `supabase/checklist.sql` | 준비물 |
-| 5 | `supabase/grants.sql` | Data API 권한. **표를 더할 때마다 다시 돌린다** |
+| 4 | `supabase/place.sql` | 나라·도시 칸 |
+| 5 | `supabase/settle.sql` | 결제수단 칸(현금 지갑) |
+| 6 | `supabase/crew.sql` | 같은 여행 멤버끼리 서로를 보는 함수 |
+| 7 | `supabase/checklist.sql` | 준비물 (화면은 걷었지만 표는 남아 있다) |
+| 8 | `supabase/seq.sql` | 그날 안의 차례를 `seq` 하나로 — **지금 보이는 차례 그대로** 다시 매긴다 |
+| 9 | `supabase/home.sql` | 홈이 쓸 '여행의 모양' 을 여행당 한 줄로 주는 함수 |
+| 10 | `supabase/realtime.sql` | `items` 를 publication 에 — 동행자의 변경이 그 자리에서 온다 |
+| 11 | `supabase/grants.sql` | Data API 권한. **표·함수를 더할 때마다 다시 돌린다** |
 
 ★순서를 지켜야 한다. `items.sql` 은 `trip.is_trip_member()` 를 부르는데 그 함수는 2번이 만든다.
+
+★★**8번은 이미 쓰고 있는 데이터에도 돌려야 한다.** 차례를 `seq` 가 정하도록 바꾼 날
+  (2026-09-17) 이전에 적힌 줄들은 `seq` 가 '적어 넣은 순서' 라, 안 돌리면 그 순서대로
+  뒤섞인다 — 값이 상하지는 않지만 화면이 통째로 흔들린다. 새로 까는 자리에서는
+  줄이 없으므로 아무 일도 안 한다.
+★9·10번을 안 돌려도 앱은 돈다. 9번이 없으면 홈 카드의 곳 수·레일·세계지도가 빠지고,
+  10번이 없으면 동행자의 변경이 새로고침해야 보인다 — 둘 다 예전과 같은 상태다.
 
 ### 그다음 대시보드에서 두 가지
 
