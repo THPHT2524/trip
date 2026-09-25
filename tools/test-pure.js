@@ -268,6 +268,33 @@ eq(r2.lat, 34.6688, '홑따옴표가 있어도 좌표는 뽑는다');
 const many = 'https://www.google.com/maps/place/X/@1,1,10z/data=!3d11.1!4d22.2!8m2!3d33.3!4d44.4';
 eq(GM.parse(many).lat, 33.3, '!8m2 블록을 먼저 고른다');
 
+// ── 플러스코드(!20s) ───────────────────────────────────────────────────
+// ★둘 다 2026-09-25에 실제로 받은 링크다. `!3d`/`!4d` 도 `@` 도 없고 `!20s` 만 있었다.
+const pc1 = GM.parse('https://www.google.com/maps/place/%EC%9D%B4%EC%9E%AC%EB%AA%A8%ED%94%BC%EC%9E%90/'
+          + 'data=!4m4!3m3!1s0x3568e900465013ef:0xbd6d467cd430faa6!16s%2Fg%2F11wtj6qplb!20s8Q7F422J%2BX63GH5C');
+eq(pc1.lat, 35.1023871, '★!3d 도 @ 도 없으면 !20s 플러스코드로 좌표를 낸다 (부산 중구)');
+eq(pc1.lng, 129.0305543, '  경도도 같이');
+eq(pc1.approx, false, '★플러스코드는 그 장소의 칸이라 approx 가 아니다 (@ 와 다르다)');
+
+eq(GM.parse('https://www.google.com/maps/place/X/data=!3m1!4b1!4m4!3m3!1s0x1:0x2'
+          + '!20s8Q7F32WV%2BC2VPVRF!18m1!1e1').lat, 35.0961199, '  같은 날 받은 두 번째 링크 (부산 영도)');
+
+// 순서 — 핀이 있으면 플러스코드를 안 본다
+eq(GM.parse('https://www.google.com/maps/place/X/@1,1,17z/data=!8m2!3d34.6688!4d135.5010!20s8Q7F422J%2BX63GH5C').lat,
+   34.6688, '★!3d 가 있으면 플러스코드보다 먼저다');
+// 플러스코드는 @ 보다 먼저 — @ 는 지도 중심이고 이건 장소의 칸이다
+const pc2 = GM.parse('https://www.google.com/maps/place/X/@34.6,135.5,17z/data=!20s8Q7F422J%2BX63GH5C');
+eq(pc2.lat, 35.1023871, '★플러스코드가 @(지도 중심) 보다 먼저다');
+eq(pc2.approx, false, '  그래서 approx 도 안 선다');
+
+// 못 푸는 것은 안 푼다
+eq(GM.parse('https://www.google.com/maps/place/X/data=!20s422J%2BX6').lat, null,
+   '★짧은 코드(기준 지점이 있어야 풀린다)는 안 받는다 — 반쯤 풀어 엉뚱한 데 찍지 않는다');
+eq(GM.parse('https://www.google.com/maps/place/X/data=!20sABCDEFGH%2BIJ').lat, null,
+   '  코드 알파벳에 없는 글자(A·B·D·E·I…)가 섞이면 안 받는다');
+eq(GM.parse('https://www.google.com/maps/place/X/data=!20s8Q7F422J').lat, null,
+   '  + 가 없으면 플러스코드가 아니다');
+
 // 핀이 없으면 @ 로 떨어지되 approx 를 세운다
 const r3 = GM.parse('https://www.google.com/maps/@34.6937,135.5023,15z');
 eq(r3.lat, 34.6937, '핀이 없으면 @ 를 쓴다');

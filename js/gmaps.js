@@ -51,6 +51,52 @@ const GM = (function () {
     return m ? { lat: num(m[1]), lng: num(m[2]) } : null;
   }
 
+  /* 플러스코드(Open Location Code) — `data=` 안의 `!20s` 칸이 그것이다.
+     ★왜 필요한가(2026-09-25): 부산 가게 링크들이 `!3d`/`!4d` 도 `@` 도 없이 왔다.
+       폰에서 공유하면 좌표가 **아예 안 담기고**(`?q=주소&ftid=…`), 그 링크를 브라우저에서
+       열어 주소창을 복사해도 `!20s` 만 있는 경우가 있다 — 모모스커피·이재모피자 둘 다
+       그랬다(도쿄타워는 `!3d`/`!4d` 가 있고 `!20s` 는 없다). 그때 이 한 칸이 그 장소의
+       **유일한 좌표**다. 없으면 사람이 손으로 찍는 수밖에 없다.
+     ★★셈만으로 푼다 — 망도 키도 안 탄다. 이 파일이 구글맵 JS API 를 안 쓰는 것과 같은 까닭이다.
+     ★**전체 코드만** 받는다(앞 여덟 자 + `+` + 두 자 이상). `4H2+F7` 같은 짧은 코드는
+       기준 지점이 있어야 풀리는데 우리에겐 없다 — 못 푸는 것을 반쯤 풀어 엉뚱한 데 찍지 않는다. */
+  const OLC = '23456789CFGHJMPQRVWX';
+  const OLC_FULL = /^[23456789CFGHJMPQRVWX]{8}\+[23456789CFGHJMPQRVWX]{2,7}$/;
+
+  function decodeOLC(code) {
+    const d = code.replace('+', '');
+    /* 앞 열 자리 = 다섯 쌍. 쌍마다 남은 칸을 스무 조각으로 쪼갠다(위도·경도 같은 비율). */
+    let lat = -90, lng = -180, res = 20;
+    for (let i = 0; i < 10; i += 2) {
+      lat += OLC.indexOf(d[i])     * res;
+      lng += OLC.indexOf(d[i + 1]) * res;
+      if (i < 8) res /= 20;
+    }
+    /* 열한 자리부터는 칸 하나를 **세로 5 · 가로 4** 격자로 다시 쪼갠 번호다(쌍이 아니다). */
+    let gLat = res, gLng = res;
+    for (let i = 10; i < d.length; i++) {
+      gLat /= 5; gLng /= 4;
+      const k = OLC.indexOf(d[i]);
+      lat += Math.floor(k / 4) * gLat;
+      lng += (k % 4) * gLng;
+    }
+    /* ★칸의 **가운데**를 돌려준다. 코드가 가리키는 것은 점이 아니라 칸이고,
+       모서리를 그대로 쓰면 늘 남서쪽으로 치우친다(열 자리 칸이 14m 쯤이다).
+     ★1e-7 로 끊는다(약 1cm). 안 끊으면 35.10238710000001 같은 부동소수 찌꺼기가
+       그대로 폼 칸에 박힌다 — 정밀도가 아니라 지저분함이다. */
+    const cut = v => Math.round(v * 1e7) / 1e7;
+    return { lat: cut(lat + gLat / 2), lng: cut(lng + gLng / 2) };
+  }
+
+  function plusAt(u) {
+    const m = /!20s([^!?&#]+)/.exec(u);
+    if (!m) return null;
+    let c = m[1];
+    try { c = decodeURIComponent(c); } catch (e) { /* 깨진 인코딩이면 원문으로 본다 */ }
+    c = c.trim().toUpperCase();
+    return OLC_FULL.test(c) ? decodeOLC(c) : null;
+  }
+
   /* 지도 중심. 핀이 없을 때만 쓰고 approx 로 표시한다. */
   function centerAt(u) {
     const m = /@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(u);
@@ -88,6 +134,8 @@ const GM = (function () {
 
     const name = placeName(s);
     let at = pinAt(s), approx = false;
+    /* 핀 → 플러스코드 → 지도 중심. 플러스코드는 그 **장소의** 칸이라 중심과 달리 approx 가 아니다. */
+    if (!GEO.ok(at)) at = plusAt(s);
     if (!GEO.ok(at)) { at = centerAt(s); approx = !!at; }
 
     let qn = null;
