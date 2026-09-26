@@ -200,19 +200,16 @@ const Plan = (function () {
     return { sum, miss };
   }
 
-  /* '다음 갈 곳' — 오늘 이후로 아직 안 다녀온 첫 **정거장**. 현지에서 이 앱을 여는 이유다.
-     ★★결제 줄을 뺀다(2026-09-10). 결제 줄은 부모의 날짜·시각을 물려받는데 seq 까지
-       같은 짝이 실제 데이터에 **서른 중 여섯** 있다 — 세 열쇠가 다 비면 부모와 자식의
-       차례가 정해지지 않고, 자식이 앞서면 그 id 가 여기서 뽑힌다. 그런데 결제 줄은
-       화면에 .stop 으로 서지 않으므로(kidsOf 가 따로 뽑는다) **어느 줄에도 표가 안
-       붙는다** — '다음 갈 곳' 이 통째로 사라진다.
-     ⚠ 지금 데이터로 돌려 보면 한 번도 안 걸린다(그 여섯이 하루의 첫 줄인 적이 없다).
-       고장이 난 적은 없고, 날 뿐이었다 — 정거장을 묻는 자리이니 정거장만 본다. */
-  function nextId() {
-    const t = U.todayISO();
-    const cand = rows.filter(r => !r.parent_id && !r.done && r.on_date >= t);
-    return cand.length ? cand[0].id : null;
-  }
+  /* ★★**'다음 갈 곳' 표를 걷었다(2026-09-26). 다시 만들지 말 것.**
+     이 앱에는 **다녀왔는지가 없다** — 줄에 달린 단추는 '취소'(`done`)지 '완료' 가
+     아니다. 그래서 '다음' 을 셀 재료가 없었고, `!done && on_date >= 오늘` 의 첫 줄은
+     실제로는 이런 것이었다:
+       · 아직 안 떠난 여행 → **여행의 첫 줄**이 늘 켜져 있다(출발이 두 달 뒤여도)
+       · 여행 중 → **그날의 첫 줄**이 하루 종일 켜져 있다(저녁 8시에도 아침 줄)
+     둘 다 '다음 갈 곳' 이 아니라 그냥 첫 줄이고, 화면에서는 **그 한 줄만 골라 둔
+     것처럼** 보였다. 값을 고쳐서 살아나는 종류가 아니라 전제가 없는 기능이다.
+     ★되살리려면 먼저 '다녀왔다' 를 적을 자리가 있어야 한다. 시각(`at_time`)으로
+       어림하는 길도 있지만 시각은 안 적은 줄이 많아 그 줄들이 통째로 빠진다. */
 
   // ── 그리기 ────────────────────────────────────────────────────────────
   function render() {
@@ -245,12 +242,11 @@ const Plan = (function () {
       return;
     }
     M = MONEY.total(rows, FXS.rateOf);        // 이번 그리기에서 쓸 셈 한 벌
-    const nid = nextId();
     el.innerHTML = (offline ? '<p class="note">연결이 없어 마지막으로 받아 둔 일정을 보여줍니다</p>' : '')
-                 + days.map((d, i) => dayHtml(d, i + 1, nid)).join('');
+                 + days.map((d, i) => dayHtml(d, i + 1)).join('');
   }
 
-  function dayHtml(d, n, nid) {
+  function dayHtml(d, n) {
     const list = ofDay(d);
     /* ★★하루 합계는 **결제 줄까지** 센다. 목록에는 장소 줄만 세우지만(ofDay), 돈은
        자식에도 붙어 있다 — 장소 줄만 세었더니 항공권 ₩428,000 을 결제 줄로 옮긴 날의
@@ -293,7 +289,7 @@ const Plan = (function () {
 
     let html = '';
     list.forEach((r, i) => {
-      html += stopHtml(r, nid, num.get(r.id));
+      html += stopHtml(r, num.get(r.id));
       const nx = list[i + 1];
       if (nx) html += segHtml(r, nx);
     });
@@ -319,12 +315,12 @@ const Plan = (function () {
       title="${esc(nm)}" aria-label="${esc(nm)}">${esc(nm.trim().charAt(0).toUpperCase())}</span>`;
   }
 
-  function stopHtml(r, nid, num) {
+  function stopHtml(r, num) {
     const k = U.kvar(r.kind);
     /* ⚠ is-pending 은 **줄에도** 단다(2026-09-10). 전에는 안쪽 단추(.item)에만 있었는데
        '아직 못 보냈다' 를 그리는 자리는 레일 위의 핀이고, 핀은 .stop 의 자식이라
        .item 에서는 닿지 않는다(css 에는 부모를 고르는 수가 없다). */
-    const cls = ['stop', r.done ? 'is-done' : '', r.id === nid ? 'is-next' : '',
+    const cls = ['stop', r.done ? 'is-done' : '',
                  r._pending ? 'is-pending' : '',
                  ].filter(Boolean).join(' ');
     const time = r.at_time ? r.at_time.slice(0, 5) : '';
