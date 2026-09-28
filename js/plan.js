@@ -23,7 +23,9 @@ const Plan = (function () {
      많이 갖는다. 지도는 하루씩 보는 물건이고 일정은 죽 이어 보는 물건이다. */
   let editing = null;   // 수정 중인 항목 id (null = 새로 추가)
   let loaded = false;   // 이 여행의 일정을 한 번이라도 받았나
-  let offline = false;  // 마지막 읽기가 로컬 사본이었나
+  /* 마지막 읽기가 로컬 사본이었나, 그리고 **왜** 사본인가 — 홈과 같은 어법이다
+     (app.js 의 staleWhy). null | 'offline' | 'fail'. */
+  let staleWhy = null;
   let crew = [];        // 동행자 — '결제자' 를 사람 이름으로 고르게 한다
 
 
@@ -242,7 +244,10 @@ const Plan = (function () {
       return;
     }
     M = MONEY.total(rows, FXS.rateOf);        // 이번 그리기에서 쓸 셈 한 벌
-    el.innerHTML = (offline ? '<p class="note">연결이 없어 마지막으로 받아 둔 일정을 보여줍니다</p>' : '')
+    el.innerHTML = (staleWhy
+                    ? `<p class="note">${staleWhy === 'offline'
+                        ? '연결이 없어 마지막으로 받아 둔 일정을 보여줍니다'
+                        : '일정을 못 받아 마지막으로 받아 둔 것을 보여줍니다'}</p>` : '')
                  + days.map((d, i) => dayHtml(d, i + 1)).join('');
   }
 
@@ -682,9 +687,11 @@ const Plan = (function () {
         if (editing) await DB.items.patch(editing, diff);
         else await DB.items.create(trip.id, v);
       } catch (e) {
-        /* 서버가 거절한 것(검증·권한)은 그대로 보여 준다 — 다시 보내다 같은 말을 듣는다.
-           끊겨서 못 보낸 것만 쌓아 둔다. */
-        if (!Outbox.isOffline(e)) throw e;
+        /* 서버가 거절한 것(검증·권한)은 그대로 보여 준다 — 다시 보내도 같은 말을 듣는다.
+           ★끊긴 것만이 아니라 **다시 하면 될 것**까지 쌓는다(2026-09-28). PGRST303
+             처럼 잠시 뒤면 될 오류에 저장을 통째로 실패시키면, 방금 적은 것을
+             사람이 다시 적어야 한다. */
+        if (!Outbox.retriable(e)) throw e;
         Outbox.queue(editing
           /* ★이름을 따로 얹는다 — row 에는 바뀐 칸만 있어서 금액만 고친 줄에는
              이름이 없는데, 못 보낸 띠는 그 줄을 이름으로 불러야 한다. */
@@ -709,7 +716,7 @@ const Plan = (function () {
     try {
       try { await DB.items.remove(editing); }
       catch (e) {
-        if (!Outbox.isOffline(e)) throw e;
+        if (!Outbox.retriable(e)) throw e;
         Outbox.queue({ kind: 'delete', id: editing, tripId: trip.id });
       }
       await reload();
@@ -742,10 +749,14 @@ const Plan = (function () {
     try {
       base = await DB.items.list(trip.id);
       Outbox.cacheSet(trip.id, base);
-      offline = false;
+      staleWhy = null;
     } catch (e) {
       const cached = Outbox.cacheGet(trip.id);
-      if (cached && Outbox.isOffline(e)) { base = cached; offline = true; }
+      /* ★isOffline 이 아니라 retriable 이다(2026-09-28) — 홈과 같은 까닭이다.
+         PGRST303 처럼 잠시 뒤면 될 오류에 사본을 두고도 빈 판을 세우지 않는다. */
+      if (cached && Outbox.retriable(e)) {
+        base = cached; staleWhy = Outbox.isOffline(e) ? 'offline' : 'fail';
+      }
       else throw e;
     }
     rows = Outbox.apply(trip.id, base);
@@ -771,7 +782,9 @@ const Plan = (function () {
       const r = rows.find(x => x.id === done.dataset.done);
       try { await DB.items.setDone(r.id, !r.done); }
       catch (err) {
-        if (!Outbox.isOffline(err)) { alert(err.message); return; }
+        /* ★retriable 이면 알리지 않고 쌓는다(2026-09-28). 전에는 PGRST303 같은
+           일시적 오류에 팝업만 띄우고 **누른 것이 없던 일이 됐다.** */
+        if (!Outbox.retriable(err)) { alert(err.message); return; }
         /* ★한 칸만 쌓는다(2026-09-17). 통째로 쌓고 있었는데, 그러면 끊긴 동안 동행자가
            고친 것이 나중에 이 줄이 올라가면서 옛 값으로 되돌아간다 — '못 감' 한 칸을
            눌렀을 뿐인데. */
@@ -855,7 +868,7 @@ const Plan = (function () {
       const r = rows.find(x => x.id === id);
       try { await DB.items.patch(id, { seq }); }
       catch (e) {
-        if (!Outbox.isOffline(e)) { alert(e.message); return; }
+        if (!Outbox.retriable(e)) { alert(e.message); return; }
         Outbox.queue({ kind: 'update', id, tripId: trip.id,
                        row: { seq }, name: r ? r.name : '' });
       }

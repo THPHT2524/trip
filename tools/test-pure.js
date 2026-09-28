@@ -646,6 +646,27 @@ eq(bare > 0, true, '★여유를 빼면 목표를 넘는 줄이 실제로 생긴
      ]).map(r => r.id), ['x', 'y'],
      '★끌어 옮겨 시각과 어긋난 줄도 **차례가 이긴다**(시각으로 되돌리지 않는다)');
 
+  // ── retriable: '다시 하면 될 것' 과 '진짜 거절' 을 가른다 ───────────────
+  // ★2026-09-28에 실제로 맞은 오류가 이 표의 첫 줄이다. 전에는 이 갈래가 없어서
+  //   잠시 뒤면 될 오류가 '서버가 거절' 로 떨어졌고, 적어 둔 것이 버려졌다.
+  online(true);
+  const RE = Outbox.retriable;
+  eq(RE(new Error('여행을 못 불러왔습니다: JWT issued at future [PGRST303]')), true,
+     '★실측 — 토큰이 너무 새것이라 막힌 것이라 잠시 뒤면 저절로 된다');
+  eq(RE(new Error('일정을 받지 못했습니다: JWT expired [PGRST301]')), true, '  만료도 갱신하면 된다');
+  eq(RE(new Error('Failed to fetch')), true, '  끊긴 것은 당연히 다시 하면 된다');
+  eq(RE(new Error('Too Many Requests')), true, '  상한에 걸린 것은 쉬면 풀린다');
+  eq(RE(new Error('Service Unavailable')), true, '  서버가 잠깐 못 받는 것');
+  eq(RE(new Error('new row violates row-level security policy [42501]')), false,
+     '★RLS 는 다시 보내도 같다 — 버리고 무엇이 버려졌는지 알려야 한다');
+  eq(RE(new Error('duplicate key value violates unique constraint [23505]')), false,
+     '  제약 위반도 다시 보내도 같다');
+  eq(RE(new Error('만들어졌지만 되읽지 못했습니다 [PGRST116]')), false, '  정책을 고쳐야 할 것');
+  eq(RE(new Error('trip 스키마가 Data API 에 노출되지 않았습니다 [PGRST106]')), false,
+     '  설정을 사람이 고쳐야 할 것');
+  eq(RE(new Error('알 수 없는 오류')), false, '★모르는 오류는 안 넣는다 — 허용 목록이다');
+  eq(RE(null), false, '  오류가 없으면 다시 할 것도 없다');
+
   // ── flush: 순서대로 보내고, 끊기면 **거기서 멈춘다** ────────────────────
   const sentLog = [];
   global.DB = { items: {
@@ -660,6 +681,14 @@ eq(bare > 0, true, '★여유를 빼면 목표를 넘는 줄이 실제로 생긴
   eq(sentLog, ['c:새 줄', 'd:c'], '★끊기면 그 자리에서 멈춘다(뒤엣것을 먼저 보내지 않는다)');
   eq([r.sent, r.failed, r.dropped.length], [1, 2, 0], '  보낸 하나 · 남은 둘 · 버린 것 없음');
   eq(Outbox.count(), 2, '  실패한 것은 큐에 그대로 남는다');
+
+  // ── 잠시 뒤면 될 오류는 **버리지 않는다** (2026-09-28) ─────────────────
+  global.DB.items.remove = async () => {
+    throw new Error('일정을 지우지 못했습니다: JWT issued at future [PGRST303]');
+  };
+  r = await Outbox.flush();
+  eq([Outbox.count(), r.dropped.length], [2, 0],
+     '★PGRST303 은 큐에 그대로 두고 아무것도 안 버린다(전에는 여기서 사라졌다)');
 
   // ── 서버가 거절한 것은 다시 보내도 같다 — 빼고 알린다 ──────────────────
   global.DB.items.remove = async () => { throw new Error('violates row-level security policy'); };

@@ -33,6 +33,25 @@ const Outbox = (function () {
     return /Failed to fetch|NetworkError|network|Load failed|타임아웃|시간 초과/i.test(m);
   }
 
+  /* 다시 해 보면 될 오류인가. isOffline 은 **'연결이 없나'** 를 묻고,
+     이것은 **'지금이라서 진 것인가'** 를 묻는다. 둘을 한 함수로 합치지 않는다 —
+     화면에 '연결이 없습니다' 라고 적을지는 앞엣것이 정하고, 큐를 지울지는 이것이 정한다.
+
+     ★★왜 생겼나(2026-09-28): 폰에서 `JWT issued at future [PGRST303]` 를 맞았다.
+       토큰의 `iat` 가 PostgREST 시계보다 **앞서** 막힌 것이다 — 만료가 아니라 반대로
+       너무 새 토큰이라서 난다(오래 닫아 둔 뒤 열면 supabase-js 가 갱신하고 방금 찍힌
+       그 토큰으로 곧바로 첫 질의를 보낸다). 몇 초 뒤면 저절로 낫는데, 전에는 이것이
+       '서버가 거절 = 다시 보내도 같다' 로 떨어져 **적어 둔 것이 버려졌다.**
+     ★모르는 오류는 **안 넣는다**(허용 목록이다). 진짜 거절을 여기 넣으면 큐가
+       영원히 안 비고 같은 오류를 되풀이한다 — `isOffline` 의 주석이 경계하는 그것이다.
+     ★RLS(42501)·제약 위반(23505)·PGRST106·PGRST116 은 여기 안 걸린다. 그것들은
+       다시 보내도 같은, 고쳐야 할 진짜 거절이다. */
+  function retriable(err) {
+    if (isOffline(err)) return true;
+    const m = String((err && err.message) || err || '');
+    return /PGRST30[0-9]|JW[TS]|429|Too Many Requests|Internal Server Error|Bad Gateway|Service Unavailable|Gateway Time/i.test(m);
+  }
+
   // ── 로컬 사본 ─────────────────────────────────────────────────────────
   /* ★★사본이 **쌓이기만 했다**(2026-09-17에 고쳤다). 여는 여행마다 한 벌씩 남고 지우는
      코드가 없어서 서른여덟 여행이면 1MB 가까이 된다. 한도(보통 5MB)에 닿으면 setItem 이
@@ -190,8 +209,11 @@ const Outbox = (function () {
         else if (op.kind === 'delete') await DB.items.remove(op.id);
         q.shift(); sent += 1; write();
       } catch (e) {
-        if (isOffline(e)) { write(); return { sent, failed: q.length, dropped }; }
-        q.shift(); write();                 // 서버가 거절한 것 — 다시 보내도 같다
+        /* ★isOffline 이 아니라 retriable 이다(2026-09-28). 네트워크가 멀쩡해도
+           PGRST303 처럼 **잠시 뒤면 될** 오류가 있고, 그것까지 버리면
+           적어 둔 것이 사라진다. 그때는 큐를 남기고 다음 기회에 보낸다. */
+        if (retriable(e)) { write(); return { sent, failed: q.length, dropped }; }
+        q.shift(); write();                 // 진짜 거절 — 다시 보내도 같다
         dropped.push({ op, why: e.message });
       }
     }
@@ -218,7 +240,7 @@ const Outbox = (function () {
   }
 
   return {
-    isOffline, cacheSet, cacheGet, cacheDrop, homeSet, homeGet,
+    isOffline, retriable, cacheSet, cacheGet, cacheDrop, homeSet, homeGet,
     queue, apply, flush, tmpId, summary,
     count: () => q.length,
     onChange: fn => subs.push(fn),

@@ -29,7 +29,11 @@
       ? { trips: raw.trips, air: raw.air || [] } : { trips: [], air: [] };
     sby = new Map(shape.trips.map(x => [x.trip_id, x]));
   }
-  let offlineHome = false; // 지금 보고 있는 목록이 로컬 사본인가
+  /* 지금 보고 있는 목록이 로컬 사본인가, 그리고 **왜** 사본인가.
+     null | 'offline'(연결이 없다) | 'fail'(연결은 있는데 못 받았다).
+     ★참/거짓이 아니라 까닭을 든다(2026-09-28) — 띠가 '연결이 없어' 라고 적는데
+       네트워크가 멀쩡한 실패에도 그 말이 나가면 화면이 거짓말을 한다. */
+  let staleWhy = null;
   let homeErr = null;      // 목록을 못 받았다(사본도 없다). 있으면 판 대신 안내가 선다
   let tripId = null;       // 지금 열어 둔 여행
   let tab = 'plan';
@@ -185,8 +189,10 @@
     const el = $('trips');
     /* 일정 탭이 쓰는 그 말과 같은 말이다(plan.js 의 drawDays) — 두 화면이 같은 일을
        같은 문장으로 알린다. */
-    const stale = offlineHome
-      ? '<p class="note">연결이 없어 마지막으로 받아 둔 목록을 보여줍니다</p>' : '';
+    const stale = staleWhy
+      ? `<p class="note">${staleWhy === 'offline'
+          ? '연결이 없어 마지막으로 받아 둔 목록을 보여줍니다'
+          : '목록을 못 받아 마지막으로 받아 둔 것을 보여줍니다'}</p>` : '';
     /* ★★못 받았으면 **판을 세우지 않는다**(2026-09-17). 아래 빈 판은 '예정 없음' 이라고
        적는데, 그건 여행이 없다는 말이지 못 받았다는 말이 아니다 — 서른여덟 여행을
        가진 사람에게 그렇게 말하면 거짓말이다.
@@ -818,13 +824,28 @@
     try {
       /* 둘을 나란히 부른다 — 카드가 '여행의 모양' 을 그리려면 둘 다 있어야 하고,
          차례로 부르면 첫 화면이 두 번 왕복만큼 늦어진다. */
-      const [list, sh] = await Promise.all([DB.trips.list(), DB.trips.shape()]);
+      /* ★★첫 질의만 **한 번 더** 해 본다(2026-09-28). 오래 닫아 둔 뒤 열면
+         supabase-js 가 토큰을 갱신하고 방금 찍힌 그 토큰으로 곧바로 여기를 부르는데,
+         PostgREST 시계가 몇 초 뒤처져 있으면 `JWT issued at future [PGRST303]` 로
+         막힌다. 잠시 뒤면 저절로 되는 오류라 사람에게 '다시 시도' 를 누르게 할
+         까닭이 없다 — 그 단추가 듣는다는 것이 곧 기다리면 된다는 증거다.
+       ★**여기만** 한다. 부팅 뒤 첫 질의는 늘 이것이고(일정은 목록을 받은 뒤에 연다),
+         다른 자리는 아래 '사본으로 물러나기' 가 받아 준다.
+       ★끊긴 것이면 기다리지 않는다 — 1.5초를 세도 달라질 게 없고 사본이 바로 있다. */
+      let got;
+      try { got = await Promise.all([DB.trips.list(), DB.trips.shape()]); }
+      catch (e) {
+        if (!Outbox.retriable(e) || Outbox.isOffline(e)) throw e;
+        await new Promise(r => setTimeout(r, 1500));
+        got = await Promise.all([DB.trips.list(), DB.trips.shape()]);
+      }
+      const [list, sh] = got;
       trips = list;
       /* ★못 받았으면(null) **갖고 있던 것을 지우지 않는다.** 빈 배열로 덮으면 카드가
          '일정 N'과 합계를 잃고 통화 코드만 남는데, 화면은 아무 말도 안 하므로
          돈을 안 쓴 여행처럼 보인다. 목록 자체는 list 로 이미 그릴 수 있다. */
       if (sh) setShape(sh); else retryShape();
-      offlineHome = false; homeErr = null;
+      staleWhy = null; homeErr = null;
       /* 끊긴 곳에서 열 수 있게 사본을 남긴다 — 일정이 이미 하는 일을 목록에도 한다 */
       Outbox.homeSet(trips, sh);
     } catch (e) {
@@ -832,11 +853,14 @@
          물러났고, 그래서 끊긴 곳에서 앱을 처음 열면 목록도 없고 진행 중인 여행으로
          들어가지도 못했다 — 이 앱이 오프라인을 위해 만든 것이 전부 여기서 막혔다.
          일정 탭은 진작 이렇게 하고 있었다(plan.js 의 reload). */
-      const c = Outbox.isOffline(e) ? Outbox.homeGet() : null;
+      /* ★isOffline 이 아니라 retriable 이다(2026-09-28). 멀쩡한 사본을 들고도
+         빈 화면을 세우던 자리다 — 사본은 '끊겼을 때' 가 아니라 **'못 받았을 때'**
+         쓰는 것이다. 진짜 거절(RLS 등)만 아래 안내로 보낸다. */
+      const c = Outbox.retriable(e) ? Outbox.homeGet() : null;
       if (c) {
         trips = c.trips || [];
         setShape(c.shape);
-        offlineHome = true;
+        staleWhy = Outbox.isOffline(e) ? 'offline' : 'fail';
       } else {
         trips = [];
         homeErr = e;
