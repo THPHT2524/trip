@@ -17,8 +17,20 @@ const GM = (function () {
   /* 단축 링크 — 리다이렉트를 따라가야 전체 URL 이 나오는데 브라우저에서는 CORS 에 막힌다.
      서버(api/gmaps.js)가 대신 따라간다. */
   const SHORT = /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps)\//i;
-  /* 전체 URL — 이건 브라우저에서 바로 파싱한다. 서버를 부르지 않는다. */
-  const FULL  = /^https?:\/\/((www\.|maps\.)?google\.[a-z.]{2,6}|maps\.google\.[a-z.]{2,6})\//i;
+  /* 전체 URL — 이건 브라우저에서 바로 파싱한다. 서버를 부르지 않는다.
+     ★★여기도 **끝의 슬래시를 요구하고 있었다**(2026-09-29에 고쳤다). 구글이 펼쳐 주는
+       주소에 `https://maps.google.com?q=…` 처럼 **경로가 없는 것**이 있는데, 그러면
+       아래 parse 가 87번 줄에서 곧장 null 이라 이름 한 자도 못 건졌다.
+       api/gmaps.js 의 hopOk 와 같은 병이고 같은 방식으로 고쳤다.
+     ★앞가지는 `www.`·`maps.` 둘만 받는다(서버 쪽보다 좁다) — 여기는 방어선이 아니라
+       '우리가 읽을 줄 아는 모양인가' 를 묻는 자리라, 넓힐 까닭이 없다. */
+  const FULL_HOST = /^((www|maps)\.)?google(\.[a-z]{2,4}){1,2}$/i;
+  function isFull(s) {
+    try {
+      const u = new URL(s);
+      return (u.protocol === 'https:' || u.protocol === 'http:') && FULL_HOST.test(u.hostname);
+    } catch (e) { return false; }
+  }
 
   const num = s => { const n = parseFloat(s); return Number.isFinite(n) ? n : null; };
 
@@ -130,7 +142,7 @@ const GM = (function () {
     }
 
     if (needsServer(s)) return { needsServer: true, url: s };
-    if (!FULL.test(s)) return null;
+    if (!isFull(s)) return null;
 
     const name = placeName(s);
     let at = pinAt(s), approx = false;

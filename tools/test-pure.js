@@ -248,6 +248,30 @@ eq(C('https://evil.com/maps/AbCd1234'), null, '남의 호스트');
 eq(C('https://maps.app.goo.gl/ab'), null, '너무 짧은 코드');
 eq(C('https://www.google.com/maps/place/X'), null, '전체 URL 은 서버가 안 받는다 (브라우저가 파싱한다)');
 
+// ── api/gmaps.js: 따라가도 되는 곳인가 (SSRF 방어선 둘째 겹) ────────────
+// ★★2026-09-29. 옛 규칙이 끝에 슬래시를 요구해서, 구글의 첫 리다이렉트인
+//   `https://maps.google.com?q=…`(경로 없음)를 '구글 밖' 으로 판정했다 —
+//   그래서 폰 단축 링크가 한 번도 안 펼쳐졌다.
+const H = API.hopOk;
+eq(H('https://maps.google.com?q=x'), true, '★경로가 없어도 구글이면 따라간다 (이게 실제로 오는 모양이다)');
+eq(H('https://www.google.com/maps?q=x'), true, '경로가 있는 보통 모양');
+eq(H('https://google.co.kr/maps'), true, '나라 도메인(2단)');
+eq(H('https://evilgoogle.com/'), false, '★앞에 붙인 사칭');
+eq(H('https://google.com.evil.com/'), false, '★뒤에 붙인 사칭 — 호스트를 끝까지 못박는다');
+eq(H('https://evil.com/?a=google.com'), false, '★주소 안에 google.com 이 있어도 호스트가 아니면 안 된다');
+eq(H('http://maps.google.com/'), false, 'http 는 안 따라간다');
+eq(H('not a url'), false, '주소가 아니면 안 따라간다');
+
+// ── GM: 경로 없는 전체 URL 도 읽는다 (2026-09-29) ───────────────────────
+eq(GM.parse('https://maps.google.com?q=Osaka+Castle').name, 'Osaka Castle',
+   '★경로가 없어도 파싱한다 — 전에는 여기서 null 이라 이름 한 자도 못 건졌다');
+// ★폰 단축 링크를 끝까지 따라가면 나오는 마지막 주소(2026-09-25 실측). **좌표가 없다** —
+//   고쳐도 이름까지가 끝이라는 것을 못박아 둔다. 좌표는 브라우저 주소를 붙여야 들어온다.
+const mob = GM.parse('https://www.google.com/maps?q=%EA%B4%91%EB%B3%B5%EC%A4%91%EC%95%99%EB%A1%9C+33'
+                   + '&ftid=0x3568e900465013ef:0xbd6d467cd430faa6&entry=gps');
+eq(mob.name, '광복중앙로 33', '  폰 링크에서 건지는 것은 이름(주소)뿐');
+eq([mob.lat, mob.lng], [null, null], '★그리고 좌표는 링크에 아예 없다 — ftid 는 좌표가 아니다');
+
 // ── GM: 전체 URL ───────────────────────────────────────────────────────
 // ★핵심 — @ 는 지도 중심이고 !3d/!4d 가 핀이다. 둘이 다른 URL 로 확인한다.
 const full = 'https://www.google.com/maps/place/%EC%98%A4%EC%82%AC%EC%B9%B4%EC%84%B1/'

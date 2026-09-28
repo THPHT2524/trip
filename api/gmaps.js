@@ -39,9 +39,30 @@ function canonical(raw) {
 }
 
 /* 따라가는 중에 닿아도 되는 곳. 구글 밖으로 나가면 거기서 멈춘다 —
-   단축 링크가 언제든 남의 사이트를 가리키게 바뀔 수 있다. */
-const HOP_OK = /^https:\/\/([a-z0-9-]+\.)*google\.[a-z.]{2,6}\//i;
+   단축 링크가 언제든 남의 사이트를 가리키게 바뀔 수 있다.
 
+   ★★정규식으로 **주소 전체**를 보다가 호스트만 보는 것으로 바꿨다(2026-09-29).
+     옛 규칙이 `google\.[a-z.]{2,6}\/` 처럼 **끝에 슬래시**를 요구했는데, 폰에서 공유한
+     링크의 첫 리다이렉트가 `https://maps.google.com?q=…` 로 **경로가 아예 없다.**
+     그래서 구글 안인데도 '구글 밖으로 나가는 링크' 로 판정해 422 를 돌려줬다 —
+     즉 폰에서 붙여넣으면 한 번도 안 열렸다. canonical() 이 이미 URL 로 분해해서
+     보는 것과 같은 방식으로 맞춘다(2026-09-01 에 같은 병을 여기 세 줄 위에서 고쳤는데
+     이 줄은 옛 모양으로 남아 있었다).
+   ★호스트를 **끝까지 못박는다**(`$`). `google.com.evil.com` 이나 `evilgoogle.com` 은
+     안 걸린다 — 이 함수가 SSRF 방어선의 두 번째 겹이라 느슨하게 풀면 안 된다. */
+const GOOGLE_HOST = /^([a-z0-9-]+\.)*google(\.[a-z]{2,4}){1,2}$/i;
+
+function hopOk(raw) {
+  try {
+    const u = new URL(raw);
+    return u.protocol === 'https:' && GOOGLE_HOST.test(u.hostname);
+  } catch (e) { return false; }
+}
+
+/* ★실측(2026-09-25) 폰 단축 링크는 **네 걸음**이다:
+     maps.app.goo.gl/… → maps.google.com?q=… → maps.google.com/maps?q=…
+                       → www.google.com/maps?q=…&ftid=…  (200, 끝)
+   여유가 한 걸음뿐이니, 구글이 한 겹 더 끼우면 여기서 막힌다. */
 const MAX_HOPS = 5;
 
 /* ★★**브라우저인 척하면 안 된다.** 데스크톱 Chrome UA 를 보내면 구글이 302 대신
@@ -85,7 +106,7 @@ async function expand(start) {
     const next = r.headers.get('location');
     if (!next) return { url, status: r.status };
     const abs = new URL(next, url).toString();
-    if (!HOP_OK.test(abs)) {
+    if (!hopOk(abs)) {
       return { err: '구글 밖으로 나가는 링크입니다.', to: abs };
     }
     url = abs;
@@ -153,3 +174,4 @@ module.exports = async (req, res) => {
 };
 
 module.exports.canonical = canonical;   // tools/test-pure.js 용
+module.exports.hopOk = hopOk;           // "
