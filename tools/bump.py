@@ -10,6 +10,13 @@
 #   ② css/app.css 의 @font-face ?v=N
 #   ③ sw.js 의 const V = N      (캐시 이름)
 #   ④ sw.js 의 SHELL 목록 ?v=N  (프리캐시할 URL)
+#   ⑤ _stub*.html (로그인 없이 보는 실험대) — index.html 의 사본이라 같이 안 뜨면 뒤처진다
+#
+# ★★⑤는 2026-10-27에 들어왔다. 손으로 뜨고 있었는데 **일곱 판이나 뒤처져 있었다**
+#   (_stub.html v=532 · _stub-off.html v=526 vs index v=539). 위 머리말이 경고하는
+#   "손으로 하면 반드시 하나를 빠뜨린다" 가 여기서 그대로 났다 — 더 나쁜 것은, 뒤처진
+#   실험대는 **틀린 것을 보여 주면서도 멀쩡해 보인다**는 점이다. 디자인 점검을 그걸로
+#   하면 이미 고친 것을 또 고치거나, 지금 깨진 것을 못 본다.
 #
 # ★★그리고 SHELL 에 **줄이 있는지**까지 본다(2026-09-10, shell_gap 참고). ④는 적혀
 #   있는 줄의 번호만 갈아 끼우므로, 자산을 하나 더하면서 SHELL 에 안 적으면 잡히지 않는다.
@@ -21,7 +28,7 @@
 # ★자산 지문(assets-sha)도 함께 적는다. 자산이 바뀌었는데 ?v 를 안 올렸으면 check 가 막는다.
 #   .gitattributes 가 줄바꿈을 LF 로 고정하므로 맥·윈도우·CI 에서 같은 값이 나온다
 #   (card-dashboard 는 그 고정이 없어서 윈도우에서 지문이 어긋났다).
-import hashlib, os, re, sys
+import hashlib, os, re, sys, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # ?v 를 쓰는 HTML 이 둘이다 — /themore 를 더하면서 늘었다.
@@ -32,6 +39,59 @@ SW = os.path.join(ROOT, "sw.js")
 # css 도 ?v 를 쓴다 — @font-face 의 글꼴 URL. 페이지와 같은 번호로 올라가야 한다.
 CSS = os.path.join(ROOT, "css", "app.css")
 BUMPED = PAGES + [CSS]
+
+# ── 실험대 ──────────────────────────────────────────────────────────────
+# index.html 의 사본에 db.js 만 가짜로 갈아 끼운 것. 앱의 나머지는 전부 진짜다.
+# ★**있는 것만 다시 뜬다.** 갓 클론한 데서 없는 파일을 만들어 내지는 않는다 —
+#   .gitignore 가 _stub* 를 빼 두었으므로 이건 각자의 로컬 물건이다.
+# ★꼬리에 붙는 script 가 변종을 가른다. 그것만 지켜서 몸통을 새로 뜬다.
+STUBS = {
+    "_stub.html": "",
+    # home_shape RPC 가 아직 없는 상태(= supabase/home.sql 을 안 돌린 상태)
+    "_stub-norpc.html": """<script>
+(function(){
+  var w = setInterval(function(){
+    if (typeof DB === 'undefined' || !DB.trips) return;
+    clearInterval(w);
+    DB.trips.shape = async function(){ return null; };
+  }, 0);
+})();
+</script>
+""",
+    # 끊긴 상태 — 목록이 사본으로 물러나는지 본다. ?live 를 붙이면 평소대로 돈다.
+    "_stub-off.html": """<script>
+(function(){
+  var wait = setInterval(function(){
+    if (typeof DB === 'undefined' || !DB.trips) return;
+    clearInterval(wait);
+    if (!location.search.includes('live')) {
+      DB.trips.list = async function(){ throw new Error('Failed to fetch'); };
+      DB.trips.shape = async function(){ return null; };
+    }
+  }, 0);
+})();
+</script>
+""",
+}
+
+
+def restub(new):
+    """index.html 을 떠서 _stub*.html 을 다시 만든다. 다시 뜬 파일 이름을 돌려준다."""
+    made = []
+    src = read(INDEX)
+    # ?t 는 캐시 무력화다 — 실험대는 고치는 족족 보여야 하므로 ?v 만으로는 모자라다
+    stamp = str(int(time.time()))
+    body = re.sub(r"\?v=(\d+)", lambda m: "?v=%s&t=%s" % (m.group(1), stamp), src)
+    body = body.replace("/js/db.js?v=%d&t=%s" % (new, stamp), "/_stub-db.js?t=%s" % stamp)
+    assert "_stub-db.js" in body, "db.js 를 못 바꿨다 — index.html 의 태그가 바뀌었는지 보라"
+    for name, tail in STUBS.items():
+        p = os.path.join(ROOT, name)
+        if not os.path.exists(p):
+            continue
+        write(p, body + tail)
+        made.append(name)
+    return made
+
 
 read = lambda p: open(p, encoding="utf-8", newline="").read()
 
@@ -136,8 +196,11 @@ def main():
         print("FAIL - 올린 뒤에도 셋이 어긋납니다. 직접 확인하세요.")
         return 1
 
-    print("PASS - v=%d -> v=%d · assets-sha:%s · 자산 %d개"
-          % (old, new, sha, len(versioned())))
+    made = restub(new)
+
+    print("PASS - v=%d -> v=%d · assets-sha:%s · 자산 %d개%s"
+          % (old, new, sha, len(versioned()),
+             " · 실험대 %d개 다시 뜸" % len(made) if made else ""))
     return 0
 
 
